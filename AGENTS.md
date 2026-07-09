@@ -1,6 +1,6 @@
-# OpenDesk 分支说明（默认）
+# OpenDesk 分支说明（role/python）
 
-本仓库采用三人并行开发模式，每位开发者在各自分支维护自己的 Cursor rules 与代码规范。
+本分支面向 **Developer C（Python/AI Runtime）**。
 
 ## 分支
 
@@ -11,5 +11,6 @@
 ## 规范入口
 
 - `.cursor/rules/`：各角色规则文件
+- `.cursor/rules/python.md`：本分支规则
 - `contracts/`：三端共享契约（DTO/IPC/HTTP/Event/Error），任何 Breaking Change 必须先改契约
 
