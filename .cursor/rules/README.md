@@ -1,5 +1,6 @@
 本目录存放 Cursor Rules（团队代码规范与协作边界）。
 
+- `master.md`：全仓库基线规则（master 分支维护，所有分支必须遵守）
 - `frontend.md`：React/桌面端规范（Developer A）
 - `rust.md`：Rust/Tauri/SQLite/IPC 规范（Developer B）
 - `python.md`：Python/AI Runtime 规范（Developer C）
