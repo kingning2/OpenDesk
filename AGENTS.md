@@ -11,5 +11,6 @@
 ## 规范入口
 
 - `.cursor/rules/`：各角色规则文件
+- `.cursor/rules/master.md`：全仓库基线规则（所有分支都必须遵守）
 - `contracts/`：三端共享契约（DTO/IPC/HTTP/Event/Error），任何 Breaking Change 必须先改契约
 
