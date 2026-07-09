@@ -1,0 +1,4 @@
+﻿[package]
+name = "tenant"
+version.workspace = true
+edition.workspace = true

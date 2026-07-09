@@ -1,0 +1,4 @@
+﻿[package]
+name = "mcp"
+version.workspace = true
+edition.workspace = true

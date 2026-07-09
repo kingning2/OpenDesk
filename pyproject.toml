@@ -1,0 +1,28 @@
+[project]
+name = "opendesk"
+version = "0.1.0"
+description = "OpenDesk AI customer service desktop platform"
+readme = "README.md"
+requires-python = ">=3.13"
+
+[tool.uv.workspace]
+members = [
+  "python/sidecar",
+  "python/packages/contracts",
+  "python/packages/shared",
+  "python/packages/gateway",
+  "python/packages/queue",
+  "python/packages/worker",
+  "python/packages/provider",
+  "python/packages/llm",
+  "python/packages/rag",
+  "python/packages/ocr",
+  "python/packages/agent",
+  "python/packages/browser",
+  "python/packages/workflow",
+  "python/packages/prompt",
+  "python/packages/memory",
+  "python/packages/model",
+]
+
+[tool.uv.sources]

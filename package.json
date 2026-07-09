@@ -1,0 +1,14 @@
+{
+  "name": "opendesk",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "pnpm --filter @desk/desktop dev",
+    "build": "pnpm --filter @desk/desktop build",
+    "preview": "pnpm --filter @desk/desktop preview",
+    "tauri": "pnpm --filter @desk/desktop tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

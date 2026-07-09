@@ -1,0 +1,4 @@
+﻿[package]
+name = "mail-net"
+version.workspace = true
+edition.workspace = true

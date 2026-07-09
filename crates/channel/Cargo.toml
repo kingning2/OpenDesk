@@ -1,0 +1,4 @@
+﻿[package]
+name = "channel"
+version.workspace = true
+edition.workspace = true

@@ -1,0 +1,4 @@
+﻿[package]
+name = "knowledge"
+version.workspace = true
+edition.workspace = true

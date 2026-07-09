@@ -1,0 +1,4 @@
+﻿[package]
+name = "adapter"
+version.workspace = true
+edition.workspace = true

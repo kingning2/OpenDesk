@@ -1,0 +1,4 @@
+﻿[package]
+name = "mail"
+version.workspace = true
+edition.workspace = true

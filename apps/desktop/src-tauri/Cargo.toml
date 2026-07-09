@@ -1,0 +1,15 @@
+[package]
+name = "desktop"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { workspace = true }
+
+[dependencies]
+app = { path = "../../../crates/app" }
+tauri = { workspace = true }
