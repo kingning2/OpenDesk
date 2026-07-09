@@ -5,9 +5,16 @@
 ## 1) 架构边界（必须）
 
 - 固定三层：**React（展示） → Rust（Application Core） → Python（AI Runtime）**
-- React 只通过 **Tauri IPC** 调 Rust；**禁止** React 直接访问 Python sidecar
-- Python 不知道 React；只提供 HTTP API（按 `contracts/`）
+- React 只通过 **Tauri IPC** 调 Rust；**禁止** React 以任何方式直连 Python sidecar（包括 `http://localhost:*` / WebSocket / SSE）
+- Python 不知道 React；只提供对 Rust 的本机 IPC API（协议仍按 `contracts/` 定义）
 - 数据库存储由 Rust 负责：**Python 禁止直连 SQLite/关系库**
+
+### 1.1 Rust 必须掌控 Python Runtime（硬约束）
+
+- Rust 必须负责 Python sidecar 的**生命周期管理**（启动/停止/重启/健康检查/超时）
+- Rust 必须**接管 sidecar stdout/stderr**，并将其写入本地日志与可检索的结构化日志（按 `trace_id`/`task_id` 关联）
+- Python sidecar 必须提供仅供 Rust 调用的**管理面接口**（建议：`/health`、`/stats`、`/tasks/active`、`/debug/dump`、`/metrics`），契约归档到 `contracts/openapi/sidecar.v1.yaml`
+- Python sidecar 的业务输出（含流式 token）必须先回到 Rust，再由 Rust 通过 Tauri Events 转发给前端
 
 ## 2) 契约优先（必须）
 
