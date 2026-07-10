@@ -1,1 +1,1 @@
-﻿"""provider package scaffold."""
+"""provider package scaffold."""

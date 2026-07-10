@@ -1,1 +1,1 @@
-﻿"""worker package scaffold."""
+"""worker package scaffold."""

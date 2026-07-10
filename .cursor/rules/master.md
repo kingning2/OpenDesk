@@ -54,3 +54,33 @@
 - 引入新模块/新命名：必须符合命名规范与目录约束
 - 禁止在“未完成架构评审”阶段开始写业务功能（当前阶段只允许骨架、契约、规范与工具链）
 
+## 8) 代码校验（必须）
+
+提交前必须通过对应语言的 lint 检查；CI 也会强制执行。
+
+| 语言 | 工具 | 命令 |
+|------|------|------|
+| Frontend | ESLint + TypeScript | `pnpm lint:frontend` |
+| Rust | rustfmt + Clippy | `pnpm lint:rust` |
+| Python | Ruff（check + format） | `pnpm lint:python` |
+| 全量 | 三端一起 | `pnpm lint` |
+
+### 8.1 Frontend（ESLint）
+
+- 配置：`eslint.config.js`
+- Feature UI（`apps/desktop/src/features/**`）**禁止**直接 import `@tauri-apps/api`，必须走 `@desk/platform/ipc`
+- 自动修复：`pnpm lint:frontend:fix`
+
+### 8.2 Rust（rustfmt + Clippy）
+
+- 格式化：`rustfmt.toml`
+- 静态分析：`clippy.toml` + `cargo clippy -D warnings`
+- 快捷别名：`.cargo/config.toml`（`cargo lint`、`cargo fmt-check`）
+- 自动格式化：`pnpm lint:rust:fix`
+
+### 8.3 Python（Ruff）
+
+- 配置：根目录 `pyproject.toml` 中 `[tool.ruff]`
+- 检查 import 排序、常见 bug、现代化语法
+- 自动修复：`pnpm lint:python:fix`
+

@@ -1,1 +1,1 @@
-﻿"""agent package scaffold."""
+"""agent package scaffold."""

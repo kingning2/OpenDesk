@@ -1,1 +1,1 @@
-﻿"""workflow package scaffold."""
+"""workflow package scaffold."""

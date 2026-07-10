@@ -1,1 +1,1 @@
-﻿//! file crate scaffold.
+//! file crate scaffold.

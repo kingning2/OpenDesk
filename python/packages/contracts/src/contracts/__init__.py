@@ -1,1 +1,1 @@
-﻿"""contracts package scaffold."""
+"""contracts package scaffold."""

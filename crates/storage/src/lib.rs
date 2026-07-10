@@ -1,1 +1,1 @@
-﻿//! storage crate scaffold.
+//! storage crate scaffold.

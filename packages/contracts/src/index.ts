@@ -1,3 +1,3 @@
-# Placeholder for generated TypeScript contracts.
+// Placeholder for generated TypeScript contracts.
 
 export {};

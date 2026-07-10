@@ -1,1 +1,1 @@
-﻿"""shared package scaffold."""
+"""shared package scaffold."""
