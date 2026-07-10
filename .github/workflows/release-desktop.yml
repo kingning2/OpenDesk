@@ -1,0 +1,212 @@
+name: Release Desktop Bundles
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ensure GitHub Release exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists."
+          else
+            gh release create "$TAG" \
+              --title "$TAG" \
+              --notes "Automated desktop build artifacts for $TAG"
+          fi
+
+  build-windows-x64:
+    runs-on: windows-latest
+    needs: create-release
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Windows x64 bundle
+        run: pnpm tauri build -- --target x86_64-pc-windows-msvc
+
+      - name: Package Windows x64 artifact
+        id: package
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $name = "opendesk-$tag-windows-x64.zip"
+          $bundleDir = "apps/desktop/src-tauri/target/x86_64-pc-windows-msvc/release/bundle"
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Compress-Archive -Path "$bundleDir/*" -DestinationPath "dist/$name" -Force
+          "asset=dist/$name" >> $env:GITHUB_OUTPUT
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-x64
+          path: ${{ steps.package.outputs.asset }}
+
+      - name: Upload Windows x64 asset to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: gh release upload "$env:TAG" "${{ steps.package.outputs.asset }}" --clobber
+
+  build-windows-x86:
+    runs-on: windows-latest
+    needs: create-release
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: i686-pc-windows-msvc
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Windows x86 bundle
+        run: pnpm tauri build -- --target i686-pc-windows-msvc
+
+      - name: Package Windows x86 artifact
+        id: package
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $name = "opendesk-$tag-windows-x86.zip"
+          $bundleDir = "apps/desktop/src-tauri/target/i686-pc-windows-msvc/release/bundle"
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Compress-Archive -Path "$bundleDir/*" -DestinationPath "dist/$name" -Force
+          "asset=dist/$name" >> $env:GITHUB_OUTPUT
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-x86
+          path: ${{ steps.package.outputs.asset }}
+
+      - name: Upload Windows x86 asset to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: gh release upload "$env:TAG" "${{ steps.package.outputs.asset }}" --clobber
+
+  build-macos-intel:
+    runs-on: macos-13
+    needs: create-release
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-apple-darwin
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build macOS Intel bundle
+        run: pnpm tauri build -- --target x86_64-apple-darwin
+
+      - name: Package macOS Intel artifact
+        id: package
+        run: |
+          TAG="${{ github.ref_name }}"
+          NAME="opendesk-${TAG}-macos-intel.zip"
+          BUNDLE_DIR="apps/desktop/src-tauri/target/x86_64-apple-darwin/release/bundle"
+          mkdir -p dist
+          zip -r "dist/$NAME" "$BUNDLE_DIR"
+          echo "asset=dist/$NAME" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-intel
+          path: ${{ steps.package.outputs.asset }}
+
+      - name: Upload macOS Intel asset to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: gh release upload "$TAG" "${{ steps.package.outputs.asset }}" --clobber
+
+  build-macos-apple-silicon:
+    runs-on: macos-14
+    needs: create-release
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build macOS Apple Silicon bundle
+        run: pnpm tauri build -- --target aarch64-apple-darwin
+
+      - name: Package macOS Apple Silicon artifact
+        id: package
+        run: |
+          TAG="${{ github.ref_name }}"
+          NAME="opendesk-${TAG}-macos-apple-silicon.zip"
+          BUNDLE_DIR="apps/desktop/src-tauri/target/aarch64-apple-darwin/release/bundle"
+          mkdir -p dist
+          zip -r "dist/$NAME" "$BUNDLE_DIR"
+          echo "asset=dist/$NAME" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-apple-silicon
+          path: ${{ steps.package.outputs.asset }}
+
+      - name: Upload macOS Apple Silicon asset to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: gh release upload "$TAG" "${{ steps.package.outputs.asset }}" --clobber
