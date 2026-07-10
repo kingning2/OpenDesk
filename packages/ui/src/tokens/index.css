@@ -1,0 +1,61 @@
+/**
+ * OpenDesk design tokens — Apple-inspired glass, dynamic color, typography.
+ * Import once in apps/desktop: import "@desk/ui/tokens"
+ */
+
+@theme {
+  /* Dynamic Color */
+  --color-background: oklch(0.98 0.005 250);
+  --color-foreground: oklch(0.18 0.02 250);
+  --color-card: oklch(1 0 0 / 0.72);
+  --color-card-foreground: oklch(0.2 0.02 250);
+  --color-primary: oklch(0.55 0.2 250);
+  --color-primary-foreground: oklch(0.99 0 0);
+  --color-muted: oklch(0.94 0.01 250);
+  --color-muted-foreground: oklch(0.45 0.02 250);
+  --color-border: oklch(0 0 0 / 0.08);
+
+  /* Radius */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+
+  /* Glass */
+  --glass-bg: oklch(1 0 0 / 0.55);
+  --glass-border: oklch(1 0 0 / 0.22);
+  --glass-shadow: 0 8px 32px oklch(0 0 0 / 0.1);
+
+  /* Blur / Backdrop */
+  --blur-glass: 24px;
+  --backdrop-dim: oklch(0 0 0 / 0.35);
+
+  /* Typography */
+  --font-sans: "SF Pro Text", "Inter", system-ui, sans-serif;
+  --font-display: "SF Pro Display", "Inter", system-ui, sans-serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+
+  /* Motion duration */
+  --motion-fast: 150ms;
+  --motion-base: 250ms;
+  --motion-slow: 400ms;
+}
+
+.dark {
+  --color-background: oklch(0.14 0.02 250);
+  --color-foreground: oklch(0.96 0.01 250);
+  --color-card: oklch(0.22 0.02 250 / 0.65);
+  --color-card-foreground: oklch(0.96 0.01 250);
+  --color-primary: oklch(0.68 0.18 250);
+  --color-muted: oklch(0.22 0.02 250);
+  --color-muted-foreground: oklch(0.65 0.02 250);
+  --color-border: oklch(1 0 0 / 0.1);
+  --glass-bg: oklch(0.25 0.02 250 / 0.55);
+  --glass-border: oklch(1 0 0 / 0.12);
+  --glass-shadow: 0 8px 32px oklch(0 0 0 / 0.35);
+  --backdrop-dim: oklch(0 0 0 / 0.55);
+}

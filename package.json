@@ -7,13 +7,15 @@
     "dev": "pnpm --filter @desk/desktop dev",
     "build": "pnpm --filter @desk/desktop build",
     "preview": "pnpm --filter @desk/desktop preview",
-    "tauri": "pnpm --filter @desk/desktop tauri",
+    "tauri": "node tooling/scripts/tauri.mjs",
+    "prepare": "husky",
     "lint": "pnpm lint:frontend && pnpm lint:rust && pnpm lint:python",
     "lint:fix": "pnpm lint:frontend:fix && pnpm lint:rust:fix && pnpm lint:python:fix",
-    "lint:frontend": "eslint .",
+    "lint:frontend": "eslint . && pnpm lint:types",
     "lint:frontend:fix": "eslint . --fix",
-    "lint:rust": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings",
-    "lint:rust:fix": "cargo fmt --all",
+    "lint:types": "tsc -p tsconfig.lint.json --noEmit",
+    "lint:rust": "node tooling/scripts/lint-rust.mjs",
+    "lint:rust:fix": "node tooling/scripts/lint-rust-fix.mjs",
     "lint:python": "node tooling/scripts/lint-python.mjs",
     "lint:python:fix": "node tooling/scripts/lint-python-fix.mjs"
   },
@@ -24,6 +26,8 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "husky": "^9.1.7",
+    "typescript": "~5.8.3",
     "typescript-eslint": "^8.48.0"
   }
 }
