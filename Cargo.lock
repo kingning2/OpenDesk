@@ -732,6 +732,7 @@ dependencies = [
  "app",
  "tauri",
  "tauri-build",
+ "tauri-plugin-opener",
 ]
 
 [[package]]
@@ -2785,6 +2786,10 @@ dependencies = [
 [[package]]
 name = "runtime"
 version = "0.1.0"
+dependencies = [
+ "serde",
+ "thiserror 2.0.18",
+]
 
 [[package]]
 name = "rustc-hash"

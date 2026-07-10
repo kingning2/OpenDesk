@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://agent/sidecar/ping.request/v1",
+  "title": "agent/sidecar/ping.request",
+  "type": "object",
+  "required": [],
+  "properties": {
+    "trace_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}
