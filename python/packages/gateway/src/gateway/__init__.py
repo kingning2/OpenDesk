@@ -1,1 +1,1 @@
-﻿"""gateway package scaffold."""
+"""gateway package scaffold."""

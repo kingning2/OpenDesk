@@ -1,1 +1,1 @@
-﻿//! vector crate scaffold.
+//! vector crate scaffold.

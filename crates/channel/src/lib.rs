@@ -1,4 +1,4 @@
-﻿//! channel crate scaffold.
+//! channel crate scaffold.
 
 pub mod app;
 pub mod domain;

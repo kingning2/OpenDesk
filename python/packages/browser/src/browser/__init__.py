@@ -1,1 +1,1 @@
-﻿"""browser package scaffold."""
+"""browser package scaffold."""

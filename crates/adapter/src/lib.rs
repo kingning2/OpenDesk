@@ -1,1 +1,1 @@
-﻿//! adapter crate scaffold.
+//! adapter crate scaffold.

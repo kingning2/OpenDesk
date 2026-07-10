@@ -1,1 +1,1 @@
-﻿"""ocr package scaffold."""
+"""ocr package scaffold."""
