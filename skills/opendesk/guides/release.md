@@ -1,0 +1,43 @@
+# Release Guide
+
+骨架阶段无正式发布流程；本文档定义未来发布约束。
+
+## 版本策略
+
+- 桌面应用：SemVer（`apps/desktop/package.json`）
+- Contract：`contracts/CHANGELOG.md` 独立版本注记
+- Rust workspace：统一 `workspace.package.version`
+
+## 发布前检查
+
+```bash
+pnpm lint
+python skills/opendesk/scripts/check_architecture.py
+python skills/opendesk/scripts/check_contracts.py
+pnpm build
+```
+
+## Breaking Change 发布
+
+1. Contract v2 + MIGRATION.md
+2. 三端实现同步迁移
+3. 桌面应用 major 版本 bump
+4. 发布说明列出不兼容项
+
+## 产物
+
+| 产物 | 命令 |
+|------|------|
+| 桌面安装包 | `pnpm tauri build` |
+| Contract 文档 | 自 `contracts/openapi` 生成 |
+
+## 分支策略
+
+- `main` — 集成分支
+- `role/frontend` · `role/rust` · `role/python` — 并行开发
+- Feature 完整后 PR 回 `main`
+
+## 相关
+
+- [review.md](review.md)
+- [contracts.md](contracts.md)

@@ -13,3 +13,4 @@ tauri-build = { workspace = true }
 [dependencies]
 app = { path = "../../../crates/app" }
 tauri = { workspace = true }
+tauri-plugin-opener = { workspace = true }
