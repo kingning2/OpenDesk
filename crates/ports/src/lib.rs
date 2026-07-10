@@ -1,1 +1,1 @@
-﻿//! ports crate scaffold.
+//! ports crate scaffold.

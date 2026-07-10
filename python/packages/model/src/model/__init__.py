@@ -1,1 +1,1 @@
-﻿"""model package scaffold."""
+"""model package scaffold."""

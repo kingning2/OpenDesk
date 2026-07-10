@@ -1,1 +1,1 @@
-﻿//! kernel crate scaffold.
+//! kernel crate scaffold.

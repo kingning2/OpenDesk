@@ -1,1 +1,1 @@
-﻿"""OpenDesk AI sidecar package."""
+"""OpenDesk AI sidecar package."""

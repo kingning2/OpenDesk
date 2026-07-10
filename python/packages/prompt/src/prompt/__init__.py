@@ -1,1 +1,1 @@
-﻿"""prompt package scaffold."""
+"""prompt package scaffold."""

@@ -1,1 +1,1 @@
-﻿//! mail-net crate scaffold.
+//! mail-net crate scaffold.
