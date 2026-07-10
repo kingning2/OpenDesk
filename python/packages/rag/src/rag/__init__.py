@@ -1,1 +1,1 @@
-﻿"""rag package scaffold."""
+"""rag package scaffold."""

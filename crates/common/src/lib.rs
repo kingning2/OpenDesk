@@ -1,1 +1,1 @@
-﻿//! common crate scaffold.
+//! common crate scaffold.

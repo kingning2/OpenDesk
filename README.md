@@ -17,6 +17,16 @@ pnpm install
 pnpm tauri dev
 ```
 
+## 代码校验
+
+```bash
+pnpm lint              # 三端全量检查
+pnpm lint:frontend     # ESLint
+pnpm lint:rust         # rustfmt + clippy
+pnpm lint:python       # ruff check + format
+pnpm lint:fix          # 自动修复（前端 + rust fmt + python）
+```
+
 ## 文档
 
 - `docs/architecture/` — 架构与 ADR

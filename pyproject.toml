@@ -5,6 +5,11 @@ description = "OpenDesk AI customer service desktop platform"
 readme = "README.md"
 requires-python = ">=3.13"
 
+[dependency-groups]
+dev = [
+  "ruff>=0.11",
+]
+
 [tool.uv.workspace]
 members = [
   "python/sidecar",
@@ -26,3 +31,44 @@ members = [
 ]
 
 [tool.uv.sources]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+src = ["python"]
+
+[tool.ruff.lint]
+select = [
+  "E",
+  "F",
+  "I",
+  "UP",
+  "B",
+  "SIM",
+  "N",
+]
+ignore = []
+
+[tool.ruff.lint.isort]
+known-first-party = [
+  "agent",
+  "browser",
+  "contracts",
+  "gateway",
+  "llm",
+  "memory",
+  "model",
+  "ocr",
+  "prompt",
+  "provider",
+  "queue",
+  "rag",
+  "shared",
+  "worker",
+  "workflow",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"

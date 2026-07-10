@@ -1,1 +1,1 @@
-﻿"""queue package scaffold."""
+"""queue package scaffold."""
