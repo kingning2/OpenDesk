@@ -58,7 +58,16 @@ jobs:
         run: |
           $tag = "${{ github.ref_name }}"
           $name = "opendesk-$tag-windows-x64.zip"
-          $bundleDir = "apps/desktop/src-tauri/target/x86_64-pc-windows-msvc/release/bundle"
+          $candidates = @(
+            "target/x86_64-pc-windows-msvc/release/bundle",
+            "apps/desktop/src-tauri/target/x86_64-pc-windows-msvc/release/bundle",
+            "target/release/bundle"
+          )
+          $bundleDir = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $bundleDir) {
+            Write-Error "Bundle directory not found. Checked: $($candidates -join ', ')"
+            exit 1
+          }
           New-Item -ItemType Directory -Force -Path dist | Out-Null
           Compress-Archive -Path "$bundleDir/*" -DestinationPath "dist/$name" -Force
           "asset=dist/$name" >> $env:GITHUB_OUTPUT
@@ -106,7 +115,16 @@ jobs:
         run: |
           $tag = "${{ github.ref_name }}"
           $name = "opendesk-$tag-windows-x86.zip"
-          $bundleDir = "apps/desktop/src-tauri/target/i686-pc-windows-msvc/release/bundle"
+          $candidates = @(
+            "target/i686-pc-windows-msvc/release/bundle",
+            "apps/desktop/src-tauri/target/i686-pc-windows-msvc/release/bundle",
+            "target/release/bundle"
+          )
+          $bundleDir = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $bundleDir) {
+            Write-Error "Bundle directory not found. Checked: $($candidates -join ', ')"
+            exit 1
+          }
           New-Item -ItemType Directory -Force -Path dist | Out-Null
           Compress-Archive -Path "$bundleDir/*" -DestinationPath "dist/$name" -Force
           "asset=dist/$name" >> $env:GITHUB_OUTPUT
@@ -153,7 +171,21 @@ jobs:
         run: |
           TAG="${{ github.ref_name }}"
           NAME="opendesk-${TAG}-macos-intel.zip"
-          BUNDLE_DIR="apps/desktop/src-tauri/target/x86_64-apple-darwin/release/bundle"
+          BUNDLE_DIR=""
+          for candidate in \
+            "target/x86_64-apple-darwin/release/bundle" \
+            "apps/desktop/src-tauri/target/x86_64-apple-darwin/release/bundle" \
+            "target/release/bundle"
+          do
+            if [ -d "$candidate" ]; then
+              BUNDLE_DIR="$candidate"
+              break
+            fi
+          done
+          if [ -z "$BUNDLE_DIR" ]; then
+            echo "Bundle directory not found." >&2
+            exit 1
+          fi
           mkdir -p dist
           zip -r "dist/$NAME" "$BUNDLE_DIR"
           echo "asset=dist/$NAME" >> "$GITHUB_OUTPUT"
@@ -200,7 +232,21 @@ jobs:
         run: |
           TAG="${{ github.ref_name }}"
           NAME="opendesk-${TAG}-macos-apple-silicon.zip"
-          BUNDLE_DIR="apps/desktop/src-tauri/target/aarch64-apple-darwin/release/bundle"
+          BUNDLE_DIR=""
+          for candidate in \
+            "target/aarch64-apple-darwin/release/bundle" \
+            "apps/desktop/src-tauri/target/aarch64-apple-darwin/release/bundle" \
+            "target/release/bundle"
+          do
+            if [ -d "$candidate" ]; then
+              BUNDLE_DIR="$candidate"
+              break
+            fi
+          done
+          if [ -z "$BUNDLE_DIR" ]; then
+            echo "Bundle directory not found." >&2
+            exit 1
+          fi
           mkdir -p dist
           zip -r "dist/$NAME" "$BUNDLE_DIR"
           echo "asset=dist/$NAME" >> "$GITHUB_OUTPUT"
