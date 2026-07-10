@@ -16,11 +16,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
+          GH_REPO: ${{ github.repository }}
         run: |
-          if gh release view "$TAG" >/dev/null 2>&1; then
+          if gh release view "$TAG" --repo "$GH_REPO" >/dev/null 2>&1; then
             echo "Release $TAG already exists."
           else
             gh release create "$TAG" \
+              --repo "$GH_REPO" \
               --title "$TAG" \
               --notes "Automated desktop build artifacts for $TAG"
           fi
@@ -70,7 +72,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
-        run: gh release upload "$env:TAG" "${{ steps.package.outputs.asset }}" --clobber
+          GH_REPO: ${{ github.repository }}
+        run: gh release upload "$env:TAG" "${{ steps.package.outputs.asset }}" --repo "$env:GH_REPO" --clobber
 
   build-windows-x86:
     runs-on: windows-latest
@@ -117,7 +120,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
-        run: gh release upload "$env:TAG" "${{ steps.package.outputs.asset }}" --clobber
+          GH_REPO: ${{ github.repository }}
+        run: gh release upload "$env:TAG" "${{ steps.package.outputs.asset }}" --repo "$env:GH_REPO" --clobber
 
   build-macos-intel:
     runs-on: macos-13
@@ -163,7 +167,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
-        run: gh release upload "$TAG" "${{ steps.package.outputs.asset }}" --clobber
+          GH_REPO: ${{ github.repository }}
+        run: gh release upload "$TAG" "${{ steps.package.outputs.asset }}" --repo "$GH_REPO" --clobber
 
   build-macos-apple-silicon:
     runs-on: macos-14
@@ -209,4 +214,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
-        run: gh release upload "$TAG" "${{ steps.package.outputs.asset }}" --clobber
+          GH_REPO: ${{ github.repository }}
+        run: gh release upload "$TAG" "${{ steps.package.outputs.asset }}" --repo "$GH_REPO" --clobber
