@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "pnpm --filter @desk/desktop dev",
     "build": "pnpm --filter @desk/desktop build",
+    "build:sidecar": "node tooling/scripts/build-sidecar.mjs",
     "preview": "pnpm --filter @desk/desktop preview",
     "tauri": "node tooling/scripts/tauri.mjs",
     "prepare": "husky",
