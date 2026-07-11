@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Sync contracts to codegen output directories (skeleton)."""
+"""Sync contracts to codegen output directories."""
 
 from __future__ import annotations
 
 import argparse
+import json
 import logging
+import re
 from pathlib import Path
 
 from _common import CONTRACTS, ROOT, setup_logging, write_text
@@ -12,6 +14,96 @@ from _common import CONTRACTS, ROOT, setup_logging, write_text
 TS_OUT = ROOT / "packages" / "contracts" / "src" / "generated"
 PY_OUT = ROOT / "python" / "packages" / "contracts" / "src" / "contracts" / "generated"
 RS_OUT = ROOT / "crates" / "common" / "src" / "contracts"
+
+TYPE_MAP_TS = {
+    "string": "string",
+    "boolean": "boolean",
+    "integer": "number",
+    "number": "number",
+}
+TYPE_MAP_RS = {
+    "string": "String",
+    "boolean": "bool",
+    "integer": "i64",
+    "number": "f64",
+}
+TYPE_MAP_PY = {
+    "string": "str",
+    "boolean": "bool",
+    "integer": "int",
+    "number": "float",
+}
+
+
+def _schema_names(rel: Path) -> tuple[str, str]:
+    parts = list(rel.parts[:-1])
+    stem = rel.name.removesuffix(".schema.json")
+    if "." in stem:
+        name_part, direction = stem.rsplit(".", 1)
+        parts.extend([name_part, direction])
+    else:
+        parts.append(stem)
+    pascal = "".join(part[:1].upper() + part[1:] for part in parts)
+    snake = "_".join(parts)
+    return pascal, snake
+
+
+def _load_schema(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _emit_ts(name: str, schema: dict) -> str:
+    required = set(schema.get("required", []))
+    props = schema.get("properties", {})
+    lines = [f"export interface {name} {{"]
+    for prop, spec in props.items():
+        ts_type = TYPE_MAP_TS.get(spec.get("type", "string"), "unknown")
+        optional = "" if prop in required else "?"
+        lines.append(f"  {prop}{optional}: {ts_type};")
+    lines.append("}")
+    return "\n".join(lines) + "\n"
+
+
+def _emit_rs(name: str, schema: dict) -> str:
+    required = set(schema.get("required", []))
+    props = schema.get("properties", {})
+    lines = [
+        "use serde::{Deserialize, Serialize};",
+        "",
+        "#[derive(Debug, Clone, Serialize, Deserialize)]",
+        f"pub struct {name} {{",
+    ]
+    for prop, spec in props.items():
+        rs_type = TYPE_MAP_RS.get(spec.get("type", "string"), "String")
+        if prop not in required:
+            rs_type = f"Option<{rs_type}>"
+        lines.append(f"    pub {prop}: {rs_type},")
+    lines.append("}")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def _emit_py(name: str, schema: dict) -> str:
+    required = set(schema.get("required", []))
+    props = schema.get("properties", {})
+    lines = [
+        '"""Auto-generated from contracts/schema."""',
+        "",
+        "from typing import TypedDict",
+        "",
+    ]
+    if required == set(props):
+        lines.append(f"class {name}(TypedDict):")
+    else:
+        lines.append(f"class {name}(TypedDict, total=False):")
+    if not props:
+        lines.append("    pass")
+    else:
+        for prop, spec in props.items():
+            py_type = TYPE_MAP_PY.get(spec.get("type", "string"), "str")
+            lines.append(f"    {prop}: {py_type}")
+    lines.append("")
+    return "\n".join(lines)
 
 
 def main() -> int:
@@ -26,22 +118,56 @@ def main() -> int:
         logging.warning("no schemas at %s", schema_root)
         return 0
 
-    schemas = list(schema_root.rglob("*.schema.json"))
+    schemas = sorted(schema_root.rglob("*.schema.json"))
     logging.info("found %d schema files", len(schemas))
 
-    index_ts = "// Auto-generated contract index (skeleton).\n// TODO: wire contracts/codegen pipeline.\n"
-    index_py = '"""Auto-generated contract index (skeleton)."""\n'
-    index_rs = "// Auto-generated contract index (skeleton).\n"
+    ts_exports: list[str] = []
+    py_exports: list[str] = []
+    rs_exports: list[str] = []
 
     for path in schemas:
         rel = path.relative_to(schema_root)
-        logging.debug("would codegen %s", rel)
+        pascal, snake = _schema_names(rel)
+        schema = _load_schema(path)
 
-    write_text(TS_OUT / "index.ts", index_ts, dry_run=args.dry_run)
-    write_text(PY_OUT / "__init__.py", index_py, dry_run=args.dry_run)
-    write_text(RS_OUT / "mod.rs", index_rs, dry_run=args.dry_run)
+        ts_file = TS_OUT / f"{snake}.ts"
+        py_file = PY_OUT / f"{snake}.py"
+        rs_file = RS_OUT / f"{snake}.rs"
 
-    logging.info("sync complete (skeleton placeholders)")
+        write_text(ts_file, _emit_ts(pascal, schema), dry_run=args.dry_run)
+        write_text(py_file, _emit_py(pascal, schema), dry_run=args.dry_run)
+        write_text(rs_file, _emit_rs(pascal, schema), dry_run=args.dry_run)
+
+        ts_exports.append(f'export type {{ {pascal} }} from "./{snake}";')
+        py_exports.append(f"from .{snake} import {pascal}")
+        rs_exports.append(f"pub mod {snake};")
+        rs_exports.append(f"pub use {snake}::{pascal};")
+
+    ts_index = (
+        "// Auto-generated by sync_contracts.py — do not edit.\n\n" + "\n".join(ts_exports) + "\n"
+    )
+    py_all = []
+    for line in py_exports:
+        match = re.search(r"import (\w+)", line)
+        if match:
+            py_all.append(f'    "{match.group(1)}",')
+
+    py_index = (
+        '"""Auto-generated contract index."""\n\n'
+        + "\n".join(py_exports)
+        + "\n\n__all__ = [\n"
+        + "\n".join(py_all)
+        + "\n]\n"
+    )
+    rs_index = (
+        "// Auto-generated by sync_contracts.py — do not edit.\n\n" + "\n".join(rs_exports) + "\n"
+    )
+
+    write_text(TS_OUT / "index.ts", ts_index, dry_run=args.dry_run)
+    write_text(PY_OUT / "__init__.py", py_index, dry_run=args.dry_run)
+    write_text(RS_OUT / "mod.rs", rs_index, dry_run=args.dry_run)
+
+    logging.info("sync complete (%d schemas)", len(schemas))
     return 0
 
 
