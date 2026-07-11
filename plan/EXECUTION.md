@@ -4,11 +4,11 @@ Architecture Skeleton 阶段执行索引 — **Current** 与 **Next** 为单一�
 
 ## Current
 
-_(无 — 待开始 M5 前端界面骨架)_
+_(无 — T018 P2–P5 已完成，P6 签名/公证待后续)_
 
 ## Next
 
-[T013-ui-layout-primitives](./pending/T013-ui-layout-primitives.md)
+_(P6 签名与公证，或 M4 业务 Feature 垂直切片)_
 
 ---
 
@@ -33,6 +33,7 @@ _(无 — 待开始 M5 前端界面骨架)_
 | T015 | [app-header-bar](./pending/T015-app-header-bar.md) | P1 | pending | M5 | T013, T014 |
 | T016 | [shell-refactor-nav-registry](./pending/T016-shell-refactor-nav-registry.md) | P1 | pending | M5 | T013, T014, T015 |
 | T017 | [feature-page-scaffold](./pending/T017-feature-page-scaffold.md) | P1 | pending | M5 | T015, T016 |
+| T018 | [sidecar-production-bundle](./completed/T018-sidecar-production-bundle.md) | P0 | completed | M6 | T004 |
 
 ---
 
@@ -53,6 +54,10 @@ Sidecar 自愈、内核 event/task、storage port、sidecar 管理面客户端�
 ### M4 — Business Features _(未规划)_
 
 chat / mail / knowledge 等业务 Feature 垂直切片（Contract → Rust → Python → React）。
+
+### M6 — Production Bundle _(进行中)_
+
+Sidecar 冻结 + Tauri externalBin + Win/macOS 签名公证 + CI 集成（T018）。
 
 ### M5 — Frontend UI Shell _(进行中)_
 
