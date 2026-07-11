@@ -86,6 +86,36 @@ cd packages/ui && pnpm dlx shadcn@latest add button
 pnpm lint:frontend
 ```
 
+## 布局与页面骨架
+
+M5 UI Shell 由 `@desk/ui` 布局原语 + `apps/desktop` 组装层构成：
+
+```
+TitleBar（窗口级）
+└─ AppLayout
+   ├─ Sidebar + SidebarNav
+   └─ MainPanel
+      ├─ AppHeader（页面级标题 + ThemeToggle）
+      └─ PageScaffold / Feature 内容
+```
+
+| 组件 | 包 | 用途 |
+|------|-----|------|
+| `TitleBar` | `@desk/ui` | 无边框窗口拖拽 + 窗口控制（回调由 shell 接 `@desk/platform/window`） |
+| `AppLayout` / `Sidebar` / `MainPanel` | `@desk/ui` | 应用级布局 |
+| `AppHeader` / `ThemeToggle` | `@desk/ui` | 路由标题 + 主题切换 |
+| `PageScaffold` / `PageContainer` | `@desk/ui` | Feature 页面统一内边距与宽度 |
+| `nav-registry.ts` | `apps/desktop` | 聚合各 Feature 的 `navItem` |
+| `page-meta.ts` | `apps/desktop` | 路由 → 页面标题映射 |
+
+新增 Feature 前端骨架：
+
+1. `features/<name>/index.ts` 导出 `{ id, path, navItem }` 与 page 组件
+2. 在 `route/nav-registry.ts` 注册 `navItem`
+3. 在 `route/router.tsx` 添加路由
+4. 在 `route/page-meta.ts` 添加标题（可选 description）
+5. 页面内容用 `PageScaffold` 包裹；占位页可复用 `FeaturePlaceholderPage`
+
 ## 相关
 
 - [ui-design-system.md](ui-design-system.md)

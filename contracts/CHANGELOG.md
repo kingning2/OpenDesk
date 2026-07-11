@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4
+
+- 新增 Python Sidecar stdout JSON Lines 日志契约 `runtime/log/entry/v1`
+
 ## 0.1.3
 
 - Sidecar 崩溃/health 失败自动重启 + `runtime.sidecar.restarted` 事件

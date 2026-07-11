@@ -2,7 +2,7 @@
 |-------|-------|
 | ID | T016 |
 | Priority | P1 |
-| Status | pending |
+| Status | completed |
 | Depends on | T013, T014, T015 |
 | Blocks | T017 |
 | Milestone | M5 |
@@ -30,10 +30,10 @@
 
 ## Acceptance criteria
 
-- [ ] Shell 文件仅负责组装，不含复杂样式逻辑
-- [ ] 新增 Feature 只需：export navItem + 在 registry 聚合 + router 加路由
-- [ ] 现有 Home / Agent 导航行为与 T011 一致
-- [ ] `check_layers.py` 与 `pnpm lint:frontend` 通过
+- [x] Shell 文件仅负责组装，不含复杂样式逻辑
+- [x] 新增 Feature 只需：export navItem + 在 registry 聚合 + router 加路由
+- [x] 现有 Home / Agent 导航行为与 T011 一致
+- [x] `check_layers.py` 与 `pnpm lint:frontend` 通过
 
 ## Key files
 

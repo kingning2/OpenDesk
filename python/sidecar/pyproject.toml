@@ -4,6 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
   "gateway",
+  "shared",
 ]
 
 [dependency-groups]
@@ -20,3 +21,4 @@ packages = ["sidecar"]
 
 [tool.uv.sources]
 gateway = { workspace = true }
+shared = { workspace = true }

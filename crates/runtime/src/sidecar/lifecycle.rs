@@ -166,7 +166,7 @@ impl SidecarLifecycle {
             ));
         }
 
-        let mut command = build_spawn_command(&self.config);
+        let mut command = build_spawn_command(&self.config)?;
         let mut child = command
             .spawn()
             .map_err(|error| SidecarLifecycleError::SpawnFailed(error.to_string()))?;
@@ -281,7 +281,7 @@ fn resolve_sidecar_dir() -> PathBuf {
     PathBuf::from("python/sidecar")
 }
 
-fn build_spawn_command(config: &SidecarConfig) -> Command {
+fn build_spawn_command(config: &SidecarConfig) -> Result<Command, SidecarLifecycleError> {
     let port = config.port.to_string();
 
     if let Some(bundled) = config.bundled_executable.as_ref() {
@@ -289,7 +289,7 @@ fn build_spawn_command(config: &SidecarConfig) -> Command {
             let mut cmd = Command::new(bundled);
             cmd.arg("--port").arg(&port);
             info!(executable = %bundled.display(), "starting bundled sidecar");
-            return configure_stdio(cmd);
+            return Ok(configure_stdio(cmd));
         }
         warn!(
             executable = %bundled.display(),
@@ -299,28 +299,51 @@ fn build_spawn_command(config: &SidecarConfig) -> Command {
 
     let sidecar_dir = path_to_str(&config.sidecar_dir);
 
-    let command = if config.use_uv {
+    if config.use_uv && command_available("uv") {
         let mut cmd = Command::new("uv");
         cmd.arg("run")
             .arg("--directory")
-            .arg(sidecar_dir)
+            .arg(&sidecar_dir)
             .arg("python")
             .arg("-m")
             .arg("sidecar.main")
             .arg("--port")
-            .arg(port);
-        cmd
-    } else {
-        let mut cmd = Command::new(&config.python_executable);
+            .arg(&port);
+        return Ok(configure_stdio(cmd));
+    }
+
+    if config.use_uv {
+        warn!("uv not found in PATH, falling back to python executable");
+    }
+
+    for candidate in spawn_python_candidates(config) {
+        if !command_available(&candidate) {
+            continue;
+        }
+
+        let mut cmd = Command::new(&candidate);
         cmd.current_dir(&config.sidecar_dir)
             .arg("-m")
             .arg("sidecar.main")
             .arg("--port")
-            .arg(port);
-        cmd
-    };
+            .arg(&port);
+        info!(executable = %candidate, "starting sidecar with python");
+        return Ok(configure_stdio(cmd));
+    }
 
-    configure_stdio(command)
+    Err(SidecarLifecycleError::SpawnFailed(
+        "no Python runtime found in PATH (install uv, or ensure python/py is available; set OPENDESK_PYTHON)".into(),
+    ))
+}
+
+fn spawn_python_candidates(config: &SidecarConfig) -> Vec<String> {
+    let mut candidates = vec![config.python_executable.clone()];
+    for fallback in ["python", "python3", "py"] {
+        if !candidates.iter().any(|value| value == fallback) {
+            candidates.push(fallback.to_string());
+        }
+    }
+    candidates
 }
 
 fn configure_stdio(mut command: Command) -> Command {
@@ -365,6 +388,31 @@ pub fn bundled_sidecar_filename() -> String {
         format!("{base}.exe")
     } else {
         base
+    }
+}
+
+fn command_available(program: &str) -> bool {
+    #[cfg(windows)]
+    {
+        std::process::Command::new("where")
+            .arg(program)
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status()
+            .map(|status| status.success())
+            .unwrap_or(false)
+    }
+
+    #[cfg(not(windows))]
+    {
+        std::process::Command::new("sh")
+            .arg("-c")
+            .arg(format!("command -v {program}"))
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status()
+            .map(|status| status.success())
+            .unwrap_or(false)
     }
 }
 

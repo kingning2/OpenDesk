@@ -1,4 +1,30 @@
 {
+  "branch_kinds": {
+    "feature": {
+      "label": "新功能",
+      "description": "新 Feature、UI 骨架、垂直切片等增量开发。"
+    },
+    "fix": {
+      "label": "缺陷修复",
+      "description": "非紧急 bug 修复，随常规 PR 合并 main。"
+    },
+    "hotfix": {
+      "label": "紧急热修",
+      "description": "生产/阻塞级问题，优先合 main 并尽快发布。"
+    },
+    "chore": {
+      "label": "工程杂项",
+      "description": "工具链、CI、依赖、脚本、规则，无业务行为变更。"
+    },
+    "refactor": {
+      "label": "重构",
+      "description": "结构/命名调整，不改变对外行为。"
+    },
+    "docs": {
+      "label": "文档",
+      "description": "仅文档、计划、README，无代码逻辑变更。"
+    }
+  },
   "roles": {
     "frontend": {
       "label": "Desktop — React · UI · Tauri · Rust",
@@ -12,25 +38,16 @@
         "crates/**",
         "plan/**"
       ],
-      "optional_globs": [
-        "contracts/**"
-      ],
-      "forbidden_globs": [
-        "python/**"
-      ],
+      "optional_globs": ["contracts/**"],
+      "forbidden_globs": ["python/**"],
       "rule_files": ["frontend.md", "rust.md"]
     },
     "python": {
       "label": "Python AI Runtime",
       "description": "Sidecar 与 python/packages；禁止改 React/Rust 业务层。",
       "branch_prefix": "python",
-      "allowed_globs": [
-        "python/**",
-        "plan/**"
-      ],
-      "optional_globs": [
-        "contracts/**"
-      ],
+      "allowed_globs": ["python/**", "plan/**"],
+      "optional_globs": ["contracts/**"],
       "forbidden_globs": [
         "apps/desktop/**",
         "packages/ui/**",
