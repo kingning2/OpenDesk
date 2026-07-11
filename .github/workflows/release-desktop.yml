@@ -49,6 +49,16 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Build frozen sidecar
+        run: node tooling/scripts/build-sidecar.mjs --target x86_64-pc-windows-msvc
+
       - name: Build Windows x64 bundle
         run: pnpm tauri build --target x86_64-pc-windows-msvc
 
@@ -120,6 +130,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          architecture: x86
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Build frozen sidecar
+        run: node tooling/scripts/build-sidecar.mjs --target i686-pc-windows-msvc
+
       - name: Build Windows x86 bundle
         run: pnpm tauri build --target i686-pc-windows-msvc
 
@@ -190,6 +211,16 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Build frozen sidecar
+        run: node tooling/scripts/build-sidecar.mjs --target x86_64-apple-darwin
 
       - name: Build macOS Intel bundle
         run: pnpm tauri build --target x86_64-apple-darwin
@@ -275,6 +306,16 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Build frozen sidecar
+        run: node tooling/scripts/build-sidecar.mjs --target aarch64-apple-darwin
 
       - name: Build macOS Apple Silicon bundle
         run: pnpm tauri build --target aarch64-apple-darwin
