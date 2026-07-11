@@ -1,39 +1,88 @@
-import { NavLink, Outlet } from "react-router";
-import { ThemeProvider } from "@desk/ui";
-import { agentFeature } from "@feature/agent";
-
-const navItems = [
-  { to: "/", label: "Home", end: true },
-  { to: agentFeature.path, label: "Agent" },
-];
+import { NavLink, Outlet, useLocation } from "react-router";
+import {
+  AnimatePresence,
+  AppLayout,
+  FadeSlide,
+  IconButton,
+  MainPanel,
+  NavRail,
+  NavRailNav,
+  navRailItemVariants,
+  TabBar,
+  ThemeProvider,
+  ThemeToggle,
+  TitleBar,
+} from "@desk/ui";
+import { Settings } from "@desk/ui/icons";
+import { closeWindow, getPlatform, minimizeWindow, startWindowDrag, toggleMaximizeWindow } from "@desk/platform";
+import { navItems } from "../route/nav-registry";
+import { useWorkspaceTabs } from "./use-workspace-tabs";
 
 export function AppShell() {
+  const platform = getPlatform();
+  const location = useLocation();
+  const { tabs, activePath, ensureTab, selectTab, closeTab, addTab } = useWorkspaceTabs();
+
   return (
-    <ThemeProvider>
-      <div className="flex min-h-screen">
-        <aside className="w-52 border-r border-border p-4">
-          <p className="mb-4 text-[length:var(--text-sm)] font-medium">OpenDesk</p>
-          <nav className="flex flex-col gap-2">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.end}
-                className={({ isActive }) =>
-                  [
-                    "rounded-[var(--radius-md)] px-3 py-2 text-[length:var(--text-sm)]",
-                    isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground",
-                  ].join(" ")
-                }
-              >
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
-        </aside>
-        <main className="flex flex-1 items-start justify-center p-6">
-          <Outlet />
-        </main>
+    <ThemeProvider defaultTheme="dark">
+      <div className="flex h-screen w-full flex-col overflow-hidden bg-shell">
+        <TitleBar
+          platform={platform}
+          actions={
+            <>
+              <IconButton label="Settings" title="Settings">
+                <Settings className="size-3.5" />
+              </IconButton>
+              <ThemeToggle size="compact" />
+            </>
+          }
+          tabs={
+            <TabBar
+              embedded
+              items={tabs}
+              activePath={activePath}
+              onSelect={selectTab}
+              onClose={closeTab}
+              onAdd={addTab}
+            />
+          }
+          onStartDrag={() => void startWindowDrag()}
+          onMinimize={() => void minimizeWindow()}
+          onToggleMaximize={() => void toggleMaximizeWindow()}
+          onClose={() => void closeWindow()}
+        />
+        <AppLayout
+          sidebar={
+            <NavRail>
+              <NavRailNav>
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <NavLink
+                      key={item.id}
+                      to={item.path}
+                      end={item.end}
+                      title={item.label}
+                      onClick={() => ensureTab(item.path)}
+                      className={({ isActive }) => navRailItemVariants({ active: isActive })}
+                    >
+                      {Icon ? <Icon className="size-[1.125rem] shrink-0" aria-hidden /> : null}
+                      <span className="max-w-full truncate">{item.label}</span>
+                    </NavLink>
+                  );
+                })}
+              </NavRailNav>
+            </NavRail>
+          }
+        >
+          <MainPanel>
+            <AnimatePresence mode="wait">
+              <FadeSlide key={location.pathname} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                <Outlet />
+              </FadeSlide>
+            </AnimatePresence>
+          </MainPanel>
+        </AppLayout>
       </div>
     </ThemeProvider>
   );
