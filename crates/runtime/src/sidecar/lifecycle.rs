@@ -36,6 +36,8 @@ pub struct SidecarConfig {
     pub python_executable: String,
     pub startup_timeout: Duration,
     pub max_restart_attempts: u32,
+    /// Frozen sidecar executable (release / OPENDESK_SIDECAR_BIN). When set, takes precedence over dev spawn.
+    pub bundled_executable: Option<PathBuf>,
 }
 
 impl SidecarConfig {
@@ -59,7 +61,13 @@ impl SidecarConfig {
                 .unwrap_or_else(|_| "python".to_string()),
             startup_timeout: Duration::from_secs(15),
             max_restart_attempts,
+            bundled_executable: resolve_bundled_executable(),
         }
+    }
+
+    pub fn with_bundled_executable(mut self, path: PathBuf) -> Self {
+        self.bundled_executable = Some(path);
+        self
     }
 }
 
@@ -152,7 +160,7 @@ impl SidecarLifecycle {
             }
         }
 
-        if !self.config.sidecar_dir.exists() {
+        if self.config.bundled_executable.is_none() && !self.config.sidecar_dir.exists() {
             return Err(SidecarLifecycleError::SidecarDirNotFound(
                 self.config.sidecar_dir.display().to_string(),
             ));
@@ -275,9 +283,23 @@ fn resolve_sidecar_dir() -> PathBuf {
 
 fn build_spawn_command(config: &SidecarConfig) -> Command {
     let port = config.port.to_string();
+
+    if let Some(bundled) = config.bundled_executable.as_ref() {
+        if bundled.is_file() {
+            let mut cmd = Command::new(bundled);
+            cmd.arg("--port").arg(&port);
+            info!(executable = %bundled.display(), "starting bundled sidecar");
+            return configure_stdio(cmd);
+        }
+        warn!(
+            executable = %bundled.display(),
+            "bundled sidecar executable missing; falling back to development launcher"
+        );
+    }
+
     let sidecar_dir = path_to_str(&config.sidecar_dir);
 
-    let mut command = if config.use_uv {
+    let command = if config.use_uv {
         let mut cmd = Command::new("uv");
         cmd.arg("run")
             .arg("--directory")
@@ -298,11 +320,52 @@ fn build_spawn_command(config: &SidecarConfig) -> Command {
         cmd
     };
 
+    configure_stdio(command)
+}
+
+fn configure_stdio(mut command: Command) -> Command {
     command
         .stdin(std::process::Stdio::null())
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped());
     command
+}
+
+fn resolve_bundled_executable() -> Option<PathBuf> {
+    if let Ok(path) = std::env::var("OPENDESK_SIDECAR_BIN") {
+        let path = PathBuf::from(path);
+        if path.is_file() {
+            return Some(path);
+        }
+    }
+
+    if cfg!(debug_assertions) {
+        return None;
+    }
+
+    let candidate = bundled_executable_candidate();
+    if candidate.is_file() {
+        Some(candidate)
+    } else {
+        None
+    }
+}
+
+fn bundled_executable_candidate() -> PathBuf {
+    let exe_dir = std::env::current_exe()
+        .ok()
+        .and_then(|path| path.parent().map(Path::to_path_buf))
+        .unwrap_or_default();
+    exe_dir.join(bundled_sidecar_filename())
+}
+
+pub fn bundled_sidecar_filename() -> String {
+    let base = format!("sidecar-{}", env!("OPENDESK_TARGET_TRIPLE"));
+    if cfg!(target_os = "windows") {
+        format!("{base}.exe")
+    } else {
+        base
+    }
 }
 
 fn path_to_str(path: &Path) -> String {
@@ -316,5 +379,21 @@ where
     let mut lines = BufReader::new(reader).lines();
     while let Ok(Some(line)) = lines.next_line().await {
         log_pipe::emit_line(stream, &line);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bundled_sidecar_filename_matches_target_triple() {
+        let filename = bundled_sidecar_filename();
+        assert!(filename.starts_with("sidecar-"));
+        if cfg!(target_os = "windows") {
+            assert!(filename.ends_with(".exe"));
+        } else {
+            assert!(!filename.ends_with(".exe"));
+        }
     }
 }
