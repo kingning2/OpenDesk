@@ -255,7 +255,7 @@ def main() -> int:
     handlers_init = PYTHON_PACKAGES / "gateway" / "src" / "gateway" / "handlers" / "__init__.py"
     ensure_python_import(
         handlers_init,
-        f"from .{route_key} import handle_{feature}_{action}",
+        f"from .{route_key} import handle_{feature}_{action} as handle_{feature}_{action}",
         dry_run=args.dry_run,
     )
 
@@ -264,14 +264,17 @@ def main() -> int:
     if routes_file.exists():
         content = routes_file.read_text(encoding="utf-8")
         if route not in content:
-            write_text(routes_file, content.rstrip() + "\n" + route_line + "\n", dry_run=args.dry_run)
+            write_text(
+                routes_file,
+                content.rstrip() + "\n" + route_line + "\n",
+                dry_run=args.dry_run,
+            )
     else:
         write_text(
             routes_file,
             '"""Sidecar route table — consumed by Rust-managed HTTP server."""\n\n'
             "from __future__ import annotations\n\n"
-            f"from gateway.handlers.{route_key} import handle_{feature}_{action}\n\n"
-            'ROUTES: dict[str, tuple[str, str]] = {}\n\n'
+            "ROUTES: dict[str, tuple[str, str]] = {}\n\n"
             f"{route_line}\n",
             dry_run=args.dry_run,
         )
