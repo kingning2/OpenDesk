@@ -87,5 +87,21 @@ class SidecarHandler(BaseHTTPRequestHandler):
 
 def serve(port: int = 8787) -> None:
     server = ThreadingHTTPServer(("127.0.0.1", port), SidecarHandler)
-    logger.info("sidecar listening on 127.0.0.1:%s", port)
-    server.serve_forever()
+    logger.info(
+        "sidecar ready",
+        extra={"event": "sidecar.ready", "feature": "runtime", "port": port},
+    )
+    try:
+        server.serve_forever()
+    except Exception:
+        logger.exception(
+            "sidecar server failed",
+            extra={"event": "sidecar.failed", "feature": "runtime"},
+        )
+        raise
+    finally:
+        server.server_close()
+        logger.info(
+            "sidecar stopped",
+            extra={"event": "sidecar.stopped", "feature": "runtime"},
+        )

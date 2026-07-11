@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import logging
 
 from sidecar.logging_config import configure_logging
 from sidecar.server import serve
+
+logger = logging.getLogger("opendesk.sidecar")
 
 
 def main() -> None:
@@ -13,6 +16,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="OpenDesk Python sidecar")
     parser.add_argument("--port", type=int, default=8787)
     args = parser.parse_args()
+    logger.info(
+        "sidecar starting",
+        extra={"event": "sidecar.starting", "feature": "runtime", "port": args.port},
+    )
     serve(args.port)
 
 
