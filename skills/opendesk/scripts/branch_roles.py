@@ -10,9 +10,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 CONFIG_PATH = ROOT / "skills" / "opendesk" / "config" / "branch_roles.json"
 ACTIVE_RULE_PATH = ROOT / ".cursor" / "rules" / "active-branch.mdc"
-RULES_DIR = ROOT / ".cursor" / "rules"
 
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+KIND_RE = re.compile(r"^[a-z][a-z0-9-]*$")
 
 
 @dataclass(frozen=True)
@@ -27,6 +27,13 @@ class RoleConfig:
     rule_files: tuple[str, ...]
 
 
+@dataclass(frozen=True)
+class KindConfig:
+    key: str
+    label: str
+    description: str
+
+
 def load_config() -> dict:
     return json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
 
@@ -34,6 +41,11 @@ def load_config() -> dict:
 def list_role_keys() -> list[str]:
     config = load_config()
     return [key for key in config["roles"] if key != "integration"]
+
+
+def list_kind_keys() -> list[str]:
+    config = load_config()
+    return list(config["branch_kinds"].keys())
 
 
 def role_from_config(key: str) -> RoleConfig:
@@ -53,20 +65,64 @@ def role_from_config(key: str) -> RoleConfig:
     )
 
 
+def kind_from_config(key: str) -> KindConfig:
+    config = load_config()
+    kinds = config.get("branch_kinds", {})
+    if key not in kinds:
+        raise KeyError(f"unknown branch kind: {key}")
+    raw = kinds[key]
+    return KindConfig(key=key, label=raw["label"], description=raw["description"])
+
+
 def validate_slug(slug: str) -> str:
     slug = slug.strip().lower()
     if not slug:
-        raise ValueError("slug is required (e.g. m5-layout)")
+        raise ValueError("slug is required (e.g. m5-ui-shell)")
     if not SLUG_RE.fullmatch(slug):
-        raise ValueError(f"invalid slug: {slug!r} (use kebab-case, e.g. m5-layout)")
+        raise ValueError(f"invalid slug: {slug!r} (use kebab-case, e.g. m5-ui-shell)")
     return slug
 
 
-def branch_name_for(role_key: str, slug: str | None = None) -> str:
+def validate_kind(kind: str) -> str:
+    kind = kind.strip().lower()
+    if not kind:
+        raise ValueError(
+            "branch kind is required (feature | fix | hotfix | chore | refactor | docs)"
+        )
+    if not KIND_RE.fullmatch(kind):
+        raise ValueError(f"invalid kind: {kind!r}")
+    if kind not in list_kind_keys():
+        choices = ", ".join(list_kind_keys())
+        raise ValueError(f"unknown kind {kind!r}; choose: {choices}")
+    return kind
+
+
+def branch_name_for(role_key: str, kind: str, slug: str) -> str:
     role = role_from_config(role_key)
-    if slug:
-        return f"{role.branch_prefix}/{validate_slug(slug)}"
-    return f"role/{role.branch_prefix}"
+    kind_key = validate_kind(kind)
+    slug_key = validate_slug(slug)
+    return f"{role.branch_prefix}/{kind_key}/{slug_key}"
+
+
+def parse_branch(branch: str) -> tuple[str | None, str | None, str | None]:
+    """Return (role_key, kind, slug) when parseable."""
+    config = load_config()
+    roles = set(config["roles"]) - {"integration"}
+    kinds = set(config.get("branch_kinds", {}))
+
+    if branch.startswith("role/"):
+        suffix = branch.removeprefix("role/")
+        if suffix in roles:
+            return suffix, None, None
+
+    parts = branch.split("/")
+    if len(parts) == 3 and parts[0] in roles and parts[1] in kinds:
+        return parts[0], parts[1], parts[2]
+
+    if len(parts) == 2 and parts[0] in roles:
+        return parts[0], None, parts[1]
+
+    return None, None, None
 
 
 def resolve_role(branch: str) -> RoleConfig:
@@ -77,22 +133,28 @@ def resolve_role(branch: str) -> RoleConfig:
     if branch == "main":
         return role_from_config("integration")
 
-    if branch.startswith("role/"):
-        suffix = branch.removeprefix("role/")
-        if suffix in config["roles"]:
-            return role_from_config(suffix)
-
-    prefix = branch.split("/", 1)[0]
-    if prefix in config["roles"]:
-        return role_from_config(prefix)
+    role_key, _, _ = parse_branch(branch)
+    if role_key:
+        return role_from_config(role_key)
 
     raise ValueError(
         f"cannot infer role from branch {branch!r}; "
-        f"use frontend/<slug>, python/<slug>, contract/<slug>, role/<role>, or main"
+        f"use <role>/<kind>/<slug> (e.g. frontend/feature/m5-ui-shell) or main"
     )
 
 
 def render_active_rule(branch: str, role: RoleConfig) -> str:
+    _, kind, slug = parse_branch(branch)
+    kind_line = ""
+    if kind:
+        try:
+            kind_cfg = kind_from_config(kind)
+            kind_line = f"\n**类型：** {kind_cfg.label} (`{kind}`) — {kind_cfg.description}\n"
+        except KeyError:
+            kind_line = f"\n**类型：** `{kind}`\n"
+    if slug:
+        kind_line += f"\n**任务：** `{slug}`\n"
+
     allowed = "\n".join(f"- `{g}`" for g in role.allowed_globs)
     optional = (
         "\n".join(f"- `{g}`" for g in role.optional_globs)
@@ -118,7 +180,7 @@ alwaysApply: true
 # 当前分支：`{branch}`
 
 **角色：** {role.label}
-
+{kind_line}
 {role.description}
 
 ## 允许修改

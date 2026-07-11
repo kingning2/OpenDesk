@@ -14,8 +14,12 @@ const preset = {
         xl: "var(--radius-xl)",
       },
       colors: {
+        shell: "var(--color-shell)",
+        workspace: "var(--color-workspace)",
         background: "var(--color-background)",
         foreground: "var(--color-foreground)",
+        surface: "var(--color-surface)",
+        sidebar: "var(--color-sidebar)",
         card: {
           DEFAULT: "var(--color-card)",
           foreground: "var(--color-card-foreground)",

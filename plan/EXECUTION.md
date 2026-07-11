@@ -4,11 +4,11 @@ Architecture Skeleton 阶段执行索引 — **Current** 与 **Next** 为单一�
 
 ## Current
 
-_(无 — 待开始 M5 前端界面骨架)_
+_(无 — M5 前端界面骨架已完成)_
 
 ## Next
 
-[T013-ui-layout-primitives](./pending/T013-ui-layout-primitives.md)
+_(M4 业务 Feature 垂直切片待规划)_
 
 ---
 
@@ -28,11 +28,11 @@ _(无 — 待开始 M5 前端界面骨架)_
 | T010 | [sidecar-management-api](./completed/T010-sidecar-management-api.md) | P1 | completed | M2 | T004 |
 | T011 | [frontend-routes-scaffold](./completed/T011-frontend-routes-scaffold.md) | P1 | completed | M3 | T001 |
 | T012 | [agent-feature-vertical-slice](./completed/T012-agent-feature-vertical-slice.md) | P1 | completed | M3 | T003, T011 |
-| T013 | [ui-layout-primitives](./pending/T013-ui-layout-primitives.md) | P0 | pending | M5 | T011 |
-| T014 | [custom-titlebar](./pending/T014-custom-titlebar.md) | P0 | pending | M5 | T013 |
-| T015 | [app-header-bar](./pending/T015-app-header-bar.md) | P1 | pending | M5 | T013, T014 |
-| T016 | [shell-refactor-nav-registry](./pending/T016-shell-refactor-nav-registry.md) | P1 | pending | M5 | T013, T014, T015 |
-| T017 | [feature-page-scaffold](./pending/T017-feature-page-scaffold.md) | P1 | pending | M5 | T015, T016 |
+| T013 | [ui-layout-primitives](./completed/T013-ui-layout-primitives.md) | P0 | completed | M5 | T011 |
+| T014 | [custom-titlebar](./completed/T014-custom-titlebar.md) | P0 | completed | M5 | T013 |
+| T015 | [app-header-bar](./completed/T015-app-header-bar.md) | P1 | completed | M5 | T013, T014 |
+| T016 | [shell-refactor-nav-registry](./completed/T016-shell-refactor-nav-registry.md) | P1 | completed | M5 | T013, T014, T015 |
+| T017 | [feature-page-scaffold](./completed/T017-feature-page-scaffold.md) | P1 | completed | M5 | T015, T016 |
 
 ---
 
@@ -54,7 +54,7 @@ Sidecar 自愈、内核 event/task、storage port、sidecar 管理面客户端�
 
 chat / mail / knowledge 等业务 Feature 垂直切片（Contract → Rust → Python → React）。
 
-### M5 — Frontend UI Shell _(进行中)_
+### M5 — Frontend UI Shell ✅
 
 布局原语、Tauri 自定义标题栏、应用 Header、Shell 重构、Feature 占位页骨架。
 

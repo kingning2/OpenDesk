@@ -7,16 +7,16 @@
 **由分支名自动决定。** 运行 `pnpm branch:sync` 生成 [`.cursor/rules/active-branch.mdc`](.cursor/rules/active-branch.mdc)（允许/禁止路径 + 细则规则）。
 
 ```bash
-pnpm branch frontend m5-layout   # 创建并 checkout 前端任务分支
-pnpm branch                      # 交互式创建
-pnpm branch:sync                 # 切换分支后刷新规则
+pnpm branch:create frontend feature m5-ui-shell   # → frontend/feature/m5-ui-shell
+pnpm branch                                     # 交互式
+pnpm branch:sync                                # 切换分支后刷新规则
 ```
 
-| 分支前缀 | 职责 |
+| 分支模式 | 职责 |
 |----------|------|
-| `frontend/*` | React · UI · Platform · Rust · Tauri · `crates/**` |
-| `python/*` | Python sidecar · `python/**` |
-| `contract/*` | `contracts/` + codegen |
+| `frontend/<kind>/<slug>` | React · UI · Tauri · `crates/**` |
+| `python/<kind>/<slug>` | Python sidecar · `python/**` |
+| `contract/<kind>/<slug>` | `contracts/` + codegen |
 | `main` | 集成分支 |
 
 配置源：[`skills/opendesk/config/branch_roles.json`](skills/opendesk/config/branch_roles.json)

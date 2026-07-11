@@ -2,7 +2,7 @@
 |-------|-------|
 | ID | T014 |
 | Priority | P0 |
-| Status | pending |
+| Status | completed |
 | Depends on | T013 |
 | Blocks | T016 |
 | Milestone | M5 |
@@ -32,10 +32,10 @@
 
 ## Acceptance criteria
 
-- [ ] 开发模式下窗口无系统原生标题栏，可拖拽移动
-- [ ] 最小化 / 最大化（或还原）/ 关闭按钮可用
-- [ ] Feature 层无 `@tauri-apps/api` 导入（窗口 API 仅在 platform）
-- [ ] `pnpm lint:frontend` 通过
+- [x] 开发模式下窗口无系统原生标题栏，可拖拽移动
+- [x] 最小化 / 最大化（或还原）/ 关闭按钮可用
+- [x] Feature 层无 `@tauri-apps/api` 导入（窗口 API 仅在 platform）
+- [x] `pnpm lint:frontend` 通过
 
 ## Key files
 
