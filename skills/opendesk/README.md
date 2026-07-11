@@ -143,8 +143,7 @@ python skills/opendesk/scripts/generate_tree.py
 
 | 角色 | 分支 | 范围 |
 |------|------|------|
-| Developer A | `role/frontend` | `apps/desktop/src/**` · `packages/ui/**` · `packages/platform/**` |
-| Developer B | `role/rust` | `crates/**` · `apps/desktop/src-tauri/**` |
+| Developer A + B | `role/frontend` | `apps/desktop/**` · `packages/ui/**` · `packages/platform/**` · `crates/**` |
 | Developer C | `role/python` | `python/**` |
 | 共同 | — | `contracts/`（必须评审） |
 

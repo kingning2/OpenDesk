@@ -203,10 +203,11 @@ Infrastructure（storage / vector / file / runtime）
 
 | 角色 | 分支 | 职责范围 |
 |------|------|----------|
-| Developer A | `role/frontend` | `apps/desktop/src/**` · `packages/ui/**` · `packages/platform/**` |
-| Developer B | `role/rust` | `crates/**` · `apps/desktop/src-tauri/**` |
+| Developer A + B | `role/frontend` | `apps/desktop/**` · `packages/ui/**` · `packages/platform/**` · `crates/**` |
 | Developer C | `role/python` | `python/**` |
 | 共同 | — | `contracts/`（**必须评审**） |
+
+> UI 与 Tauri/Rust 同仓迭代，合并在 `role/frontend`；不再单独维护 `role/rust`。
 
 ---
 

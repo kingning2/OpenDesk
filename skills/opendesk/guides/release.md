@@ -34,7 +34,7 @@ pnpm build
 ## 分支策略
 
 - `main` — 集成分支
-- `role/frontend` · `role/rust` · `role/python` — 并行开发
+- `role/frontend`（React + Rust/Tauri）· `role/python` — 并行开发
 - Feature 完整后 PR 回 `main`
 
 ## 相关
