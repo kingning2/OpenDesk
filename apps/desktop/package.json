@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:bundle": "node ../../tooling/scripts/build-sidecar.mjs && pnpm build",
     "preview": "vite preview",
     "tauri": "tauri",
     "lint": "eslint .",

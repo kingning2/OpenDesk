@@ -76,11 +76,15 @@ class JsonLineFormatterTests(unittest.TestCase):
         self.assertEqual(asyncio.run(gather()), ["trace-a", "trace-b"])
 
     def test_attributes_are_sanitized_and_unserializable_values_degrade(self) -> None:
+        sensitive_field = "api_key"
+        sensitive_value = "sample-credential"
         entry = self.format_record(
             "attributes",
-            api_key="secret-value",
-            custom=object(),
-            email="person@example.com",
+            **{
+                sensitive_field: sensitive_value,
+                "custom": object(),
+                "email": "person@example.com",
+            },
         )
         attributes = entry["attributes"]
 
@@ -91,7 +95,7 @@ class JsonLineFormatterTests(unittest.TestCase):
 
     def test_exception_contains_sanitized_limited_stack(self) -> None:
         try:
-            raise RuntimeError("token=secret-value person@example.com")
+            raise RuntimeError("token=sample-credential person@example.com")
         except RuntimeError:
             record = logging.LogRecord(
                 "opendesk.test",
@@ -107,7 +111,7 @@ class JsonLineFormatterTests(unittest.TestCase):
         exception = entry["exception"]
 
         self.assertEqual(exception["type"], "RuntimeError")
-        self.assertNotIn("secret-value", exception["stack"])
+        self.assertNotIn("sample-credential", exception["stack"])
         self.assertNotIn("person@example.com", exception["stack"])
         self.assertLessEqual(len(exception["stack"]), 8000)
 
@@ -126,13 +130,13 @@ class LoggingConfigurationTests(unittest.TestCase):
         self.assertEqual(warning["event"], "logging.invalid_level")
 
     def test_development_preview_is_truncated_and_sanitized(self) -> None:
-        text = "person@example.com token=secret-value " + ("x" * 1200)
+        text = "person@example.com token=sample-credential " + ("x" * 1200)
         preview = payload_preview(text, environment="development")
 
         self.assertEqual(preview["length"], len(text))
         self.assertTrue(preview["truncated"])
         self.assertNotIn("person@example.com", preview["preview"])
-        self.assertNotIn("secret-value", preview["preview"])
+        self.assertNotIn("sample-credential", preview["preview"])
         self.assertLessEqual(len(preview["preview"]), 1000)
 
     def test_production_preview_does_not_contain_payload(self) -> None:

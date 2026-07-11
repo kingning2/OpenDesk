@@ -28,8 +28,11 @@ pnpm build
 
 | 产物 | 命令 |
 |------|------|
-| 桌面安装包 | `pnpm tauri build` |
+| 桌面安装包 | `pnpm tauri build`（自动执行 `build:bundle`：冻结 sidecar + 前端构建） |
+| 仅冻结 sidecar | `pnpm build:sidecar` 或 `node tooling/scripts/build-sidecar.mjs --target <triple>` |
 | Contract 文档 | 自 `contracts/openapi` 生成 |
+
+`pnpm tauri build` 前会将 PyInstaller 产物复制到 `apps/desktop/src-tauri/binaries/sidecar-<target-triple>[.exe]`，由 Tauri `externalBin` 打入安装包。开发模式 `pnpm tauri dev` 仍使用 `uv` / 源码 sidecar。
 
 ## 分支策略
 
