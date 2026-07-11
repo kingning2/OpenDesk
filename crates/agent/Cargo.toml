@@ -2,3 +2,7 @@
 name = "agent"
 version.workspace = true
 edition.workspace = true
+
+[dependencies]
+common = { path = "../common" }
+ports = { path = "../ports" }

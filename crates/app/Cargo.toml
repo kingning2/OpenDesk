@@ -6,5 +6,10 @@ edition.workspace = true
 [dependencies]
 tauri = { workspace = true }
 tauri-plugin-opener = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
+common = { path = "../common" }
+adapter = { path = "../adapter" }
+agent = { path = "../agent" }
+runtime = { path = "../runtime" }
+kernel = { path = "../kernel" }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
