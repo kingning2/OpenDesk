@@ -2,3 +2,8 @@
 name = "ports"
 version.workspace = true
 edition.workspace = true
+
+[dependencies]
+async-trait = { workspace = true }
+common = { path = "../common" }
+thiserror = "2"
