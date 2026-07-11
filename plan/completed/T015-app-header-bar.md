@@ -2,7 +2,7 @@
 |-------|-------|
 | ID | T015 |
 | Priority | P1 |
-| Status | pending |
+| Status | completed |
 | Depends on | T013, T014 |
 | Blocks | T016, T017 |
 | Milestone | M5 |
@@ -29,11 +29,11 @@
 
 ## Acceptance criteria
 
-- [ ] 切换路由时 Header 标题同步更新
-- [ ] 主题切换可用且持久化（next-themes 默认行为）
-- [ ] Header 与 TitleBar 视觉分层清晰（TitleBar 窗口级，AppHeader 页面级）
-- [ ] Feature 层无裸 Tailwind，通过 `@desk/ui` 组合
-- [ ] `pnpm lint:frontend` 通过
+- [x] 切换路由时 Header 标题同步更新
+- [x] 主题切换可用且持久化（next-themes 默认行为）
+- [x] Header 与 TitleBar 视觉分层清晰（TitleBar 窗口级，AppHeader 页面级）
+- [x] Feature 层无裸 Tailwind，通过 `@desk/ui` 组合
+- [x] `pnpm lint:frontend` 通过
 
 ## Key files
 

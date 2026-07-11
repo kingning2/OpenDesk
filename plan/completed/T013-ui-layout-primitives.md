@@ -2,7 +2,7 @@
 |-------|-------|
 | ID | T013 |
 | Priority | P0 |
-| Status | pending |
+| Status | completed |
 | Depends on | T011 |
 | Blocks | T014, T015, T016 |
 | Milestone | M5 |
@@ -30,10 +30,10 @@
 
 ## Acceptance criteria
 
-- [ ] 五个布局组件可在 Storybook 式占位页或 shell 中组合渲染
-- [ ] Feature 层可通过 `@desk/ui` 导入，无需裸 Tailwind 原子类
-- [ ] 使用 `tokens/` 中的 glass / radius / typography 令牌
-- [ ] `pnpm lint:frontend` 通过
+- [x] 五个布局组件可在 Storybook 式占位页或 shell 中组合渲染
+- [x] Feature 层可通过 `@desk/ui` 导入，无需裸 Tailwind 原子类
+- [x] 使用 `tokens/` 中的 glass / radius / typography 令牌
+- [x] `pnpm lint:frontend` 通过
 
 ## Key files
 
