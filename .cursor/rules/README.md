@@ -8,9 +8,10 @@
 |------|------|------|
 | [`master.md`](master.md) | 全仓库 | **基线规则，所有分支必须遵守** |
 | [`frontend.md`](frontend.md) | 前端 | React Compiler · @desk/ui · 设计系统 |
+| [`rust.md`](rust.md) | Rust / Tauri | crates · IPC · 六边形分层 |
 | [`../../skills/opendesk/`](../../skills/opendesk/) | 全仓库 | AI 开发知识库 |
 
-> `rust.md` · `python.md` 待各角色分支补充；前端细则见 `frontend.md` 与 `skills/opendesk/guides/ui-design-system.md`。
+> `python.md` 待 `role/python` 分支补充；前端细则见 `frontend.md` 与 `skills/opendesk/guides/ui-design-system.md`。
 
 ## 规则目标
 

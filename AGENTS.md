@@ -1,6 +1,6 @@
 # OpenDesk 分支说明（role/frontend）
 
-本分支面向 **Developer A（React/TS/UI）**。
+本分支面向 **Developer A + B（React/TS/UI + Rust/Tauri/IPC）** — 桌面端前后端一体开发。
 
 ## 当前阶段
 
@@ -24,15 +24,17 @@ AI 开发知识库：[`skills/opendesk/`](skills/opendesk/)（架构 · recipes 
 
 | 分支 | 角色 | 职责 |
 |------|------|------|
-| `role/frontend` | Developer A | React · `packages/ui` · `packages/platform` |
-| `role/rust` | Developer B | Rust · Tauri · `crates/**` |
+| `role/frontend` | Developer A + B | React · `packages/ui` · `packages/platform` · Rust · Tauri · `crates/**` |
 | `role/python` | Developer C | Python AI Runtime · `python/**` |
+
+> UI 改动常伴随 Tauri 配置与 IPC，因此前端与 Rust 合并在本分支，不再单独维护 `role/rust`。
 
 ## 规范入口
 
 - [`.cursor/rules/master.md`](.cursor/rules/master.md) — 全仓库基线规则（**所有分支必须遵守**）
 - [`.cursor/rules/README.md`](.cursor/rules/README.md) — 规则目录说明
-- [`.cursor/rules/frontend.md`](.cursor/rules/frontend.md) — 前端角色规则
+- [`.cursor/rules/frontend.md`](.cursor/rules/frontend.md) — 前端规则
+- [`.cursor/rules/rust.md`](.cursor/rules/rust.md) — Rust / Tauri 规则
 - [`contracts/`](contracts/) — 三端共享契约（DTO/IPC/HTTP/Event/Error），任何 Breaking Change 必须先改契约
 
 ## Code Review 清单
