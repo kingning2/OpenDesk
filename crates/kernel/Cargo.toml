@@ -2,3 +2,11 @@
 name = "kernel"
 version.workspace = true
 edition.workspace = true
+
+[dependencies]
+thiserror = "2"
+tokio = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "macros", "time", "test-util"] }

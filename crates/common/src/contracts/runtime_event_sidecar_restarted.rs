@@ -1,0 +1,10 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RuntimeEventSidecarRestarted {
+    pub event_id: String,
+    pub occurred_at: String,
+    pub port: i64,
+    pub attempt: i64,
+    pub reason: Option<String>,
+}

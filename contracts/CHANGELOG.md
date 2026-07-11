@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.1.3
+
+- Sidecar 崩溃/health 失败自动重启 + `runtime.sidecar.restarted` 事件
+- `InMemoryEventBus` / `InMemoryTaskScheduler` 可用骨架
+- `RecordStore` CRUD port + 内存占位实现
+- Sidecar 管理面 `/stats` `/tasks/active` `/metrics` `/debug/dump`
+- react-router 路由 + agent Feature 垂直切片模板
+
+## 0.1.2
+
+- Rust 接管 Python sidecar 生命周期（启动 / 健康检查 / 停止）
+- 新增 `kernel::event` / `kernel::task` 与 `ports::RecordStore` 骨架
+
+## 0.1.1
+
+- 新增 `agent/ipc/ping` Tauri IPC 契约
+- `sync_contracts.py` 生成三端 DTO 类型
+- 打通 `agent/ping` 端到端骨架（React → Rust → Python sidecar）
+
 ## 0.1.0
 
 - 初始化契约目录结构

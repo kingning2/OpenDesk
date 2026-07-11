@@ -1,1 +1,3 @@
-//! common crate scaffold.
+//! Shared DTOs and contract types.
+
+pub mod contracts;

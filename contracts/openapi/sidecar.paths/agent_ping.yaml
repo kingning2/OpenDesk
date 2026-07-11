@@ -6,13 +6,12 @@
     operationId: agent_ping
     summary: "agent ping (Rust → Python)"
     tags: [agent]
-
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '../../schema/v1/agent/sidecar/ping.request.schema.json'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../schema/v1/agent/sidecar/ping.request.schema.json'
     responses:
       "200":
         description: Success

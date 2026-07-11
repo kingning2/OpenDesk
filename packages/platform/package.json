@@ -5,6 +5,7 @@
   "type": "module",
   "main": "./src/index.ts",
   "dependencies": {
+    "@desk/contracts": "workspace:*",
     "@tauri-apps/api": "^2"
   }
 }
