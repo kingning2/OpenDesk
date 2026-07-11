@@ -6,6 +6,11 @@ dependencies = [
   "gateway",
 ]
 
+[dependency-groups]
+dev = [
+  "pyinstaller>=6.13",
+]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
