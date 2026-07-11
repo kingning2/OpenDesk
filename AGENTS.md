@@ -1,10 +1,25 @@
-# OpenDesk 分支说明（role/frontend）
+# OpenDesk
 
-本分支面向 **Developer A + B（React/TS/UI + Rust/Tauri/IPC）** — 桌面端前后端一体开发。
+企业 AI 客服桌面平台 — Architecture Skeleton 阶段。
 
-## 当前阶段
+## 当前分支职责
 
-**Architecture Skeleton** — 只允许目录、crate、trait、DTO、Contract、Interface、Mock；**禁止**业务逻辑、Demo、绕架构。
+**由分支名自动决定。** 运行 `pnpm branch:sync` 生成 [`.cursor/rules/active-branch.mdc`](.cursor/rules/active-branch.mdc)（允许/禁止路径 + 细则规则）。
+
+```bash
+pnpm branch frontend m5-layout   # 创建并 checkout 前端任务分支
+pnpm branch                      # 交互式创建
+pnpm branch:sync                 # 切换分支后刷新规则
+```
+
+| 分支前缀 | 职责 |
+|----------|------|
+| `frontend/*` | React · UI · Platform · Rust · Tauri · `crates/**` |
+| `python/*` | Python sidecar · `python/**` |
+| `contract/*` | `contracts/` + codegen |
+| `main` | 集成分支 |
+
+配置源：[`skills/opendesk/config/branch_roles.json`](skills/opendesk/config/branch_roles.json)
 
 ## 架构约束（硬约束）
 
@@ -18,29 +33,19 @@ React（展示）  →  Tauri IPC  →  Rust（协调者）  →  Python（AI Ru
 
 完整约束：[`.cursor/rules/master.md`](.cursor/rules/master.md)
 
-AI 开发知识库：[`skills/opendesk/`](skills/opendesk/)（架构 · recipes · templates · scripts）
-
-## 分支
-
-| 分支 | 角色 | 职责 |
-|------|------|------|
-| `role/frontend` | Developer A + B | React · `packages/ui` · `packages/platform` · Rust · Tauri · `crates/**` |
-| `role/python` | Developer C | Python AI Runtime · `python/**` |
-
-> UI 改动常伴随 Tauri 配置与 IPC，因此前端与 Rust 合并在本分支，不再单独维护 `role/rust`。
+AI 开发知识库：[`skills/opendesk/`](skills/opendesk/)
 
 ## 规范入口
 
-- [`.cursor/rules/master.md`](.cursor/rules/master.md) — 全仓库基线规则（**所有分支必须遵守**）
-- [`.cursor/rules/README.md`](.cursor/rules/README.md) — 规则目录说明
-- [`.cursor/rules/frontend.md`](.cursor/rules/frontend.md) — 前端规则
-- [`.cursor/rules/rust.md`](.cursor/rules/rust.md) — Rust / Tauri 规则
-- [`contracts/`](contracts/) — 三端共享契约（DTO/IPC/HTTP/Event/Error），任何 Breaking Change 必须先改契约
+- [`.cursor/rules/master.md`](.cursor/rules/master.md) — 全仓库基线
+- [`.cursor/rules/branch-workflow.mdc`](.cursor/rules/branch-workflow.mdc) — 分支命令与工作流
+- [`.cursor/rules/active-branch.mdc`](.cursor/rules/active-branch.mdc) — **当前分支** scope（生成文件）
+- [`.cursor/rules/frontend.md`](.cursor/rules/frontend.md) · [`.cursor/rules/rust.md`](.cursor/rules/rust.md) · [`.cursor/rules/python.md`](.cursor/rules/python.md)
 
 ## Code Review 清单
 
+- [ ] 当前分支 scope 内改动？（见 `active-branch.mdc`）
 - [ ] 是否跨层？是否跨 Feature？
 - [ ] 是否先改了 Contract？
 - [ ] 是否违反六边形架构？
-- [ ] 是否符合角色职责？
 - [ ] `pnpm lint` 是否可通过？

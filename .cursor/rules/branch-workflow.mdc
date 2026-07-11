@@ -1,0 +1,43 @@
+---
+description: Branch workflow — create role branches and sync active-branch rules from git branch name
+alwaysApply: true
+---
+
+# 分支工作流
+
+OpenDesk 用 **分支名前缀** 决定当前可改路径与细则规则。
+
+## 创建分支
+
+```bash
+pnpm branch frontend m5-layout    # → frontend/m5-layout
+pnpm branch python sidecar-log   # → python/sidecar-log
+pnpm branch contract agent-v2    # → contract/agent-v2
+pnpm branch                      # 交互式
+```
+
+## 切换分支后同步规则
+
+```bash
+pnpm branch:sync
+```
+
+生成 [`.cursor/rules/active-branch.mdc`](active-branch.mdc)（按当前 `git branch --show-current`）。
+
+## 分支命名
+
+| 模式 | 角色 | 示例 |
+|------|------|------|
+| `frontend/<slug>` | 桌面端 React + Rust/Tauri | `frontend/m5-layout` |
+| `python/<slug>` | Python Runtime | `python/sidecar-logging` |
+| `contract/<slug>` | 契约 | `contract/agent-v2` |
+| `role/<role>` | 长期角色分支（legacy） | `role/frontend` |
+| `main` | 集成 | — |
+
+角色定义：[`skills/opendesk/config/branch_roles.json`](../../skills/opendesk/config/branch_roles.json)
+
+## AI 助手
+
+1. 任务开始前确认当前分支；若无 `active-branch.mdc` 或分支刚切换，运行 `pnpm branch:sync`
+2. **只改** `active-branch.mdc` 中「允许修改」路径；禁止路径不要顺手改
+3. 跨端字段变更：在 `contract/*` 分支或先改 `contracts/` 再 codegen

@@ -7,11 +7,14 @@
 | 文件 | 范围 | 说明 |
 |------|------|------|
 | [`master.md`](master.md) | 全仓库 | **基线规则，所有分支必须遵守** |
+| [`branch-workflow.mdc`](branch-workflow.mdc) | 全仓库 | 分支创建命令 · 按分支名约束 scope |
+| [`active-branch.mdc`](active-branch.mdc) | 全仓库 | **当前分支**允许/禁止路径（`pnpm branch:sync` 生成） |
 | [`frontend.md`](frontend.md) | 前端 | React Compiler · @desk/ui · 设计系统 |
 | [`rust.md`](rust.md) | Rust / Tauri | crates · IPC · 六边形分层 |
+| [`python.md`](python.md) | Python | sidecar · packages |
 | [`../../skills/opendesk/`](../../skills/opendesk/) | 全仓库 | AI 开发知识库 |
 
-> `python.md` 待 `role/python` 分支补充；前端细则见 `frontend.md` 与 `skills/opendesk/guides/ui-design-system.md`。
+> `active-branch.mdc` 由 `pnpm branch:sync` 本地生成（已 gitignore）；切换分支后请同步。
 
 ## 规则目标
 

@@ -141,11 +141,16 @@ python skills/opendesk/scripts/generate_tree.py
 
 ## 三人协作边界
 
-| 角色 | 分支 | 范围 |
-|------|------|------|
-| Developer A + B | `role/frontend` | `apps/desktop/**` · `packages/ui/**` · `packages/platform/**` · `crates/**` |
-| Developer C | `role/python` | `python/**` |
-| 共同 | — | `contracts/`（必须评审） |
+按 **分支名前缀** 约束 scope（见 `pnpm branch:sync` → `active-branch.mdc`）。
+
+| 分支前缀 | 范围 |
+|----------|------|
+| `frontend/*` | `apps/desktop/**` · `packages/ui/**` · `packages/platform/**` · `crates/**` |
+| `python/*` | `python/**` |
+| `contract/*` | `contracts/**` |
+| 共同 | `contracts/` 变更必须评审 |
+
+创建分支：`pnpm branch` · 配置：[`config/branch_roles.json`](config/branch_roles.json)
 
 ---
 
