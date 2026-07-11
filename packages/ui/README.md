@@ -37,6 +37,15 @@ OpenDesk 设计系统与 UI 组件库。所有视觉与交互原语**必须**从
 
 ## 使用
 
+桌面端 `globals.css` 必须扫描本包源码，否则布局/组件类不会进入最终 CSS：
+
+```css
+@import "tailwindcss";
+@import "@desk/ui/tokens";
+
+@source "../../../../packages/ui/src/**/*.{ts,tsx}";
+```
+
 ```tsx
 import { Card, ThemeProvider, Toaster } from "@desk/ui";
 

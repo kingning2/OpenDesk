@@ -8,7 +8,8 @@
     ".": "./src/index.ts",
     "./tokens": "./src/tokens/index.css",
     "./tokens/motion": "./src/tokens/motion.ts",
-    "./tailwind": "./tailwind.preset.ts"
+    "./tailwind": "./tailwind.preset.ts",
+    "./icons": "./src/icons/index.ts"
   },
   "peerDependencies": {
     "react": "^19.0.0",

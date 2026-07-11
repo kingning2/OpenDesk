@@ -2,7 +2,7 @@
 |-------|-------|
 | ID | T017 |
 | Priority | P1 |
-| Status | pending |
+| Status | completed |
 | Depends on | T015, T016 |
 | Blocks | — |
 | Milestone | M5 |
@@ -34,10 +34,10 @@
 
 ## Acceptance criteria
 
-- [ ] 侧栏可导航至 chat / mail / knowledge 占位页
-- [ ] Agent 页使用与其他 Feature 一致的 `PageScaffold`
-- [ ] 占位 Feature 目录结构可作为 `add-feature.md` 的前端复制模板
-- [ ] `pnpm lint:frontend` 通过
+- [x] 侧栏可导航至 chat / mail / knowledge 占位页
+- [x] Agent 页使用与其他 Feature 一致的 `PageScaffold`
+- [x] 占位 Feature 目录结构可作为 `add-feature.md` 的前端复制模板
+- [x] `pnpm lint:frontend` 通过
 
 ## Key files
 

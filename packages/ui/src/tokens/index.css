@@ -1,15 +1,30 @@
 /**
- * OpenDesk design tokens — Apple-inspired glass, dynamic color, typography.
+ * OpenDesk design tokens — semantic colors for Tailwind utilities.
  * Import once in apps/desktop: import "@desk/ui/tokens"
+ *
+ * Roles:
+ * - shell      → title bar, sidebar, workspace gutter (unified chrome)
+ * - workspace  → elevated main panel card
+ * - card       → in-page content cards
  */
 
 @theme {
-  /* Dynamic Color */
-  --color-background: oklch(0.98 0.005 250);
+  /* Chrome */
+  --color-shell: oklch(0.955 0.008 250);
+  --color-sidebar: var(--color-shell);
+  --color-background: var(--color-shell);
+
+  /* Workspace */
+  --color-workspace: oklch(0.99 0.003 250);
+  --color-surface: var(--color-workspace);
+
+  /* Content */
   --color-foreground: oklch(0.18 0.02 250);
-  --color-card: oklch(1 0 0 / 0.72);
+  --color-card: oklch(1 0 0 / 0.88);
   --color-card-foreground: oklch(0.2 0.02 250);
-  --color-primary: oklch(0.55 0.2 250);
+
+  /* Accent */
+  --color-primary: oklch(0.55 0.2 280);
   --color-primary-foreground: oklch(0.99 0 0);
   --color-muted: oklch(0.94 0.01 250);
   --color-muted-foreground: oklch(0.45 0.02 250);
@@ -24,7 +39,7 @@
   /* Glass */
   --glass-bg: oklch(1 0 0 / 0.55);
   --glass-border: oklch(1 0 0 / 0.22);
-  --glass-shadow: 0 8px 32px oklch(0 0 0 / 0.1);
+  --glass-shadow: 0 8px 32px oklch(0 0 0 / 0.08);
 
   /* Blur / Backdrop */
   --blur-glass: 24px;
@@ -46,16 +61,22 @@
 }
 
 .dark {
-  --color-background: oklch(0.14 0.02 250);
-  --color-foreground: oklch(0.96 0.01 250);
-  --color-card: oklch(0.22 0.02 250 / 0.65);
-  --color-card-foreground: oklch(0.96 0.01 250);
-  --color-primary: oklch(0.68 0.18 250);
-  --color-muted: oklch(0.22 0.02 250);
-  --color-muted-foreground: oklch(0.65 0.02 250);
-  --color-border: oklch(1 0 0 / 0.1);
-  --glass-bg: oklch(0.25 0.02 250 / 0.55);
-  --glass-border: oklch(1 0 0 / 0.12);
+  --color-shell: oklch(0.14 0.015 280);
+  --color-workspace: oklch(0.19 0.015 280);
+  --color-sidebar: var(--color-shell);
+  --color-background: var(--color-shell);
+  --color-surface: var(--color-workspace);
+
+  --color-foreground: oklch(0.93 0.01 280);
+  --color-card: oklch(0.22 0.02 280 / 0.82);
+  --color-card-foreground: oklch(0.93 0.01 280);
+  --color-primary: oklch(0.62 0.19 285);
+  --color-muted: oklch(0.24 0.02 280);
+  --color-muted-foreground: oklch(0.62 0.02 280);
+  --color-border: oklch(1 0 0 / 0.08);
+
+  --glass-bg: oklch(0.22 0.02 280 / 0.55);
+  --glass-border: oklch(1 0 0 / 0.1);
   --glass-shadow: 0 8px 32px oklch(0 0 0 / 0.35);
   --backdrop-dim: oklch(0 0 0 / 0.55);
 }
