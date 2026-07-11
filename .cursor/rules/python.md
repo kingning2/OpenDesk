@@ -1,12 +1,20 @@
-# Developer C（Python）规则
+# Python Rules（Developer C）
 
 适用范围：`python/**`
 
 ## 职责边界
 
-- Python 是 **AI Runtime**（gateway → queue → worker → provider）
-- Python 不知道 React；不直接调用 Tauri IPC
-- Python 不直连 SQLite/关系库（需要数据由 Rust 注入上下文或通过 Rust 查询后传入）
+- Python 是 **AI Runtime / Sidecar**（gateway → queue → worker → provider），只被 Rust `runtime` 调用
+- **禁止**直连 SQLite/关系库、React、Tauri；业务数据由 Rust 注入上下文
+- **禁止** import `apps/`、`crates/`、`packages/` 源码
+
+## 目录
+
+```
+python/
+├── sidecar/           # HTTP 服务（Rust 管理生命周期）
+└── packages/          # 共享 Python 包
+```
 
 ## 运行时分层（必须）
 
@@ -23,6 +31,15 @@
 
 ## 契约与兼容
 
-- Request/Response/Events/Errors 必须来源 `contracts/`（codegen 产物）
-- 字段新增以可选为主；破坏性变更必须走 `schema/v2` + 迁移说明
+- Request/Response/Events/Errors 必须来自 `contracts/` codegen（`python/packages/contracts`）
+- 字段新增以可选为主；Breaking Change 先改 `contracts/schema/v2` 并提供迁移说明，再运行 `sync_contracts.py`
 
+## 日志
+
+- 结构化 JSON 日志；`trace_id` 由 Rust 传入或从 header 解析
+- 禁止 `print()` 调试残留
+
+## 相关
+
+- `skills/opendesk/guides/python.md`
+- `skills/opendesk/recipes/add-python-package.md`

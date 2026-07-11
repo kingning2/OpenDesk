@@ -34,8 +34,9 @@ pnpm build
 ## 分支策略
 
 - `main` — 集成分支
-- `role/frontend` · `role/rust` · `role/python` — 并行开发
-- Feature 完整后 PR 回 `main`
+- `frontend/<slug>` · `python/<slug>` · `contract/<slug>` — 任务分支（`pnpm branch:create <role> <slug>`）
+- `role/<role>` — 长期角色分支（legacy）
+- Feature 完成后 PR 回 `main`；切换分支后运行 `pnpm branch:sync`
 
 ## 相关
 

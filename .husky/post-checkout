@@ -1,0 +1,2 @@
+#!/usr/bin/env sh
+python skills/opendesk/scripts/sync_branch_rules.py -q 2>/dev/null || true

@@ -199,14 +199,21 @@ Infrastructure（storage / vector / file / runtime）
 
 ---
 
-## 8) 三人协作边界（强约束）
+## 8) 分支与协作边界（强约束）
 
-| 角色 | 分支 | 职责范围 |
-|------|------|----------|
-| Developer A | `role/frontend` | `apps/desktop/src/**` · `packages/ui/**` · `packages/platform/**` |
-| Developer B | `role/rust` | `crates/**` · `apps/desktop/src-tauri/**` |
-| Developer C | `role/python` | `python/**` |
-| 共同 | — | `contracts/`（**必须评审**） |
+分支名前缀决定可改路径；运行 `pnpm branch:sync` 生成 `.cursor/rules/active-branch.mdc`。
+
+| 分支前缀 | 职责 |
+|----------|------|
+| `frontend/*` | `apps/desktop/**` · `packages/ui/**` · `packages/platform/**` · `crates/**` |
+| `python/*` | `python/**` |
+| `contract/*` | `contracts/**` + codegen |
+| `main` | 集成（全仓，合并前全量 lint） |
+| `role/<role>` | 长期角色分支（等同 `frontend` / `python`） |
+
+创建分支：`pnpm branch`（交互）或 `pnpm branch:create frontend <slug>`
+
+配置：[`skills/opendesk/config/branch_roles.json`](../../skills/opendesk/config/branch_roles.json)
 
 ---
 
