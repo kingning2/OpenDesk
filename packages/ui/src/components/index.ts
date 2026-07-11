@@ -2,3 +2,6 @@ export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, 
 export type { CardProps } from "./card";
 export { Toaster, toast } from "./sonner";
 export { WorkflowEditor } from "./workflow-editor";
+export { ThemeToggle } from "./theme-toggle";
+export type { ThemeToggleProps } from "./theme-toggle";
+export * from "./layout";
