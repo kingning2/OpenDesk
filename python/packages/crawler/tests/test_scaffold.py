@@ -114,12 +114,17 @@ def test_service_start_status_and_logs() -> None:
 
     assert status["status"] == "completed"
     assert status["platform"] == "youtube_mock"
+    assert status.get("message")
+    assert "keyword_stats_json" in status
     logs_resp = service.logs({"job_id": job_id})
     assert logs_resp["ok"] is True
     import json
 
     rows = json.loads(logs_resp["logs_json"])
     assert any(row["phase"] == "job_completed" for row in rows)
+    stats = json.loads(status["keyword_stats_json"])
+    assert isinstance(stats, list)
+    assert len(stats) >= 1
 
 
 def test_youtube_requires_api_key_on_start() -> None:

@@ -113,7 +113,12 @@ class YoutubeMockAdapter:
                 },
             )
 
-        def emit_progress(keyword: str) -> None:
+        def emit_progress(
+            keyword: str,
+            *,
+            keyword_scanned: int,
+            keyword_accepted: int,
+        ) -> None:
             emitter.emit(
                 "crawler.job.progress",
                 {
@@ -124,6 +129,8 @@ class YoutubeMockAdapter:
                     "current_keyword": keyword,
                     "scanned_count": scanned,
                     "accepted_count": accepted,
+                    "keyword_scanned": keyword_scanned,
+                    "keyword_accepted": keyword_accepted,
                     "quota_used": calculate_expected_quota(
                         search_pages=search_pages,
                         channel_list_calls=channel_list_calls,
@@ -218,17 +225,11 @@ class YoutubeMockAdapter:
                     f"accepted={kept} scanned_batch={len(candidates)}",
                     keyword=keyword,
                 )
-                quota_used = calculate_expected_quota(
-                    search_pages=search_pages,
-                    channel_list_calls=channel_list_calls,
+                emit_progress(
+                    keyword,
+                    keyword_scanned=len(candidates),
+                    keyword_accepted=kept,
                 )
-                emit_log(
-                    "quota",
-                    f"quota_used={quota_used}",
-                    keyword=keyword,
-                    detail=f'{{"quota_used":{quota_used}}}',
-                )
-                emit_progress(keyword)
                 emit_log("keyword_done", f"keyword done accepted_total={accepted}", keyword=keyword)
 
                 if accepted >= config.max_total:

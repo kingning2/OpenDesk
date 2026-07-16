@@ -120,7 +120,12 @@ class YoutubeApiAdapter:
                 },
             )
 
-        def emit_progress(keyword: str) -> None:
+        def emit_progress(
+            keyword: str,
+            *,
+            keyword_scanned: int,
+            keyword_accepted: int,
+        ) -> None:
             emitter.emit(
                 "crawler.job.progress",
                 {
@@ -131,6 +136,8 @@ class YoutubeApiAdapter:
                     "current_keyword": keyword,
                     "scanned_count": scanned,
                     "accepted_count": accepted,
+                    "keyword_scanned": keyword_scanned,
+                    "keyword_accepted": keyword_accepted,
                     "quota_used": calculate_expected_quota(
                         search_pages=search_pages,
                         channel_list_calls=channel_list_calls,
@@ -178,6 +185,13 @@ class YoutubeApiAdapter:
 
                     emit_log("keyword_begin", f"begin keyword={keyword}", keyword=keyword)
                     page_token: str | None = None
+                    keyword_scanned = 0
+                    keyword_accepted = 0
+                    emit_progress(
+                        keyword,
+                        keyword_scanned=keyword_scanned,
+                        keyword_accepted=keyword_accepted,
+                    )
 
                     while accepted < config.max_total:
                         if should_cancel():
@@ -202,15 +216,13 @@ class YoutubeApiAdapter:
                         )
 
                         items = search_body.get("items") or []
-                        channel_ids = [
-                            str(
-                                item.get("snippet", {}).get("channelId")
-                                or item.get("id", {}).get("channelId")
-                                or ""
-                            )
-                            for item in items
-                        ]
-                        channel_ids = [cid for cid in channel_ids if cid]
+                        channel_ids: list[str] = []
+                        for item in items:
+                            snippet = item.get("snippet") or {}
+                            id_obj = item.get("id") or {}
+                            cid = str(snippet.get("channelId") or id_obj.get("channelId") or "")
+                            if cid:
+                                channel_ids.append(cid)
                         if not channel_ids:
                             page_token = search_body.get("nextPageToken")
                             if not page_token:
@@ -228,6 +240,7 @@ class YoutubeApiAdapter:
                         )
                         channel_items = channels_body.get("items") or []
                         scanned += len(channel_items)
+                        keyword_scanned += len(channel_items)
                         emit_log(
                             "channel_batch",
                             f"channels.list size={len(channel_items)}",
@@ -245,12 +258,6 @@ class YoutubeApiAdapter:
                             hit = self._to_hit(channel)
                             country = hit.country.upper()
                             if country and country in exclude:
-                                emit_log(
-                                    "filter",
-                                    f"exclude channel={hit.channel_id} country={hit.country}",
-                                    keyword=keyword,
-                                    level="DEBUG",
-                                )
                                 continue
 
                             uploads_id = (
@@ -268,35 +275,16 @@ class YoutubeApiAdapter:
                                 playlist_item_pages += pages
 
                             if year_videos < config.min_year_video_count:
-                                emit_log(
-                                    "filter",
-                                    (
-                                        f"drop inactive channel={hit.channel_id} "
-                                        f"year_videos={year_videos}"
-                                    ),
-                                    keyword=keyword,
-                                    level="DEBUG",
-                                )
                                 continue
 
                             accepted += 1
-                            emit_log(
-                                "filter",
-                                f"accept channel={hit.channel_id} title={hit.title}",
-                                keyword=keyword,
-                            )
+                            keyword_accepted += 1
 
-                        quota_used = calculate_expected_quota(
-                            search_pages=search_pages,
-                            channel_list_calls=channel_list_calls,
-                            playlist_item_pages=playlist_item_pages,
+                        emit_progress(
+                            keyword,
+                            keyword_scanned=keyword_scanned,
+                            keyword_accepted=keyword_accepted,
                         )
-                        emit_log(
-                            "quota",
-                            f"quota_used={quota_used}",
-                            keyword=keyword,
-                        )
-                        emit_progress(keyword)
 
                         page_token = search_body.get("nextPageToken")
                         if not page_token:
@@ -310,6 +298,11 @@ class YoutubeApiAdapter:
                         "keyword_done",
                         f"keyword done accepted_total={accepted}",
                         keyword=keyword,
+                    )
+                    emit_progress(
+                        keyword,
+                        keyword_scanned=keyword_scanned,
+                        keyword_accepted=keyword_accepted,
                     )
                     if stop_reason == "max_total_reached":
                         break
