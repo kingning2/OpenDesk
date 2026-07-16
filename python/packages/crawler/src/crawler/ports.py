@@ -23,6 +23,7 @@ class JobConfig:
         min_year_video_count: Min videos in ``year``.
         exclude_countries: Country codes/names to exclude.
         batch_id: Optional batch identifier.
+        api_key: Platform API key from desktop UI (never log).
     """
 
     platform: str
@@ -33,6 +34,7 @@ class JobConfig:
     min_year_video_count: int = 10
     exclude_countries: list[str] = field(default_factory=list)
     batch_id: str = ""
+    api_key: str = ""
 
 
 @dataclass

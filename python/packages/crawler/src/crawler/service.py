@@ -60,6 +60,7 @@ def parse_job_config(payload: dict[str, Any]) -> JobConfig:
         min_year_video_count=int(payload.get("min_year_video_count") or 10),
         exclude_countries=_split_csv(str(payload.get("exclude_countries") or "")),
         batch_id=str(payload.get("batch_id") or ""),
+        api_key=str(payload.get("api_key") or ""),
     )
 
 
@@ -112,8 +113,8 @@ class CrawlJobService:
             ``{ok, job_id, trace_id?}``.
         """
         config = parse_job_config(payload)
-        # Resolve adapter early to fail fast on unknown platform.
-        get_adapter(config.platform)
+        # Resolve adapter early to fail fast on unknown platform / missing key.
+        get_adapter(config.platform, api_key=config.api_key)
         job_id = str(uuid.uuid4())
         state = JobState(
             job_id=job_id,
@@ -219,7 +220,7 @@ class CrawlJobService:
             emitter = state.emitter
 
         try:
-            adapter = get_adapter(config.platform)
+            adapter = get_adapter(config.platform, api_key=config.api_key)
             summary = adapter.run(
                 job_id,
                 config,

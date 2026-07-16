@@ -1,4 +1,4 @@
-"""Crawler package tests — mock phases, quota, process logs.
+"""Crawler package tests — mock phases, quota, api_key gate.
 
 Author: Xiaoman
 Created: 2026-07-16
@@ -9,6 +9,8 @@ from __future__ import annotations
 import time
 
 from crawler.events import InMemoryCrawlEventEmitter
+from crawler.helpers import extract_email
+from crawler.platforms.youtube_api import YoutubeApiAdapter
 from crawler.platforms.youtube_mock import YoutubeMockAdapter
 from crawler.ports import JobConfig
 from crawler.quota import calculate_expected_quota, get_endpoint_cost
@@ -27,6 +29,27 @@ def test_quota_costs_match_kol_nest() -> None:
     assert get_endpoint_cost("/search") == 100
     assert get_endpoint_cost("/channels") == 1
     assert calculate_expected_quota(search_pages=2, channel_list_calls=3) == 203
+
+
+def test_extract_email_normalizes_obfuscation() -> None:
+    """Email extractor understands common obfuscation."""
+    assert extract_email("mail me at foo [at] bar [dot] com please") == "foo@bar.com"
+
+
+def test_youtube_api_requires_api_key() -> None:
+    """Live adapter refuses empty api_key."""
+    try:
+        YoutubeApiAdapter(api_key="")
+        raised = False
+    except ValueError:
+        raised = True
+    assert raised
+
+
+def test_youtube_api_detects_quota_exceeded() -> None:
+    """Quota detector matches YouTube error payloads."""
+    assert YoutubeApiAdapter._is_quota_exceeded('{"error":{"errors":[{"reason":"quotaExceeded"}]}}')
+    assert not YoutubeApiAdapter._is_quota_exceeded('{"error":{"message":"notFound"}}')
 
 
 def test_youtube_mock_emits_ordered_process_logs() -> None:
@@ -71,7 +94,7 @@ def test_service_start_status_and_logs() -> None:
     service = CrawlJobService()
     started = service.start(
         {
-            "platform": "youtube",
+            "platform": "youtube_mock",
             "keywords": "skincare",
             "rate_limit_ms": 0,
             "max_total": 5,
@@ -90,9 +113,20 @@ def test_service_start_status_and_logs() -> None:
         status = service.status({"job_id": job_id})
 
     assert status["status"] == "completed"
-    assert status["platform"] == "youtube"
+    assert status["platform"] == "youtube_mock"
     logs = service.logs(job_id)
     assert any(row["phase"] == "job_completed" for row in logs)
+
+
+def test_youtube_requires_api_key_on_start() -> None:
+    """Live youtube platform requires api_key from UI."""
+    service = CrawlJobService()
+    try:
+        service.start({"platform": "youtube", "keywords": "a"})
+        raised = False
+    except ValueError:
+        raised = True
+    assert raised
 
 
 def test_unsupported_platform_raises() -> None:
