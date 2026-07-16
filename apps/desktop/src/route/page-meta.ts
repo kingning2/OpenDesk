@@ -12,6 +12,10 @@ const pageMetaByPath: Record<string, PageMeta> = {
     title: "Agent",
     description: "Sidecar connectivity vertical slice",
   },
+  "/features/crawler": {
+    title: "Crawler",
+    description: "YouTube channel crawl with process logs",
+  },
   "/features/chat": {
     title: "Chat",
     description: "Customer conversation workspace",
