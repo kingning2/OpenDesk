@@ -527,11 +527,14 @@ fn verifier_search_dirs() -> Vec<PathBuf> {
 /// 按编译 triple 生成候选文件名（Windows 仅 MSVC 命名）。
 fn verifier_candidate_names() -> Vec<String> {
     let mut names = Vec::new();
-    // Windows：始终优先固定 MSVC 产物名，避免默认 rustc host 为 gnu 时找错文件。
-    if cfg!(target_os = "windows") {
-        names.push("license-verifier-x86_64-pc-windows-msvc.exe".into());
-    }
     names.push(bundled_verifier_filename());
+    // 本机开发：若 TARGET 被映射为 msvc，仍兼容常见 x86_64 产物名。
+    if cfg!(target_os = "windows") {
+        let triple = env!("OPENDESK_LICENSE_TARGET_TRIPLE");
+        if triple != "x86_64-pc-windows-msvc" {
+            names.push("license-verifier-x86_64-pc-windows-msvc.exe".into());
+        }
+    }
     names.push(verifier_bin_name().to_string());
     names
 }

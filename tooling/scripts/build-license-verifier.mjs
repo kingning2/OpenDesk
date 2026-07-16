@@ -18,8 +18,8 @@ const subscriptionDir = join(root, "subscription");
 const binariesDir = join(root, "apps/desktop/src-tauri/binaries");
 const adapterGeneratedDir = join(root, "crates/adapter/generated");
 
-/** Windows OpenDesk 固定使用 MSVC 产物命名。 */
-const WINDOWS_MSVC_TRIPLE = "x86_64-pc-windows-msvc";
+/** 本机 Windows 默认 MSVC triple（仅当未指定 --target / 环境变量时）。 */
+const WINDOWS_DEFAULT_MSVC_TRIPLE = "x86_64-pc-windows-msvc";
 
 function parseArgs(argv) {
   const options = { target: null };
@@ -68,29 +68,45 @@ function readHostTriple() {
 }
 
 /**
- * 规范化 Windows 目标：一律 MSVC，拒绝 gnu。
+ * Windows GNU → 同架构 MSVC；保留 i686 / aarch64 等 arch。
+ *
+ * @param {string} triple
+ * @returns {string}
+ */
+function forceWindowsMsvc(triple) {
+  if (triple.includes("windows-gnu")) {
+    return triple.replace("windows-gnu", "windows-msvc");
+  }
+  if (triple.includes("windows") && !triple.includes("windows-msvc")) {
+    return WINDOWS_DEFAULT_MSVC_TRIPLE;
+  }
+  return triple;
+}
+
+/**
+ * 解析构建目标：CLI --target > Tauri/Cargo 环境变量 > 本机默认。
  *
  * @param {string | null} requested
  * @returns {string}
  */
 function resolveBuildTriple(requested) {
-  if (platform() !== "win32") {
-    return requested ?? process.env.CARGO_BUILD_TARGET ?? readHostTriple();
+  const fromEnv =
+    process.env.TAURI_ENV_TARGET_TRIPLE ||
+    process.env.CARGO_BUILD_TARGET ||
+    null;
+  const raw =
+    requested ??
+    fromEnv ??
+    (platform() === "win32" ? WINDOWS_DEFAULT_MSVC_TRIPLE : readHostTriple());
+
+  if (platform() === "win32" || raw.includes("windows")) {
+    const forced = forceWindowsMsvc(raw);
+    if (forced !== raw) {
+      console.warn(`WARNING: rewriting Windows target ${raw} -> ${forced}`);
+    }
+    return forced;
   }
-  const raw = requested ?? process.env.CARGO_BUILD_TARGET ?? WINDOWS_MSVC_TRIPLE;
-  if (raw.includes("windows-gnu")) {
-    console.warn(
-      `WARNING: refusing Windows GNU target ${raw}; using ${WINDOWS_MSVC_TRIPLE}`,
-    );
-    return WINDOWS_MSVC_TRIPLE;
-  }
-  if (raw.includes("windows") && !raw.includes("windows-msvc")) {
-    console.warn(
-      `WARNING: non-MSVC Windows target ${raw}; using ${WINDOWS_MSVC_TRIPLE}`,
-    );
-    return WINDOWS_MSVC_TRIPLE;
-  }
-  return raw.includes("windows") ? raw : WINDOWS_MSVC_TRIPLE;
+  return raw;
 }
 
 function artifactName(targetTriple) {
@@ -114,10 +130,9 @@ const { target: targetArg } = parseArgs(process.argv.slice(2));
 
 const env = { ...process.env };
 if (platform() === "win32") {
-  // vendored OpenSSL 需要 MSVC；避免 gnu toolchain 缺 gcc。
+  // 宿主编译器固定 MSVC；交叉目标（如 i686）靠 --target，不要改成 gnu。
   env.RUSTUP_TOOLCHAIN =
     env.RUSTUP_TOOLCHAIN ?? "stable-x86_64-pc-windows-msvc";
-  // openssl-src Configure 需要 perl（仓库内 portable Strawberry Perl）。
   const perlRoot = join(root, "tooling", "strawberry-perl");
   const perlBin = join(perlRoot, "perl", "bin");
   const mingwBin = join(perlRoot, "c", "bin");
@@ -126,7 +141,7 @@ if (platform() === "win32") {
     env.PATH = env.Path;
   } else {
     console.warn(
-      "WARNING: tooling/strawberry-perl not found; vendored OpenSSL build may fail without perl on PATH",
+      "WARNING: tooling/strawberry-perl not found; ensure perl is on PATH for vendored OpenSSL",
     );
   }
 }
@@ -147,6 +162,7 @@ const cargoArgs = [
   buildTriple,
 ];
 
+console.log(`building license-verifier for ${buildTriple}`);
 run("cargo", cargoArgs, { cwd: subscriptionDir, env });
 
 const releaseDir = join(subscriptionDir, "target", buildTriple, "release");
@@ -166,7 +182,6 @@ if (!buildTriple.includes("windows")) {
 }
 console.log(`license-verifier -> ${destPath}`);
 
-// 清理历史 gnu 别名，避免运行时扫到错误文件。
 if (platform() === "win32") {
   const staleGnu = join(
     binariesDir,

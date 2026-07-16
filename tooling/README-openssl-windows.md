@@ -4,8 +4,10 @@
 
 On Windows this requires:
 
-1. **MSVC only** (`stable-x86_64-pc-windows-msvc` / `x86_64-pc-windows-msvc`) — set by `pnpm tauri`、`pnpm build:license-verifier`、`tauri:*-locked`。**不要**用 GNU host 编桌面端或 verifier。
-2. **Perl** — portable Strawberry Perl under `tooling/strawberry-perl/` (gitignored)
+1. **MSVC only** (`stable-x86_64-pc-windows-msvc` / 对应 `--target *-windows-msvc`) — `pnpm tauri`、`pnpm build:license-verifier`、CI release 均使用。**不要**用 GNU host 编桌面端或 verifier。
+2. **Perl** — 本地可用 `tooling/strawberry-perl/`（gitignored）；CI 用 `choco install strawberryperl`。
+
+If Perl is missing locally, download once:
 
 If Perl is missing, download once:
 

@@ -97,7 +97,19 @@ cargo run --bin license-verifier -- verify --token <activationToken> --state-dir
 
 退出码：`0` 通过，`1` 未通过，`2` 运行错误。stdout 为一行 JSON（含 `tokenExpiredAt`、可选 `activatedAt`）。
 
-主程序通过 `LICENSE_VERIFIER_EXE` 或 `src-tauri/binaries/license-verifier-x86_64-pc-windows-msvc.exe` 定位该 exe（Windows **仅 MSVC 命名**，不再提供 gnu 别名），并自动传入 `--state-dir`。
+主程序通过 `LICENSE_VERIFIER_EXE` 或 `src-tauri/binaries/license-verifier-<triple>` 定位该 exe（Windows **仅 MSVC 命名**），并自动传入 `--state-dir`。
+
+## CI / Release
+
+`release-desktop` 在各平台 `tauri build` 前会执行：
+
+```bash
+node tooling/scripts/build-license-verifier.mjs --target <triple>
+```
+
+Windows runner 需安装 Strawberry Perl（workflow 已 `choco install`），供 openssl-src vendored 使用。  
+`pnpm tauri build` 的 `beforeBuildCommand`（`build:bundle`）也会再编一次 verifier，并读取 `TAURI_ENV_TARGET_TRIPLE`。
+
 
 ## Key 文件格式
 
