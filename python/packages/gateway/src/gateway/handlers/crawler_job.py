@@ -107,3 +107,36 @@ def handle_crawler_job_status(payload: dict[str, Any] | None, *, trace_id: str) 
                 "status": "unknown",
                 "trace_id": trace_id,
             }
+
+
+def handle_crawler_job_logs(payload: dict[str, Any] | None, *, trace_id: str) -> dict[str, Any]:
+    """Fetch crawl process logs for a job.
+
+    Contract: ``contracts/schema/v1/crawler/sidecar/job_logs.*.schema.json``
+
+    Args:
+        payload: Must include ``job_id``.
+        trace_id: Trace id from Rust.
+
+    Returns:
+        Logs response with ``logs_json``.
+    """
+    body = dict(payload or {})
+    if trace_id and "trace_id" not in body:
+        body["trace_id"] = trace_id
+    with bind_log_context(trace_id=trace_id or body.get("trace_id", ""), feature="crawler"):
+        logger.info("handle_crawler_job_logs", extra={"event": "crawler.job_logs"})
+        try:
+            return get_default_service().logs(body)
+        except (ValueError, KeyError) as exc:
+            logger.warning(
+                "crawler job logs rejected: %s",
+                exc,
+                extra={"event": "crawler.job_logs_rejected"},
+            )
+            return {
+                "ok": False,
+                "job_id": str(body.get("job_id") or ""),
+                "logs_json": "[]",
+                "trace_id": trace_id,
+            }

@@ -10,6 +10,7 @@ from typing import Any, ClassVar
 from gateway.handlers import (
     handle_agent_ping,
     handle_crawler_job_cancel,
+    handle_crawler_job_logs,
     handle_crawler_job_start,
     handle_crawler_job_status,
 )
@@ -22,6 +23,7 @@ HANDLERS = {
     "handle_crawler_job_start": handle_crawler_job_start,
     "handle_crawler_job_cancel": handle_crawler_job_cancel,
     "handle_crawler_job_status": handle_crawler_job_status,
+    "handle_crawler_job_logs": handle_crawler_job_logs,
 }
 
 

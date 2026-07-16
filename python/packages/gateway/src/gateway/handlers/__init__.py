@@ -3,6 +3,9 @@ from .crawler_job import (
     handle_crawler_job_cancel as handle_crawler_job_cancel,
 )
 from .crawler_job import (
+    handle_crawler_job_logs as handle_crawler_job_logs,
+)
+from .crawler_job import (
     handle_crawler_job_start as handle_crawler_job_start,
 )
 from .crawler_job import (
@@ -12,6 +15,7 @@ from .crawler_job import (
 __all__ = [
     "handle_agent_ping",
     "handle_crawler_job_cancel",
+    "handle_crawler_job_logs",
     "handle_crawler_job_start",
     "handle_crawler_job_status",
 ]

@@ -6,6 +6,7 @@ Created: 2026-07-16
 
 from __future__ import annotations
 
+import json
 import logging
 import threading
 import uuid
@@ -192,20 +193,31 @@ class CrawlJobService:
                 result["trace_id"] = str(payload["trace_id"])
             return result
 
-    def logs(self, job_id: str) -> list[dict[str, Any]]:
-        """Return ordered process log events for a job (test/debug helper).
+    def logs(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Return process logs for a job as JSON string.
 
         Args:
-            job_id: Job identifier.
+            payload: Must include ``job_id``.
 
         Returns:
-            ``crawler.job.log`` payloads sorted by ``seq``.
+            ``{ok, job_id, logs_json, trace_id?}``.
         """
+        job_id = str(payload.get("job_id") or "").strip()
+        if not job_id:
+            raise ValueError("job_id is required")
         with self._lock:
             state = self._jobs.get(job_id)
             if state is None:
                 raise KeyError(f"unknown job_id={job_id}")
-            return list(state.emitter.logs_for(job_id))
+            rows = list(state.emitter.logs_for(job_id))
+        result: dict[str, Any] = {
+            "ok": True,
+            "job_id": job_id,
+            "logs_json": json.dumps(rows, ensure_ascii=False),
+        }
+        if payload.get("trace_id"):
+            result["trace_id"] = str(payload["trace_id"])
+        return result
 
     def _run_job(self, job_id: str) -> None:
         """Background worker for one job.
