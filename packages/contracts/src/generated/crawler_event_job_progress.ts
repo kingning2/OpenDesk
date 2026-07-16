@@ -8,4 +8,6 @@ export interface CrawlerEventJobProgress {
   accepted_count: number;
   quota_used?: number;
   search_pages?: number;
+  keyword_scanned?: number;
+  keyword_accepted?: number;
 }

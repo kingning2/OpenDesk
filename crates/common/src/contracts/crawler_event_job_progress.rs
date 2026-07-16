@@ -11,4 +11,6 @@ pub struct CrawlerEventJobProgress {
     pub accepted_count: i64,
     pub quota_used: Option<i64>,
     pub search_pages: Option<i64>,
+    pub keyword_scanned: Option<i64>,
+    pub keyword_accepted: Option<i64>,
 }

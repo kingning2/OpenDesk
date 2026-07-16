@@ -13,3 +13,5 @@ class CrawlerEventJobProgress(TypedDict, total=False):
     accepted_count: int
     quota_used: int
     search_pages: int
+    keyword_scanned: int
+    keyword_accepted: int

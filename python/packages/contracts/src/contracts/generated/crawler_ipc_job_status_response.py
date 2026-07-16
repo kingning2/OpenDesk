@@ -9,6 +9,13 @@ class CrawlerIpcJobStatusResponse(TypedDict, total=False):
     platform: str
     status: str
     stop_reason: str
+    message: str
+    current_keyword: str
     scanned_count: int
     accepted_count: int
+    keyword_scanned: int
+    keyword_accepted: int
+    quota_used: int
+    keyword_stats_json: str
+    error_message: str
     trace_id: str
