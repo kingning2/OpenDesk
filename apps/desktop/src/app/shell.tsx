@@ -15,6 +15,7 @@ import {
 } from "@desk/ui";
 import { Settings } from "@desk/ui/icons";
 import { closeWindow, getPlatform, minimizeWindow, startWindowDrag, toggleMaximizeWindow } from "@desk/platform";
+import { LicensePlanBadge } from "@feature/license";
 import { navItems } from "../route/nav-registry";
 import { useWorkspaceTabs } from "./use-workspace-tabs";
 
@@ -53,7 +54,7 @@ export function AppShell() {
         />
         <AppLayout
           sidebar={
-            <NavRail>
+            <NavRail className="h-full min-h-0">
               <NavRailNav>
                 {navItems.map((item) => {
                   const Icon = item.icon;
@@ -72,6 +73,7 @@ export function AppShell() {
                   );
                 })}
               </NavRailNav>
+              <LicensePlanBadge />
             </NavRail>
           }
         >

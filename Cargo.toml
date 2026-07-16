@@ -25,6 +25,7 @@ members = [
   "crates/file",
   "crates/mail-net",
 ]
+exclude = ["subscription"]
 
 [workspace.package]
 version = "0.1.0"
