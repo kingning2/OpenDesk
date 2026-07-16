@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://crawler/ipc/job_logs.response/v1",
+  "title": "crawler/job_logs.response",
+  "description": "Process logs as JSON string (array of crawler.job.log payloads) for codegen simplicity.",
+  "type": "object",
+  "required": ["ok", "job_id", "logs_json"],
+  "properties": {
+    "ok": {
+      "type": "boolean"
+    },
+    "job_id": {
+      "type": "string"
+    },
+    "logs_json": {
+      "type": "string",
+      "description": "JSON array of crawler.job.log event payloads."
+    },
+    "trace_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.7
+
+- 新增 crawler `job.logs`（IPC + Sidecar）：返回 `logs_json` 过程日志数组字符串，供前端任务日志面板轮询
+
 ## 0.1.6
 
 - crawler `job_config` / `job.start`（IPC + Sidecar）增加可选字段 `api_key`
