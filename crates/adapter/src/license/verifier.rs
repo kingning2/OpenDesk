@@ -67,9 +67,7 @@ impl VerifierProcessLicense {
     pub fn from_env() -> Result<Self, LicenseError> {
         let verifier_path = resolve_verifier_path()?;
         let security = LicenseHostSecurity::from_embedded();
-        if let Err(error) = security.verify_binary_integrity(&verifier_path) {
-            return Err(error);
-        }
+        security.verify_binary_integrity(&verifier_path)?;
         if !security.has_attest_key() {
             return Err(LicenseError::FailClosed {
                 reason: "attestation key not embedded; run `pnpm build:license-verifier` (builds subscription and writes crates/adapter/generated/)"

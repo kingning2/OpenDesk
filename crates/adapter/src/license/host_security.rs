@@ -107,7 +107,7 @@ impl LicenseHostSecurity {
         hasher.update(nanos.to_le_bytes());
         hasher.update(std::process::id().to_le_bytes());
         hasher.update(b"opendesk-nonce");
-        hex_encode(&hasher.finalize())
+        hex_encode(hasher.finalize())
     }
 
     /// 校验 verifier 返回的 attestation。
@@ -153,14 +153,14 @@ impl LicenseHostSecurity {
         let mut mac = HmacSha256::new_from_slice(&self.attest_key)
             .map_err(|error| format!("HMAC init failed: {error}"))?;
         mac.update(payload.as_bytes());
-        Ok(hex_encode(&mac.finalize().into_bytes()))
+        Ok(hex_encode(mac.finalize().into_bytes()))
     }
 }
 
 fn hex_sha256(bytes: &[u8]) -> String {
     let mut hasher = Sha256::new();
     hasher.update(bytes);
-    hex_encode(&hasher.finalize())
+    hex_encode(hasher.finalize())
 }
 
 fn hex_encode(bytes: impl AsRef<[u8]>) -> String {
@@ -175,7 +175,7 @@ fn decode_hex(input: &str) -> Result<Vec<u8>, String> {
     if input.is_empty() {
         return Ok(Vec::new());
     }
-    if input.len() % 2 != 0 {
+    if !input.len().is_multiple_of(2) {
         return Err("hex length must be even".into());
     }
     (0..input.len())
