@@ -8,6 +8,7 @@ export {
   Monitor,
   Moon,
   Plus,
+  Search,
   Settings,
   Square,
   Sun,
