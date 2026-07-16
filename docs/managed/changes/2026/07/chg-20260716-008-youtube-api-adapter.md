@@ -2,7 +2,7 @@
 id: CHG-20260716-008-youtube-api-adapter
 title: YouTube 真 API Adapter + 前端传入 api_key
 type: change
-status: in_progress
+status: completed
 priority: P0
 owner: cursor-agent
 domain: python-runtime
@@ -45,17 +45,21 @@ related: []
 
 ## 验收
 
-- [ ] `api_key` 出现在 IPC/Sidecar start 契约
-- [ ] 真 Adapter 能调 search/channels；quotaExceeded → stop_reason
-- [ ] 日志/事件不含 api_key 明文
-- [ ] 前端可写入 key 并 start（或本 Change 拆 PR 时 Python 侧先绿）
-- [ ] lint / check_contracts 通过
+- [x] `api_key` 出现在 IPC/Sidecar start 契约
+- [x] 真 Adapter 能调 search/channels；quotaExceeded → stop_reason
+- [x] 日志/事件不含 api_key 明文
+- [x] 前端可写入 key 并 start；过程日志面板轮询 `job.logs`
+- [x] lint / check_contracts 通过（Rust 本机 gnu 工具链缺失，未全量 cargo check）
 
 ## 实际结果
 
-（实现中）
+- Contract 0.1.6 `api_key`；0.1.7 `job.logs`（`logs_json`）
+- Python：`YoutubeApiAdapter` + `youtube_mock`；Sidecar `/v1/crawler/job/{start,cancel,status,logs}`
+- Rust：Tauri commands + sidecar route clients + `CrawlerSidecarGateway`
+- React：`/features/crawler` 页面（API Key 密码框 + 关键词 + Process logs）
 
 ## 后续项
 
 - 密钥安全存储（keychain）
-- 过程日志面板打磨
+- 根 `pyproject.toml` 注册 crawler workspace（被 pre-commit 门禁阻挡，需 tooling 提交）
+- 过程日志改为 Event 推送（减少轮询）

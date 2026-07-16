@@ -4,4 +4,5 @@
 
 | Change ID | 状态 | 优先级 | 主领域 | 负责人 | 父任务 | 阻塞 |
 |---|---|---|---|---|---|---|
-| CHG-20260716-008-youtube-api-adapter | in_progress | P0 | python-runtime | cursor-agent | CHG-007 | 前端 UI 需 frontend 分支 |
+
+当前无活跃变更。`CHG-20260716-008-youtube-api-adapter` 已 completed。
