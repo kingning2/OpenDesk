@@ -4,5 +4,5 @@
 
 | Change ID | 状态 | 优先级 | 主领域 | 负责人 | 父任务 | 阻塞 |
 |---|---|---|---|---|---|---|
-
-当前没有 Developer C 正在实施的变更。Rust交接任务见 `CHG-20260711-004-rust-sidecar-log-ingest`，由 Developer B 审批后加入 Active。
+| CHG-20260715-002-license-activation-gate | in_progress | P0 | desktop-runtime | cursor-agent | T019 | — |
+| CHG-20260716-002-license-starts-on-activate | in_progress | P1 | desktop-runtime | cursor-agent | T019 | — |
