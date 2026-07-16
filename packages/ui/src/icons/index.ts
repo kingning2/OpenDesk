@@ -7,6 +7,7 @@ export {
   Minus,
   Monitor,
   Moon,
+  Lock,
   Plus,
   Settings,
   Square,
