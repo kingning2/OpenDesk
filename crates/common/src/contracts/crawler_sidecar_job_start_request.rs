@@ -11,4 +11,5 @@ pub struct CrawlerSidecarJobStartRequest {
     pub min_year_video_count: Option<i64>,
     pub exclude_countries: Option<String>,
     pub batch_id: Option<String>,
+    pub api_key: Option<String>,
 }

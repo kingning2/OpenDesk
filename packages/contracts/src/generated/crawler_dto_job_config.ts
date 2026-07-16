@@ -7,4 +7,5 @@ export interface CrawlerDtoJobConfig {
   min_year_video_count?: number;
   exclude_countries?: string;
   batch_id?: string;
+  api_key?: string;
 }

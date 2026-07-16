@@ -12,3 +12,4 @@ class CrawlerDtoJobConfig(TypedDict, total=False):
     min_year_video_count: int
     exclude_countries: str
     batch_id: str
+    api_key: str
