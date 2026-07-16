@@ -3,12 +3,18 @@ name = "app"
 version.workspace = true
 edition.workspace = true
 
+[features]
+default = []
+license-lock = []
+
 [dependencies]
+async-trait = { workspace = true }
 tauri = { workspace = true }
 tauri-plugin-opener = { workspace = true }
 common = { path = "../common" }
 adapter = { path = "../adapter" }
 agent = { path = "../agent" }
+ports = { path = "../ports" }
 runtime = { path = "../runtime" }
 kernel = { path = "../kernel" }
 tracing = { workspace = true }
