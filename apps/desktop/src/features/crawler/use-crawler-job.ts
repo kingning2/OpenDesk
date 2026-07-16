@@ -1,5 +1,5 @@
 /**
- * Crawl job hook — start/cancel/status + process log polling.
+ * Crawl job hook — poll operational progress (keyword / counts / stop reason).
  *
  * @author Xiaoman
  * @created 2026-07-16
@@ -8,26 +8,50 @@
 import { useEffect, useState } from "react";
 import {
   crawlerJobCancel,
-  crawlerJobLogs,
   crawlerJobStart,
   crawlerJobStatus,
 } from "@desk/platform/ipc/crawler";
 
-export interface CrawlLogLine {
-  seq?: number;
-  phase?: string;
-  level?: string;
-  message?: string;
-  keyword?: string;
+export interface KeywordStatRow {
+  keyword: string;
+  scanned: number;
+  accepted: number;
+}
+
+export type CrawlUiStatus =
+  | "idle"
+  | "queued"
+  | "running"
+  | "completed"
+  | "failed"
+  | "cancelled";
+
+function statusLabel(status: CrawlUiStatus, stopReason?: string): string {
+  if (status === "idle") return "未开始";
+  if (status === "queued") return "排队中";
+  if (status === "running") return "爬取中";
+  if (status === "cancelled") return "已取消";
+  if (status === "failed") return "失败";
+  if (stopReason === "quota_exceeded") return "已因配额自动停止";
+  if (stopReason === "max_total_reached") return "已达数量上限";
+  if (stopReason === "keywords_finished") return "已完成";
+  return "已结束";
 }
 
 export function useCrawlerJob() {
   const [apiKey, setApiKey] = useState("");
   const [keywords, setKeywords] = useState("beauty,skincare");
   const [jobId, setJobId] = useState<string | null>(null);
-  const [status, setStatus] = useState("idle");
-  const [summary, setSummary] = useState("");
-  const [logs, setLogs] = useState<CrawlLogLine[]>([]);
+  const [status, setStatus] = useState<CrawlUiStatus>("idle");
+  const [stopReason, setStopReason] = useState("");
+  const [message, setMessage] = useState("");
+  const [currentKeyword, setCurrentKeyword] = useState("");
+  const [keywordAccepted, setKeywordAccepted] = useState(0);
+  const [keywordScanned, setKeywordScanned] = useState(0);
+  const [acceptedCount, setAcceptedCount] = useState(0);
+  const [scannedCount, setScannedCount] = useState(0);
+  const [quotaUsed, setQuotaUsed] = useState(0);
+  const [keywordStats, setKeywordStats] = useState<KeywordStatRow[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -39,37 +63,41 @@ export function useCrawlerJob() {
 
     async function poll() {
       try {
-        const [statusRes, logsRes] = await Promise.all([
-          crawlerJobStatus({ job_id: jobId! }),
-          crawlerJobLogs({ job_id: jobId! }),
-        ]);
+        const statusRes = await crawlerJobStatus({ job_id: jobId! });
         if (cancelled) {
           return;
         }
-        setStatus(statusRes.status);
-        setSummary(
-          [
-            `platform=${statusRes.platform}`,
-            statusRes.scanned_count != null ? `scanned=${statusRes.scanned_count}` : null,
-            statusRes.accepted_count != null ? `accepted=${statusRes.accepted_count}` : null,
-            statusRes.stop_reason ? `stop=${statusRes.stop_reason}` : null,
-          ]
-            .filter(Boolean)
-            .join(" · "),
-        );
-        try {
-          const parsed = JSON.parse(logsRes.logs_json) as CrawlLogLine[];
-          setLogs(Array.isArray(parsed) ? parsed : []);
-        } catch {
-          setLogs([]);
+        const nextStatus = (statusRes.status || "running") as CrawlUiStatus;
+        setStatus(nextStatus);
+        setStopReason(statusRes.stop_reason ?? "");
+        setMessage(statusRes.message ?? "");
+        setCurrentKeyword(statusRes.current_keyword ?? "");
+        setKeywordAccepted(statusRes.keyword_accepted ?? 0);
+        setKeywordScanned(statusRes.keyword_scanned ?? 0);
+        setAcceptedCount(statusRes.accepted_count ?? 0);
+        setScannedCount(statusRes.scanned_count ?? 0);
+        setQuotaUsed(statusRes.quota_used ?? 0);
+        if (statusRes.error_message) {
+          setError(statusRes.error_message);
         }
-        if (statusRes.status === "completed" || statusRes.status === "failed" || statusRes.status === "cancelled") {
+        try {
+          const parsed = JSON.parse(statusRes.keyword_stats_json ?? "[]") as KeywordStatRow[];
+          setKeywordStats(Array.isArray(parsed) ? parsed : []);
+        } catch {
+          setKeywordStats([]);
+        }
+        if (
+          nextStatus === "completed" ||
+          nextStatus === "failed" ||
+          nextStatus === "cancelled"
+        ) {
           setBusy(false);
         }
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : String(err));
           setBusy(false);
+          setStatus("failed");
         }
       }
     }
@@ -77,7 +105,7 @@ export function useCrawlerJob() {
     void poll();
     const timer = window.setInterval(() => {
       void poll();
-    }, 1000);
+    }, 800);
     return () => {
       cancelled = true;
       window.clearInterval(timer);
@@ -87,8 +115,15 @@ export function useCrawlerJob() {
   async function start() {
     setError("");
     setBusy(true);
-    setLogs([]);
-    setSummary("");
+    setMessage("正在启动…");
+    setStopReason("");
+    setCurrentKeyword("");
+    setKeywordStats([]);
+    setAcceptedCount(0);
+    setScannedCount(0);
+    setKeywordAccepted(0);
+    setKeywordScanned(0);
+    setQuotaUsed(0);
     try {
       const result = await crawlerJobStart({
         platform: "youtube",
@@ -101,6 +136,7 @@ export function useCrawlerJob() {
       if (!result.ok || !result.job_id) {
         setError("启动失败：请检查 API Key 与 Sidecar");
         setBusy(false);
+        setStatus("failed");
         return;
       }
       setJobId(result.job_id);
@@ -108,6 +144,7 @@ export function useCrawlerJob() {
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       setBusy(false);
+      setStatus("failed");
     }
   }
 
@@ -129,8 +166,16 @@ export function useCrawlerJob() {
     setKeywords,
     jobId,
     status,
-    summary,
-    logs,
+    statusText: statusLabel(status, stopReason),
+    stopReason,
+    message,
+    currentKeyword,
+    keywordAccepted,
+    keywordScanned,
+    acceptedCount,
+    scannedCount,
+    quotaUsed,
+    keywordStats,
     busy,
     error,
     start,
