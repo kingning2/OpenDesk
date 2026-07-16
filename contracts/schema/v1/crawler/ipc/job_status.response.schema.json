@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://crawler/ipc/job_status.response/v1",
+  "title": "crawler/job_status.response",
+  "type": "object",
+  "required": ["ok", "job_id", "status", "platform"],
+  "properties": {
+    "ok": {
+      "type": "boolean"
+    },
+    "job_id": {
+      "type": "string"
+    },
+    "platform": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "description": "queued | running | completed | failed | cancelled"
+    },
+    "stop_reason": {
+      "type": "string"
+    },
+    "scanned_count": {
+      "type": "integer"
+    },
+    "accepted_count": {
+      "type": "integer"
+    },
+    "trace_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

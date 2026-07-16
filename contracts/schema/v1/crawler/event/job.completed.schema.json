@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://crawler/event/job.completed/v1",
+  "title": "crawler/job.completed",
+  "type": "object",
+  "required": ["event_id", "occurred_at", "job_id", "platform", "stop_reason", "scanned_count", "accepted_count"],
+  "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "occurred_at": {
+      "type": "string"
+    },
+    "job_id": {
+      "type": "string"
+    },
+    "platform": {
+      "type": "string"
+    },
+    "stop_reason": {
+      "type": "string",
+      "description": "keywords_finished | max_total_reached | quota_exceeded | cancelled"
+    },
+    "scanned_count": {
+      "type": "integer"
+    },
+    "accepted_count": {
+      "type": "integer"
+    },
+    "quota_used": {
+      "type": "integer"
+    },
+    "duration_ms": {
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false
+}

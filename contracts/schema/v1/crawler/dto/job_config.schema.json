@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://crawler/dto/job_config/v1",
+  "title": "crawler/job_config",
+  "description": "Platform-agnostic crawl job configuration. keywords and exclude_countries are comma-separated for codegen simplicity.",
+  "type": "object",
+  "required": ["platform", "keywords"],
+  "properties": {
+    "platform": {
+      "type": "string",
+      "description": "Target platform. v1 supports youtube only; future values e.g. bilibili, tiktok."
+    },
+    "keywords": {
+      "type": "string",
+      "description": "Comma-separated search keywords."
+    },
+    "rate_limit_ms": {
+      "type": "integer",
+      "description": "Minimum delay between API calls in milliseconds."
+    },
+    "max_total": {
+      "type": "integer",
+      "description": "Max channels to accept in this job."
+    },
+    "year": {
+      "type": "integer",
+      "description": "Activity filter year (YouTube uploads count)."
+    },
+    "min_year_video_count": {
+      "type": "integer",
+      "description": "Minimum videos in year to keep a channel."
+    },
+    "exclude_countries": {
+      "type": "string",
+      "description": "Comma-separated ISO country codes or names to exclude."
+    },
+    "batch_id": {
+      "type": "string",
+      "description": "Optional keyword batch identifier."
+    }
+  },
+  "additionalProperties": false
+}

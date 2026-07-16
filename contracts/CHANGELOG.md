@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.5
+
+- 新增 `crawler` 契约：job-config / channel-result DTO
+- 新增 crawler IPC + sidecar：`job.start` / `job.cancel` / `job.status`
+- 新增 crawler 事件：`job.started` / `job.progress` / `job.log` / `job.completed` / `job.failed`
+- 首版 platform 仅约定 `youtube`，枚举可扩展
+
 ## 0.1.4
 
 - 新增 Python Sidecar stdout JSON Lines 日志契约 `runtime/log/entry/v1`

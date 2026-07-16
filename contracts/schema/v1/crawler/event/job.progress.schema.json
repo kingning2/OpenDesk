@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://crawler/event/job.progress/v1",
+  "title": "crawler/job.progress",
+  "type": "object",
+  "required": ["event_id", "occurred_at", "job_id", "platform", "scanned_count", "accepted_count"],
+  "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "occurred_at": {
+      "type": "string"
+    },
+    "job_id": {
+      "type": "string"
+    },
+    "platform": {
+      "type": "string"
+    },
+    "current_keyword": {
+      "type": "string"
+    },
+    "scanned_count": {
+      "type": "integer"
+    },
+    "accepted_count": {
+      "type": "integer"
+    },
+    "quota_used": {
+      "type": "integer"
+    },
+    "search_pages": {
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false
+}

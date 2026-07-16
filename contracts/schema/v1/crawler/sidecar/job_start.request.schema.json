@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://crawler/sidecar/job_start.request/v1",
+  "title": "crawler/sidecar/job_start.request",
+  "description": "Rust to Python sidecar: start crawl job.",
+  "type": "object",
+  "required": ["platform", "keywords"],
+  "properties": {
+    "trace_id": {
+      "type": "string"
+    },
+    "platform": {
+      "type": "string"
+    },
+    "keywords": {
+      "type": "string"
+    },
+    "rate_limit_ms": {
+      "type": "integer"
+    },
+    "max_total": {
+      "type": "integer"
+    },
+    "year": {
+      "type": "integer"
+    },
+    "min_year_video_count": {
+      "type": "integer"
+    },
+    "exclude_countries": {
+      "type": "string"
+    },
+    "batch_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}
