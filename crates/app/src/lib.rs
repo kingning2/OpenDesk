@@ -104,8 +104,15 @@ async fn crawler_job_status(
         platform: response.platform,
         status: response.status,
         stop_reason: response.stop_reason,
+        message: response.message,
+        current_keyword: response.current_keyword,
         scanned_count: response.scanned_count,
         accepted_count: response.accepted_count,
+        keyword_scanned: response.keyword_scanned,
+        keyword_accepted: response.keyword_accepted,
+        quota_used: response.quota_used,
+        keyword_stats_json: response.keyword_stats_json,
+        error_message: response.error_message,
         trace_id: response.trace_id.or(request.trace_id),
     })
 }
