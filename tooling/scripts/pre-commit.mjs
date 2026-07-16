@@ -50,6 +50,19 @@ function blockedConfigFiles(files) {
   );
 }
 
+/** 形如 role/chore/slug 的分支允许改护栏文件（专用 tooling PR）。 */
+function isToolingChoreBranch() {
+  const result = spawnSync("git", ["branch", "--show-current"], {
+    encoding: "utf8",
+    shell: true,
+  });
+  if (result.status !== 0) {
+    return false;
+  }
+  const branch = (result.stdout ?? "").trim().replaceAll("\\", "/");
+  return /\/chore\//.test(branch) || branch.startsWith("chore/");
+}
+
 function stagedPatch(file) {
   const result = spawnSync("git", ["diff", "--cached", "--", file], {
     encoding: "utf8",
@@ -84,17 +97,26 @@ const pyFiles = stagedFiles(/\.py$/);
 const allStaged = stagedFiles();
 const modifiedConfig = blockedConfigFiles(allStaged);
 
-if (modifiedConfig.length > 0) {
+if (modifiedConfig.length > 0 && !isToolingChoreBranch()) {
   console.error(
     "[pre-commit] Blocked: editing lint/format/git guardrail files is not allowed in normal feature commits.",
   );
   console.error(
-    "[pre-commit] If this is intentional, split it into a dedicated tooling/rules PR.",
+    "[pre-commit] If this is intentional, open a dedicated `*/chore/*` tooling PR.",
   );
   for (const file of modifiedConfig) {
     console.error(` - ${file}`);
   }
   process.exit(1);
+}
+
+if (modifiedConfig.length > 0 && isToolingChoreBranch()) {
+  console.warn(
+    "[pre-commit] Allowing guardrail file edits on chore tooling branch:",
+  );
+  for (const file of modifiedConfig) {
+    console.warn(` - ${file}`);
+  }
 }
 
 if (tsFiles.length > 0) {
