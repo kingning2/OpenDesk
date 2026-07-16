@@ -37,6 +37,10 @@
     "batch_id": {
       "type": "string",
       "description": "Optional keyword batch identifier."
+    },
+    "api_key": {
+      "type": "string",
+      "description": "Platform API key supplied by the desktop UI via Rust. Never log this value."
     }
   },
   "additionalProperties": false

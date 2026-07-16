@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.6
+
+- crawler `job_config` / `job.start`（IPC + Sidecar）增加可选字段 `api_key`
+- 说明：由前端写入，经 Rust 下发；Python 真 YouTube Adapter 使用；禁止写入日志
+
 ## 0.1.5
 
 - 新增 `crawler` 契约：job-config / channel-result DTO

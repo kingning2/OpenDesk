@@ -32,6 +32,10 @@
     },
     "batch_id": {
       "type": "string"
+    },
+    "api_key": {
+      "type": "string",
+      "description": "YouTube Data API key from desktop UI. Never log."
     }
   },
   "additionalProperties": false
