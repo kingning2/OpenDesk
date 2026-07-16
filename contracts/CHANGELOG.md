@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.8
+
+- crawler `job.status` / `job.progress` 增加运营进度字段：`message`、`current_keyword`、`keyword_scanned` / `keyword_accepted`、`quota_used`、`keyword_stats_json`、`error_message`
+- 供桌面 UI 展示「当前关键词 / 已爬数量 / 失败或配额停」，替代技术 phase 日志面板
+
 ## 0.1.7
 
 - 新增 crawler `job.logs`（IPC + Sidecar）：返回 `logs_json` 过程日志数组字符串，供前端任务日志面板轮询

@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "opendesk://crawler/sidecar/job_status.response/v1",
   "title": "crawler/sidecar/job_status.response",
+  "description": "Operational crawl progress for desktop UI (not technical phase logs).",
   "type": "object",
   "required": ["ok", "job_id", "status", "platform"],
   "properties": {
@@ -15,16 +16,43 @@
       "type": "string"
     },
     "status": {
-      "type": "string"
+      "type": "string",
+      "description": "queued | running | completed | failed | cancelled"
     },
     "stop_reason": {
+      "type": "string",
+      "description": "keywords_finished | max_total_reached | quota_exceeded | cancelled | failed"
+    },
+    "message": {
+      "type": "string",
+      "description": "Human-readable progress or terminal message for UI."
+    },
+    "current_keyword": {
       "type": "string"
     },
     "scanned_count": {
-      "type": "integer"
+      "type": "integer",
+      "description": "Total channels scanned across keywords."
     },
     "accepted_count": {
+      "type": "integer",
+      "description": "Total channels accepted across keywords."
+    },
+    "keyword_scanned": {
       "type": "integer"
+    },
+    "keyword_accepted": {
+      "type": "integer"
+    },
+    "quota_used": {
+      "type": "integer"
+    },
+    "keyword_stats_json": {
+      "type": "string",
+      "description": "JSON array of {keyword, scanned, accepted} for finished/current keywords."
+    },
+    "error_message": {
+      "type": "string"
     },
     "trace_id": {
       "type": "string"
