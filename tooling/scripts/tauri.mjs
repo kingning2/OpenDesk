@@ -21,9 +21,11 @@ if (!commandExists("uv")) {
   env.OPENDESK_USE_UV = "0";
 }
 
-// Tauri on Windows requires the MSVC toolchain; this machine's rustup default host is GNU.
+// Windows：一律 MSVC（与 license-verifier / OpenSSL vendored 一致），不用 GNU。
 if (platform() === "win32") {
   env.RUSTUP_TOOLCHAIN = "stable-x86_64-pc-windows-msvc";
+  env.CARGO_BUILD_TARGET =
+    env.CARGO_BUILD_TARGET || "x86_64-pc-windows-msvc";
 }
 
 const result = spawnSync(
