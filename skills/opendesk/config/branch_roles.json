@@ -35,8 +35,7 @@
         "packages/ui/**",
         "packages/platform/**",
         "packages/contracts/**",
-        "crates/**",
-        "plan/**"
+        "crates/**"
       ],
       "optional_globs": ["contracts/**"],
       "forbidden_globs": ["python/**"],
@@ -46,7 +45,7 @@
       "label": "Python AI Runtime",
       "description": "Sidecar 与 python/packages；禁止改 React/Rust 业务层。",
       "branch_prefix": "python",
-      "allowed_globs": ["python/**", "plan/**"],
+      "allowed_globs": ["python/**"],
       "optional_globs": ["contracts/**"],
       "forbidden_globs": [
         "apps/desktop/**",
@@ -62,16 +61,10 @@
       "branch_prefix": "contract",
       "allowed_globs": [
         "contracts/**",
-        "skills/opendesk/scripts/sync_contracts.py",
-        "plan/**"
+        "skills/opendesk/scripts/sync_contracts.py"
       ],
       "optional_globs": [],
-      "forbidden_globs": [
-        "apps/**",
-        "crates/**",
-        "python/**",
-        "packages/**"
-      ],
+      "forbidden_globs": ["apps/**", "crates/**", "python/**", "packages/**"],
       "rule_files": []
     },
     "integration": {
