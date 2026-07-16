@@ -6,8 +6,8 @@
  */
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@desk/ui";
-import { Lock } from "@desk/ui/icons";
+import { Card, CardContent, CardHeader, CardTitle, cn } from "@desk/ui";
+import { LicenseLockHero } from "./license-lock-hero";
 import { useLicenseActivate } from "./use-license-activate";
 
 /**
@@ -19,6 +19,27 @@ import { useLicenseActivate } from "./use-license-activate";
 export interface LicenseLockOverlayProps {
   /** 激活成功后的回调。 */
   onActivated: () => void;
+}
+
+/**
+ * 根据锁动画相位生成锁下方文案。
+ *
+ * @author Xiaoman
+ * @created 2026-07-16
+ *
+ * @param lockAnim - 锁动画相位
+ * @param expanded - 是否已展开激活面板
+ * @returns 说明文案
+ */
+function lockCaption(
+  lockAnim: "idle" | "busy" | "success" | "failure",
+  expanded: boolean,
+): string {
+  if (lockAnim === "success") return "解锁成功";
+  if (lockAnim === "failure") return "校验未通过，锁已加固";
+  if (lockAnim === "busy") return "正在校验激活码…";
+  if (expanded) return "填写激活信息";
+  return "点击锁图标激活软件";
 }
 
 /**
@@ -37,11 +58,14 @@ export function LicenseLockOverlay({ onActivated }: LicenseLockOverlayProps) {
     token,
     setToken,
     busy,
+    lockAnim,
     message,
     copyMachineCode,
     activateWithToken,
     activateWithKeyFile,
   } = useLicenseActivate(onActivated);
+
+  const animatingResult = lockAnim === "success" || lockAnim === "failure";
 
   return (
     <div
@@ -51,17 +75,18 @@ export function LicenseLockOverlay({ onActivated }: LicenseLockOverlayProps) {
       aria-label="软件激活"
     >
       <div className="flex w-full max-w-md flex-col items-center gap-4">
-        <button
-          type="button"
-          onClick={() => setExpanded((value) => !value)}
-          className="flex size-24 items-center justify-center rounded-full border border-border/60 bg-card/80 shadow-lg transition hover:bg-card"
-          aria-expanded={expanded}
-          aria-label={expanded ? "收起激活面板" : "打开激活面板"}
-        >
-          <Lock className="size-10 text-muted-foreground" strokeWidth={1.5} aria-hidden />
-        </button>
+        <LicenseLockHero
+          anim={lockAnim}
+          caption={lockCaption(lockAnim, expanded)}
+          expanded={expanded}
+          disabled={busy || animatingResult}
+          onLockClick={() => {
+            if (busy || animatingResult) return;
+            setExpanded((value) => !value);
+          }}
+        />
 
-        {expanded ? (
+        {expanded && lockAnim !== "success" ? (
           <Card variant="glass" className="w-full">
             <CardHeader className="text-center">
               <CardTitle>激活 OpenDesk</CardTitle>
@@ -82,7 +107,7 @@ export function LicenseLockOverlay({ onActivated }: LicenseLockOverlayProps) {
                   <button
                     type="button"
                     onClick={() => void copyMachineCode()}
-                    disabled={!machineCode}
+                    disabled={!machineCode || busy || animatingResult}
                     className="rounded-[var(--radius-md)] bg-secondary px-3 py-2 text-[length:var(--text-sm)] disabled:opacity-60"
                   >
                     复制
@@ -97,15 +122,16 @@ export function LicenseLockOverlay({ onActivated }: LicenseLockOverlayProps) {
                   onChange={(event) => setToken(event.target.value)}
                   rows={3}
                   placeholder="粘贴 activation token"
-                  className="w-full rounded-[var(--radius-md)] border border-border bg-background px-3 py-2 font-mono text-[length:var(--text-sm)]"
+                  disabled={busy || animatingResult}
+                  className="w-full rounded-[var(--radius-md)] border border-border bg-background px-3 py-2 font-mono text-[length:var(--text-sm)] disabled:opacity-60"
                 />
                 <button
                   type="button"
-                  disabled={busy || !token.trim()}
+                  disabled={busy || animatingResult || !token.trim()}
                   onClick={() => void activateWithToken()}
                   className="w-full rounded-[var(--radius-md)] bg-primary px-4 py-2 text-[length:var(--text-sm)] text-primary-foreground disabled:opacity-60"
                 >
-                  {busy ? "激活中…" : "用 Token 激活"}
+                  {busy ? "校验中…" : "用 Token 激活"}
                 </button>
               </div>
 
@@ -114,27 +140,35 @@ export function LicenseLockOverlay({ onActivated }: LicenseLockOverlayProps) {
                 <input
                   type="file"
                   accept=".key,application/octet-stream"
-                  disabled={busy}
+                  disabled={busy || animatingResult}
                   onChange={(event) => {
                     const file = event.target.files?.[0];
                     if (file) void activateWithKeyFile(file);
+                    event.target.value = "";
                   }}
                   className="block w-full text-[length:var(--text-sm)]"
                 />
               </div>
 
               {message ? (
-                <p className="text-center text-[length:var(--text-sm)] text-muted-foreground">
+                <p
+                  role="status"
+                  aria-live="polite"
+                  className={cn(
+                    "text-center text-[length:var(--text-sm)]",
+                    busy
+                      ? "text-muted-foreground"
+                      : message.includes("成功") || message.includes("已复制")
+                        ? "text-foreground"
+                        : "text-destructive",
+                  )}
+                >
                   {message}
                 </p>
               ) : null}
             </CardContent>
           </Card>
-        ) : (
-          <p className="text-[length:var(--text-sm)] text-muted-foreground">
-            点击锁图标激活软件
-          </p>
-        )}
+        ) : null}
       </div>
     </div>
   );

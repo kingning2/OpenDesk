@@ -1,14 +1,21 @@
 /**
  * License 激活面板 React Hook（薄适配层）。
  *
- * 将 [`LicenseActivationService`] 接到表单状态。
+ * 将 [`LicenseActivationService`] 接到表单状态，并用 toast + 锁动画反馈每次操作。
  *
  * @author Xiaoman
  * @created 2026-07-16
  */
 
 import { useEffect, useState } from "react";
+import { toast } from "@desk/ui";
 import { LicenseActivationService } from "./license-activation-service";
+import type { LicenseLockAnim } from "./license-lock-glyph";
+
+/** 成功裂开动画时长（毫秒），结束后再卸载闸门。 */
+const SUCCESS_ANIM_MS = 900;
+/** 失败加固动画时长（毫秒），结束后回到 idle。 */
+const FAILURE_ANIM_MS = 700;
 
 /**
  * Hook 返回值：激活表单状态与操作。
@@ -25,6 +32,8 @@ export interface UseLicenseActivateResult {
   setToken: (value: string) => void;
   /** 是否正在激活。 */
   busy: boolean;
+  /** 锁图标动画相位。 */
+  lockAnim: LicenseLockAnim;
   /** 提示/错误消息。 */
   message: string | null;
   /** 复制设备码。 */
@@ -33,6 +42,24 @@ export interface UseLicenseActivateResult {
   activateWithToken: () => Promise<void>;
   /** 用 key 文件激活。 */
   activateWithKeyFile: (file: File) => Promise<void>;
+}
+
+/**
+ * 等待指定毫秒；尊重 `prefers-reduced-motion` 时几乎立即返回。
+ *
+ * @author Xiaoman
+ * @created 2026-07-16
+ *
+ * @param ms - 正常动画等待时长
+ * @returns 无
+ */
+function waitForAnim(ms: number): Promise<void> {
+  const reduced =
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, reduced ? 80 : ms);
+  });
 }
 
 /**
@@ -51,6 +78,7 @@ export function useLicenseActivate(
   const [machineCode, setMachineCode] = useState("");
   const [token, setToken] = useState("");
   const [busy, setBusy] = useState(false);
+  const [lockAnim, setLockAnim] = useState<LicenseLockAnim>("idle");
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -61,9 +89,10 @@ export function useLicenseActivate(
         if (!cancelled) setMachineCode(code);
       })
       .catch((error: unknown) => {
-        if (!cancelled) {
-          setMessage(error instanceof Error ? error.message : String(error));
-        }
+        if (cancelled) return;
+        const text = error instanceof Error ? error.message : String(error);
+        setMessage(text);
+        toast.error(text);
       });
     return () => {
       cancelled = true;
@@ -73,28 +102,45 @@ export function useLicenseActivate(
   async function copyMachineCode() {
     const nextMessage = await service.copyMachineCode();
     setMessage(nextMessage);
+    if (nextMessage === "设备码已复制") {
+      toast.success(nextMessage);
+    } else {
+      toast.error(nextMessage);
+    }
+  }
+
+  async function runActivate(
+    run: () => ReturnType<LicenseActivationService["activateWithToken"]>,
+  ) {
+    const pending = "正在校验激活码…";
+    setBusy(true);
+    setLockAnim("busy");
+    setMessage(pending);
+    const toastId = toast.loading(pending);
+    const result = await run();
+    setMessage(result.message);
+    setBusy(false);
+
+    if (result.ok) {
+      setLockAnim("success");
+      toast.success(result.message, { id: toastId });
+      await waitForAnim(SUCCESS_ANIM_MS);
+      onActivated();
+      return;
+    }
+
+    setLockAnim("failure");
+    toast.error(result.message, { id: toastId });
+    await waitForAnim(FAILURE_ANIM_MS);
+    setLockAnim("idle");
   }
 
   async function activateWithToken() {
-    setBusy(true);
-    setMessage(null);
-    const result = await service.activateWithToken(token);
-    setMessage(result.message);
-    setBusy(false);
-    if (result.ok) {
-      onActivated();
-    }
+    await runActivate(() => service.activateWithToken(token));
   }
 
   async function activateWithKeyFile(file: File) {
-    setBusy(true);
-    setMessage(null);
-    const result = await service.activateWithKeyFile(file);
-    setMessage(result.message);
-    setBusy(false);
-    if (result.ok) {
-      onActivated();
-    }
+    await runActivate(() => service.activateWithKeyFile(file));
   }
 
   return {
@@ -102,6 +148,7 @@ export function useLicenseActivate(
     token,
     setToken,
     busy,
+    lockAnim,
     message,
     copyMachineCode,
     activateWithToken,

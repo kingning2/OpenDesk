@@ -1,13 +1,14 @@
 /**
  * License 闸门 React Hook（薄适配层）。
  *
- * 将 [`LicenseGateController`] 接到组件状态。
+ * 将 [`LicenseGateController`] 接到组件状态；校验失败时用 toast 提示。
  *
  * @author Xiaoman
  * @created 2026-07-16
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "@desk/ui";
 import { LicenseGateController } from "./license-gate-controller";
 import type { LicenseStatus } from "@desk/platform/ipc/license";
 
@@ -45,6 +46,7 @@ export function useLicenseGate(): UseLicenseGateResult {
   const [error, setError] = useState<string | null>(null);
   const [gateBlocks, setGateBlocks] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
+  const didNotifyError = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -54,6 +56,13 @@ export function useLicenseGate(): UseLicenseGateResult {
       setError(snapshot.error);
       setGateBlocks(snapshot.gateBlocks);
       setLoading(false);
+      if (snapshot.error && !didNotifyError.current) {
+        didNotifyError.current = true;
+        toast.error(snapshot.error);
+      }
+      if (!snapshot.error) {
+        didNotifyError.current = false;
+      }
     });
     return () => {
       cancelled = true;
@@ -61,6 +70,7 @@ export function useLicenseGate(): UseLicenseGateResult {
   }, [controller, reloadToken]);
 
   function refresh() {
+    didNotifyError.current = false;
     setLoading(true);
     setReloadToken((value) => value + 1);
   }
