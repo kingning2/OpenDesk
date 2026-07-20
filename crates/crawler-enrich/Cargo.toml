@@ -1,0 +1,15 @@
+[package]
+name = "crawler-enrich"
+version.workspace = true
+edition.workspace = true
+description = "YouTube email enrichment via OpenCV template matching + enigo (Worker-only)"
+
+[dependencies]
+enigo = { workspace = true }
+image = "0.25"
+imageproc = { workspace = true }
+rand = { workspace = true }
+screenshots = { workspace = true }
+thiserror = "2"
+tokio = { workspace = true, features = ["fs", "macros", "rt-multi-thread", "time"] }
+tracing = { workspace = true }
