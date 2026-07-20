@@ -70,6 +70,8 @@ AI 开发知识库：[`skills/opendesk/`](skills/opendesk/)（架构 · recipes 
 - [`.cursor/rules/branch-workflow.mdc`](.cursor/rules/branch-workflow.mdc) — 分支命令与工作流
 - [`.cursor/rules/active-branch.mdc`](.cursor/rules/active-branch.mdc) — **当前分支** scope（生成文件）
 - [`.cursor/rules/frontend.md`](.cursor/rules/frontend.md) · [`.cursor/rules/rust.md`](.cursor/rules/rust.md) · [`.cursor/rules/python.md`](.cursor/rules/python.md)
+- [`.cursor/skills/emil-design-eng/SKILL.md`](.cursor/skills/emil-design-eng/SKILL.md) — 前端 UI / 动效必须遵循（Emil Kowalski）
+- `/check-emil-design` — 对照上述 skill 审查当前 UI/动效（见 [`.cursor/commands/check-emil-design.md`](.cursor/commands/check-emil-design.md)）
 - [`contracts/`](contracts/) — 三端共享契约，Breaking Change 必须先改契约并提供迁移说明
 
 ## Code Review 清单

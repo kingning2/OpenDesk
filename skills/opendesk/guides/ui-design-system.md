@@ -37,7 +37,6 @@ import { Card } from "@desk/ui";
 | 拖拽排序 | `Sortable`（dnd-kit） |
 | ⌘K 面板 | `Command`（cmdk） |
 | 通知 | `toast` / `Toaster`（Sonner） |
-| 工作流编辑 | `WorkflowEditor`（Monaco） |
 
 ## Glass 示例
 
@@ -61,6 +60,9 @@ import { Card } from "@desk/ui";
 
 ## Motion / Spring
 
+动效决策与审查须遵循 [emil-design-eng](../../.cursor/skills/emil-design-eng/SKILL.md) /
+[review-animations](../../.cursor/skills/review-animations/SKILL.md)（低于 300ms、ease-out、仅 transform/opacity 等）。
+
 ```tsx
 import { motion } from "motion/react";
 import { spring } from "@desk/ui/tokens/motion";
@@ -72,3 +74,4 @@ import { spring } from "@desk/ui/tokens/motion";
 
 - [frontend.md](frontend.md)
 - [../../packages/ui/README.md](../../packages/ui/README.md)
+- [../../.cursor/skills/emil-design-eng/SKILL.md](../../.cursor/skills/emil-design-eng/SKILL.md)

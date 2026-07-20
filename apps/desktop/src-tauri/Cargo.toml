@@ -7,6 +7,10 @@ edition.workspace = true
 name = "desktop_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+[features]
+default = []
+license-lock = ["app/license-lock"]
+
 [build-dependencies]
 tauri-build = { workspace = true }
 

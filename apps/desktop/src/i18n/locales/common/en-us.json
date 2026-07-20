@@ -1,0 +1,42 @@
+{
+  "app": {
+    "name": "OpenDesk"
+  },
+  "shell": {
+    "settings": "Settings",
+    "openTab": "Open tab"
+  },
+  "license": {
+    "checking": "Verifying license…",
+    "readFailed": "Failed to read license status",
+    "retry": "Retry"
+  },
+  "nav": {
+    "home": "Home",
+    "agent": "Agent",
+    "chat": "Chat",
+    "mail": "Mail",
+    "knowledge": "Knowledge",
+    "crawler": "Crawler",
+    "settings": "Settings"
+  },
+  "meta": {
+    "home": "Home",
+    "homeDescription": "OpenDesk architecture scaffold",
+    "agent": "Agent",
+    "agentDescription": "Sidecar connectivity vertical slice",
+    "crawler": "Crawler",
+    "crawlerDescription": "YouTube channel crawl with process logs",
+    "chat": "Chat",
+    "chatDescription": "Customer conversation workspace",
+    "mail": "Mail",
+    "mailDescription": "Inbound and outbound mail handling",
+    "knowledge": "Knowledge",
+    "knowledgeDescription": "Knowledge base and retrieval",
+    "settings": "Settings",
+    "settingsDescription": "Application settings"
+  },
+  "placeholder": {
+    "developing": "This feature is under development."
+  }
+}

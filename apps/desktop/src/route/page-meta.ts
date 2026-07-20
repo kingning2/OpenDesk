@@ -1,31 +1,63 @@
+/**
+ * 路由 → 页面元信息（标题 / 描述使用 i18n key）。
+ *
+ * @author Xiaoman
+ * @created 2026-07-20
+ */
+
+/**
+ * 页面元信息。
+ *
+ * @author Xiaoman
+ * @created 2026-07-20
+ */
 export interface PageMeta {
-  title: string;
-  description?: string;
+  /** 标题 i18n key。 */
+  titleKey: string;
+  /** 描述 i18n key。 */
+  descriptionKey?: string;
 }
 
 const pageMetaByPath: Record<string, PageMeta> = {
   "/": {
-    title: "Home",
-    description: "OpenDesk architecture scaffold",
+    titleKey: "meta.home",
+    descriptionKey: "meta.homeDescription",
   },
   "/features/agent": {
-    title: "Agent",
-    description: "Sidecar connectivity vertical slice",
+    titleKey: "meta.agent",
+    descriptionKey: "meta.agentDescription",
+  },
+  "/features/crawler": {
+    titleKey: "meta.crawler",
+    descriptionKey: "meta.crawlerDescription",
   },
   "/features/chat": {
-    title: "Chat",
-    description: "Customer conversation workspace",
+    titleKey: "meta.chat",
+    descriptionKey: "meta.chatDescription",
   },
   "/features/mail": {
-    title: "Mail",
-    description: "Inbound and outbound mail handling",
+    titleKey: "meta.mail",
+    descriptionKey: "meta.mailDescription",
   },
   "/features/knowledge": {
-    title: "Knowledge",
-    description: "Knowledge base and retrieval",
+    titleKey: "meta.knowledge",
+    descriptionKey: "meta.knowledgeDescription",
+  },
+  "/settings": {
+    titleKey: "meta.settings",
+    descriptionKey: "meta.settingsDescription",
   },
 };
 
+/**
+ * 按路径取页面元信息。
+ *
+ * @author Xiaoman
+ * @created 2026-07-20
+ *
+ * @param pathname - 路由路径
+ * @returns 元信息；未知路径回退到应用名
+ */
 export function getPageMeta(pathname: string): PageMeta {
-  return pageMetaByPath[pathname] ?? { title: "OpenDesk" };
+  return pageMetaByPath[pathname] ?? { titleKey: "app.name" };
 }

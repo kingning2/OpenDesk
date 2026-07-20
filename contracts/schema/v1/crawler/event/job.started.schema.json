@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://crawler/event/job.started/v1",
+  "title": "crawler/job.started",
+  "type": "object",
+  "required": ["event_id", "occurred_at", "job_id", "platform"],
+  "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "occurred_at": {
+      "type": "string"
+    },
+    "job_id": {
+      "type": "string"
+    },
+    "platform": {
+      "type": "string"
+    },
+    "keywords": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

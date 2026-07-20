@@ -1,0 +1,42 @@
+{
+  "app": {
+    "name": "OpenDesk"
+  },
+  "shell": {
+    "settings": "设置",
+    "openTab": "打开标签"
+  },
+  "license": {
+    "checking": "正在校验授权状态…",
+    "readFailed": "授权状态读取失败",
+    "retry": "重试"
+  },
+  "nav": {
+    "home": "首页",
+    "agent": "Agent",
+    "chat": "Chat",
+    "mail": "Mail",
+    "knowledge": "Knowledge",
+    "crawler": "采集",
+    "settings": "设置"
+  },
+  "meta": {
+    "home": "首页",
+    "homeDescription": "OpenDesk 架构脚手架",
+    "agent": "Agent",
+    "agentDescription": "Sidecar 连通性垂直切片",
+    "crawler": "采集",
+    "crawlerDescription": "YouTube 频道采集与过程日志",
+    "chat": "Chat",
+    "chatDescription": "客户会话工作区",
+    "mail": "Mail",
+    "mailDescription": "收发邮件处理",
+    "knowledge": "Knowledge",
+    "knowledgeDescription": "知识库与检索",
+    "settings": "设置",
+    "settingsDescription": "应用设置"
+  },
+  "placeholder": {
+    "developing": "该功能正在开发中。"
+  }
+}

@@ -1,6 +1,6 @@
 # Frontend Guide（React / TypeScript）
 
-适用范围：`apps/desktop/src/**`、`packages/ui/**`、`packages/platform/**`
+适用范围：`apps/desktop/src/**`、`packages/ui/**`、`packages/platform/**`、`packages/store/**`、`packages/i18n/**`
 
 ## 必须技术栈
 
@@ -8,6 +8,8 @@
 |------|-----|
 | 编译 | **React Compiler**（`babel-plugin-react-compiler`） |
 | UI | **shadcn/ui + Radix UI**（组件只在 `packages/ui`） |
+| 状态 | **Zustand**（经 `@desk/store`） |
+| 多语言 | **`@desk/i18n`**（i18next；文案字典在 app） |
 | 样式 | **Tailwind CSS**（令牌在 `@desk/ui/tokens`） |
 | 动画 | **Motion** + Spring 预设 |
 | 图标 | **Lucide React** |
@@ -19,9 +21,21 @@
 | 拖拽 | **dnd-kit** |
 | 命令面板 | **cmdk** |
 | Toast | **Sonner** |
-| Workflow | **Monaco Editor** |
 
 详见 [ui-design-system.md](ui-design-system.md)。
+
+## 设计工程 Skill（强制）
+
+UI / 动效必须遵循 Emil Kowalski Skill（`npx skills add emilkowalski/skill`）：
+
+1. 改 UI 前阅读 [`.cursor/skills/emil-design-eng/SKILL.md`](../../.cursor/skills/emil-design-eng/SKILL.md)
+2. 动效审查用 [`.cursor/skills/review-animations/SKILL.md`](../../.cursor/skills/review-animations/SKILL.md)
+3. 动效词表 / 找机会 / 改进：`animation-vocabulary` · `find-animation-opportunities` · `improve-animations`
+4. Apple HIG 参考：`apple-design`（与本仓库 Apple 风令牌一起用）
+
+摘要：UI 动效通常低于 300ms、ease-out、只动 transform/opacity、无 scale(0)、高频少动、`prefers-reduced-motion`、审查用 Before/After/Why 表。
+
+自检：Agent 对话执行 `/check-emil-design`（可跟路径或「当前 diff」）。
 
 ## 样式规则（硬约束）
 
@@ -50,22 +64,47 @@ Glass · Blur · Backdrop · Motion · Spring · Dynamic Color · Radius · Typo
 |------|------|
 | UI · 交互 · 主题 · 布局 · 动画 | 业务规则 · SQL · AI 逻辑 |
 | 组合 `@desk/ui` 组件 | Feature 裸 Tailwind / 直接 Radix |
+| Feature 本地状态经 `@desk/store` | 在 `@desk/store` 包内写业务领域 store |
 | 通过 platform 调 Rust | `@tauri-apps/api`（Feature 层） |
 
 ## 目录约定
 
 ```
 apps/desktop/src/
-├── app/              # 根组件 + globals.css
+├── app/              # 根组件 + globals.css + 窗口壳
 ├── route/
-└── features/<name>/
+└── features/<name>/  # 业务 Feature（含 xxxStore）
 
-packages/ui/src/
-├── tokens/           # 设计令牌
-├── components/       # shadcn 风格组件
-├── theme/            # ThemeProvider
-└── lib/cn.ts
+packages/ui/src/      # 通用 UI
+packages/store/src/   # Zustand 底座（createDeskStore）
+packages/platform/src/# IPC / OS
 ```
+
+## Store
+
+```typescript
+import { createDeskStore } from "@desk/store";
+
+export const chatStore = createDeskStore<ChatState>((set) => ({
+  // Feature 内定义状态与 actions
+}));
+```
+
+命名：`chatStore`、`userStore`。业务状态放 Feature / 壳层，不放 `@desk/store` 包本体。
+
+## i18n
+
+```typescript
+import { createI18n } from "@desk/i18n";
+
+export const appI18n = createI18n({
+  defaultLocale: "zh-CN",
+  messages: { "zh-CN": zhCN, en },
+  persistKey: "opendesk.locale",
+});
+```
+
+文案字典放 `apps/desktop/src/i18n/locales/`；组件内用 `useT()` / `useI18n()`。
 
 ## IPC
 
@@ -88,25 +127,26 @@ pnpm lint:frontend
 
 ## 布局与页面骨架
 
-M5 UI Shell 由 `@desk/ui` 布局原语 + `apps/desktop` 组装层构成：
+M5 UI Shell：窗口壳全部在 `apps/desktop`；`@desk/ui` 只提供通用控件与页面原语。
 
 ```
-TitleBar（窗口级）
+apps/desktop
+├─ TitleBar（唯一窗口 header：logo + TabBar + 窗口控制）
 └─ AppLayout
-   ├─ Sidebar + SidebarNav
+   ├─ NavRail
    └─ MainPanel
-      ├─ AppHeader（页面级标题 + ThemeToggle）
-      └─ PageScaffold / Feature 内容
+      └─ PageScaffold（@desk/ui）/ Feature 内容
 ```
 
 | 组件 | 包 | 用途 |
 |------|-----|------|
-| `TitleBar` | `@desk/ui` | 无边框窗口拖拽 + 窗口控制（回调由 shell 接 `@desk/platform/window`） |
-| `AppLayout` / `Sidebar` / `MainPanel` | `@desk/ui` | 应用级布局 |
-| `AppHeader` / `ThemeToggle` | `@desk/ui` | 路由标题 + 主题切换 |
+| `TitleBar` / `AppLayout` / `NavRail` / `MainPanel` / `TabBar` | `apps/desktop/src/app` | 桌面窗口壳与工作区装配 |
+| `ThemeToggle` / `IconButton` / `Button` / `Card` | `@desk/ui` | 通用交互与展示控件 |
 | `PageScaffold` / `PageContainer` | `@desk/ui` | Feature 页面统一内边距与宽度 |
 | `nav-registry.ts` | `apps/desktop` | 聚合各 Feature 的 `navItem` |
 | `page-meta.ts` | `apps/desktop` | 路由 → 页面标题映射 |
+
+约定：`@desk/ui` 只放 Button / Card / Input 等通用组件；OpenDesk 窗口壳、NavRail、工作区 Tab 放 `apps/desktop`。
 
 新增 Feature 前端骨架：
 

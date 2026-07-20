@@ -61,3 +61,20 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - run: uv sync --group dev
       - run: pnpm lint:python
+
+  subscription:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: subscription
+      - name: Install build deps (vendored OpenSSL)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y perl build-essential
+      - name: Build license-verifier
+        run: cargo build --manifest-path subscription/Cargo.toml --release --bin license-verifier
+      - name: Test subscription lib
+        run: cargo test --manifest-path subscription/Cargo.toml --lib

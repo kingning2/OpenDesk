@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://crawler/ipc/job_results.response/v1",
+  "title": "crawler/job_results.response",
+  "description": "Accepted channels as JSON array (crawler/channel_result DTO + keyword).",
+  "type": "object",
+  "required": ["ok", "job_id", "results_json"],
+  "properties": {
+    "ok": {
+      "type": "boolean"
+    },
+    "job_id": {
+      "type": "string"
+    },
+    "results_json": {
+      "type": "string",
+      "description": "JSON array of channel_result objects with optional keyword field."
+    },
+    "trace_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

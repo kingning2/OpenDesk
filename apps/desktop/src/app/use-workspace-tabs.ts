@@ -1,32 +1,59 @@
-import { useCallback, useState } from "react";
-import { useLocation, useNavigate } from "react-router";
-import type { TabBarItem } from "@desk/ui";
+/**
+ * 工作区标签状态（打开路径 + 选择 / 关闭）。
+ *
+ * @author Xiaoman
+ * @created 2026-07-20
+ */
 
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router";
+
+import { useI18n } from "../i18n";
 import { navItems } from "../route/nav-registry";
 import { getPageMeta } from "../route/page-meta";
+import type { TabBarItem } from "./layout";
 
-function createTab(path: string): TabBarItem {
-  const navItem = navItems.find((item) => item.path === path);
-  const meta = getPageMeta(path);
-
-  return {
-    id: path,
-    path,
-    label: navItem?.label ?? meta.title,
-    closable: path !== "/",
-  };
-}
-
+/**
+ * 管理工作区多标签打开路径与导航。
+ *
+ * @author Xiaoman
+ * @created 2026-07-20
+ *
+ * @returns 标签列表与操作回调
+ */
 export function useWorkspaceTabs() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { t } = useI18n();
   const [openPaths, setOpenPaths] = useState(() => [pathname]);
 
   const ensureTab = useCallback((path: string) => {
     setOpenPaths((current) => (current.includes(path) ? current : [...current, path]));
   }, []);
 
-  const tabs = openPaths.map(createTab);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      ensureTab(pathname);
+    }, 0);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [pathname, ensureTab]);
+
+  const tabs = useMemo<TabBarItem[]>(
+    () =>
+      openPaths.map((path) => {
+        const navItem = navItems.find((item) => item.path === path);
+        const meta = getPageMeta(path);
+        return {
+          id: path,
+          path,
+          label: t(navItem?.labelKey ?? meta.titleKey),
+          closable: path !== "/",
+        };
+      }),
+    [openPaths, t],
+  );
 
   const selectTab = useCallback(
     (path: string) => {
@@ -67,6 +94,7 @@ export function useWorkspaceTabs() {
   return {
     tabs,
     activePath: pathname,
+    openPaths,
     ensureTab,
     selectTab,
     closeTab,

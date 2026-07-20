@@ -6,7 +6,7 @@ export const chatFeature = {
   navItem: {
     id: "chat",
     path: "/features/chat",
-    label: "Chat",
+    labelKey: "nav.chat",
     icon: MessageSquare,
   },
 };

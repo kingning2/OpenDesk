@@ -1,8 +1,12 @@
 # OpenDesk
 
-企业级 AI 智能客服桌面平台（Architecture v2 + Naming v1）。
+本地优先 **AI 商务桌面**：YouTube 获客 → 邮件谈价 → WhatsApp 辅助（翻译/建议，人发）。
 
-> **当前阶段：Architecture Skeleton** — 只允许骨架、契约、规范与工具链；禁止业务逻辑与 Demo。
+> **当前阶段：** Architecture Skeleton + 部分垂直切片（爬虫、UI Shell、Sidecar）。MVP 商务能力见下方规划文档。
+
+## MVP 规划（团队评审）
+
+👉 **[`docs/managed/MVP_REVIEW.md`](docs/managed/MVP_REVIEW.md)** — GitHub 评审入口：路线图、Epic、子任务改动范围、ADR。
 
 ## 架构约束（必读）
 
@@ -16,9 +20,9 @@ React  →  Rust  →  Python
 |------|------|
 | React → Python | 含 localhost HTTP / WebSocket / SSE |
 | React → SQLite | 存储由 Rust 负责 |
-| Python → SQLite | 存储由 Rust 负责 |
+| Python → SQLite | 存储由 Rust 负责；AI 仅只读 Query Port |
+| AI 写库 / 自动发信 | 客户状态与发送仅 UI 人工操作 |
 | Feature 间直接 import | 跨 Feature 只允许 Query Port · Event · Contract |
-| UseCase 中写 IO | SQL / HTTP / 文件系统须在 Infrastructure 层 |
 | 先改实现再改契约 | 跨端变更须先改 `contracts/` |
 
 完整规则见 [`.cursor/rules/master.md`](.cursor/rules/master.md)。
@@ -30,6 +34,7 @@ React  →  Rust  →  Python
 - `crates` — Rust Workspace（kernel · app · feature crates）
 - `python` — AI Runtime（sidecar · gateway · queue · worker · provider）
 - `contracts` — 三端共享契约（**唯一真相源**）
+- `docs/managed/` — MVP 规划、Change Record、ADR
 
 ## 开发
 
@@ -53,12 +58,14 @@ pnpm lint:fix          # 自动修复（前端 + rust fmt + python）
 
 ## 文档
 
-- [`skills/opendesk/`](skills/opendesk/) — **AI 开发知识库**（架构 · 规范 · 模板 · 脚本）
+- **[`docs/managed/MVP_REVIEW.md`](docs/managed/MVP_REVIEW.md)** — MVP 团队评审入口
+- [`docs/managed/roadmaps/mvp-sales-workbench.md`](docs/managed/roadmaps/mvp-sales-workbench.md) — 总路线图
+- [`skills/opendesk/`](skills/opendesk/) — AI 开发知识库
 - [`.cursor/skills/opendesk/SKILL.md`](.cursor/skills/opendesk/SKILL.md) — Cursor Skill 入口
-- [`.cursor/rules/master.md`](.cursor/rules/master.md) — 全局架构约束与协作边界
-- [`AGENTS.md`](AGENTS.md) — 分支与角色说明
-- [`contracts/README.md`](contracts/README.md) — 契约层说明
-- `docs/architecture/` — 架构与 ADR
+- [`.cursor/rules/master.md`](.cursor/rules/master.md) — 全局架构约束
+- [`docs/architecture/`](docs/architecture/) — 产品与运行时架构
+  - [`product-architecture.md`](docs/architecture/product-architecture.md) — 商务工作台产品架构
+  - [`python-ai-runtime-architecture.md`](docs/architecture/python-ai-runtime-architecture.md) — Python AI Runtime
 
 ### 架构检查
 

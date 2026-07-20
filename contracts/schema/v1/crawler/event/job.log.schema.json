@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://crawler/event/job.log/v1",
+  "title": "crawler/job.log",
+  "description": "One crawl process log line for UI job log panel. seq is monotonic per job_id.",
+  "type": "object",
+  "required": ["event_id", "occurred_at", "job_id", "platform", "seq", "phase", "level", "message"],
+  "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "occurred_at": {
+      "type": "string"
+    },
+    "job_id": {
+      "type": "string"
+    },
+    "platform": {
+      "type": "string"
+    },
+    "seq": {
+      "type": "integer",
+      "description": "Monotonic sequence number within a job."
+    },
+    "phase": {
+      "type": "string",
+      "description": "job_started | keyword_begin | search_page | channel_batch | filter | quota | keyword_done | job_completed | job_failed"
+    },
+    "level": {
+      "type": "string",
+      "description": "DEBUG | INFO | WARNING | ERROR"
+    },
+    "message": {
+      "type": "string"
+    },
+    "keyword": {
+      "type": "string"
+    },
+    "detail": {
+      "type": "string",
+      "description": "Optional compact JSON or plain detail string."
+    }
+  },
+  "additionalProperties": false
+}

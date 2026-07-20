@@ -1,27 +1,44 @@
-import { NavLink, Outlet, useLocation } from "react-router";
+/**
+ * 桌面应用主壳：窗口标题栏 + 侧栏导航 + 工作区。
+ *
+ * @author Xiaoman
+ * @created 2026-07-20
+ */
+
+import { NavLink, useNavigate } from "react-router";
+import { IconButton, ThemeProvider, ThemeToggle } from "@desk/ui";
+import { Settings } from "@desk/ui/icons";
+import { closeWindow, getPlatform, minimizeWindow, startWindowDrag, toggleMaximizeWindow } from "@desk/platform";
+import { LicensePlanBadge } from "@feature/license";
+import { useI18n } from "../i18n";
+import { navItems } from "../route/nav-registry";
 import {
-  AnimatePresence,
   AppLayout,
-  FadeSlide,
-  IconButton,
   MainPanel,
   NavRail,
   NavRailNav,
   navRailItemVariants,
   TabBar,
-  ThemeProvider,
-  ThemeToggle,
-  TitleBar,
-} from "@desk/ui";
-import { Settings } from "@desk/ui/icons";
-import { closeWindow, getPlatform, minimizeWindow, startWindowDrag, toggleMaximizeWindow } from "@desk/platform";
-import { navItems } from "../route/nav-registry";
+} from "./layout";
+import { TitleBar } from "./title-bar";
 import { useWorkspaceTabs } from "./use-workspace-tabs";
+import { WorkspaceOutlet } from "./workspace-outlet";
 
+/**
+ * 桌面应用主壳。
+ *
+ * 负责：窗口 TitleBar、侧栏导航、工作区标签与内容出口。
+ *
+ * @author Xiaoman
+ * @created 2026-07-20
+ *
+ * @returns 应用壳节点
+ */
 export function AppShell() {
   const platform = getPlatform();
-  const location = useLocation();
-  const { tabs, activePath, ensureTab, selectTab, closeTab, addTab } = useWorkspaceTabs();
+  const navigate = useNavigate();
+  const { t } = useI18n();
+  const { tabs, activePath, openPaths, ensureTab, selectTab, closeTab, addTab } = useWorkspaceTabs();
 
   return (
     <ThemeProvider defaultTheme="dark">
@@ -30,7 +47,14 @@ export function AppShell() {
           platform={platform}
           actions={
             <>
-              <IconButton label="Settings" title="Settings">
+              <IconButton
+                label={t("shell.settings")}
+                title={t("shell.settings")}
+                onClick={() => {
+                  ensureTab("/settings");
+                  navigate("/settings");
+                }}
+              >
                 <Settings className="size-3.5" />
               </IconButton>
               <ThemeToggle size="compact" />
@@ -53,34 +77,32 @@ export function AppShell() {
         />
         <AppLayout
           sidebar={
-            <NavRail>
+            <NavRail className="h-full min-h-0">
               <NavRailNav>
                 {navItems.map((item) => {
                   const Icon = item.icon;
+                  const label = t(item.labelKey);
                   return (
                     <NavLink
                       key={item.id}
                       to={item.path}
                       end={item.end}
-                      title={item.label}
+                      title={label}
                       onClick={() => ensureTab(item.path)}
                       className={({ isActive }) => navRailItemVariants({ active: isActive })}
                     >
                       {Icon ? <Icon className="size-[1.125rem] shrink-0" aria-hidden /> : null}
-                      <span className="max-w-full truncate">{item.label}</span>
+                      <span className="max-w-full truncate">{label}</span>
                     </NavLink>
                   );
                 })}
               </NavRailNav>
+              <LicensePlanBadge />
             </NavRail>
           }
         >
           <MainPanel>
-            <AnimatePresence mode="wait">
-              <FadeSlide key={location.pathname} className="flex min-h-0 flex-1 flex-col overflow-hidden">
-                <Outlet />
-              </FadeSlide>
-            </AnimatePresence>
+            <WorkspaceOutlet openPaths={openPaths} activePath={activePath} />
           </MainPanel>
         </AppLayout>
       </div>

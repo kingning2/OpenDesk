@@ -1,0 +1,115 @@
+// OpenDesk 激活码签发（管理员本机工具，界面从简）
+
+import { Button, LineEdit, VerticalBox, HorizontalBox, TextEdit } from "std-widgets.slint";
+
+export component ActivationGenWindow inherits Window {
+    title: "OpenDesk 激活码签发";
+    preferred-width: 560px;
+    preferred-height: 540px;
+    min-width: 480px;
+    min-height: 480px;
+
+    in-out property <string> machine-code: "";
+    in-out property <string> days-text: "30";
+    in-out property <string> product: "opendesk";
+    in-out property <string> version: "1";
+    in-out property <string> private-key-path: "keys/private_key.pem";
+    in-out property <string> output-path: "license.key";
+    in-out property <string> token-preview: "";
+    in-out property <string> status-message: "填写客户设备码，选择天数后点击生成。天数从客户首次激活起算。";
+    in-out property <bool> busy: false;
+
+    callback generate-clicked();
+    callback fill-local-machine-code();
+
+    VerticalBox {
+        padding: 16px;
+        spacing: 10px;
+
+        Text {
+            text: "OpenDesk 激活码签发";
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        Text {
+            text: "设备码（客户机器上复制；留空则尝试读本机）";
+            font-size: 12px;
+        }
+        HorizontalBox {
+            spacing: 8px;
+            LineEdit {
+                text <=> root.machine-code;
+                placeholder-text: "粘贴客户设备码";
+                enabled: !root.busy;
+            }
+            Button {
+                text: "本机码";
+                enabled: !root.busy;
+                clicked => { root.fill-local-machine-code(); }
+            }
+        }
+
+        HorizontalBox {
+            spacing: 8px;
+            VerticalBox {
+                spacing: 4px;
+                Text { text: "有效天数"; font-size: 12px; }
+                LineEdit {
+                    text <=> root.days-text;
+                    enabled: !root.busy;
+                }
+            }
+            VerticalBox {
+                spacing: 4px;
+                Text { text: "产品"; font-size: 12px; }
+                LineEdit {
+                    text <=> root.product;
+                    enabled: !root.busy;
+                }
+            }
+            VerticalBox {
+                spacing: 4px;
+                Text { text: "版本"; font-size: 12px; }
+                LineEdit {
+                    text <=> root.version;
+                    enabled: !root.busy;
+                }
+            }
+        }
+
+        Text { text: "私钥路径"; font-size: 12px; }
+        LineEdit {
+            text <=> root.private-key-path;
+            enabled: !root.busy;
+        }
+
+        Text { text: "输出 .key 路径"; font-size: 12px; }
+        LineEdit {
+            text <=> root.output-path;
+            enabled: !root.busy;
+        }
+
+        Button {
+            text: root.busy ? "生成中…" : "生成激活码";
+            primary: true;
+            enabled: !root.busy;
+            clicked => { root.generate-clicked(); }
+        }
+
+        Text { text: "Token 预览（可复制发给客户）"; font-size: 12px; }
+        TextEdit {
+            text <=> root.token-preview;
+            read-only: true;
+            wrap: word-wrap;
+            min-height: 96px;
+        }
+
+        Text {
+            text: root.status-message;
+            wrap: word-wrap;
+            color: #444444;
+            font-size: 12px;
+        }
+    }
+}

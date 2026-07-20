@@ -7,3 +7,4 @@ edition.workspace = true
 async-trait = { workspace = true }
 common = { path = "../common" }
 thiserror = "2"
+serde = { workspace = true }

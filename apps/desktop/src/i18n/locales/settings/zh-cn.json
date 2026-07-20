@@ -1,0 +1,16 @@
+{
+  "title": "设置",
+  "subtitle": "应用设置",
+  "language": "语言",
+  "languageHint": "界面语言保存在本机。",
+  "youtubeTitle": "YouTube 采集",
+  "youtubeDescription": "配置 YouTube Data API v3 密钥。密钥保存在本机数据库，不会写入日志。",
+  "apiKey": "API 密钥",
+  "apiKeyPlaceholder": "粘贴 YouTube API 密钥",
+  "save": "保存",
+  "saving": "保存中…",
+  "configured": "已配置",
+  "afterConfig": "配置完成后，可在",
+  "crawlerLink": "YouTube 频道采集",
+  "afterConfigSuffix": "页面开始任务。"
+}

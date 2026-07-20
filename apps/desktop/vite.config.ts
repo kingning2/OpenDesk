@@ -19,6 +19,8 @@ export default defineConfig(async () => ({
     alias: {
       "@desk/ui": path.resolve(__dirname, "../../packages/ui/src"),
       "@desk/platform": path.resolve(__dirname, "../../packages/platform/src"),
+      "@desk/store": path.resolve(__dirname, "../../packages/store/src"),
+      "@desk/i18n": path.resolve(__dirname, "../../packages/i18n/src"),
       "@desk/contracts": path.resolve(__dirname, "../../packages/contracts/src"),
       "@feature": path.resolve(__dirname, "./src/features"),
     },

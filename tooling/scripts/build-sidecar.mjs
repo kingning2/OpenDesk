@@ -75,7 +75,10 @@ function hasCommand(command) {
 const { target: targetArg } = parseArgs(process.argv.slice(2));
 
 const targetTriple =
-  targetArg ?? process.env.CARGO_BUILD_TARGET ?? readHostTriple();
+  targetArg ??
+  process.env.TAURI_ENV_TARGET_TRIPLE ??
+  process.env.CARGO_BUILD_TARGET ??
+  readHostTriple();
 const outputName = artifactName(targetTriple);
 const destPath = join(binariesDir, outputName);
 

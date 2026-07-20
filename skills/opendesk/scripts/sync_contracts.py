@@ -43,7 +43,10 @@ def _schema_names(rel: Path) -> tuple[str, str]:
         parts.extend([name_part, direction])
     else:
         parts.append(stem)
-    pascal = "".join(part[:1].upper() + part[1:] for part in parts)
+    # Split snake segments so job_start → JobStart (not Job_start).
+    pascal = "".join(
+        "".join(seg[:1].upper() + seg[1:] for seg in part.split("_") if seg) for part in parts
+    )
     snake = "_".join(parts)
     return pascal, snake
 
@@ -91,6 +94,7 @@ def _emit_py(name: str, schema: dict) -> str:
         "",
         "from typing import TypedDict",
         "",
+        "",
     ]
     if required == set(props):
         lines.append(f"class {name}(TypedDict):")
@@ -102,8 +106,7 @@ def _emit_py(name: str, schema: dict) -> str:
         for prop, spec in props.items():
             py_type = TYPE_MAP_PY.get(spec.get("type", "string"), "str")
             lines.append(f"    {prop}: {py_type}")
-    lines.append("")
-    return "\n".join(lines)
+    return "\n".join(lines) + "\n"
 
 
 def main() -> int:

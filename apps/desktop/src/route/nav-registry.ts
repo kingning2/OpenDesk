@@ -1,22 +1,44 @@
+/**
+ * 侧栏导航项注册表。
+ *
+ * @author Xiaoman
+ * @created 2026-07-20
+ */
+
 import type { LucideIcon } from "@desk/ui/icons";
 import { Home } from "@desk/ui/icons";
 
 import { agentFeature } from "@feature/agent";
 import { chatFeature } from "@feature/chat";
+import { crawlerFeature } from "@feature/crawler";
 import { knowledgeFeature } from "@feature/knowledge";
 import { mailFeature } from "@feature/mail";
 
+/**
+ * 导航项（文案用 `labelKey` 走 i18n）。
+ *
+ * @author Xiaoman
+ * @created 2026-07-20
+ */
 export interface NavItem {
   id: string;
   path: string;
-  label: string;
+  /** i18n 点分 key，如 `nav.home`。 */
+  labelKey: string;
   end?: boolean;
   icon?: LucideIcon;
 }
 
+/**
+ * 已注册侧栏导航项。
+ *
+ * @author Xiaoman
+ * @created 2026-07-20
+ */
 export const navItems: NavItem[] = [
-  { id: "home", path: "/", label: "Home", end: true, icon: Home },
+  { id: "home", path: "/", labelKey: "nav.home", end: true, icon: Home },
   agentFeature.navItem,
+  crawlerFeature.navItem,
   chatFeature.navItem,
   mailFeature.navItem,
   knowledgeFeature.navItem,

@@ -1,3 +1,5 @@
+//! HTTP adapter for Python sidecar routes still owned by the runtime layer.
+
 use async_trait::async_trait;
 use common::contracts::{AgentSidecarPingRequest, AgentSidecarPingResponse};
 use ports::sidecar::AgentSidecarGateway;

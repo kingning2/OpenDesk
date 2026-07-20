@@ -1,5 +1,22 @@
+/**
+ * Mail Feature 占位页。
+ *
+ * @author Xiaoman
+ * @created 2026-07-20
+ */
+
 import { FeaturePlaceholderPage } from "../../app/pages/feature-placeholder";
 
+/**
+ * Mail 页面。
+ *
+ * @author Xiaoman
+ * @created 2026-07-20
+ *
+ * @returns 页面节点
+ */
 export function MailPage() {
-  return <FeaturePlaceholderPage featureName="Mail" description="Inbound and outbound mail handling — coming soon." />;
+  return (
+    <FeaturePlaceholderPage titleKey="mail.title" descriptionKey="mail.description" />
+  );
 }
