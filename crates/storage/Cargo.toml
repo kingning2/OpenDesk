@@ -5,3 +5,7 @@ edition.workspace = true
 
 [dependencies]
 ports = { path = "../ports" }
+diesel = { workspace = true }
+diesel_migrations = { workspace = true }
+libsqlite3-sys = { workspace = true }
+uuid = { workspace = true }

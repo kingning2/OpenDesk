@@ -1,3 +1,5 @@
+//! Tauri shell: agent sidecar IPC plus in-process Rust crawler commands.
+
 mod logging;
 mod state;
 
@@ -6,17 +8,68 @@ use agent::app::ping::PingAgent;
 use common::contracts::{
     AgentIpcPingRequest, AgentIpcPingResponse, CrawlerIpcJobCancelRequest,
     CrawlerIpcJobCancelResponse, CrawlerIpcJobLogsRequest, CrawlerIpcJobLogsResponse,
-    CrawlerIpcJobStartRequest, CrawlerIpcJobStartResponse, CrawlerIpcJobStatusRequest,
-    CrawlerIpcJobStatusResponse, CrawlerSidecarJobCancelRequest, CrawlerSidecarJobLogsRequest,
-    CrawlerSidecarJobStartRequest, CrawlerSidecarJobStatusRequest,
+    CrawlerIpcJobResultsRequest, CrawlerIpcJobResultsResponse, CrawlerIpcJobStartRequest,
+    CrawlerIpcJobStartResponse, CrawlerIpcJobStatusRequest, CrawlerIpcJobStatusResponse,
+    CrawlerIpcKeywordsBatchesResponse, CrawlerIpcKeywordsImportRequest,
+    CrawlerIpcKeywordsImportResponse,
 };
+use crawler::CrawlerService;
 use kernel::event::{EventBus, InMemoryEventBus};
 use logging::init_tracing;
-use ports::sidecar::CrawlerSidecarGateway;
+use ports::crawler_channels::CrawlerChannelStore;
+use ports::crawler_keywords::CrawlerKeywordStore;
+use ports::crawler_settings::{CrawlerSettingsStore, YOUTUBE_API_KEY};
 use runtime::sidecar::lifecycle::{SidecarConfig, SidecarLifecycle};
 use state::AppState;
+use std::path::PathBuf;
 use std::sync::Arc;
+use storage::crawler_channels::SqliteCrawlerChannelStore;
+use storage::crawler_db::CrawlerDb;
+use storage::crawler_keywords::SqliteCrawlerKeywordStore;
+use storage::crawler_settings::SqliteCrawlerSettingsStore;
 use tauri::Manager;
+
+fn crawler_db_path() -> PathBuf {
+    let mut path = dirs::data_local_dir().unwrap_or_else(std::env::temp_dir);
+    path.push("OpenDesk");
+    path.push("crawler.db");
+    path
+}
+
+/// Resolve comma-separated keywords from the request or SQLite keyword batch.
+fn resolve_keywords(
+    store: &dyn CrawlerKeywordStore,
+    keywords: Option<String>,
+    batch_id: Option<String>,
+) -> Result<String, String> {
+    if let Some(text) = keywords.and_then(|value| {
+        let trimmed = value.trim().to_string();
+        if trimmed.is_empty() {
+            None
+        } else {
+            Some(trimmed)
+        }
+    }) {
+        return Ok(text);
+    }
+    let batch = batch_id
+        .and_then(|value| {
+            let trimmed = value.trim().to_string();
+            if trimmed.is_empty() {
+                None
+            } else {
+                Some(trimmed)
+            }
+        })
+        .ok_or_else(|| "请先导入 CSV 并选择关键词批次".to_string())?;
+    let list = store
+        .enabled_keywords_for_batch(&batch)
+        .map_err(|error| error.to_string())?;
+    if list.is_empty() {
+        return Err(format!("批次 {batch} 没有可用关键词"));
+    }
+    Ok(list.join(","))
+}
 
 #[tauri::command]
 async fn agent_ping(
@@ -31,33 +84,80 @@ async fn agent_ping(
     PingAgent::execute(state.gateway.as_ref(), request).await
 }
 
+/// Start a crawl job in the Rust `CrawlerService` (no Python sidecar).
 #[tauri::command]
 async fn crawler_job_start(
     state: tauri::State<'_, AppState>,
     request: CrawlerIpcJobStartRequest,
 ) -> Result<CrawlerIpcJobStartResponse, String> {
-    state
-        .lifecycle
-        .ensure_running()
-        .await
-        .map_err(|error| error.to_string())?;
-    let sidecar_request = CrawlerSidecarJobStartRequest {
-        trace_id: request.trace_id.clone(),
-        platform: request.platform,
-        keywords: request.keywords,
-        rate_limit_ms: request.rate_limit_ms,
-        max_total: request.max_total,
-        year: request.year,
-        min_year_video_count: request.min_year_video_count,
-        exclude_countries: request.exclude_countries,
-        batch_id: request.batch_id,
-        api_key: request.api_key,
-    };
-    let response = state.gateway.job_start(sidecar_request).await?;
-    Ok(CrawlerIpcJobStartResponse {
-        ok: response.ok,
-        job_id: response.job_id,
-        trace_id: response.trace_id.or(request.trace_id),
+    let store = state.keywords_store.clone();
+    let keywords_input = request.keywords.clone();
+    let batch_id_input = request.batch_id.clone();
+    let keywords = tauri::async_runtime::spawn_blocking(move || {
+        resolve_keywords(store.as_ref(), keywords_input, batch_id_input)
+    })
+    .await
+    .map_err(|error| error.to_string())??;
+    let keywords = keywords
+        .split(',')
+        .map(str::trim)
+        .filter(|item| !item.is_empty())
+        .map(str::to_string)
+        .collect::<Vec<_>>();
+    state.crawler.start(request, keywords)
+}
+
+#[tauri::command]
+async fn crawler_keywords_import(
+    state: tauri::State<'_, AppState>,
+    request: CrawlerIpcKeywordsImportRequest,
+) -> Result<CrawlerIpcKeywordsImportResponse, String> {
+    let store = state.keywords_store.clone();
+    let csv_content = request.csv_content.clone();
+    let batch_id = request.batch_id.clone();
+    let trace_id = request.trace_id.clone();
+    let result = tauri::async_runtime::spawn_blocking(move || {
+        store
+            .import_csv(&csv_content, batch_id.as_deref())
+            .map_err(|error| error.to_string())
+    })
+    .await
+    .map_err(|error| error.to_string())??;
+    Ok(CrawlerIpcKeywordsImportResponse {
+        ok: true,
+        batch_id: result.batch_id,
+        inserted: result.inserted,
+        skipped_existing: result.skipped_existing,
+        skipped_too_long: result.skipped_too_long,
+        total: result.total,
+        trace_id,
+        message: None,
+    })
+}
+
+#[tauri::command]
+async fn crawler_keywords_batches(
+    state: tauri::State<'_, AppState>,
+) -> Result<CrawlerIpcKeywordsBatchesResponse, String> {
+    let store = state.keywords_store.clone();
+    let batches = tauri::async_runtime::spawn_blocking(move || {
+        store.list_batches().map_err(|error| error.to_string())
+    })
+    .await
+    .map_err(|error| error.to_string())??;
+    let payload: Vec<serde_json::Value> = batches
+        .into_iter()
+        .map(|item| {
+            serde_json::json!({
+                "batch_id": item.batch_id,
+                "keyword_count": item.keyword_count,
+            })
+        })
+        .collect();
+    Ok(CrawlerIpcKeywordsBatchesResponse {
+        ok: true,
+        batches_json: serde_json::to_string(&payload).map_err(|error| error.to_string())?,
+        trace_id: None,
     })
 }
 
@@ -66,21 +166,7 @@ async fn crawler_job_cancel(
     state: tauri::State<'_, AppState>,
     request: CrawlerIpcJobCancelRequest,
 ) -> Result<CrawlerIpcJobCancelResponse, String> {
-    state
-        .lifecycle
-        .ensure_running()
-        .await
-        .map_err(|error| error.to_string())?;
-    let sidecar_request = CrawlerSidecarJobCancelRequest {
-        trace_id: request.trace_id.clone(),
-        job_id: request.job_id.clone(),
-    };
-    let response = state.gateway.job_cancel(sidecar_request).await?;
-    Ok(CrawlerIpcJobCancelResponse {
-        ok: response.ok,
-        job_id: response.job_id,
-        trace_id: response.trace_id.or(request.trace_id),
-    })
+    state.crawler.cancel(request)
 }
 
 #[tauri::command]
@@ -88,33 +174,7 @@ async fn crawler_job_status(
     state: tauri::State<'_, AppState>,
     request: CrawlerIpcJobStatusRequest,
 ) -> Result<CrawlerIpcJobStatusResponse, String> {
-    state
-        .lifecycle
-        .ensure_running()
-        .await
-        .map_err(|error| error.to_string())?;
-    let sidecar_request = CrawlerSidecarJobStatusRequest {
-        trace_id: request.trace_id.clone(),
-        job_id: request.job_id.clone(),
-    };
-    let response = state.gateway.job_status(sidecar_request).await?;
-    Ok(CrawlerIpcJobStatusResponse {
-        ok: response.ok,
-        job_id: response.job_id,
-        platform: response.platform,
-        status: response.status,
-        stop_reason: response.stop_reason,
-        message: response.message,
-        current_keyword: response.current_keyword,
-        scanned_count: response.scanned_count,
-        accepted_count: response.accepted_count,
-        keyword_scanned: response.keyword_scanned,
-        keyword_accepted: response.keyword_accepted,
-        quota_used: response.quota_used,
-        keyword_stats_json: response.keyword_stats_json,
-        error_message: response.error_message,
-        trace_id: response.trace_id.or(request.trace_id),
-    })
+    state.crawler.status(request)
 }
 
 #[tauri::command]
@@ -122,22 +182,93 @@ async fn crawler_job_logs(
     state: tauri::State<'_, AppState>,
     request: CrawlerIpcJobLogsRequest,
 ) -> Result<CrawlerIpcJobLogsResponse, String> {
-    state
-        .lifecycle
-        .ensure_running()
-        .await
-        .map_err(|error| error.to_string())?;
-    let sidecar_request = CrawlerSidecarJobLogsRequest {
-        trace_id: request.trace_id.clone(),
-        job_id: request.job_id.clone(),
-    };
-    let response = state.gateway.job_logs(sidecar_request).await?;
-    Ok(CrawlerIpcJobLogsResponse {
-        ok: response.ok,
-        job_id: response.job_id,
-        logs_json: response.logs_json,
-        trace_id: response.trace_id.or(request.trace_id),
+    state.crawler.logs(request)
+}
+
+/// List accepted channels for a job from SQLite (`crawler_channel`).
+#[tauri::command]
+async fn crawler_job_results(
+    state: tauri::State<'_, AppState>,
+    request: CrawlerIpcJobResultsRequest,
+) -> Result<CrawlerIpcJobResultsResponse, String> {
+    let store = state.channels_store.clone();
+    let job_id = request.job_id.clone();
+    let trace_id = request.trace_id.clone();
+    let rows = tauri::async_runtime::spawn_blocking(move || {
+        store
+            .list_by_job(&job_id)
+            .map_err(|error| error.to_string())
     })
+    .await
+    .map_err(|error| error.to_string())??;
+    let payload: Vec<serde_json::Value> = rows
+        .into_iter()
+        .map(|row| {
+            serde_json::json!({
+                "keyword": row.keyword,
+                "platform": row.platform,
+                "channel_id": row.channel_id,
+                "title": row.title,
+                "country": row.country,
+                "subscriber_count": row.subscriber_count,
+                "email": row.email,
+                "description": row.description,
+                "custom_url": row.custom_url,
+            })
+        })
+        .collect();
+    Ok(CrawlerIpcJobResultsResponse {
+        ok: true,
+        job_id: request.job_id,
+        results_json: serde_json::to_string(&payload).map_err(|error| error.to_string())?,
+        trace_id,
+    })
+}
+
+#[derive(serde::Serialize)]
+struct CrawlerYoutubeApiKeyResponse {
+    api_key: String,
+}
+
+#[derive(serde::Deserialize)]
+struct CrawlerYoutubeApiKeySetRequest {
+    api_key: String,
+}
+
+/// Read persisted YouTube Data API key from SQLite.
+#[tauri::command]
+async fn crawler_youtube_api_key_get(
+    state: tauri::State<'_, AppState>,
+) -> Result<CrawlerYoutubeApiKeyResponse, String> {
+    let store = state.settings_store.clone();
+    let api_key = tauri::async_runtime::spawn_blocking(move || {
+        store
+            .get(YOUTUBE_API_KEY)
+            .map_err(|error| error.to_string())
+    })
+    .await
+    .map_err(|error| error.to_string())??
+    .unwrap_or_default();
+    Ok(CrawlerYoutubeApiKeyResponse { api_key })
+}
+
+/// Persist YouTube Data API key to SQLite.
+#[tauri::command]
+async fn crawler_youtube_api_key_set(
+    state: tauri::State<'_, AppState>,
+    request: CrawlerYoutubeApiKeySetRequest,
+) -> Result<CrawlerYoutubeApiKeyResponse, String> {
+    let store = state.settings_store.clone();
+    let api_key = request.api_key.trim().to_string();
+    let value = api_key.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        store
+            .set(YOUTUBE_API_KEY, &value)
+            .map_err(|error| error.to_string())
+    })
+    .await
+    .map_err(|error| error.to_string())??;
+    Ok(CrawlerYoutubeApiKeyResponse { api_key })
 }
 
 pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
@@ -149,9 +280,22 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
         event_bus.clone() as Arc<dyn EventBus>,
     ));
     let gateway = Arc::new(RuntimeAgentSidecar::new(lifecycle.client().clone()));
+    let db_path = crawler_db_path();
+    let crawler_db = CrawlerDb::open(&db_path).expect("open crawler database");
+    let channels_store = Arc::new(SqliteCrawlerChannelStore::new(crawler_db.clone()))
+        as Arc<dyn CrawlerChannelStore>;
+    let settings_store = Arc::new(SqliteCrawlerSettingsStore::new(crawler_db.clone()))
+        as Arc<dyn CrawlerSettingsStore>;
+    let crawler = Arc::new(CrawlerService::new(channels_store.clone()));
+    let keywords_store =
+        Arc::new(SqliteCrawlerKeywordStore::new(crawler_db)) as Arc<dyn CrawlerKeywordStore>;
     let app_state = AppState {
         lifecycle: lifecycle.clone(),
         gateway,
+        crawler,
+        keywords_store,
+        channels_store,
+        settings_store,
         event_bus,
     };
 
@@ -172,7 +316,12 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             crawler_job_start,
             crawler_job_cancel,
             crawler_job_status,
-            crawler_job_logs
+            crawler_job_logs,
+            crawler_job_results,
+            crawler_keywords_import,
+            crawler_keywords_batches,
+            crawler_youtube_api_key_get,
+            crawler_youtube_api_key_set
         ])
         .build(context)?
         .run(move |app_handle, event| {
