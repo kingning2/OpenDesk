@@ -28,12 +28,20 @@ use storage::crawler_channels::SqliteCrawlerChannelStore;
 use storage::crawler_db::CrawlerDb;
 use storage::crawler_keywords::SqliteCrawlerKeywordStore;
 use storage::crawler_settings::SqliteCrawlerSettingsStore;
+use storage::opendesk_db::OpendeskDb;
 use tauri::Manager;
 
 fn crawler_db_path() -> PathBuf {
     let mut path = dirs::data_local_dir().unwrap_or_else(std::env::temp_dir);
     path.push("OpenDesk");
     path.push("crawler.db");
+    path
+}
+
+fn opendesk_db_path() -> PathBuf {
+    let mut path = dirs::data_local_dir().unwrap_or_else(std::env::temp_dir);
+    path.push("OpenDesk");
+    path.push("opendesk.db");
     path
 }
 
@@ -266,6 +274,10 @@ async fn crawler_job_results(
                 "email": row.email,
                 "description": row.description,
                 "custom_url": row.custom_url,
+                "email_status": row.email_status,
+                "enrich_attempts": row.enrich_attempts,
+                "enrich_error": row.enrich_error,
+                "enriched_at": row.enriched_at,
             })
         })
         .collect();
@@ -334,6 +346,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
     let gateway = Arc::new(RuntimeAgentSidecar::new(lifecycle.client().clone()));
     let license = build_license_gate();
     let db_path = crawler_db_path();
+    let _opendesk_db = OpendeskDb::open(opendesk_db_path()).expect("open opendesk database");
     let crawler_db = CrawlerDb::open(&db_path).expect("open crawler database");
     let channels_store = Arc::new(SqliteCrawlerChannelStore::new(crawler_db.clone()))
         as Arc<dyn CrawlerChannelStore>;

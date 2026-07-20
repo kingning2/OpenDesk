@@ -1024,6 +1024,8 @@ fn youtube_channel_record(
         .and_then(|value| value.get("subscriberCount"))
         .and_then(Value::as_str)
         .and_then(|value| value.parse::<i64>().ok());
+    let email = extract_email(&description);
+    let email_status = ChannelRecord::initial_email_status(&email).to_string();
     ChannelRecord {
         job_id: job_id.to_string(),
         keyword: keyword.to_string(),
@@ -1043,12 +1045,16 @@ fn youtube_channel_record(
             .and_then(Value::as_str)
             .map(str::to_string),
         subscriber_count,
-        email: extract_email(&description),
+        email,
         description: Some(description),
         custom_url: snippet
             .and_then(|value| value.get("customUrl"))
             .and_then(Value::as_str)
             .map(str::to_string),
+        email_status,
+        enrich_attempts: 0,
+        enrich_error: None,
+        enriched_at: None,
     }
 }
 
