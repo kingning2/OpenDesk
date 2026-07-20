@@ -41,14 +41,27 @@ export function Card({ className, variant, padding, asChild = false, ...props }:
   return <Comp className={cn(cardVariants({ variant, padding }), className)} {...props} />;
 }
 
-export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("flex flex-col gap-1.5", className)} {...props} />;
+export function CardHeader({
+  className,
+  compact = false,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement> & { compact?: boolean }) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col gap-1.5",
+        compact ? "px-4 pt-3 pb-0" : undefined,
+        className,
+      )}
+      {...props}
+    />
+  );
 }
 
 export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h3
-      className={cn("font-display text-[length:var(--text-lg)] font-semibold leading-none", className)}
+      className={cn("font-display text-(length:--text-lg) font-semibold leading-none", className)}
       {...props}
     />
   );
@@ -56,12 +69,21 @@ export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHead
 
 export function CardDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
   return (
-    <p className={cn("text-[length:var(--text-sm)] text-muted-foreground", className)} {...props} />
+    <p className={cn("text-(length:--text-sm) text-muted-foreground", className)} {...props} />
   );
 }
 
-export function CardContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("pt-0", className)} {...props} />;
+export function CardContent({
+  className,
+  padding = "default",
+  ...props
+}: React.HTMLAttributes<HTMLDivElement> & { padding?: "default" | "none" }) {
+  return (
+    <div
+      className={cn(padding === "none" ? "p-0" : "pt-0", className)}
+      {...props}
+    />
+  );
 }
 
 export function CardFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
