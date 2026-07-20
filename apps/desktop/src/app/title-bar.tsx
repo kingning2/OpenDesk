@@ -1,21 +1,54 @@
-import { Minus, Square, X } from "../../icons";
-import * as React from "react";
+/**
+ * OpenDesk 桌面壳窗口标题栏（无边框窗口拖拽 + 系统窗口控制）。
+ *
+ * 仅供 `apps/desktop` 壳层使用，不放入 `@desk/ui`。
+ *
+ * @author Xiaoman
+ * @created 2026-07-20
+ */
 
-import { cn } from "../../lib/cn";
+import { cn } from "@desk/ui";
+import { Minus, Square, X } from "@desk/ui/icons";
+import type { HTMLAttributes, ReactNode, MouseEvent } from "react";
 
+/** 标题栏适配的桌面平台。 */
 export type TitleBarPlatform = "macos" | "windows" | "linux";
 
-export interface TitleBarProps extends React.HTMLAttributes<HTMLDivElement> {
-  title?: string;
+/**
+ * 窗口标题栏属性。
+ *
+ * @author Xiaoman
+ * @created 2026-07-20
+ */
+export interface TitleBarProps extends HTMLAttributes<HTMLElement> {
+  /** 桌面平台；决定流量灯占位或 Windows 窗口按钮。 */
   platform?: TitleBarPlatform;
-  tabs?: React.ReactNode;
-  actions?: React.ReactNode;
+  /** 中间标签区（如 TabBar）。 */
+  tabs?: ReactNode;
+  /** 右侧操作区（设置、主题等）。 */
+  actions?: ReactNode;
+  /** 开始拖拽窗口。 */
   onStartDrag?: () => void;
+  /** 最小化。 */
   onMinimize?: () => void;
+  /** 切换最大化。 */
   onToggleMaximize?: () => void;
+  /** 关闭窗口。 */
   onClose?: () => void;
 }
 
+/**
+ * 窗口控制按钮。
+ *
+ * @author Xiaoman
+ * @created 2026-07-20
+ *
+ * @param props.label - 无障碍标签
+ * @param props.onClick - 点击回调
+ * @param props.children - 图标
+ * @param props.className - 额外样式
+ * @returns 按钮节点
+ */
 function WindowControlButton({
   label,
   onClick,
@@ -24,7 +57,7 @@ function WindowControlButton({
 }: {
   label: string;
   onClick?: () => void;
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
 }) {
   return (
@@ -33,7 +66,7 @@ function WindowControlButton({
       aria-label={label}
       onClick={onClick}
       className={cn(
-        "inline-flex h-8 w-9 cursor-pointer items-center justify-center text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground",
+        "inline-flex h-8 w-9 cursor-pointer items-center justify-center text-muted-foreground transition-[color,background-color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-muted/60 hover:text-foreground active:scale-[0.97]",
         className,
       )}
     >
@@ -42,6 +75,15 @@ function WindowControlButton({
   );
 }
 
+/**
+ * Windows / Linux 窗口控制组。
+ *
+ * @author Xiaoman
+ * @created 2026-07-20
+ *
+ * @param props - 最小化 / 最大化 / 关闭回调
+ * @returns 控制组节点
+ */
 function WindowControls({
   onMinimize,
   onToggleMaximize,
@@ -66,6 +108,18 @@ function WindowControls({
   );
 }
 
+/**
+ * 可拖拽区域；双击切换最大化。
+ *
+ * @author Xiaoman
+ * @created 2026-07-20
+ *
+ * @param props.className - 样式
+ * @param props.children - 子节点
+ * @param props.onStartDrag - 拖拽回调
+ * @param props.onToggleMaximize - 双击最大化回调
+ * @returns 拖拽区域节点
+ */
 function DragRegion({
   className,
   children,
@@ -73,11 +127,11 @@ function DragRegion({
   onToggleMaximize,
 }: {
   className?: string;
-  children?: React.ReactNode;
+  children?: ReactNode;
   onStartDrag?: () => void;
   onToggleMaximize?: () => void;
 }) {
-  const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseDown = (event: MouseEvent<HTMLDivElement>) => {
     if (event.button !== 0) {
       return;
     }
@@ -93,7 +147,7 @@ function DragRegion({
   return (
     <div
       data-tauri-drag-region
-      className={cn("select-none cursor-default", className)}
+      className={cn("cursor-default select-none", className)}
       onMouseDown={handleMouseDown}
     >
       {children}
@@ -101,8 +155,16 @@ function DragRegion({
   );
 }
 
+/**
+ * 桌面壳唯一窗口标题栏：品牌 logo + 标签 + 操作 + 窗口控制。
+ *
+ * @author Xiaoman
+ * @created 2026-07-20
+ *
+ * @param props - 见 {@link TitleBarProps}
+ * @returns 标题栏节点
+ */
 export function TitleBar({
-  title = "OpenDesk",
   platform = "windows",
   tabs,
   actions,
@@ -115,10 +177,18 @@ export function TitleBar({
 }: TitleBarProps) {
   const isMac = platform === "macos";
 
+  const brand = (
+    <img
+      src="/logo.png"
+      alt="OpenDesk"
+      className="size-5 shrink-0 rounded-[var(--radius-sm)] object-cover"
+    />
+  );
+
   return (
     <header
       className={cn(
-        "flex h-11 shrink-0 items-stretch overflow-hidden bg-shell items-center",
+        "flex h-11 shrink-0 items-center overflow-hidden bg-shell",
         className,
       )}
       {...props}
@@ -133,9 +203,7 @@ export function TitleBar({
             onToggleMaximize={onToggleMaximize}
             className="flex shrink-0 items-center px-3"
           >
-            <span className="truncate font-display text-[length:var(--text-xs)] text-muted-foreground">
-              {title}
-            </span>
+            {brand}
           </DragRegion>
           {tabs}
           <DragRegion
@@ -153,7 +221,7 @@ export function TitleBar({
             onToggleMaximize={onToggleMaximize}
             className="flex shrink-0 items-center px-3"
           >
-            <span className="font-display text-[length:var(--text-sm)] font-medium">{title}</span>
+            {brand}
           </DragRegion>
           {tabs}
           <DragRegion

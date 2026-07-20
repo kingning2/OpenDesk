@@ -14,3 +14,4 @@ class CrawlerIpcJobStartRequest(TypedDict, total=False):
     exclude_countries: str
     batch_id: str
     api_key: str
+    locale: str

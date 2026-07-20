@@ -1,0 +1,6 @@
+{
+  "title": "Agent",
+  "subtitle": "Sidecar 连通性垂直切片",
+  "ping": "Ping sidecar",
+  "pinging": "请求中…"
+}

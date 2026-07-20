@@ -35,8 +35,6 @@ __pycache__/
 *.sw?
 
 .cursor/*
-!.cursor/skills/
-!.cursor/skills/**
 
 .codegraph/*
 
@@ -48,3 +46,5 @@ crates/adapter/generated/license_verifier.sha256
 crates/adapter/generated/license_attest_key.hex
 
 docs/managed/changes/*
+
+.agents

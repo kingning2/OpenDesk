@@ -4,5 +4,6 @@
 
 | Change ID | 状态 | 优先级 | 主领域 | 负责人 | 父任务 | 阻塞 |
 |---|---|---|---|---|---|---|
+| CHG-20260720-010-i18n-route-json | in_progress | P0 | desktop-runtime | cursor-agent | — | — |
 | CHG-20260715-002-license-activation-gate | in_progress | P0 | desktop-runtime | cursor-agent | T019 | — |
 | CHG-20260716-002-license-starts-on-activate | in_progress | P1 | desktop-runtime | cursor-agent | T019 | — |

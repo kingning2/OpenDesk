@@ -6,7 +6,7 @@ export const agentFeature = {
   navItem: {
     id: "agent",
     path: "/features/agent",
-    label: "Agent",
+    labelKey: "nav.agent",
     icon: Bot,
   },
 };
