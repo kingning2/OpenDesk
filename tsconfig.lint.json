@@ -21,6 +21,10 @@
       "@desk/ui/*": ["packages/ui/src/*"],
       "@desk/platform": ["packages/platform/src"],
       "@desk/platform/*": ["packages/platform/src/*"],
+      "@desk/store": ["packages/store/src"],
+      "@desk/store/*": ["packages/store/src/*"],
+      "@desk/i18n": ["packages/i18n/src"],
+      "@desk/i18n/*": ["packages/i18n/src/*"],
       "@desk/contracts": ["packages/contracts/src"],
       "@desk/contracts/*": ["packages/contracts/src/*"],
       "@feature/*": ["apps/desktop/src/features/*"]
