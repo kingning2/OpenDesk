@@ -1,4 +1,32 @@
-# 本地增量 Change Record（已跟踪文件不受影响）
+# 本地增量 Change Record 忽略规则
+#
+# 默认忽略 changes/ 下所有内容。
+# MVP 规划文档需提交 GitHub：须先放行父目录，再放行具体文件。
+#
+# 新增需提交的规划文档：追加 !2026/07/<filename>
+
 **
 !README.md
 !.gitignore
+!2026/
+!2026/07/
+!2026/07/epic-20260720-001-mvp-sales-workbench.md
+!2026/07/chg-20260720-013-customer-profile-model.md
+!2026/07/chg-20260720-014-crawler-lead-import.md
+!2026/07/chg-20260720-015-smtp-mail-send.md
+!2026/07/chg-20260720-016-pricing-catalog.md
+!2026/07/chg-20260720-017-ai-readonly-query-tools.md
+!2026/07/chg-20260720-018-ai-mail-draft.md
+!2026/07/chg-20260720-019-customer-timeline-quote-history.md
+!2026/07/chg-20260720-020-whatsapp-business-assist.md
+!2026/07/chg-20260720-021-product-narrative-realignment.md
+!2026/07/chg-20260720-022-database-worker-ocr-design.md
+!2026/07/chg-20260720-023-opendesk-db-worker-skeleton.md
+!2026/07/chg-20260720-024-ocr-worker-pipeline.md
+!2026/07/chg-20260720-025-ocr-tesseract-model-download.md
+!2026/07/chg-20260720-026-mail-inbound-reply-record.md
+!2026/07/chg-20260720-027-llm-provider-settings.md
+!2026/07/chg-20260720-028-ocr-business-scenarios.md
+!2026/07/chg-20260720-029-imap-inbound-sync.md
+!2026/07/chg-20260720-030-ai-correction-feedback.md
+!2026/07/chg-20260720-031-crawler-playwright-email-enrich.md

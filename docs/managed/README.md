@@ -18,6 +18,7 @@
 
 | 目录 | 管理范围 | 拆分单位 |
 |---|---|---|
+| [`MVP_REVIEW.md`](MVP_REVIEW.md) | **GitHub 团队评审入口** | 指向路线图、Epic、Change、ADR |
 | `registry/` | 小型导航与当前工作 | 活跃项、领域目录 |
 | `domains/` | 某个稳定领域的现状 | 一个领域一个目录 |
 | `roadmaps/` | 领域里程碑与尚未完成的目标 | 一个领域一份活跃路线图，过大时按里程碑拆分 |
@@ -25,6 +26,18 @@
 | `decisions/` | 长期有效的架构决策 | 一个决策一个文件，按领域分片 |
 | `templates/` | 新文档模板 | 一种文档一个模板 |
 | `archive/` | 过期索引与归档规则 | 只保留导航，不集中堆正文 |
+
+## MVP 规划（提交 GitHub 供评审）
+
+当前 MVP 文档包已就绪，**尚未开始业务代码实施**。
+
+- 评审入口：[`MVP_REVIEW.md`](MVP_REVIEW.md)
+- 总路线图：[`roadmaps/mvp-sales-workbench.md`](roadmaps/mvp-sales-workbench.md)
+- 数据库设计：[`../architecture/database-schema.md`](../architecture/database-schema.md)
+- 进程模型（Worker/OCR）：[`../architecture/process-model.md`](../architecture/process-model.md)
+- Epic：[`changes/2026/07/epic-20260720-001-mvp-sales-workbench.md`](changes/2026/07/epic-20260720-001-mvp-sales-workbench.md)
+
+`changes/.gitignore` 已对白名单 MVP 规划文件放行，以便 `git add` 提交。
 
 ## 修改门禁
 

@@ -2,6 +2,12 @@
 
 Roadmap 按领域管理里程碑，只保留活跃和近期目标。
 
+## 活跃路线图
+
+| 路线图 | 说明 |
+|--------|------|
+| [mvp-sales-workbench.md](mvp-sales-workbench.md) | **当前 MVP**：YouTube 获客 → 邮件谈价 → WA 辅助；含文档地图与子任务索引 |
+
 ## 规则
 
 - 默认路径：`roadmaps/<domain>.md`；
