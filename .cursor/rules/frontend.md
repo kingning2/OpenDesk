@@ -1,20 +1,22 @@
 ---
-description: OpenDesk frontend stack — React Compiler, shadcn/Radix, Tailwind, Motion, Apple-style design tokens in @desk/ui
-globs: apps/desktop/**/*.{ts,tsx},packages/ui/**/*.{ts,tsx},packages/platform/**/*.{ts,tsx}
+description: OpenDesk frontend stack — React Compiler, shadcn/Radix, Tailwind, Motion, Zustand store, Apple-style design tokens in @desk/ui
+globs: apps/desktop/**/*.{ts,tsx},packages/ui/**/*.{ts,tsx},packages/platform/**/*.{ts,tsx},packages/store/**/*.{ts,tsx},packages/i18n/**/*.{ts,tsx}
 alwaysApply: false
 ---
 
 # Frontend Rules（Developer A）
 
-适用范围：`apps/desktop/src/**`、`packages/ui/**`、`packages/platform/**`
+适用范围：`apps/desktop/src/**`、`packages/ui/**`、`packages/platform/**`、`packages/store/**`、`packages/i18n/**`
 
 ## 必须使用的技术栈
 
 
 | 类别          | 库                         | 说明                                         |
-| ----------- | ------------------------- | ------------------------------------------ |
+| ----------- | ---------------------- | ------------------------------------------ |
 | 编译          | **React Compiler**        | 必须启用，禁止仅靠手动 `useMemo`/`useCallback` 优化     |
 | 组件基座        | **shadcn/ui + Radix UI**  | 组件源码在 `packages/ui`，可改不可绕                  |
+| 状态          | **Zustand**               | 经 `@desk/store`；业务 store 放 Feature / 壳层     |
+| 多语言        | **`@desk/i18n`**          | `createI18n`；文案字典放 app                       |
 | 样式          | **Tailwind CSS**          | 仅允许在 `packages/ui` 内写 utility；Feature 禁止裸用 |
 | 动画          | **Motion**                | Spring / 过渡；禁止 Feature 直接写 CSS animation   |
 | 图标          | **Lucide React**          | 统一 `@desk/ui/icons` 导出                     |
@@ -26,7 +28,6 @@ alwaysApply: false
 | 拖拽          | **dnd-kit**               | 经 `@desk/ui` 拖拽 primitives                 |
 | 命令面板        | **cmdk**                  | 经 `@desk/ui` Command 封装                    |
 | Toast       | **Sonner**                | 经 `@desk/ui` Toaster                       |
-| Workflow 编辑 | **Monaco Editor**         | 经 `@desk/ui` WorkflowEditor 封装             |
 
 
 ## Apple 风设计令牌（`packages/ui`）
@@ -57,8 +58,10 @@ import { Card } from "@desk/ui";
 | 包                   | 允许                               | 禁止                                          |
 | ------------------- | -------------------------------- | ------------------------------------------- |
 | `packages/ui`       | 组件 · 令牌 · 主题 · 动画                | IPC · 业务 · Store · API                      |
+| `packages/store`    | Zustand 底座 · `createDeskStore`   | 业务领域状态 · IPC                               |
+| `packages/i18n`     | `createI18n` · Provider / hooks    | 产品文案字典（放 app）                             |
 | `packages/platform` | IPC · OS API                     | 业务逻辑                                        |
-| `features/*`        | 组合 `@desk/ui` + `@desk/platform` | `@tauri-apps/api` · 裸 Tailwind · 直接引入 Radix |
+| `features/*`        | 组合 `@desk/ui` + `@desk/platform` + `@desk/store` + `@desk/i18n` | `@tauri-apps/api` · 裸 Tailwind · 直接引入 Radix |
 
 
 ## React Compiler
@@ -69,10 +72,37 @@ import { Card } from "@desk/ui";
 
 Feature 只通过 `@desk/platform/ipc` 调 Rust，禁止 `invoke()` 与 `@tauri-apps/api`。
 
+## 设计工程 Skill（强制）
+
+前端 UI / 动效 / 交互打磨 **必须** 遵循 Emil Kowalski 设计工程 Skill（已安装）：
+
+| Skill | 路径 | 何时使用 |
+|-------|------|----------|
+| **`emil-design-eng`** | [`.cursor/skills/emil-design-eng/SKILL.md`](../skills/emil-design-eng/SKILL.md) | 写或改 UI、组件、过渡、反馈态时 **先读再改** |
+| `review-animations` | [`.cursor/skills/review-animations/SKILL.md`](../skills/review-animations/SKILL.md) | 动效 diff / PR 审查 |
+| `animation-vocabulary` | [`.cursor/skills/animation-vocabulary/SKILL.md`](../skills/animation-vocabulary/SKILL.md) | 描述动效意图、写 prompt |
+| `find-animation-opportunities` | [`.cursor/skills/find-animation-opportunities/SKILL.md`](../skills/find-animation-opportunities/SKILL.md) | 找可动效的交互点 |
+| `improve-animations` | [`.cursor/skills/improve-animations/SKILL.md`](../skills/improve-animations/SKILL.md) | 改进现有动效 |
+| `apple-design` | [`.cursor/skills/apple-design/SKILL.md`](../skills/apple-design/SKILL.md) | Apple HIG 对齐（与本仓库 Apple 风令牌互补） |
+
+硬约束摘要（细节以 `emil-design-eng` 全文为准）：
+
+- UI 动效通常 **低于 300ms**；优先 `ease-out` / 自定义曲线，避免 `ease-in`
+- 只动画 **`transform` / `opacity`**；禁止无故 `transition: all`
+- 不要从 `scale(0)` 出现；popover 从 trigger 原点缩放
+- 高频操作（键盘、百次/日）少动或不动；尊重 `prefers-reduced-motion`
+- 动效审查输出 **Before / After / Why** 表格
+
+安装来源：`npx skills add emilkowalski/skill`（`skills-lock.json`）；Cursor 副本在 `.cursor/skills/`。
+
+**自检命令：** 在 Agent 对话输入 `/check-emil-design`（可跟路径或「当前 diff」），按 Emil 标准审查 UI/动效并给出 `PASS` / `FAIL`。
+
 ## 相关文档
 
 - `packages/ui/README.md`
+- `packages/store/README.md`
 - `skills/opendesk/guides/ui-design-system.md`
+- `.cursor/skills/emil-design-eng/SKILL.md`
 
 ## 补充职责边界
 
@@ -85,6 +115,7 @@ Feature 只通过 `@desk/platform/ipc` 调 Rust，禁止 `invoke()` 与 `@tauri-
 - Feature 必须放在 `apps/desktop/src/features/{chat,mail,workflow,...}` 下
 - 每个 feature 目录仅使用短名（一个词优先）
 - IPC 调用必须通过 `packages/platform/src/ipc` 封装；组件内禁止直接 `@tauri-apps/api` 调用
+- 客户端状态经 `@desk/store`（Zustand）；业务 store 定义在 Feature / 壳层，禁止把领域状态塞进 `packages/store`
 
 ## 命名规范
 
@@ -96,4 +127,3 @@ Feature 只通过 `@desk/platform/ipc` 调 Rust，禁止 `invoke()` 与 `@tauri-
 
 - 所有跨端字段变更：先改 `contracts/`，再改 UI
 - Breaking Change：必须走 `contracts/schema/v2`（或新文件）+ 迁移说明
-
