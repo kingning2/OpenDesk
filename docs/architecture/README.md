@@ -19,8 +19,8 @@ OpenDesk 架构文档与 ADR 存放目录。
                    │ 本机 IPC（contracts 定义）
 ┌──────────────────▼──────────────────────┐
 │  Python AI Runtime                      │
-│  LLM · RAG · OCR · Agent · Queue        │
-│  禁止：GUI · SQLite · 业务状态 · React    │
+│  LLM · Agent（只读 Query）· 邮件/WA 草稿   │
+│  禁止：GUI · SQLite · 写库 · 自动发信      │
 └─────────────────────────────────────────┘
 ```
 
@@ -37,7 +37,7 @@ OpenDesk 架构文档与 ADR 存放目录。
 
 ## Feature 列表（互相独立）
 
-`chat` · `mail` · `agent` · `workflow` · `knowledge` · `browser` · `ocr` · `mcp` · `plugin` · `tenant` · `user` · `channel`
+`chat` · `mail` · `agent` · `workflow` · `knowledge` · `browser` · `ocr` · `mcp` · `plugin` · `tenant` · `user` · `channel` · `crawler`
 
 跨 Feature 通信只允许：
 
@@ -63,7 +63,13 @@ contracts/  →  codegen  →  Rust  →  Python  →  React
 
 ## 相关文档
 
-- [`.cursor/rules/master.md`](../../.cursor/rules/master.md) — 完整约束与 lint 规范
-- [`contracts/README.md`](../../contracts/README.md) — 契约层说明
-- [`contracts/compatibility/MIGRATION.md`](../../contracts/compatibility/MIGRATION.md) — 破坏性变更迁移
-- `adr/` — Architecture Decision Records
+| 文档 | 说明 |
+|------|------|
+| [`database-schema.md`](database-schema.md) | **SQLite 双库**、全表 DDL、ER 图 |
+| [`process-model.md`](process-model.md) | **三进程模型**（UI / Worker / Sidecar）；OCR 不得阻塞 UI |
+| [`product-architecture.md`](product-architecture.md) | **商务工作台**产品架构（获客·邮件·WA 辅助） |
+| [`whatsapp-webhook-deployment.md`](whatsapp-webhook-deployment.md) | **WA webhook** 开发隧道与部署手册（MVP M5） |
+| [`python-ai-runtime-architecture.md`](python-ai-runtime-architecture.md) | Python AI Runtime 工程架构 |
+| [`../managed/MVP_REVIEW.md`](../managed/MVP_REVIEW.md) | **MVP 团队评审入口**（路线图与子任务） |
+| [`.cursor/rules/master.md`](../../.cursor/rules/master.md) | 完整约束与 lint 规范 |
+| [`contracts/README.md`](../../contracts/README.md) | 契约层说明 |

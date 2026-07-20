@@ -2,28 +2,26 @@
 
 ## 1. 文档定位
 
-本文描述 OpenDesk Python AI Runtime 的**目标工程架构**，并以当前 uv workspace 为基础规划 WhatsApp AI 客服能力。
+本文描述 OpenDesk Python AI Runtime 的**目标工程架构**，以当前 uv workspace 为基础，支撑 **商务工作台 MVP**：邮件 AI 起草、WhatsApp 翻译/回复建议、**只读**客户与价目表查询。
 
-> 当前 Python 端仅具备 sidecar、gateway Ping、共享日志和若干 package 骨架。本文中的模型调用、Agent、RAG、Tool Calling 和消息处理流程均为待规划能力。
+> 当前 Python 端仅具备 sidecar、gateway Ping、共享日志和若干 package 骨架。邮件起草、只读 Query 工具、WA 翻译/建议等均为 **待规划能力**。
 
 ## 2. 运行时定位
 
 Python AI Runtime 是 Desktop Agent 的 AI 计算层，负责：
 
-- 消息预处理和语言识别；
-- LLM Provider 调用与模型路由；
-- Prompt 组装与版本管理；
-- Agent 规划和执行；
-- RAG 解析、切片、Embedding 与检索编排；
-- Tool Calling 意图生成；
-- 回复、置信度与人工接管建议。
+- 邮件谈价/跟进 **草稿** 生成（`mail_draft`）；
+- WhatsApp 消息 **翻译**（`wa_translate`）与 **回复建议**（`wa_suggest`）；
+- LLM Provider 调用；
+- Prompt 组装（注入 Rust 提供的客户档案与价目表摘要）；
+- **只读** ToolCall 发起（实际查询由 Rust Query Port 执行，见 ADR-0001）。
 
 Python 不负责：
 
 - React UI 或 Tauri 事件；
-- WhatsApp webhook 接入和消息发送；
-- 本地文件管理、SQLite 或向量数据库连接；
-- 企业系统凭据管理和业务工具最终执行；
+- WhatsApp / SMTP **发送**（发送由 Rust 经 UI 人工触发）；
+- 本地文件管理、SQLite 或向量数据库 **读写**；
+- 客户报价/合作状态的 **修改**；
 - sidecar 进程生命周期。
 
 这些能力由 Rust Application Core 统一协调。
@@ -431,15 +429,15 @@ Token、API key、手机号、邮箱、完整 Prompt 和原始客户敏感信息
 - 结构化日志；
 - 生产冻结和桌面打包。
 
-### 阶段 1：AI MVP
+### 阶段 1：商务 AI MVP
 
-- 生成请求/响应 Contract；
+- 生成请求/响应 Contract（mail_draft、wa_translate、wa_suggest）；
 - 单一 Provider 抽象与实现；
-- 基础 Agent 执行；
-- 会话上下文；
-- 基础知识库；
-- 人工接管结果；
+- **只读** Query 工具往返（customer.* / pricing.* / quote.history）；
+- `context_loader`：生成前强制拉取客户档案 + 价目表；
 - Mock 与跨进程集成测试。
+
+> 阶段 1 **不包含**：AI 写库、自动发邮件/WA、完整 RAG 知识库平台。
 
 ### 阶段 2：增强能力
 
@@ -458,7 +456,9 @@ Token、API key、手机号、邮箱、完整 Prompt 和原始客户敏感信息
 
 ## 12. 相关文档
 
-- `PRODUCT_ARCHITECTURE.md`：产品、渠道、数据和安全架构；
-- `contracts/README.md`：契约唯一真相源与 codegen；
-- `skills/opendesk/guides/python.md`：Python 端开发规范；
-- `skills/opendesk/guides/rust-python-ipc.md`：Rust 与 Python 通信规范。
+- [`product-architecture.md`](product-architecture.md) — 商务工作台产品架构；
+- [`../managed/MVP_REVIEW.md`](../managed/MVP_REVIEW.md) — GitHub 团队评审入口；
+- [`../managed/decisions/customer/adr-0001-ai-readonly-query-port.md`](../managed/decisions/customer/adr-0001-ai-readonly-query-port.md) — AI 只读查库；
+- [`contracts/README.md`](../../contracts/README.md) — 契约唯一真相源与 codegen；
+- [`skills/opendesk/guides/python.md`](../../skills/opendesk/guides/python.md) — Python 端开发规范；
+- [`skills/opendesk/guides/rust-python-ipc.md`](../../skills/opendesk/guides/rust-python-ipc.md) — Rust 与 Python 通信规范。
