@@ -38,10 +38,21 @@ fn crawler_db_path() -> PathBuf {
 }
 
 /// Resolve comma-separated keywords from the request or SQLite keyword batch.
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-07-20
+///
+/// # 参数
+///
+/// * `store` - 关键词存储
+/// * `keywords` - 直接传入的关键词串
+/// * `batch_id` - 批次 ID
+/// * `locale` - UI 语言（错误文案由后端翻译）
 fn resolve_keywords(
     store: &dyn CrawlerKeywordStore,
     keywords: Option<String>,
     batch_id: Option<String>,
+    locale: crawler::Locale,
 ) -> Result<String, String> {
     if let Some(text) = keywords.and_then(|value| {
         let trimmed = value.trim().to_string();
@@ -62,12 +73,12 @@ fn resolve_keywords(
                 Some(trimmed)
             }
         })
-        .ok_or_else(|| "请先导入 CSV 并选择关键词批次".to_string())?;
+        .ok_or_else(|| crawler::need_batch(locale))?;
     let list = store
         .enabled_keywords_for_batch(&batch)
         .map_err(|error| error.to_string())?;
     if list.is_empty() {
-        return Err(format!("批次 {batch} 没有可用关键词"));
+        return Err(crawler::empty_batch(locale, &batch));
     }
     Ok(list.join(","))
 }
@@ -133,8 +144,9 @@ async fn crawler_job_start(
     let store = state.keywords_store.clone();
     let keywords_input = request.keywords.clone();
     let batch_id_input = request.batch_id.clone();
+    let locale = crawler::Locale::parse(request.locale.as_deref());
     let keywords = tauri::async_runtime::spawn_blocking(move || {
-        resolve_keywords(store.as_ref(), keywords_input, batch_id_input)
+        resolve_keywords(store.as_ref(), keywords_input, batch_id_input, locale)
     })
     .await
     .map_err(|error| error.to_string())??;

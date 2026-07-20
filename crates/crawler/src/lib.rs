@@ -4,11 +4,16 @@
 //! worker pool, calls the YouTube Data API with `reqwest`, and keeps operational
 //! progress in memory for existing IPC `job.status` / `job.logs` polling.
 
+mod i18n;
+
+pub use i18n::{empty_batch, need_batch, Locale};
+
 use common::contracts::{
     CrawlerEventJobLog, CrawlerIpcJobCancelRequest, CrawlerIpcJobCancelResponse,
     CrawlerIpcJobLogsRequest, CrawlerIpcJobLogsResponse, CrawlerIpcJobStartRequest,
     CrawlerIpcJobStartResponse, CrawlerIpcJobStatusRequest, CrawlerIpcJobStatusResponse,
 };
+use i18n as msg;
 use ports::crawler_channels::{ChannelRecord, CrawlerChannelStore};
 use reqwest::blocking::Client;
 use serde_json::Value;
@@ -60,6 +65,8 @@ struct JobHandle {
     logs: Mutex<Vec<CrawlerEventJobLog>>,
     cancel_requested: AtomicBool,
     seq: AtomicI64,
+    /// Job 用户可见语言（启动时固定）。
+    locale: Locale,
 }
 
 #[derive(Clone)]
@@ -109,7 +116,8 @@ impl CrawlerService {
         }
 
         let job_id = Uuid::new_v4().to_string();
-        let handle = Arc::new(JobHandle::new(job_id.clone(), platform.clone()));
+        let locale = Locale::parse(request.locale.as_deref());
+        let handle = Arc::new(JobHandle::new(job_id.clone(), platform.clone(), locale));
         self.jobs
             .lock()
             .map_err(|error| error.to_string())?
@@ -352,14 +360,14 @@ impl CrawlerService {
 }
 
 impl JobHandle {
-    fn new(job_id: String, platform: String) -> Self {
+    fn new(job_id: String, platform: String, locale: Locale) -> Self {
         Self {
             snapshot: Mutex::new(JobSnapshot {
                 job_id,
                 platform,
                 status: "queued".to_string(),
                 stop_reason: None,
-                message: Some("排队中".to_string()),
+                message: Some(msg::queued(locale)),
                 current_keyword: None,
                 scanned_count: 0,
                 accepted_count: 0,
@@ -374,6 +382,7 @@ impl JobHandle {
             logs: Mutex::new(Vec::new()),
             cancel_requested: AtomicBool::new(false),
             seq: AtomicI64::new(0),
+            locale,
         }
     }
 
@@ -382,7 +391,7 @@ impl JobHandle {
             snapshot.status = "running".to_string();
             snapshot.keywords_total = keywords_total as i64;
             snapshot.keywords_done = 0;
-            snapshot.message = Some(format!("准备爬取 {keywords_total} 个关键词"));
+            snapshot.message = Some(msg::prepare_keywords(self.locale, keywords_total));
         }
     }
 
@@ -391,7 +400,7 @@ impl JobHandle {
             if snapshot.status == "queued" || snapshot.status == "running" {
                 snapshot.status = "cancelled".to_string();
                 snapshot.stop_reason = Some("cancelled".to_string());
-                snapshot.message = Some("任务已取消".to_string());
+                snapshot.message = Some(msg::cancelled(self.locale));
             }
         }
     }
@@ -412,10 +421,15 @@ impl JobHandle {
             snapshot.keyword_scanned = keyword_scanned;
             snapshot.keyword_accepted = keyword_accepted;
             snapshot.quota_used = quota_used;
-            snapshot.message = Some(format!(
-                "关键词进度 {}/{} · 当前「{keyword}」· 本词收录 {keyword_accepted} · 合计收录 {accepted_count}",
-                (snapshot.keywords_done + 1).min(snapshot.keywords_total.max(1)),
-                snapshot.keywords_total.max(1),
+            let done = (snapshot.keywords_done + 1).min(snapshot.keywords_total.max(1));
+            let total = snapshot.keywords_total.max(1);
+            snapshot.message = Some(msg::progress(
+                self.locale,
+                done,
+                total,
+                keyword,
+                keyword_accepted,
+                accepted_count,
             ));
             upsert_keyword_progress(
                 &mut snapshot.keyword_stats,
@@ -440,7 +454,7 @@ impl JobHandle {
             snapshot.quota_used = quota_used;
             snapshot.scanned_count = scanned_count;
             snapshot.accepted_count = accepted_count;
-            snapshot.message = Some(stop_message(stop_reason).to_string());
+            snapshot.message = Some(msg::stop_message(self.locale, stop_reason));
         }
     }
 
@@ -448,7 +462,7 @@ impl JobHandle {
         if let Ok(mut snapshot) = self.snapshot.lock() {
             snapshot.status = "cancelled".to_string();
             snapshot.stop_reason = Some("cancelled".to_string());
-            snapshot.message = Some("任务已取消".to_string());
+            snapshot.message = Some(msg::cancelled(self.locale));
         }
     }
 
@@ -457,7 +471,7 @@ impl JobHandle {
             snapshot.keywords_done += 1;
             let done = snapshot.keywords_done;
             let total = snapshot.keywords_total;
-            snapshot.message = Some(format!("关键词进度 {done}/{total}"));
+            snapshot.message = Some(msg::keyword_done(self.locale, done, total));
         }
     }
 
@@ -466,7 +480,7 @@ impl JobHandle {
             snapshot.status = "failed".to_string();
             snapshot.stop_reason = Some("failed".to_string());
             snapshot.error_message = Some(message.clone());
-            snapshot.message = Some(format!("失败：{message}"));
+            snapshot.message = Some(msg::failed(self.locale, &message));
         }
     }
 
@@ -521,7 +535,7 @@ impl JobHandle {
                 platform: "youtube".to_string(),
                 status: "failed".to_string(),
                 stop_reason: Some("failed".to_string()),
-                message: Some("状态不可用".to_string()),
+                message: Some(msg::status_unavailable(self.locale)),
                 current_keyword: None,
                 scanned_count: 0,
                 accepted_count: 0,
@@ -929,16 +943,6 @@ fn calculate_expected_quota(
 
 fn reached_max_total(config: &RunConfig, accepted: i64) -> bool {
     config.max_total > 0 && accepted >= config.max_total
-}
-
-fn stop_message(stop_reason: &str) -> &'static str {
-    match stop_reason {
-        "keywords_finished" => "已完成",
-        "max_total_reached" => "已达数量上限",
-        "quota_exceeded" => "YouTube 配额已用尽，已自动停止爬虫",
-        "cancelled" => "任务已取消",
-        _ => "已结束",
-    }
 }
 
 fn next_page_token(body: &Value) -> Option<String> {
