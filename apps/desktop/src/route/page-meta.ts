@@ -28,6 +28,10 @@ const pageMetaByPath: Record<string, PageMeta> = {
     title: "Knowledge",
     description: "Knowledge base and retrieval",
   },
+  "/settings": {
+    title: "Settings",
+    description: "Application settings",
+  },
 };
 
 export function getPageMeta(pathname: string): PageMeta {

@@ -1,21 +1,53 @@
 /**
- * Crawl job hook — poll operational progress (keyword / counts / stop reason).
+ * Crawl job hook — CSV keyword batches, IPC polling, React Flow node state.
  *
- * @author Xiaoman
- * @created 2026-07-16
+ * Progress is polled (status + logs) so the UI can drive a fixed React Flow
+ * monitor without subscribing to Tauri events yet.
  */
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   crawlerJobCancel,
+  crawlerJobLogs,
+  crawlerJobResults,
   crawlerJobStart,
   crawlerJobStatus,
+  crawlerKeywordsBatches,
+  crawlerKeywordsImport,
+  type KeywordBatchRow,
 } from "@desk/platform/ipc/crawler";
+import { crawlerYoutubeApiKeyGet } from "@desk/platform/ipc/crawler-settings";
 
 export interface KeywordStatRow {
   keyword: string;
   scanned: number;
   accepted: number;
+}
+
+export interface CrawlerLogRow {
+  event_id: string;
+  occurred_at: string;
+  job_id: string;
+  platform: string;
+  seq: number;
+  phase: string;
+  level: string;
+  message: string;
+  keyword?: string;
+  detail?: string;
+}
+
+/** One accepted channel row from `crawler_channel` SQLite. */
+export interface ChannelResultRow {
+  keyword: string;
+  platform: string;
+  channel_id: string;
+  title: string;
+  country?: string;
+  subscriber_count?: number;
+  email?: string;
+  description?: string;
+  custom_url?: string;
 }
 
 export type CrawlUiStatus =
@@ -40,7 +72,11 @@ function statusLabel(status: CrawlUiStatus, stopReason?: string): string {
 
 export function useCrawlerJob() {
   const [apiKey, setApiKey] = useState("");
-  const [keywords, setKeywords] = useState("beauty,skincare");
+  const [apiKeyLoading, setApiKeyLoading] = useState(true);
+  const [batchId, setBatchId] = useState("");
+  const [batches, setBatches] = useState<KeywordBatchRow[]>([]);
+  const [importMessage, setImportMessage] = useState("");
+  const [importing, setImporting] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
   const [status, setStatus] = useState<CrawlUiStatus>("idle");
   const [stopReason, setStopReason] = useState("");
@@ -51,9 +87,55 @@ export function useCrawlerJob() {
   const [acceptedCount, setAcceptedCount] = useState(0);
   const [scannedCount, setScannedCount] = useState(0);
   const [quotaUsed, setQuotaUsed] = useState(0);
+  const [keywordsTotal, setKeywordsTotal] = useState(0);
+  const [keywordsDone, setKeywordsDone] = useState(0);
   const [keywordStats, setKeywordStats] = useState<KeywordStatRow[]>([]);
+  const [logs, setLogs] = useState<CrawlerLogRow[]>([]);
+  const [channelResults, setChannelResults] = useState<ChannelResultRow[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  const refreshApiKey = useCallback(async () => {
+    setApiKeyLoading(true);
+    try {
+      const response = await crawlerYoutubeApiKeyGet();
+      setApiKey(response.api_key ?? "");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setApiKeyLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void refreshApiKey();
+    }, 0);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [refreshApiKey]);
+
+  const refreshBatches = useCallback(async () => {
+    try {
+      const items = await crawlerKeywordsBatches();
+      setBatches(items);
+      if (!batchId && items.length > 0) {
+        setBatchId(items[0].batch_id);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }, [batchId]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void refreshBatches();
+    }, 0);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [refreshBatches]);
 
   useEffect(() => {
     if (!jobId) {
@@ -63,7 +145,11 @@ export function useCrawlerJob() {
 
     async function poll() {
       try {
-        const statusRes = await crawlerJobStatus({ job_id: jobId! });
+        const [statusRes, logsRes, resultsRes] = await Promise.all([
+          crawlerJobStatus({ job_id: jobId! }),
+          crawlerJobLogs({ job_id: jobId! }),
+          crawlerJobResults({ job_id: jobId! }),
+        ]);
         if (cancelled) {
           return;
         }
@@ -77,6 +163,8 @@ export function useCrawlerJob() {
         setAcceptedCount(statusRes.accepted_count ?? 0);
         setScannedCount(statusRes.scanned_count ?? 0);
         setQuotaUsed(statusRes.quota_used ?? 0);
+        setKeywordsTotal(statusRes.keywords_total ?? 0);
+        setKeywordsDone(statusRes.keywords_done ?? 0);
         if (statusRes.error_message) {
           setError(statusRes.error_message);
         }
@@ -85,6 +173,18 @@ export function useCrawlerJob() {
           setKeywordStats(Array.isArray(parsed) ? parsed : []);
         } catch {
           setKeywordStats([]);
+        }
+        try {
+          const parsed = JSON.parse(logsRes.logs_json ?? "[]") as CrawlerLogRow[];
+          setLogs(Array.isArray(parsed) ? parsed : []);
+        } catch {
+          setLogs([]);
+        }
+        try {
+          const parsed = JSON.parse(resultsRes.results_json ?? "[]") as ChannelResultRow[];
+          setChannelResults(Array.isArray(parsed) ? parsed : []);
+        } catch {
+          setChannelResults([]);
         }
         if (
           nextStatus === "completed" ||
@@ -112,29 +212,62 @@ export function useCrawlerJob() {
     };
   }, [jobId]);
 
+  async function importCsvFile(file: File) {
+    setError("");
+    setImportMessage("");
+    setImporting(true);
+    try {
+      const csvContent = await file.text();
+      const result = await crawlerKeywordsImport({
+        csv_content: csvContent,
+        trace_id: crypto.randomUUID(),
+      });
+      if (!result.ok) {
+        setError("导入失败");
+        return;
+      }
+      setBatchId(result.batch_id);
+      setImportMessage(
+        `已导入 ${result.inserted} 条（跳过重复 ${result.skipped_existing}，过长 ${result.skipped_too_long}）`,
+      );
+      await refreshBatches();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setImporting(false);
+    }
+  }
+
   async function start() {
     setError("");
+    if (!apiKey.trim()) {
+      setError("请先在设置中配置 YouTube API 密钥");
+      return;
+    }
     setBusy(true);
     setMessage("正在启动…");
     setStopReason("");
     setCurrentKeyword("");
     setKeywordStats([]);
+    setLogs([]);
+    setChannelResults([]);
     setAcceptedCount(0);
     setScannedCount(0);
     setKeywordAccepted(0);
     setKeywordScanned(0);
     setQuotaUsed(0);
+    setKeywordsTotal(0);
+    setKeywordsDone(0);
     try {
       const result = await crawlerJobStart({
         platform: "youtube",
-        keywords,
+        batch_id: batchId,
         api_key: apiKey,
-        max_total: 20,
         rate_limit_ms: 400,
         trace_id: crypto.randomUUID(),
       });
       if (!result.ok || !result.job_id) {
-        setError("启动失败：请检查 API Key 与 Sidecar");
+        setError("启动失败：请检查 API Key、批次与 Sidecar");
         setBusy(false);
         setStatus("failed");
         return;
@@ -159,11 +292,21 @@ export function useCrawlerJob() {
     }
   }
 
+  const selectedBatch = batches.find((row) => row.batch_id === batchId);
+
   return {
     apiKey,
-    setApiKey,
-    keywords,
-    setKeywords,
+    apiKeyConfigured: Boolean(apiKey.trim()),
+    apiKeyLoading,
+    refreshApiKey,
+    batchId,
+    setBatchId,
+    batches,
+    selectedBatch,
+    importMessage,
+    importing,
+    importCsvFile,
+    refreshBatches,
     jobId,
     status,
     statusText: statusLabel(status, stopReason),
@@ -175,7 +318,11 @@ export function useCrawlerJob() {
     acceptedCount,
     scannedCount,
     quotaUsed,
+    keywordsTotal,
+    keywordsDone,
     keywordStats,
+    logs,
+    channelResults,
     busy,
     error,
     start,

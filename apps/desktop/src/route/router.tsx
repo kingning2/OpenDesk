@@ -6,6 +6,7 @@ import { ChatPage } from "@feature/chat";
 import { CrawlerPage } from "@feature/crawler";
 import { MailPage } from "@feature/mail";
 import { KnowledgePage } from "@feature/knowledge";
+import { SettingsPage } from "@feature/setting";
 
 export const appRouter = createBrowserRouter([
   {
@@ -18,6 +19,7 @@ export const appRouter = createBrowserRouter([
       { path: "features/chat", element: <ChatPage /> },
       { path: "features/mail", element: <MailPage /> },
       { path: "features/knowledge", element: <KnowledgePage /> },
+      { path: "settings", element: <SettingsPage /> },
     ],
   },
 ]);

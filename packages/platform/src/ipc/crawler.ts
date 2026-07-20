@@ -4,14 +4,19 @@ import type {
   CrawlerIpcJobCancelResponse,
   CrawlerIpcJobLogsRequest,
   CrawlerIpcJobLogsResponse,
+  CrawlerIpcJobResultsRequest,
+  CrawlerIpcJobResultsResponse,
   CrawlerIpcJobStartRequest,
   CrawlerIpcJobStartResponse,
   CrawlerIpcJobStatusRequest,
   CrawlerIpcJobStatusResponse,
+  CrawlerIpcKeywordsBatchesResponse,
+  CrawlerIpcKeywordsImportRequest,
+  CrawlerIpcKeywordsImportResponse,
 } from "@desk/contracts";
 
 /**
- * Start a crawl job (React → Rust → Python).
+ * Start a crawl job (React → Rust in-process crawler).
  *
  * @author Xiaoman
  * @created 2026-07-16
@@ -56,4 +61,40 @@ export async function crawlerJobLogs(
   input: CrawlerIpcJobLogsRequest,
 ): Promise<CrawlerIpcJobLogsResponse> {
   return invoke<CrawlerIpcJobLogsResponse>("crawler_job_logs", { request: input });
+}
+
+/**
+ * List accepted channels for a job (`results_json` array string).
+ */
+export async function crawlerJobResults(
+  input: CrawlerIpcJobResultsRequest,
+): Promise<CrawlerIpcJobResultsResponse> {
+  return invoke<CrawlerIpcJobResultsResponse>("crawler_job_results", { request: input });
+}
+
+export interface KeywordBatchRow {
+  batch_id: string;
+  keyword_count: number;
+}
+
+/**
+ * Import keywords from CSV text into Rust SQLite.
+ */
+export async function crawlerKeywordsImport(
+  input: CrawlerIpcKeywordsImportRequest,
+): Promise<CrawlerIpcKeywordsImportResponse> {
+  return invoke<CrawlerIpcKeywordsImportResponse>("crawler_keywords_import", { request: input });
+}
+
+/**
+ * List keyword import batches.
+ */
+export async function crawlerKeywordsBatches(): Promise<KeywordBatchRow[]> {
+  const response = await invoke<CrawlerIpcKeywordsBatchesResponse>("crawler_keywords_batches");
+  try {
+    const parsed = JSON.parse(response.batches_json ?? "[]") as KeywordBatchRow[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
