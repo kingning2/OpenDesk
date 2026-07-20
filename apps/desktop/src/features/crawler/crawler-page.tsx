@@ -3,15 +3,21 @@
  */
 
 import { Link } from "react-router";
-import { useMemo, useRef, useState, type ButtonHTMLAttributes } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
+  Button,
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
   PageScaffold,
-  cn,
+  ScrollArea,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   useTheme,
 } from "@desk/ui";
 import {
@@ -33,30 +39,6 @@ import {
   type CrawlerLogRow,
   type KeywordStatRow,
 } from "./use-crawler-job";
-
-function ActionButton({
-  className,
-  variant = "default",
-  size = "md",
-  ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "default" | "outline" | "ghost";
-  size?: "md" | "sm";
-}) {
-  return (
-    <button
-      className={cn(
-        "inline-flex items-center justify-center rounded-[var(--radius-md)] text-[length:var(--text-sm)] font-medium transition-colors disabled:pointer-events-none disabled:opacity-50",
-        size === "sm" ? "h-7 px-2.5" : "h-9 px-3",
-        variant === "default" && "bg-primary text-primary-foreground hover:bg-primary/90",
-        variant === "outline" && "border border-border bg-transparent hover:bg-muted",
-        variant === "ghost" && "hover:bg-muted",
-        className,
-      )}
-      {...props}
-    />
-  );
-}
 
 type FlowStage = "source" | "search" | "summary";
 type PanelView = "process" | "results";
@@ -607,12 +589,7 @@ export function CrawlerPage() {
   }
 
   return (
-    <PageScaffold
-      containerWidth="full"
-      containerPadding="sm"
-      subtitle="YouTube 频道采集"
-      className="flex min-h-0 flex-1 flex-col"
-    >
+    <PageScaffold fill containerWidth="full" containerPadding="sm" subtitle="YouTube 频道采集">
       <div className="flex min-h-0 flex-1 flex-col gap-3">
         <Card variant="glass" padding="sm" className="shrink-0">
           <div className="grid gap-3 lg:grid-cols-[auto_minmax(180px,0.7fr)_auto] lg:items-end">
@@ -631,48 +608,47 @@ export function CrawlerPage() {
                   event.target.value = "";
                 }}
               />
-              <ActionButton
+              <Button
                 type="button"
                 variant="outline"
                 disabled={importing || busy}
                 onClick={() => fileInputRef.current?.click()}
               >
                 {importing ? "导入中…" : "导入关键词"}
-              </ActionButton>
+              </Button>
             </div>
 
             <label className="block min-w-[180px] space-y-1.5">
               <span className="text-[length:var(--text-sm)] text-muted-foreground">关键词批次</span>
-              <select
-                className="h-9 w-full rounded-[var(--radius-md)] border border-border bg-background px-3 text-[length:var(--text-sm)] disabled:opacity-50"
-                value={batchId}
-                disabled={busy || batches.length === 0}
-                onChange={(event) => setBatchId(event.target.value)}
-              >
-                {batches.length === 0 ? (
-                  <option value="">请先导入关键词</option>
-                ) : (
-                  batches.map((row, index) => (
-                    <option key={row.batch_id} value={row.batch_id}>
-                      {batchLabel(row, index)}
-                    </option>
-                  ))
-                )}
-              </select>
+              {batches.length === 0 ? (
+                <Select disabled>
+                  <SelectTrigger>
+                    <SelectValue placeholder="请先导入关键词" />
+                  </SelectTrigger>
+                </Select>
+              ) : (
+                <Select value={batchId} onValueChange={setBatchId} disabled={busy}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择批次" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {batches.map((row, index) => (
+                      <SelectItem key={row.batch_id} value={row.batch_id}>
+                        {batchLabel(row, index)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </label>
 
             <div className="flex items-end gap-2 lg:justify-end">
-              <ActionButton type="button" disabled={busy || !canStart} onClick={handleStart}>
+              <Button type="button" disabled={busy || !canStart} onClick={handleStart}>
                 {busy ? "采集中…" : "开始采集"}
-              </ActionButton>
-              <ActionButton
-                type="button"
-                variant="outline"
-                disabled={!busy}
-                onClick={() => void cancel()}
-              >
+              </Button>
+              <Button type="button" variant="outline" disabled={!busy} onClick={() => void cancel()}>
                 停止
-              </ActionButton>
+              </Button>
             </div>
           </div>
 
@@ -711,11 +687,11 @@ export function CrawlerPage() {
 
         <div className="grid min-h-0 flex-1 gap-3 xl:grid-cols-[1.45fr_1fr]">
           <Card variant="glass" padding="none" className="flex min-h-0 flex-col overflow-hidden">
-            <CardHeader className="shrink-0 px-4 pt-4">
+            <CardHeader compact className="shrink-0">
               <CardTitle>采集流程</CardTitle>
               <CardDescription>点击节点查看对应详情；连线表示数据流向。</CardDescription>
             </CardHeader>
-            <CardContent className="min-h-0 flex-1 p-0">
+            <CardContent padding="none" className="min-h-0 flex-1">
               <div className="h-full min-h-[280px] w-full">
                 <ReactFlow
                   fitView
@@ -742,7 +718,7 @@ export function CrawlerPage() {
           </Card>
 
           <Card variant="glass" padding="none" className="flex min-h-0 flex-col overflow-hidden">
-            <CardHeader className="shrink-0 space-y-3 px-4 pt-4">
+            <CardHeader compact className="shrink-0 space-y-3">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <CardTitle>{STAGE_LABELS[selectedStage]}</CardTitle>
@@ -751,27 +727,27 @@ export function CrawlerPage() {
                   </CardDescription>
                 </div>
                 <div className="flex shrink-0 gap-1 rounded-[var(--radius-md)] border border-border bg-card/40 p-0.5">
-                  <ActionButton
+                  <Button
                     type="button"
                     size="sm"
                     variant={panelView === "process" ? "default" : "ghost"}
                     onClick={() => setPanelView("process")}
                   >
                     过程
-                  </ActionButton>
-                  <ActionButton
+                  </Button>
+                  <Button
                     type="button"
                     size="sm"
                     variant={panelView === "results" ? "default" : "ghost"}
                     onClick={() => setPanelView("results")}
                   >
                     结果
-                  </ActionButton>
+                  </Button>
                 </div>
               </div>
             </CardHeader>
 
-            <div className="min-h-0 flex-1 overflow-auto p-[10px]">
+            <ScrollArea className="min-h-0 flex-1 p-[10px]">
               <DetailPanel
                 stage={selectedStage}
                 view={panelView}
@@ -791,7 +767,7 @@ export function CrawlerPage() {
                 keywordsTotal={keywordsTotal}
                 busy={busy}
               />
-            </div>
+            </ScrollArea>
           </Card>
         </div>
       </div>
