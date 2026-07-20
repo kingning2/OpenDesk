@@ -2,7 +2,13 @@
 name = "provider"
 version = "0.1.0"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+  "google-genai>=2.10,<3",
+  "httpx>=0.28,<1",
+  "llm",
+  "model",
+  "openai>=2.38,<3",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -10,3 +16,7 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/provider"]
+
+[tool.uv.sources]
+llm = { workspace = true }
+model = { workspace = true }
