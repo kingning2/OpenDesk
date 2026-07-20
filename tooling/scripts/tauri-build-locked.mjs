@@ -50,26 +50,30 @@ function parseCliTarget(argv) {
 const cliTarget = parseCliTarget(process.argv.slice(2));
 
 const env = { ...process.env };
+/** @type {string | null} */
+let buildTarget = cliTarget;
 if (platform() === "win32") {
   env.RUSTUP_TOOLCHAIN =
     env.RUSTUP_TOOLCHAIN ?? "stable-x86_64-pc-windows-msvc";
   if (cliTarget) {
-    env.CARGO_BUILD_TARGET = cliTarget.includes("windows-gnu")
+    buildTarget = cliTarget.includes("windows-gnu")
       ? cliTarget.replace("windows-gnu", "windows-msvc")
       : cliTarget;
-  } else if (!env.CARGO_BUILD_TARGET) {
-    env.CARGO_BUILD_TARGET = WINDOWS_DEFAULT_MSVC;
+  } else {
+    buildTarget = env.CARGO_BUILD_TARGET || WINDOWS_DEFAULT_MSVC;
   }
+  env.CARGO_BUILD_TARGET = buildTarget;
 }
 
 const verifierArgs = ["tooling/scripts/build-license-verifier.mjs"];
-if (cliTarget) {
-  verifierArgs.push("--target", cliTarget);
+if (buildTarget) {
+  verifierArgs.push("--target", buildTarget);
 }
 run("node", verifierArgs, { env });
 
 const tauriArgs = ["tauri", "build", "--features", "license-lock"];
-if (cliTarget) {
-  tauriArgs.push("--target", cliTarget);
+if (buildTarget) {
+  // Must match CARGO_BUILD_TARGET so the bundler finds target/<triple>/release/.
+  tauriArgs.push("--target", buildTarget);
 }
 run("pnpm", tauriArgs, { env });
