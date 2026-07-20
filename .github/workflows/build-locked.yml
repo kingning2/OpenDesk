@@ -49,33 +49,34 @@ jobs:
       - name: Verify bundled license-verifier
         shell: pwsh
         run: |
-          $names = @(
-            "license-verifier-x86_64-pc-windows-msvc.exe",
-            "license-verifier.exe"
+          # Tauri copies external bins to release/ (not bundle/). Installers only contain msi/nsis.
+          $candidates = @(
+            "apps/desktop/src-tauri/binaries/license-verifier-x86_64-pc-windows-msvc.exe",
+            "target/x86_64-pc-windows-msvc/release/license-verifier.exe",
+            "apps/desktop/src-tauri/target/x86_64-pc-windows-msvc/release/license-verifier.exe"
           )
-          $roots = @(
-            "target/x86_64-pc-windows-msvc/release/bundle",
-            "apps/desktop/src-tauri/target/x86_64-pc-windows-msvc/release/bundle",
-            "target/release/bundle"
-          )
-          $bundleDir = $roots | Where-Object { Test-Path $_ } | Select-Object -First 1
-          if (-not $bundleDir) {
-            Write-Error "Bundle directory not found"
-            exit 1
-          }
           $found = $false
-          foreach ($name in $names) {
-            $hits = Get-ChildItem -Path $bundleDir -Recurse -File -Filter $name -ErrorAction SilentlyContinue
-            if ($hits.Count -gt 0) {
+          foreach ($path in $candidates) {
+            if (Test-Path $path) {
               $found = $true
-              Write-Host "Found verifier in bundle: $($hits[0].FullName)"
+              Write-Host "Found verifier: $path"
               break
             }
           }
           if (-not $found) {
-            Write-Error "license-verifier not found under $bundleDir"
+            Write-Error "license-verifier not found. Checked:`n$($candidates -join "`n")"
             exit 1
           }
+          $bundleRoots = @(
+            "target/x86_64-pc-windows-msvc/release/bundle",
+            "apps/desktop/src-tauri/target/x86_64-pc-windows-msvc/release/bundle"
+          )
+          $bundleDir = $bundleRoots | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $bundleDir) {
+            Write-Error "Bundle directory not found"
+            exit 1
+          }
+          Write-Host "Bundle output: $bundleDir"
 
       - uses: actions/upload-artifact@v4
         with:
