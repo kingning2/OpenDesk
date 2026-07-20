@@ -22,6 +22,10 @@ diesel::table! {
         email -> Nullable<Text>,
         description -> Nullable<Text>,
         custom_url -> Nullable<Text>,
+        email_status -> Text,
+        enrich_attempts -> Integer,
+        enrich_error -> Nullable<Text>,
+        enriched_at -> Nullable<Text>,
     }
 }
 
