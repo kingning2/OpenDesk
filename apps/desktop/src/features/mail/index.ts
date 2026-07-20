@@ -6,7 +6,7 @@ export const mailFeature = {
   navItem: {
     id: "mail",
     path: "/features/mail",
-    label: "Mail",
+    labelKey: "nav.mail",
     icon: Mail,
   },
 };

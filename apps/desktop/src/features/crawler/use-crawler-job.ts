@@ -3,9 +3,13 @@
  *
  * Progress is polled (status + logs) so the UI can drive a fixed React Flow
  * monitor without subscribing to Tauri events yet.
+ * 后端 job `message` / IPC 错误已按 `locale` 翻译，前端直接展示。
+ *
+ * @author Xiaoman
+ * @created 2026-07-20
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   crawlerJobCancel,
   crawlerJobLogs,
@@ -17,6 +21,8 @@ import {
   type KeywordBatchRow,
 } from "@desk/platform/ipc/crawler";
 import { crawlerYoutubeApiKeyGet } from "@desk/platform/ipc/crawler-settings";
+
+import { useI18n, useT } from "../../i18n";
 
 export interface KeywordStatRow {
   keyword: string;
@@ -58,19 +64,38 @@ export type CrawlUiStatus =
   | "failed"
   | "cancelled";
 
-function statusLabel(status: CrawlUiStatus, stopReason?: string): string {
-  if (status === "idle") return "未开始";
-  if (status === "queued") return "排队中";
-  if (status === "running") return "爬取中";
-  if (status === "cancelled") return "已取消";
-  if (status === "failed") return "失败";
-  if (stopReason === "quota_exceeded") return "已因配额自动停止";
-  if (stopReason === "max_total_reached") return "已达数量上限";
-  if (stopReason === "keywords_finished") return "已完成";
-  return "已结束";
+function statusLabel(
+  status: CrawlUiStatus,
+  t: (key: string, params?: Record<string, string | number>) => string,
+  stopReason?: string,
+): string {
+  if (status === "idle") return t("crawler.status.idle");
+  if (status === "queued") return t("crawler.status.queued");
+  if (status === "running") return t("crawler.status.running");
+  if (status === "cancelled") return t("crawler.status.cancelled");
+  if (status === "failed") return t("crawler.status.failed");
+  if (stopReason === "quota_exceeded") return t("crawler.status.quotaStop");
+  if (stopReason === "max_total_reached") return t("crawler.status.maxTotal");
+  if (stopReason === "keywords_finished") return t("crawler.status.keywordsFinished");
+  return t("crawler.status.ended");
+}
+
+/**
+ * 将 IPC 错误转为展示字符串（后端已翻译）。
+ *
+ * @author Xiaoman
+ * @created 2026-07-20
+ *
+ * @param err - 捕获的错误
+ * @returns 展示文案
+ */
+function toDisplayError(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
 }
 
 export function useCrawlerJob() {
+  const t = useT();
+  const { locale } = useI18n();
   const [apiKey, setApiKey] = useState("");
   const [apiKeyLoading, setApiKeyLoading] = useState(true);
   const [batchId, setBatchId] = useState("");
@@ -80,6 +105,7 @@ export function useCrawlerJob() {
   const [jobId, setJobId] = useState<string | null>(null);
   const [status, setStatus] = useState<CrawlUiStatus>("idle");
   const [stopReason, setStopReason] = useState("");
+  /** 后端已按 locale 翻译的 job message。 */
   const [message, setMessage] = useState("");
   const [currentKeyword, setCurrentKeyword] = useState("");
   const [keywordAccepted, setKeywordAccepted] = useState(0);
@@ -101,7 +127,7 @@ export function useCrawlerJob() {
       const response = await crawlerYoutubeApiKeyGet();
       setApiKey(response.api_key ?? "");
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(toDisplayError(err));
     } finally {
       setApiKeyLoading(false);
     }
@@ -124,7 +150,7 @@ export function useCrawlerJob() {
         setBatchId(items[0].batch_id);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(toDisplayError(err));
     }
   }, [batchId]);
 
@@ -195,7 +221,7 @@ export function useCrawlerJob() {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : String(err));
+          setError(toDisplayError(err));
           setBusy(false);
           setStatus("failed");
         }
@@ -223,16 +249,20 @@ export function useCrawlerJob() {
         trace_id: crypto.randomUUID(),
       });
       if (!result.ok) {
-        setError("导入失败");
+        setError(t("crawler.importFailed"));
         return;
       }
       setBatchId(result.batch_id);
       setImportMessage(
-        `已导入 ${result.inserted} 条（跳过重复 ${result.skipped_existing}，过长 ${result.skipped_too_long}）`,
+        t("crawler.importResult", {
+          inserted: result.inserted,
+          skipped: result.skipped_existing,
+          tooLong: result.skipped_too_long,
+        }),
       );
       await refreshBatches();
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(toDisplayError(err));
     } finally {
       setImporting(false);
     }
@@ -241,11 +271,11 @@ export function useCrawlerJob() {
   async function start() {
     setError("");
     if (!apiKey.trim()) {
-      setError("请先在设置中配置 YouTube API 密钥");
+      setError(t("crawler.needApiKey"));
       return;
     }
     setBusy(true);
-    setMessage("正在启动…");
+    setMessage(t("crawler.starting"));
     setStopReason("");
     setCurrentKeyword("");
     setKeywordStats([]);
@@ -264,20 +294,21 @@ export function useCrawlerJob() {
         batch_id: batchId,
         api_key: apiKey,
         rate_limit_ms: 400,
+        locale,
         trace_id: crypto.randomUUID(),
       });
       if (!result.ok || !result.job_id) {
-        setError("启动失败：请检查 API Key、批次与 Sidecar");
         setBusy(false);
         setStatus("failed");
+        setError(t("crawler.startFailed"));
         return;
       }
       setJobId(result.job_id);
       setStatus("queued");
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
       setBusy(false);
       setStatus("failed");
+      setError(toDisplayError(err));
     }
   }
 
@@ -288,11 +319,15 @@ export function useCrawlerJob() {
     try {
       await crawlerJobCancel({ job_id: jobId });
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(toDisplayError(err));
     }
   }
 
   const selectedBatch = batches.find((row) => row.batch_id === batchId);
+  const statusText = useMemo(
+    () => statusLabel(status, t, stopReason),
+    [status, t, stopReason],
+  );
 
   return {
     apiKey,
@@ -309,7 +344,7 @@ export function useCrawlerJob() {
     refreshBatches,
     jobId,
     status,
-    statusText: statusLabel(status, stopReason),
+    statusText,
     stopReason,
     message,
     currentKeyword,

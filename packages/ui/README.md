@@ -1,8 +1,19 @@
 # @desk/ui
 
-OpenDesk 设计系统与 UI 组件库。所有视觉与交互原语**必须**从此包导出。
+OpenDesk 设计系统与 **通用** UI 组件库。Feature 层的视觉与交互原语**必须**从此包导出。
 
 > Feature 层禁止裸用 `bg-white`、`rounded-lg` 等 Tailwind 原子类；使用语义组件与 variant。
+
+## 边界
+
+| 放在 `@desk/ui` | 不放在 `@desk/ui` |
+|-----------------|-------------------|
+| Button / Input / Select / Card / ScrollArea | 窗口 TitleBar |
+| IconButton / ThemeToggle / Toaster | NavRail / AppLayout / MainPanel |
+| PageScaffold / PageContainer | 工作区 TabBar |
+| tokens / theme / motion 原语 | 任何 OpenDesk 桌面壳装配 |
+
+桌面窗口壳在 `apps/desktop/src/app/`。
 
 ## 技术栈
 
@@ -20,7 +31,6 @@ OpenDesk 设计系统与 UI 组件库。所有视觉与交互原语**必须**从
 | 拖拽 | dnd-kit |
 | 命令面板 | cmdk |
 | Toast | Sonner |
-| Workflow | Monaco Editor |
 
 ## Apple 风令牌
 
@@ -37,13 +47,14 @@ OpenDesk 设计系统与 UI 组件库。所有视觉与交互原语**必须**从
 
 ## 使用
 
-桌面端 `globals.css` 必须扫描本包源码，否则布局/组件类不会进入最终 CSS：
+桌面端 `globals.css` 必须扫描本包源码，否则组件类不会进入最终 CSS：
 
 ```css
 @import "tailwindcss";
 @import "@desk/ui/tokens";
 
 @source "../../../../packages/ui/src/**/*.{ts,tsx}";
+@source "../**/*.{ts,tsx}";
 ```
 
 ```tsx
@@ -66,12 +77,15 @@ src/
 ├── tokens/          # 设计令牌（CSS 变量 + Motion spring）
 ├── lib/             # cn() 等工具
 ├── theme/           # ThemeProvider（next-themes）
-└── components/      # shadcn 风格组件（variant 驱动）
+├── motion/          # 可复用动效原语
+└── components/      # shadcn 风格通用组件（variant 驱动）
+    └── layout/      # PageContainer / PageScaffold
 ```
 
 ## 禁止
 
 - IPC / 业务状态 / API 调用
+- 窗口壳 / 工作区导航等仅 desktop 可用的页面级组件
 - 在 Feature 中复制本包 Tailwind 类名
 
 ## shadcn 初始化

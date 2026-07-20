@@ -1,0 +1,16 @@
+{
+  "title": "Settings",
+  "subtitle": "Application settings",
+  "language": "Language",
+  "languageHint": "Interface language is saved on this device.",
+  "youtubeTitle": "YouTube crawler",
+  "youtubeDescription": "Configure YouTube Data API v3 key. The key is stored in the local database and never written to logs.",
+  "apiKey": "API key",
+  "apiKeyPlaceholder": "Paste YouTube API key",
+  "save": "Save",
+  "saving": "Saving…",
+  "configured": "Configured",
+  "afterConfig": "After configuration, start tasks on the",
+  "crawlerLink": "YouTube channel crawler",
+  "afterConfigSuffix": "page."
+}

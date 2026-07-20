@@ -1,7 +1,15 @@
+/**
+ * 应用根组件：多语言、路由与授权门禁。
+ *
+ * @author Xiaoman
+ * @created 2026-07-20
+ */
+
 import { useCallback } from "react";
 import { RouterProvider } from "react-router";
 import { Toaster } from "@desk/ui";
 import { appRouter } from "../route";
+import { I18nProvider, useT } from "../i18n";
 import {
   LicenseGateProvider,
   LicenseLockHero,
@@ -10,7 +18,16 @@ import {
 } from "@feature/license";
 import "./globals.css";
 
-export function App() {
+/**
+ * 授权门禁与路由壳（需在 I18nProvider 内）。
+ *
+ * @author Xiaoman
+ * @created 2026-07-20
+ *
+ * @returns 壳节点
+ */
+function AppChrome() {
+  const t = useT();
   const gate = useLicenseGate();
 
   const onActivated = useCallback(() => {
@@ -29,21 +46,21 @@ export function App() {
             role="status"
             aria-live="polite"
           >
-            <LicenseLockHero anim="busy" caption="正在校验授权状态…" />
+            <LicenseLockHero anim="busy" caption={t("license.checking")} />
           </div>
         ) : null}
 
         {gate.error ? (
           <div className="fixed inset-x-0 bottom-0 top-11 z-50 flex items-center justify-center bg-background/40 p-6 backdrop-blur-md">
             <div className="max-w-md space-y-3 rounded-[var(--radius-lg)] border border-border bg-card p-6 text-center shadow-lg">
-              <p className="text-destructive">授权状态读取失败</p>
+              <p className="text-destructive">{t("license.readFailed")}</p>
               <p className="text-[length:var(--text-sm)] text-muted-foreground">{gate.error}</p>
               <button
                 type="button"
                 onClick={() => void gate.refresh()}
                 className="rounded-[var(--radius-md)] bg-primary px-4 py-2 text-primary-foreground"
               >
-                重试
+                {t("license.retry")}
               </button>
             </div>
           </div>
@@ -54,5 +71,21 @@ export function App() {
         ) : null}
       </div>
     </LicenseGateProvider>
+  );
+}
+
+/**
+ * 应用根组件。
+ *
+ * @author Xiaoman
+ * @created 2026-07-20
+ *
+ * @returns 根节点
+ */
+export function App() {
+  return (
+    <I18nProvider>
+      <AppChrome />
+    </I18nProvider>
   );
 }

@@ -6,7 +6,7 @@ export const crawlerFeature = {
   navItem: {
     id: "crawler",
     path: "/features/crawler",
-    label: "Crawler",
+    labelKey: "nav.crawler",
     icon: Search,
   },
 };

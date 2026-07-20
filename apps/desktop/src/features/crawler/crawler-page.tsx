@@ -33,6 +33,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import type { KeywordBatchRow } from "@desk/platform/ipc/crawler";
+import { useT, useI18n } from "../../i18n";
 import {
   useCrawlerJob,
   type ChannelResultRow,
@@ -95,22 +96,31 @@ function MonitorNode({ data }: NodeProps<Node<MonitorNodeData>>) {
 
 const nodeTypes = { monitor: MonitorNode };
 
-const STAGE_LABELS: Record<FlowStage, string> = {
-  source: "关键词库",
-  search: "频道搜索",
-  summary: "采集结果",
-};
+type Translate = (key: string, params?: Record<string, string | number>) => string;
 
-function batchLabel(row: KeywordBatchRow, index: number): string {
-  return `批次 ${index + 1} · ${row.keyword_count.toLocaleString()} 个关键词`;
+function stageLabel(stage: FlowStage, t: Translate): string {
+  if (stage === "source") return t("crawler.stage.source");
+  if (stage === "search") return t("crawler.stage.search");
+  return t("crawler.stage.summary");
 }
 
-function formatLogTime(iso: string): string {
+function batchLabel(row: KeywordBatchRow, index: number, t: Translate): string {
+  return t("crawler.batchLabel", {
+    index: index + 1,
+    count: row.keyword_count.toLocaleString(),
+  });
+}
+
+function formatLogTime(iso: string, locale: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) {
     return "";
   }
-  return date.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  return date.toLocaleTimeString(locale === "zh-CN" ? "zh-CN" : "en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 }
 
 function isSearchPhaseLog(row: CrawlerLogRow): boolean {
@@ -127,6 +137,7 @@ function isSearchPhaseLog(row: CrawlerLogRow): boolean {
 }
 
 function LogList({ rows, emptyText }: { rows: CrawlerLogRow[]; emptyText: string }) {
+  const { locale } = useI18n();
   if (rows.length === 0) {
     return <p className="text-[length:var(--text-sm)] text-muted-foreground">{emptyText}</p>;
   }
@@ -139,7 +150,9 @@ function LogList({ rows, emptyText }: { rows: CrawlerLogRow[]; emptyText: string
         >
           <div className="flex items-start justify-between gap-2">
             <p className="text-[length:var(--text-sm)] leading-relaxed">{row.message}</p>
-            <span className="shrink-0 text-xs text-muted-foreground">{formatLogTime(row.occurred_at)}</span>
+            <span className="shrink-0 text-xs text-muted-foreground">
+              {formatLogTime(row.occurred_at, locale)}
+            </span>
           </div>
         </div>
       ))}
@@ -148,9 +161,10 @@ function LogList({ rows, emptyText }: { rows: CrawlerLogRow[]; emptyText: string
 }
 
 function ChannelList({ rows }: { rows: ChannelResultRow[] }) {
+  const t = useT();
   if (rows.length === 0) {
     return (
-      <p className="text-[length:var(--text-sm)] text-muted-foreground">符合条件的频道会显示在这里。</p>
+      <p className="text-[length:var(--text-sm)] text-muted-foreground">{t("crawler.channelsEmpty")}</p>
     );
   }
   return (
@@ -163,10 +177,10 @@ function ChannelList({ rows }: { rows: ChannelResultRow[] }) {
           <div className="text-[length:var(--text-sm)] font-medium">{row.title}</div>
           <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
             {row.subscriber_count != null ? (
-              <span>订阅 {row.subscriber_count.toLocaleString()}</span>
+              <span>{t("crawler.subscribers", { count: row.subscriber_count.toLocaleString() })}</span>
             ) : null}
             {row.email ? <span>{row.email}</span> : null}
-            {row.keyword ? <span>来自「{row.keyword}」</span> : null}
+            {row.keyword ? <span>{t("crawler.fromKeyword", { keyword: row.keyword })}</span> : null}
           </div>
         </div>
       ))}
@@ -175,8 +189,11 @@ function ChannelList({ rows }: { rows: ChannelResultRow[] }) {
 }
 
 function KeywordStatsList({ rows }: { rows: KeywordStatRow[] }) {
+  const t = useT();
   if (rows.length === 0) {
-    return <p className="text-[length:var(--text-sm)] text-muted-foreground">开始采集后会按关键词汇总进度。</p>;
+    return (
+      <p className="text-[length:var(--text-sm)] text-muted-foreground">{t("crawler.keywordStatsEmpty")}</p>
+    );
   }
   return (
     <div className="space-y-2">
@@ -187,7 +204,10 @@ function KeywordStatsList({ rows }: { rows: KeywordStatRow[] }) {
         >
           <span className="truncate text-[length:var(--text-sm)] font-medium">{row.keyword}</span>
           <span className="shrink-0 text-xs text-muted-foreground">
-            浏览 {row.scanned.toLocaleString()} · 收录 {row.accepted.toLocaleString()}
+            {t("crawler.scannedAccepted", {
+              scanned: row.scanned.toLocaleString(),
+              accepted: row.accepted.toLocaleString(),
+            })}
           </span>
         </div>
       ))}
@@ -214,6 +234,7 @@ function KeywordProgressBanner({
   active: boolean;
   message?: string;
 }) {
+  const t = useT();
   if (total <= 0) {
     return null;
   }
@@ -222,7 +243,9 @@ function KeywordProgressBanner({
   return (
     <div className="mt-3 rounded-[var(--radius-md)] border border-border bg-card/40 px-3 py-3">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[length:var(--text-sm)] text-muted-foreground">批次关键词进度</span>
+        <span className="text-[length:var(--text-sm)] text-muted-foreground">
+          {t("crawler.batchKeywordProgress")}
+        </span>
         <span className="text-[length:var(--text-sm)] font-semibold tabular-nums">
           {formatKeywordProgress(done, total, active)}
         </span>
@@ -279,6 +302,7 @@ function DetailPanel({
   keywordsTotal,
   busy,
 }: DetailPanelProps) {
+  const t = useT();
   const searchLogs = useMemo(() => logs.filter(isSearchPhaseLog), [logs]);
 
   if (stage === "source") {
@@ -286,20 +310,26 @@ function DetailPanel({
       return (
         <div className="space-y-3">
           <div className="rounded-[var(--radius-md)] border border-border bg-card/40 px-3 py-3">
-            <div className="text-xs text-muted-foreground">当前批次</div>
+            <div className="text-xs text-muted-foreground">{t("crawler.currentBatch")}</div>
             <div className="mt-1 text-[length:var(--text-sm)] font-medium">
               {selectedBatch
-                ? `${selectedBatch.keyword_count.toLocaleString()} 个关键词已就绪`
-                : "尚未选择批次"}
+                ? t("crawler.keywordsReady", {
+                    count: selectedBatch.keyword_count.toLocaleString(),
+                  })
+                : t("crawler.noBatchSelected")}
             </div>
             {batchId ? (
-              <div className="mt-2 truncate text-xs text-muted-foreground">批次 ID：{batchId}</div>
+              <div className="mt-2 truncate text-xs text-muted-foreground">
+                {t("crawler.batchId", { id: batchId })}
+              </div>
             ) : null}
           </div>
           <div>
-            <div className="mb-2 text-[length:var(--text-sm)] font-medium">全部批次</div>
+            <div className="mb-2 text-[length:var(--text-sm)] font-medium">{t("crawler.allBatches")}</div>
             {batches.length === 0 ? (
-              <p className="text-[length:var(--text-sm)] text-muted-foreground">导入 CSV 后会出现在这里。</p>
+              <p className="text-[length:var(--text-sm)] text-muted-foreground">
+                {t("crawler.batchesEmpty")}
+              </p>
             ) : (
               <div className="space-y-2">
                 {batches.map((row, index) => (
@@ -311,7 +341,7 @@ function DetailPanel({
                         : "border-border bg-card/30"
                     }`}
                   >
-                    {batchLabel(row, index)}
+                    {batchLabel(row, index, t)}
                   </div>
                 ))}
               </div>
@@ -323,14 +353,17 @@ function DetailPanel({
     return (
       <div className="space-y-3">
         <div className="rounded-[var(--radius-md)] border border-border bg-card/40 px-3 py-3">
-          <div className="text-xs text-muted-foreground">导入状态</div>
+          <div className="text-xs text-muted-foreground">{t("crawler.importStatus")}</div>
           <div className="mt-1 text-[length:var(--text-sm)]">
-            {importMessage || "点击顶部「导入关键词」上传 CSV 文件。"}
+            {importMessage || t("crawler.importHint")}
           </div>
         </div>
         <div>
-          <div className="mb-2 text-[length:var(--text-sm)] font-medium">准备记录</div>
-          <LogList rows={logs.filter((row) => row.phase === "import" || row.phase === "setup")} emptyText="暂无准备阶段记录。" />
+          <div className="mb-2 text-[length:var(--text-sm)] font-medium">{t("crawler.prepLogs")}</div>
+          <LogList
+            rows={logs.filter((row) => row.phase === "import" || row.phase === "setup")}
+            emptyText={t("crawler.prepLogsEmpty")}
+          />
         </div>
       </div>
     );
@@ -344,24 +377,30 @@ function DetailPanel({
             done={keywordsDone}
             total={keywordsTotal}
             active={busy}
-            message={currentKeyword ? `当前关键词：${currentKeyword}` : undefined}
+            message={
+              currentKeyword
+                ? t("crawler.currentKeywordLabel", { keyword: currentKeyword })
+                : undefined
+            }
           />
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-[var(--radius-md)] border border-border bg-card/40 px-3 py-2">
-              <div className="text-xs text-muted-foreground">当前关键词</div>
+              <div className="text-xs text-muted-foreground">{t("crawler.currentKeyword")}</div>
               <div className="mt-1 truncate text-[length:var(--text-sm)] font-medium">
                 {currentKeyword || "—"}
               </div>
             </div>
             <div className="rounded-[var(--radius-md)] border border-border bg-card/40 px-3 py-2">
-              <div className="text-xs text-muted-foreground">浏览 / 收录</div>
+              <div className="text-xs text-muted-foreground">{t("crawler.browseAccept")}</div>
               <div className="mt-1 text-[length:var(--text-sm)] font-medium">
                 {scannedCount.toLocaleString()} / {acceptedCount.toLocaleString()}
               </div>
             </div>
           </div>
           <div>
-            <div className="mb-2 text-[length:var(--text-sm)] font-medium">关键词进度</div>
+            <div className="mb-2 text-[length:var(--text-sm)] font-medium">
+              {t("crawler.keywordProgress")}
+            </div>
             <KeywordStatsList rows={keywordStats} />
           </div>
         </div>
@@ -373,11 +412,15 @@ function DetailPanel({
           done={keywordsDone}
           total={keywordsTotal}
           active={busy}
-          message={currentKeyword ? `当前关键词：${currentKeyword}` : undefined}
+          message={
+            currentKeyword
+              ? t("crawler.currentKeywordLabel", { keyword: currentKeyword })
+              : undefined
+          }
         />
         <div>
-          <div className="mb-2 text-[length:var(--text-sm)] font-medium">搜索与拉取过程</div>
-          <LogList rows={searchLogs} emptyText="开始采集后，API 调用与关键词切换会显示在这里。" />
+          <div className="mb-2 text-[length:var(--text-sm)] font-medium">{t("crawler.searchProcess")}</div>
+          <LogList rows={searchLogs} emptyText={t("crawler.searchLogsEmpty")} />
         </div>
       </div>
     );
@@ -391,27 +434,30 @@ function DetailPanel({
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-2">
         <div className="rounded-[var(--radius-md)] border border-border bg-card/40 px-3 py-2">
-          <div className="text-xs text-muted-foreground">任务状态</div>
+          <div className="text-xs text-muted-foreground">{t("crawler.jobStatus")}</div>
           <div className="mt-1 text-[length:var(--text-sm)] font-medium">{statusText}</div>
         </div>
         <div className="rounded-[var(--radius-md)] border border-border bg-card/40 px-3 py-2">
-          <div className="text-xs text-muted-foreground">摘要</div>
+          <div className="text-xs text-muted-foreground">{t("crawler.summary")}</div>
           <div className="mt-1 text-[length:var(--text-sm)] font-medium">
             {channelResults.length > 0
-              ? `已收录 ${channelResults.length.toLocaleString()} 个频道`
-              : message || "等待采集完成"}
+              ? t("crawler.channelsAccepted", {
+                  count: channelResults.length.toLocaleString(),
+                })
+              : message || t("crawler.waitingComplete")}
           </div>
         </div>
       </div>
       <div>
-        <div className="mb-2 text-[length:var(--text-sm)] font-medium">完整过程</div>
-        <LogList rows={logs} emptyText="暂无动态，开始采集后会显示在这里。" />
+        <div className="mb-2 text-[length:var(--text-sm)] font-medium">{t("crawler.fullProcess")}</div>
+        <LogList rows={logs} emptyText={t("crawler.fullLogsEmpty")} />
       </div>
     </div>
   );
 }
 
 export function CrawlerPage() {
+  const t = useT();
   const { resolvedTheme } = useTheme();
   const {
     apiKeyConfigured,
@@ -492,9 +538,11 @@ export function CrawlerPage() {
         type: "monitor",
         position: { x: 0, y: 80 },
         data: {
-          title: "关键词库",
-          subtitle: selectedBatch ? `${keywordCount} 个词待采集` : "请先导入关键词",
-          value: selectedBatch ? "已准备就绪" : "导入 CSV 后即可开始",
+          title: t("crawler.stage.source"),
+          subtitle: selectedBatch
+            ? t("crawler.wordsPending", { count: keywordCount })
+            : t("crawler.importKeywordsFirst"),
+          value: selectedBatch ? t("crawler.ready") : t("crawler.importCsvToStart"),
           tone: sourceTone,
           selected: selectedStage === "source",
         },
@@ -504,12 +552,15 @@ export function CrawlerPage() {
         type: "monitor",
         position: { x: 300, y: 80 },
         data: {
-          title: busy ? "正在搜索频道" : "频道搜索",
+          title: busy ? t("crawler.searchingChannels") : t("crawler.stage.search"),
           subtitle:
             keywordsTotal > 0
               ? formatKeywordProgress(keywordsDone, keywordsTotal, busy)
-              : currentKeyword || "等待开始",
-          value: `已浏览 ${scannedCount.toLocaleString()} · 已收录 ${acceptedCount.toLocaleString()}`,
+              : currentKeyword || t("crawler.waitingStart"),
+          value: t("crawler.browsedAccepted", {
+            scanned: scannedCount.toLocaleString(),
+            accepted: acceptedCount.toLocaleString(),
+          }),
           tone: searchTone,
           selected: selectedStage === "search",
         },
@@ -519,12 +570,14 @@ export function CrawlerPage() {
         type: "monitor",
         position: { x: 600, y: 80 },
         data: {
-          title: "采集结果",
+          title: t("crawler.stage.summary"),
           subtitle: statusText,
           value:
             channelResults.length > 0
-              ? `已找到 ${channelResults.length.toLocaleString()} 个频道`
-              : message || "完成后会显示在这里",
+              ? t("crawler.channelsFound", {
+                  count: channelResults.length.toLocaleString(),
+                })
+              : message || t("crawler.showWhenDone"),
           tone: summaryTone,
           selected: selectedStage === "summary",
         },
@@ -545,6 +598,7 @@ export function CrawlerPage() {
     selectedStage,
     status,
     statusText,
+    t,
   ]);
 
   const edges = useMemo<Edge[]>(
@@ -589,7 +643,7 @@ export function CrawlerPage() {
   }
 
   return (
-    <PageScaffold fill containerWidth="full" containerPadding="sm" subtitle="YouTube 频道采集">
+    <PageScaffold fill containerWidth="full" containerPadding="sm" subtitle={t("crawler.subtitle")}>
       <div className="flex min-h-0 flex-1 flex-col gap-3">
         <Card variant="glass" padding="sm" className="shrink-0">
           <div className="grid gap-3 lg:grid-cols-[auto_minmax(180px,0.7fr)_auto] lg:items-end">
@@ -614,27 +668,29 @@ export function CrawlerPage() {
                 disabled={importing || busy}
                 onClick={() => fileInputRef.current?.click()}
               >
-                {importing ? "导入中…" : "导入关键词"}
+                {importing ? t("crawler.importing") : t("crawler.importKeywords")}
               </Button>
             </div>
 
             <label className="block min-w-[180px] space-y-1.5">
-              <span className="text-[length:var(--text-sm)] text-muted-foreground">关键词批次</span>
+              <span className="text-[length:var(--text-sm)] text-muted-foreground">
+                {t("crawler.keywordBatch")}
+              </span>
               {batches.length === 0 ? (
                 <Select disabled>
                   <SelectTrigger>
-                    <SelectValue placeholder="请先导入关键词" />
+                    <SelectValue placeholder={t("crawler.importKeywordsFirst")} />
                   </SelectTrigger>
                 </Select>
               ) : (
                 <Select value={batchId} onValueChange={setBatchId} disabled={busy}>
                   <SelectTrigger>
-                    <SelectValue placeholder="选择批次" />
+                    <SelectValue placeholder={t("crawler.selectBatch")} />
                   </SelectTrigger>
                   <SelectContent>
                     {batches.map((row, index) => (
                       <SelectItem key={row.batch_id} value={row.batch_id}>
-                        {batchLabel(row, index)}
+                        {batchLabel(row, index, t)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -644,10 +700,10 @@ export function CrawlerPage() {
 
             <div className="flex items-end gap-2 lg:justify-end">
               <Button type="button" disabled={busy || !canStart} onClick={handleStart}>
-                {busy ? "采集中…" : "开始采集"}
+                {busy ? t("crawler.crawling") : t("crawler.startCrawl")}
               </Button>
               <Button type="button" variant="outline" disabled={!busy} onClick={() => void cancel()}>
-                停止
+                {t("crawler.stop")}
               </Button>
             </div>
           </div>
@@ -657,21 +713,23 @@ export function CrawlerPage() {
           ) : null}
           {!apiKeyLoading && !apiKeyConfigured ? (
             <p className="mt-3 rounded-[var(--radius-md)] border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-[length:var(--text-sm)] text-amber-700 dark:text-amber-300">
-              请先在{" "}
+              {t("crawler.needApiKeyPrefix")}{" "}
               <Link to="/settings" className="font-medium underline underline-offset-4">
-                设置
+                {t("crawler.settingsLink")}
               </Link>{" "}
-              中配置 YouTube API 密钥，再开始采集。
+              {t("crawler.needApiKeySuffix")}
             </p>
           ) : null}
           {isQuotaStop ? (
             <p className="mt-3 rounded-[var(--radius-md)] border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-[length:var(--text-sm)] text-amber-700 dark:text-amber-300">
-              今日 API 配额已用完，采集已自动暂停。
+              {t("crawler.quotaPaused")}
             </p>
           ) : null}
           {isFailed ? (
             <p className="mt-3 rounded-[var(--radius-md)] border border-red-500/40 bg-red-500/10 px-3 py-2 text-[length:var(--text-sm)] text-red-600 dark:text-red-300">
-              采集失败{error ? `：${error}` : ""}
+              {error
+                ? t("crawler.crawlFailedWithError", { error })
+                : t("crawler.crawlFailed")}
             </p>
           ) : null}
           {!isFailed && error ? (
@@ -688,8 +746,8 @@ export function CrawlerPage() {
         <div className="grid min-h-0 flex-1 gap-3 xl:grid-cols-[1.45fr_1fr]">
           <Card variant="glass" padding="none" className="flex min-h-0 flex-col overflow-hidden">
             <CardHeader compact className="shrink-0">
-              <CardTitle>采集流程</CardTitle>
-              <CardDescription>点击节点查看对应详情；连线表示数据流向。</CardDescription>
+              <CardTitle>{t("crawler.flowTitle")}</CardTitle>
+              <CardDescription>{t("crawler.flowDescription")}</CardDescription>
             </CardHeader>
             <CardContent padding="none" className="min-h-0 flex-1">
               <div className="h-full min-h-[280px] w-full">
@@ -721,9 +779,11 @@ export function CrawlerPage() {
             <CardHeader compact className="shrink-0 space-y-3">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <CardTitle>{STAGE_LABELS[selectedStage]}</CardTitle>
+                  <CardTitle>{stageLabel(selectedStage, t)}</CardTitle>
                   <CardDescription>
-                    {panelView === "process" ? "爬取过程与 API 动态" : "当前阶段结果汇总"}
+                    {panelView === "process"
+                      ? t("crawler.panelProcessDesc")
+                      : t("crawler.panelResultsDesc")}
                   </CardDescription>
                 </div>
                 <div className="flex shrink-0 gap-1 rounded-[var(--radius-md)] border border-border bg-card/40 p-0.5">
@@ -733,7 +793,7 @@ export function CrawlerPage() {
                     variant={panelView === "process" ? "default" : "ghost"}
                     onClick={() => setPanelView("process")}
                   >
-                    过程
+                    {t("crawler.process")}
                   </Button>
                   <Button
                     type="button"
@@ -741,7 +801,7 @@ export function CrawlerPage() {
                     variant={panelView === "results" ? "default" : "ghost"}
                     onClick={() => setPanelView("results")}
                   >
-                    结果
+                    {t("crawler.results")}
                   </Button>
                 </div>
               </div>
