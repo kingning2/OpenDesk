@@ -4,7 +4,7 @@
   "title": "crawler/job_start.request",
   "description": "Tauri IPC: start a crawl job (React to Rust).",
   "type": "object",
-  "required": ["platform", "keywords"],
+  "required": ["platform", "api_key"],
   "properties": {
     "trace_id": {
       "type": "string"
@@ -13,13 +13,15 @@
       "type": "string"
     },
     "keywords": {
-      "type": "string"
+      "type": "string",
+      "description": "Optional when batch_id is set; Rust resolves from DB."
     },
     "rate_limit_ms": {
       "type": "integer"
     },
     "max_total": {
-      "type": "integer"
+      "type": "integer",
+      "description": "Max accepted channels for the job; omit or <=0 for no limit."
     },
     "year": {
       "type": "integer"

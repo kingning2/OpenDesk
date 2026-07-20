@@ -15,10 +15,15 @@ from .crawler_ipc_job_cancel_request import CrawlerIpcJobCancelRequest
 from .crawler_ipc_job_cancel_response import CrawlerIpcJobCancelResponse
 from .crawler_ipc_job_logs_request import CrawlerIpcJobLogsRequest
 from .crawler_ipc_job_logs_response import CrawlerIpcJobLogsResponse
+from .crawler_ipc_job_results_request import CrawlerIpcJobResultsRequest
+from .crawler_ipc_job_results_response import CrawlerIpcJobResultsResponse
 from .crawler_ipc_job_start_request import CrawlerIpcJobStartRequest
 from .crawler_ipc_job_start_response import CrawlerIpcJobStartResponse
 from .crawler_ipc_job_status_request import CrawlerIpcJobStatusRequest
 from .crawler_ipc_job_status_response import CrawlerIpcJobStatusResponse
+from .crawler_ipc_keywords_batches_response import CrawlerIpcKeywordsBatchesResponse
+from .crawler_ipc_keywords_import_request import CrawlerIpcKeywordsImportRequest
+from .crawler_ipc_keywords_import_response import CrawlerIpcKeywordsImportResponse
 from .crawler_sidecar_job_cancel_request import CrawlerSidecarJobCancelRequest
 from .crawler_sidecar_job_cancel_response import CrawlerSidecarJobCancelResponse
 from .crawler_sidecar_job_logs_request import CrawlerSidecarJobLogsRequest
@@ -46,10 +51,15 @@ __all__ = [
     "CrawlerIpcJobCancelResponse",
     "CrawlerIpcJobLogsRequest",
     "CrawlerIpcJobLogsResponse",
+    "CrawlerIpcJobResultsRequest",
+    "CrawlerIpcJobResultsResponse",
     "CrawlerIpcJobStartRequest",
     "CrawlerIpcJobStartResponse",
     "CrawlerIpcJobStatusRequest",
     "CrawlerIpcJobStatusResponse",
+    "CrawlerIpcKeywordsBatchesResponse",
+    "CrawlerIpcKeywordsImportRequest",
+    "CrawlerIpcKeywordsImportResponse",
     "CrawlerSidecarJobCancelRequest",
     "CrawlerSidecarJobCancelResponse",
     "CrawlerSidecarJobLogsRequest",

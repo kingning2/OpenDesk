@@ -14,6 +14,8 @@ pub struct CrawlerIpcJobStatusResponse {
     pub keyword_scanned: Option<i64>,
     pub keyword_accepted: Option<i64>,
     pub quota_used: Option<i64>,
+    pub keywords_total: Option<i64>,
+    pub keywords_done: Option<i64>,
     pub keyword_stats_json: Option<String>,
     pub error_message: Option<String>,
     pub trace_id: Option<String>,

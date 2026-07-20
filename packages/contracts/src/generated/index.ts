@@ -15,10 +15,15 @@ export type { CrawlerIpcJobCancelRequest } from "./crawler_ipc_job_cancel_reques
 export type { CrawlerIpcJobCancelResponse } from "./crawler_ipc_job_cancel_response";
 export type { CrawlerIpcJobLogsRequest } from "./crawler_ipc_job_logs_request";
 export type { CrawlerIpcJobLogsResponse } from "./crawler_ipc_job_logs_response";
+export type { CrawlerIpcJobResultsRequest } from "./crawler_ipc_job_results_request";
+export type { CrawlerIpcJobResultsResponse } from "./crawler_ipc_job_results_response";
 export type { CrawlerIpcJobStartRequest } from "./crawler_ipc_job_start_request";
 export type { CrawlerIpcJobStartResponse } from "./crawler_ipc_job_start_response";
 export type { CrawlerIpcJobStatusRequest } from "./crawler_ipc_job_status_request";
 export type { CrawlerIpcJobStatusResponse } from "./crawler_ipc_job_status_response";
+export type { CrawlerIpcKeywordsBatchesResponse } from "./crawler_ipc_keywords_batches_response";
+export type { CrawlerIpcKeywordsImportRequest } from "./crawler_ipc_keywords_import_request";
+export type { CrawlerIpcKeywordsImportResponse } from "./crawler_ipc_keywords_import_response";
 export type { CrawlerSidecarJobCancelRequest } from "./crawler_sidecar_job_cancel_request";
 export type { CrawlerSidecarJobCancelResponse } from "./crawler_sidecar_job_cancel_response";
 export type { CrawlerSidecarJobLogsRequest } from "./crawler_sidecar_job_logs_request";

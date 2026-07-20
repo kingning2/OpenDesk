@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://crawler/ipc/keywords_import.response/v1",
+  "title": "crawler/keywords_import.response",
+  "type": "object",
+  "required": ["ok", "batch_id", "inserted", "skipped_existing", "skipped_too_long", "total"],
+  "properties": {
+    "ok": { "type": "boolean" },
+    "batch_id": { "type": "string" },
+    "inserted": { "type": "integer" },
+    "skipped_existing": { "type": "integer" },
+    "skipped_too_long": { "type": "integer" },
+    "total": { "type": "integer" },
+    "trace_id": { "type": "string" },
+    "message": { "type": "string" }
+  },
+  "additionalProperties": false
+}

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.10
+
+- crawler IPC：`job.results` — 查询任务已收录频道（`results_json` 数组）
+
+## 0.1.9
+
+- crawler IPC：`keywords.import` / `keywords.batches`（CSV → SQLite）
+- `job.start` IPC：`keywords` 改为可选，由 `batch_id` 从 Rust DB 解析
+
 ## 0.1.8
 
 - crawler `job.status` / `job.progress` 增加运营进度字段：`message`、`current_keyword`、`keyword_scanned` / `keyword_accepted`、`quota_used`、`keyword_stats_json`、`error_message`

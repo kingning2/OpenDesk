@@ -16,6 +16,8 @@ class CrawlerIpcJobStatusResponse(TypedDict, total=False):
     keyword_scanned: int
     keyword_accepted: int
     quota_used: int
+    keywords_total: int
+    keywords_done: int
     keyword_stats_json: str
     error_message: str
     trace_id: str

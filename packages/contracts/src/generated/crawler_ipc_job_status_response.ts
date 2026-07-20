@@ -11,6 +11,8 @@ export interface CrawlerIpcJobStatusResponse {
   keyword_scanned?: number;
   keyword_accepted?: number;
   quota_used?: number;
+  keywords_total?: number;
+  keywords_done?: number;
   keyword_stats_json?: string;
   error_message?: string;
   trace_id?: string;
