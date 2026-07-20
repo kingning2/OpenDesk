@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://crawler/event/job.failed/v1",
+  "title": "crawler/job.failed",
+  "type": "object",
+  "required": ["event_id", "occurred_at", "job_id", "platform", "error_code", "message"],
+  "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "occurred_at": {
+      "type": "string"
+    },
+    "job_id": {
+      "type": "string"
+    },
+    "platform": {
+      "type": "string"
+    },
+    "error_code": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

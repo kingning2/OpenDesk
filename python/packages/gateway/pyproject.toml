@@ -2,7 +2,9 @@
 name = "gateway"
 version = "0.1.0"
 requires-python = ">=3.13"
-dependencies = ["shared"]
+dependencies = [
+  "shared",
+]
 
 [build-system]
 requires = ["hatchling"]

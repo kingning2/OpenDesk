@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://crawler/sidecar/job_status.request/v1",
+  "title": "crawler/sidecar/job_status.request",
+  "type": "object",
+  "required": ["job_id"],
+  "properties": {
+    "trace_id": {
+      "type": "string"
+    },
+    "job_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

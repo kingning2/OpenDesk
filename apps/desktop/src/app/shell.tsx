@@ -1,8 +1,6 @@
-import { NavLink, Outlet, useLocation } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 import {
-  AnimatePresence,
   AppLayout,
-  FadeSlide,
   IconButton,
   MainPanel,
   NavRail,
@@ -18,11 +16,12 @@ import { closeWindow, getPlatform, minimizeWindow, startWindowDrag, toggleMaximi
 import { LicensePlanBadge } from "@feature/license";
 import { navItems } from "../route/nav-registry";
 import { useWorkspaceTabs } from "./use-workspace-tabs";
+import { WorkspaceOutlet } from "./workspace-outlet";
 
 export function AppShell() {
   const platform = getPlatform();
-  const location = useLocation();
-  const { tabs, activePath, ensureTab, selectTab, closeTab, addTab } = useWorkspaceTabs();
+  const navigate = useNavigate();
+  const { tabs, activePath, openPaths, ensureTab, selectTab, closeTab, addTab } = useWorkspaceTabs();
 
   return (
     <ThemeProvider defaultTheme="dark">
@@ -31,7 +30,14 @@ export function AppShell() {
           platform={platform}
           actions={
             <>
-              <IconButton label="Settings" title="Settings">
+              <IconButton
+                label="Settings"
+                title="设置"
+                onClick={() => {
+                  ensureTab("/settings");
+                  navigate("/settings");
+                }}
+              >
                 <Settings className="size-3.5" />
               </IconButton>
               <ThemeToggle size="compact" />
@@ -78,11 +84,7 @@ export function AppShell() {
           }
         >
           <MainPanel>
-            <AnimatePresence mode="wait">
-              <FadeSlide key={location.pathname} className="flex min-h-0 flex-1 flex-col overflow-hidden">
-                <Outlet />
-              </FadeSlide>
-            </AnimatePresence>
+            <WorkspaceOutlet openPaths={openPaths} activePath={activePath} />
           </MainPanel>
         </AppLayout>
       </div>

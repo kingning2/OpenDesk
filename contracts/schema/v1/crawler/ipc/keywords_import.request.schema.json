@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://crawler/ipc/keywords_import.request/v1",
+  "title": "crawler/keywords_import.request",
+  "description": "Import keywords from CSV text (UTF-8). Columns: text[,enabled]. Auto batch_id if omitted.",
+  "type": "object",
+  "required": ["csv_content"],
+  "properties": {
+    "trace_id": { "type": "string" },
+    "csv_content": { "type": "string" },
+    "batch_id": {
+      "type": "string",
+      "description": "Optional; server generates UUID when empty."
+    }
+  },
+  "additionalProperties": false
+}

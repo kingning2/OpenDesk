@@ -14,8 +14,13 @@ tauri-plugin-opener = { workspace = true }
 common = { path = "../common" }
 adapter = { path = "../adapter" }
 agent = { path = "../agent" }
+crawler = { path = "../crawler" }
 ports = { path = "../ports" }
+storage = { path = "../storage" }
 runtime = { path = "../runtime" }
 kernel = { path = "../kernel" }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+dirs = { workspace = true }

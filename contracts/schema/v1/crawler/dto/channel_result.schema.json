@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://crawler/dto/channel_result/v1",
+  "title": "crawler/channel_result",
+  "description": "One crawled channel result. Fields common across platforms; platform-specific extras deferred.",
+  "type": "object",
+  "required": ["platform", "channel_id", "title"],
+  "properties": {
+    "platform": {
+      "type": "string"
+    },
+    "channel_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string"
+    },
+    "subscriber_count": {
+      "type": "integer"
+    },
+    "email": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "custom_url": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

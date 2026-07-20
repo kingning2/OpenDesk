@@ -9,6 +9,7 @@ export {
   Moon,
   Lock,
   Plus,
+  Search,
   Settings,
   Square,
   Sun,

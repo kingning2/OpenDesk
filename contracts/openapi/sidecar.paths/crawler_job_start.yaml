@@ -1,0 +1,27 @@
+# Path fragment for /v1/crawler/job/start
+# Rust runtime client only — React must not call this URL.
+
+/v1/crawler/job/start:
+  post:
+    operationId: crawler_job_start
+    summary: "crawler job start (Rust → Python)"
+    tags: [crawler]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../schema/v1/crawler/sidecar/job_start.request.schema.json'
+    responses:
+      "200":
+        description: Success
+        content:
+          application/json:
+            schema:
+              $ref: '../../schema/v1/crawler/sidecar/job_start.response.schema.json'
+      "500":
+        description: Sidecar error
+        content:
+          application/json:
+            schema:
+              $ref: '../sidecar.v1.yaml#/components/schemas/SidecarError'

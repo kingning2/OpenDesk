@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import type { TabBarItem } from "@desk/ui";
 
@@ -25,6 +25,15 @@ export function useWorkspaceTabs() {
   const ensureTab = useCallback((path: string) => {
     setOpenPaths((current) => (current.includes(path) ? current : [...current, path]));
   }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      ensureTab(pathname);
+    }, 0);
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [pathname, ensureTab]);
 
   const tabs = openPaths.map(createTab);
 
@@ -67,6 +76,7 @@ export function useWorkspaceTabs() {
   return {
     tabs,
     activePath: pathname,
+    openPaths,
     ensureTab,
     selectTab,
     closeTab,

@@ -1,0 +1,12 @@
+[package]
+name = "crawler"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+common = { path = "../common" }
+ports = { path = "../ports" }
+reqwest = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true }

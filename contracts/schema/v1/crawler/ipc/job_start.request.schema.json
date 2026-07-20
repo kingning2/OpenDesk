@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://crawler/ipc/job_start.request/v1",
+  "title": "crawler/job_start.request",
+  "description": "Tauri IPC: start a crawl job (React to Rust).",
+  "type": "object",
+  "required": ["platform", "api_key"],
+  "properties": {
+    "trace_id": {
+      "type": "string"
+    },
+    "platform": {
+      "type": "string"
+    },
+    "keywords": {
+      "type": "string",
+      "description": "Optional when batch_id is set; Rust resolves from DB."
+    },
+    "rate_limit_ms": {
+      "type": "integer"
+    },
+    "max_total": {
+      "type": "integer",
+      "description": "Max accepted channels for the job; omit or <=0 for no limit."
+    },
+    "year": {
+      "type": "integer"
+    },
+    "min_year_video_count": {
+      "type": "integer"
+    },
+    "exclude_countries": {
+      "type": "string"
+    },
+    "batch_id": {
+      "type": "string"
+    },
+    "api_key": {
+      "type": "string",
+      "description": "YouTube Data API key from desktop UI. Never log."
+    }
+  },
+  "additionalProperties": false
+}

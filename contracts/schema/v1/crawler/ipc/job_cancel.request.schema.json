@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://crawler/ipc/job_cancel.request/v1",
+  "title": "crawler/job_cancel.request",
+  "type": "object",
+  "required": ["job_id"],
+  "properties": {
+    "trace_id": {
+      "type": "string"
+    },
+    "job_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

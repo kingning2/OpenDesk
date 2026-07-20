@@ -3,8 +3,10 @@ import { AppShell } from "../app/shell";
 import { HomePage } from "../app/pages/home-page";
 import { AgentPage } from "@feature/agent";
 import { ChatPage } from "@feature/chat";
+import { CrawlerPage } from "@feature/crawler";
 import { MailPage } from "@feature/mail";
 import { KnowledgePage } from "@feature/knowledge";
+import { SettingsPage } from "@feature/setting";
 
 export const appRouter = createBrowserRouter([
   {
@@ -13,9 +15,11 @@ export const appRouter = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: "features/agent", element: <AgentPage /> },
+      { path: "features/crawler", element: <CrawlerPage /> },
       { path: "features/chat", element: <ChatPage /> },
       { path: "features/mail", element: <MailPage /> },
       { path: "features/knowledge", element: <KnowledgePage /> },
+      { path: "settings", element: <SettingsPage /> },
     ],
   },
 ]);

@@ -8,7 +8,11 @@ use adapter::agent_sidecar::RuntimeAgentSidecar;
 use adapter::license::UnlockedLicenseGate;
 #[cfg(feature = "license-lock")]
 use adapter::license::{FailClosedLicenseGate, VerifierProcessLicense};
+use crawler::CrawlerService;
 use kernel::event::InMemoryEventBus;
+use ports::crawler_channels::CrawlerChannelStore;
+use ports::crawler_keywords::CrawlerKeywordStore;
+use ports::crawler_settings::CrawlerSettingsStore;
 use ports::license::LicenseGate;
 use runtime::sidecar::lifecycle::SidecarLifecycle;
 use std::sync::Arc;
@@ -19,6 +23,7 @@ use std::sync::Arc;
 ///
 /// - 持有 sidecar 生命周期与 Agent 网关
 /// - 持有 License 闸门实现
+/// - 持有进程内 crawler 与 SQLite stores
 /// - 持有进程内事件总线
 ///
 /// 作者：Xiaoman
@@ -30,7 +35,13 @@ pub struct AppState {
     pub gateway: Arc<RuntimeAgentSidecar>,
     /// License 闸门（无锁 stub 或 verifier / fail-closed）。
     pub license: Arc<dyn LicenseGate>,
-    /// 进程内事件总线（当前主要用于 sidecar 生命周期）。
+    /// In-process YouTube crawl jobs for the desktop UI.
+    pub crawler: Arc<CrawlerService>,
+    pub keywords_store: Arc<dyn CrawlerKeywordStore>,
+    /// Accepted channels per job (`crawler_channel` SQLite table).
+    pub channels_store: Arc<dyn CrawlerChannelStore>,
+    /// Crawler key-value settings (`crawler_setting` SQLite table).
+    pub settings_store: Arc<dyn CrawlerSettingsStore>,
     #[allow(dead_code)]
     pub event_bus: Arc<InMemoryEventBus>,
 }

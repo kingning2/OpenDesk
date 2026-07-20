@@ -12,6 +12,10 @@ const pageMetaByPath: Record<string, PageMeta> = {
     title: "Agent",
     description: "Sidecar connectivity vertical slice",
   },
+  "/features/crawler": {
+    title: "Crawler",
+    description: "YouTube channel crawl with process logs",
+  },
   "/features/chat": {
     title: "Chat",
     description: "Customer conversation workspace",
@@ -23,6 +27,10 @@ const pageMetaByPath: Record<string, PageMeta> = {
   "/features/knowledge": {
     title: "Knowledge",
     description: "Knowledge base and retrieval",
+  },
+  "/settings": {
+    title: "Settings",
+    description: "Application settings",
   },
 };
 

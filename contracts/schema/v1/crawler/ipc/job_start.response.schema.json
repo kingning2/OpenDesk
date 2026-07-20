@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://crawler/ipc/job_start.response/v1",
+  "title": "crawler/job_start.response",
+  "type": "object",
+  "required": ["ok", "job_id"],
+  "properties": {
+    "ok": {
+      "type": "boolean"
+    },
+    "job_id": {
+      "type": "string"
+    },
+    "trace_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}
