@@ -7,7 +7,6 @@ members = [
     "agent",
     "browser",
     "contracts",
-    "crawler",
     "gateway",
     "llm",
     "memory",
@@ -49,34 +48,15 @@ version = "0.1.0"
 source = { editable = "python/packages/contracts" }
 
 [[package]]
-name = "crawler"
-version = "0.1.0"
-source = { editable = "python/packages/crawler" }
-dependencies = [
-    { name = "contracts" },
-    { name = "shared" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "contracts", editable = "python/packages/contracts" },
-    { name = "shared", editable = "python/packages/shared" },
-]
-
-[[package]]
 name = "gateway"
 version = "0.1.0"
 source = { editable = "python/packages/gateway" }
 dependencies = [
-    { name = "crawler" },
     { name = "shared" },
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "crawler", editable = "python/packages/crawler" },
-    { name = "shared", editable = "python/packages/shared" },
-]
+requires-dist = [{ name = "shared", editable = "python/packages/shared" }]
 
 [[package]]
 name = "llm"

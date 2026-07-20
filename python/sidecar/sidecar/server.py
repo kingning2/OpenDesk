@@ -7,23 +7,13 @@ import logging
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, ClassVar
 
-from gateway.handlers import (
-    handle_agent_ping,
-    handle_crawler_job_cancel,
-    handle_crawler_job_logs,
-    handle_crawler_job_start,
-    handle_crawler_job_status,
-)
+from gateway.handlers import handle_agent_ping
 from sidecar.routes import ROUTES
 
 logger = logging.getLogger("opendesk.sidecar")
 
 HANDLERS = {
     "handle_agent_ping": handle_agent_ping,
-    "handle_crawler_job_start": handle_crawler_job_start,
-    "handle_crawler_job_cancel": handle_crawler_job_cancel,
-    "handle_crawler_job_status": handle_crawler_job_status,
-    "handle_crawler_job_logs": handle_crawler_job_logs,
 }
 
 
