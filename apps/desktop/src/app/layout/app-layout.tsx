@@ -1,7 +1,7 @@
 /**
  * 桌面壳左右分栏布局（侧栏 + 主区）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 
@@ -11,7 +11,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 /**
  * `AppLayout` 属性。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 export interface AppLayoutProps extends HTMLAttributes<HTMLDivElement> {
@@ -24,7 +24,7 @@ export interface AppLayoutProps extends HTMLAttributes<HTMLDivElement> {
 /**
  * 桌面壳主体布局：侧栏与主区水平排列。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @param props - 见 {@link AppLayoutProps}

@@ -1,7 +1,7 @@
 /**
  * 启动 subscription 激活码签发 GUI（Slint）。
  *
- * 作者：Xiaoman
+ * 作者：coisini
  * 创建时间：2026-07-16
  */
 import { spawnSync } from "node:child_process";

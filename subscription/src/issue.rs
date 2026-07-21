@@ -1,6 +1,6 @@
 //! 激活签发业务服务（CLI / GUI 共用）。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-16
 
 use std::path::Path;
@@ -14,7 +14,7 @@ use crate::sign::{
 
 /// 签发请求参数。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 #[derive(Debug, Clone)]
 pub struct IssueRequest {
@@ -36,7 +36,7 @@ pub struct IssueRequest {
 
 /// 签发结果。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 #[derive(Debug, Clone)]
 pub struct IssueResult {
@@ -55,14 +55,14 @@ pub struct IssueResult {
 /// - 解析 `--days` / `--exp` 策略
 /// - 生成 token 并写入 `.key`
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 pub struct ActivationIssuer;
 
 impl ActivationIssuer {
     /// 构造签发服务。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     pub fn new() -> Self {
         Self
@@ -70,7 +70,7 @@ impl ActivationIssuer {
 
     /// 执行一次签发。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     ///
     /// # 参数

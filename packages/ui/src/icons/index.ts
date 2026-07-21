@@ -2,6 +2,7 @@ export {
   BookOpen,
   Bot,
   Home,
+  Languages,
   Mail,
   MessageSquare,
   Minus,
@@ -12,7 +13,9 @@ export {
   Search,
   Settings,
   Square,
+  SquaresUnite,
   Sun,
   X,
+  Youtube,
 } from "lucide-react";
 export type { LucideIcon } from "lucide-react";

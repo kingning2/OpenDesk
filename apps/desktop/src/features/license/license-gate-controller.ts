@@ -6,7 +6,7 @@
  * - 判断是否应遮罩主界面
  * - 将未知错误规范为可读消息
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 
@@ -18,7 +18,7 @@ import {
 /**
  * 闸门查询结果。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 export interface LicenseGateSnapshot {
@@ -33,14 +33,14 @@ export interface LicenseGateSnapshot {
 /**
  * 封装授权闸门查询逻辑（无 React 依赖）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 export class LicenseGateController {
   /**
    * 构造闸门控制器。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-16
    */
   public constructor() {}
@@ -48,7 +48,7 @@ export class LicenseGateController {
   /**
    * 拉取授权状态并计算是否拦截主界面。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-16
    *
    * @returns 闸门快照
@@ -73,7 +73,7 @@ export class LicenseGateController {
   /**
    * 判断状态是否应遮罩主界面。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-16
    *
    * @param status - 授权状态
@@ -86,7 +86,7 @@ export class LicenseGateController {
   /**
    * 将未知错误转为可读字符串。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-16
    *
    * @param error - 捕获到的未知错误

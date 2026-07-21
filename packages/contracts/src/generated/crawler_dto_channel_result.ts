@@ -7,4 +7,8 @@ export interface CrawlerDtoChannelResult {
   email?: string;
   description?: string;
   custom_url?: string;
+  email_status?: string;
+  enrich_attempts?: number;
+  enrich_error?: string;
+  enriched_at?: string;
 }

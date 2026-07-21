@@ -3,7 +3,7 @@
  *
  * 只提供创建 store 的基础设施；业务状态放在各 Feature / 壳层模块。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 

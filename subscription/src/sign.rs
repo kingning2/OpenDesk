@@ -1,6 +1,6 @@
 //! 激活 token 签发（OpenSSL RSA-PSS）。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-16
 
 use std::path::Path;
@@ -14,7 +14,7 @@ use crate::crypto::OpenSslRsaPss;
 
 /// 过期策略：绝对时间或首次激活起算的时长。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 #[derive(Debug, Clone)]
 pub enum ExpiryPolicy {
@@ -32,7 +32,7 @@ pub enum ExpiryPolicy {
 
 /// 将过期参数解析为 Unix 秒。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 pub fn parse_exp_to_unix_seconds(exp: &str) -> Result<i64, String> {
     let s = exp.trim();
@@ -58,7 +58,7 @@ pub fn parse_exp_to_unix_seconds(exp: &str) -> Result<i64, String> {
 ///
 /// `--days` → 首次激活起算；`--exp` → 绝对截止。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 pub fn resolve_expiry_policy(
     exp_arg: Option<String>,
@@ -86,7 +86,7 @@ pub fn resolve_expiry_policy(
 
 /// 兼容旧调用：仅解析绝对 `exp`（由 policy 推导展示用截止点）。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 #[deprecated(note = "use resolve_expiry_policy")]
 pub fn resolve_exp(exp_arg: Option<String>, days_arg: Option<i64>) -> Result<i64, String> {
@@ -98,7 +98,7 @@ pub fn resolve_exp(exp_arg: Option<String>, days_arg: Option<i64>) -> Result<i64
 
 /// 解析私钥路径（默认 `./keys/private_key.pem`）。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 pub fn resolve_private_key_path(private_key: Option<String>) -> Result<String, String> {
     if let Some(path) = private_key {
@@ -131,7 +131,7 @@ fn sign_rsa_pss_sha256(message: &str, private_key_path: &str) -> Result<Vec<u8>,
 
 /// 按策略生成激活 token。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 pub fn generate_activation_token_with_policy(
     machine_code: String,
@@ -167,7 +167,7 @@ pub fn generate_activation_token_with_policy(
 
 /// 生成绝对过期 token（兼容旧签名）。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 pub fn generate_activation_token(
     machine_code: String,

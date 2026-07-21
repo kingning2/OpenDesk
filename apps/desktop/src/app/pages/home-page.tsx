@@ -1,7 +1,7 @@
 /**
  * 首页。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 
@@ -12,7 +12,7 @@ import { useT } from "../../i18n";
 /**
  * 应用首页。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @returns 首页节点

@@ -1,7 +1,7 @@
 /**
  * 桌面壳窄轨导航（NavRail）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 
@@ -12,7 +12,7 @@ import type { HTMLAttributes } from "react";
 /**
  * 窄轨侧栏容器。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @param props - 标准 aside 属性
@@ -30,7 +30,7 @@ export function NavRail({ className, ...props }: HTMLAttributes<HTMLElement>) {
 /**
  * 窄轨内导航列表容器。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @param props - 标准 nav 属性
@@ -59,7 +59,7 @@ const navRailItemVariants = cva(
 /**
  * `NavRailItem` 属性。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 export interface NavRailItemProps
@@ -69,7 +69,7 @@ export interface NavRailItemProps
 /**
  * 窄轨导航项（非路由场景可用；路由场景可只用 `navRailItemVariants`）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @param props - 见 {@link NavRailItemProps}

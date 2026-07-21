@@ -29,6 +29,19 @@
     },
     "custom_url": {
       "type": "string"
+    },
+    "email_status": {
+      "type": "string",
+      "description": "found_api | pending_enrich | enriching | found_playwright | not_found | enrich_failed"
+    },
+    "enrich_attempts": {
+      "type": "integer"
+    },
+    "enrich_error": {
+      "type": "string"
+    },
+    "enriched_at": {
+      "type": "string"
     }
   },
   "additionalProperties": false

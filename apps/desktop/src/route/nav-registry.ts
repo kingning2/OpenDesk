@@ -1,7 +1,7 @@
 /**
  * 侧栏导航项注册表。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 
@@ -17,7 +17,7 @@ import { mailFeature } from "@feature/mail";
 /**
  * 导航项（文案用 `labelKey` 走 i18n）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 export interface NavItem {
@@ -32,7 +32,7 @@ export interface NavItem {
 /**
  * 已注册侧栏导航项。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 export const navItems: NavItem[] = [

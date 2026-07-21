@@ -1,6 +1,6 @@
 //! License / activation DTOs（手写；Contract codegen 暂缓，避免 Python 生成物 churn）。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-16
 
 use serde::{Deserialize, Serialize};
@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 /// - 描述闸门是否开启、是否已激活
 /// - 携带设备码、过期时间与产品名（可选）
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -38,7 +38,7 @@ pub struct LicenseStatus {
 /// - 支持粘贴 token 或上传 `.key`（Base64）
 /// - 两者必须恰好提供其一
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 ///
 /// # 示例

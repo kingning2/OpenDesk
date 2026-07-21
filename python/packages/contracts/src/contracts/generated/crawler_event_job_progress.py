@@ -8,6 +8,9 @@ class CrawlerEventJobProgress(TypedDict, total=False):
     occurred_at: str
     job_id: str
     platform: str
+    status: str
+    message: str
+    stop_reason: str
     current_keyword: str
     scanned_count: int
     accepted_count: int
@@ -15,3 +18,7 @@ class CrawlerEventJobProgress(TypedDict, total=False):
     search_pages: int
     keyword_scanned: int
     keyword_accepted: int
+    keywords_total: int
+    keywords_done: int
+    keyword_stats_json: str
+    error_message: str

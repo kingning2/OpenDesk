@@ -4,12 +4,12 @@
 //! - 解析前端传入的 locale
 //! - 按语言生成 job status / 错误提示字符串（IPC 直接下发译文，不传 key）
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-20
 
 /// 采集任务用户可见语言。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-20
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Locale {
@@ -22,7 +22,7 @@ pub enum Locale {
 impl Locale {
     /// 从 IPC / UI 语言标签解析；未知或空则默认中文。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-20
     ///
     /// # 参数
@@ -47,7 +47,7 @@ impl Locale {
 
 /// 排队中。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-20
 pub fn queued(locale: Locale) -> String {
     match locale {
@@ -58,7 +58,7 @@ pub fn queued(locale: Locale) -> String {
 
 /// 准备爬取 N 个关键词。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-20
 pub fn prepare_keywords(locale: Locale, keywords_total: usize) -> String {
     match locale {
@@ -69,7 +69,7 @@ pub fn prepare_keywords(locale: Locale, keywords_total: usize) -> String {
 
 /// 任务已取消。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-20
 pub fn cancelled(locale: Locale) -> String {
     match locale {
@@ -80,7 +80,7 @@ pub fn cancelled(locale: Locale) -> String {
 
 /// 关键词进行中进度。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-20
 pub fn progress(
     locale: Locale,
@@ -102,7 +102,7 @@ pub fn progress(
 
 /// 单个关键词完成进度。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-20
 pub fn keyword_done(locale: Locale, done: i64, total: i64) -> String {
     match locale {
@@ -113,7 +113,7 @@ pub fn keyword_done(locale: Locale, done: i64, total: i64) -> String {
 
 /// 失败摘要（含错误细节）。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-20
 pub fn failed(locale: Locale, error: &str) -> String {
     match locale {
@@ -124,7 +124,7 @@ pub fn failed(locale: Locale, error: &str) -> String {
 
 /// 状态锁不可用。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-20
 pub fn status_unavailable(locale: Locale) -> String {
     match locale {
@@ -135,7 +135,7 @@ pub fn status_unavailable(locale: Locale) -> String {
 
 /// 按 stop_reason 生成结束文案。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-20
 pub fn stop_message(locale: Locale, stop_reason: &str) -> String {
     match (locale, stop_reason) {
@@ -156,7 +156,7 @@ pub fn stop_message(locale: Locale, stop_reason: &str) -> String {
 
 /// 未选择关键词批次。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-20
 pub fn need_batch(locale: Locale) -> String {
     match locale {
@@ -167,7 +167,7 @@ pub fn need_batch(locale: Locale) -> String {
 
 /// 批次无可用关键词。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-20
 pub fn empty_batch(locale: Locale, batch: &str) -> String {
     match locale {

@@ -10,7 +10,7 @@
  * ```
  * 一路由一目录；目录内每种语言一个 JSON（i18next namespace = 路由名）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 
@@ -23,7 +23,7 @@ export type { AppLocale };
 /**
  * 桌面应用 i18n 实例。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 export const appI18n = createI18n<AppLocale>({

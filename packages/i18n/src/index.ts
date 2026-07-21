@@ -4,7 +4,7 @@
  * 业务文案按「路由目录 + 语言 JSON」放在各 app；本包提供工厂与类型。
  * 后端用户提示由 Rust 按 locale 自行翻译，不经本包做 key 映射。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 

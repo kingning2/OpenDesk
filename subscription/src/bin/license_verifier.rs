@@ -1,6 +1,6 @@
 //! 供主程序调用的校验 exe：OpenSSL 验签 + 机器码 + 过期 + 挑战应答。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-16
 
 use clap::{Parser, Subcommand};

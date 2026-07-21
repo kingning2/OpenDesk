@@ -1,6 +1,6 @@
 //! 运行时还原混淆公钥与 attestation 材料。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-16
 
 include!(concat!(env!("OUT_DIR"), "/embedded_public_key.rs"));
@@ -14,14 +14,14 @@ include!(concat!(env!("OUT_DIR"), "/key_file_salt.rs"));
 /// - 还原编译期混淆的公钥 PEM
 /// - 暴露 attestation HMAC 密钥与 `.key` 盐
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 pub struct EmbeddedMaterials;
 
 impl EmbeddedMaterials {
     /// 构造访问器。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     ///
     /// # 返回值
@@ -33,7 +33,7 @@ impl EmbeddedMaterials {
 
     /// 还原公钥 PEM 字符串。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     ///
     /// # 返回值
@@ -59,7 +59,7 @@ impl EmbeddedMaterials {
 
     /// 返回 attestation HMAC 原始密钥。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     ///
     /// # 返回值
@@ -71,7 +71,7 @@ impl EmbeddedMaterials {
 
     /// 返回 `.key` 文件 XOR 盐。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     ///
     /// # 返回值

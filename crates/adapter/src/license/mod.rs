@@ -1,6 +1,6 @@
 //! License gate adapters：无锁 stub、fail-closed、verifier 子进程。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-16
 
 mod fail_closed;

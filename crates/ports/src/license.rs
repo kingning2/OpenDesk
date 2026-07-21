@@ -1,6 +1,6 @@
 //! License gate port — activation / machine-code boundary.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-16
 
 use async_trait::async_trait;
@@ -14,7 +14,7 @@ use thiserror::Error;
 /// - 统一描述激活、机器码、verifier 子进程失败原因
 /// - 错误文案包含「何处 / 为何 / 如何解决」
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 #[derive(Debug, Clone, Error)]
 pub enum LicenseError {
@@ -195,7 +195,7 @@ pub enum LicenseError {
 /// - 写入并校验激活 token / `.key`
 /// - 业务 IPC 前做硬授权检查
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 ///
 /// # 注意事项
@@ -206,7 +206,7 @@ pub enum LicenseError {
 pub trait LicenseGate: Send + Sync {
     /// 查询当前授权状态。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     ///
     /// # 返回值
@@ -216,7 +216,7 @@ pub trait LicenseGate: Send + Sync {
 
     /// 读取本机设备码。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     ///
     /// # 返回值
@@ -226,7 +226,7 @@ pub trait LicenseGate: Send + Sync {
 
     /// 使用 token 或 `.key` 字节激活。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     ///
     /// # 参数
@@ -243,7 +243,7 @@ pub trait LicenseGate: Send + Sync {
 
     /// 确保当前已授权，供业务 IPC 调用。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     ///
     /// # 返回值

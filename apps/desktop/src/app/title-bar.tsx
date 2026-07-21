@@ -3,12 +3,12 @@
  *
  * 仅供 `apps/desktop` 壳层使用，不放入 `@desk/ui`。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 
 import { cn } from "@desk/ui";
-import { Minus, Square, X } from "@desk/ui/icons";
+import { Minus, Square, X, SquaresUnite } from "@desk/ui/icons";
 import type { HTMLAttributes, ReactNode, MouseEvent } from "react";
 
 /** 标题栏适配的桌面平台。 */
@@ -17,12 +17,14 @@ export type TitleBarPlatform = "macos" | "windows" | "linux";
 /**
  * 窗口标题栏属性。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 export interface TitleBarProps extends HTMLAttributes<HTMLElement> {
   /** 桌面平台；决定流量灯占位或 Windows 窗口按钮。 */
   platform?: TitleBarPlatform;
+  /** 当前窗口是否已最大化（控制最大化按钮图标）。 */
+  isMaximized?: boolean;
   /** 中间标签区（如 TabBar）。 */
   tabs?: ReactNode;
   /** 右侧操作区（设置、主题等）。 */
@@ -40,7 +42,7 @@ export interface TitleBarProps extends HTMLAttributes<HTMLElement> {
 /**
  * 窗口控制按钮。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @param props.label - 无障碍标签
@@ -78,24 +80,32 @@ function WindowControlButton({
 /**
  * Windows / Linux 窗口控制组。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
- * @param props - 最小化 / 最大化 / 关闭回调
+ * @param props - 最大化状态与最小化 / 最大化 / 关闭回调
  * @returns 控制组节点
  */
 function WindowControls({
+  isMaximized = false,
   onMinimize,
   onToggleMaximize,
   onClose,
-}: Pick<TitleBarProps, "onMinimize" | "onToggleMaximize" | "onClose">) {
+}: Pick<TitleBarProps, "isMaximized" | "onMinimize" | "onToggleMaximize" | "onClose">) {
   return (
     <div className="flex shrink-0 items-center">
       <WindowControlButton label="Minimize" onClick={onMinimize}>
         <Minus className="size-3.5" />
       </WindowControlButton>
-      <WindowControlButton label="Maximize" onClick={onToggleMaximize}>
-        <Square className="size-3" />
+      <WindowControlButton
+        label={isMaximized ? "Restore" : "Maximize"}
+        onClick={onToggleMaximize}
+      >
+        {isMaximized ? (
+          <SquaresUnite className="size-3" />
+        ) : (
+          <Square className="size-3" />
+        )}
       </WindowControlButton>
       <WindowControlButton
         label="Close"
@@ -111,7 +121,7 @@ function WindowControls({
 /**
  * 可拖拽区域；双击切换最大化。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @param props.className - 样式
@@ -158,7 +168,7 @@ function DragRegion({
 /**
  * 桌面壳唯一窗口标题栏：品牌 logo + 标签 + 操作 + 窗口控制。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @param props - 见 {@link TitleBarProps}
@@ -166,6 +176,7 @@ function DragRegion({
  */
 export function TitleBar({
   platform = "windows",
+  isMaximized = false,
   tabs,
   actions,
   onStartDrag,
@@ -231,6 +242,7 @@ export function TitleBar({
           />
           {actions ? <div className="flex shrink-0 items-center gap-1 px-1">{actions}</div> : null}
           <WindowControls
+            isMaximized={isMaximized}
             onMinimize={onMinimize}
             onToggleMaximize={onToggleMaximize}
             onClose={onClose}

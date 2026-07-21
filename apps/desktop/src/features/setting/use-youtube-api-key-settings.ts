@@ -1,5 +1,8 @@
 /**
  * Persisted YouTube API key — loaded from Rust SQLite via Tauri IPC.
+ *
+ * @author coisini
+ * @created 2026-07-20
  */
 
 import { useCallback, useEffect, useState } from "react";
@@ -8,8 +11,17 @@ import {
   crawlerYoutubeApiKeySet,
 } from "@desk/platform/ipc/crawler-settings";
 
+/**
+ * YouTube API 密钥设置状态与持久化。
+ *
+ * @author coisini
+ * @created 2026-07-20
+ *
+ * @returns 密钥草稿、脏标记与读写操作
+ */
 export function useYoutubeApiKeySettings() {
   const [apiKey, setApiKey] = useState("");
+  const [baseline, setBaseline] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savedMessage, setSavedMessage] = useState("");
@@ -20,7 +32,9 @@ export function useYoutubeApiKeySettings() {
     setLoading(true);
     try {
       const response = await crawlerYoutubeApiKeyGet();
-      setApiKey(response.api_key ?? "");
+      const next = response.api_key ?? "";
+      setApiKey(next);
+      setBaseline(next);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -43,14 +57,29 @@ export function useYoutubeApiKeySettings() {
     setSaving(true);
     try {
       const response = await crawlerYoutubeApiKeySet(apiKey);
-      setApiKey(response.api_key ?? "");
-      setSavedMessage("已保存");
+      const next = response.api_key ?? "";
+      setApiKey(next);
+      setBaseline(next);
+      setSavedMessage("saved");
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+      throw err;
     } finally {
       setSaving(false);
     }
   }, [apiKey]);
+
+  /**
+   * 放弃未保存编辑，恢复为已持久化基线。
+   *
+   * @author coisini
+   * @created 2026-07-21
+   */
+  const discard = useCallback(() => {
+    setApiKey(baseline);
+    setSavedMessage("");
+    setError("");
+  }, [baseline]);
 
   return {
     apiKey,
@@ -61,6 +90,8 @@ export function useYoutubeApiKeySettings() {
     error,
     refresh,
     save,
-    configured: Boolean(apiKey.trim()),
+    discard,
+    dirty: apiKey !== baseline,
+    configured: Boolean(baseline.trim()),
   };
 }

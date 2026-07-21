@@ -1,6 +1,6 @@
 //! License claims 与签名消息。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-16
 
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 /// - `duration_secs`：从**首次激活**起算的有效秒数（`--days` 签发）
 /// - `exp`：绝对过期 Unix 秒（`--exp` 签发，或旧版 token）
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -39,7 +39,7 @@ pub struct LicenseClaims {
 
 /// 当前 UTC Unix 秒。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 pub fn now_ts() -> i64 {
     Utc::now().timestamp()
@@ -50,7 +50,7 @@ pub fn now_ts() -> i64 {
 /// 时长模式：`product|v|machine|dur:{secs}`  
 /// 绝对过期模式：`product|v|machine|{exp}`
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 pub fn signing_message(
     product: &str,
@@ -68,7 +68,7 @@ pub fn signing_message(
 
 /// 将 claims 编码为 activation token。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 pub fn activation_code_from_claims(claims: &LicenseClaims) -> Result<String, String> {
     let json = serde_json::to_vec(claims).map_err(|e| format!("serialize claims failed: {e}"))?;
@@ -77,7 +77,7 @@ pub fn activation_code_from_claims(claims: &LicenseClaims) -> Result<String, Str
 
 /// 解析 activation token。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 pub fn parse_activation_code(token: &str) -> Result<LicenseClaims, String> {
     let raw = URL_SAFE_NO_PAD

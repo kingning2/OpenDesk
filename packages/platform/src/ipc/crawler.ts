@@ -18,7 +18,7 @@ import type {
 /**
  * Start a crawl job (React → Rust in-process crawler).
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 export async function crawlerJobStart(
@@ -30,7 +30,7 @@ export async function crawlerJobStart(
 /**
  * Cancel a crawl job.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 export async function crawlerJobCancel(
@@ -42,7 +42,7 @@ export async function crawlerJobCancel(
 /**
  * Query crawl job status.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 export async function crawlerJobStatus(
@@ -54,7 +54,7 @@ export async function crawlerJobStatus(
 /**
  * Fetch crawl process logs (`logs_json` array string).
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 export async function crawlerJobLogs(

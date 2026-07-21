@@ -1,7 +1,7 @@
 /**
  * 从 `locales/{route}/{zh-cn|en-us}.json` 组装 i18next resources。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 
@@ -29,7 +29,7 @@ export type AppLocale = keyof typeof LOCALE_FILE_BY_CODE;
 /**
  * 构建某一语言的全部 namespace 资源。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @param locale - 语言代码
@@ -58,7 +58,7 @@ function buildLocaleResources(locale: AppLocale): LocaleNamespaces {
 /**
  * 桌面端全部语言资源（按路由 namespace）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 export const appLocaleResources: Record<AppLocale, LocaleNamespaces> = {

@@ -10,4 +10,8 @@ pub struct CrawlerDtoChannelResult {
     pub email: Option<String>,
     pub description: Option<String>,
     pub custom_url: Option<String>,
+    pub email_status: Option<String>,
+    pub enrich_attempts: Option<i64>,
+    pub enrich_error: Option<String>,
+    pub enriched_at: Option<String>,
 }

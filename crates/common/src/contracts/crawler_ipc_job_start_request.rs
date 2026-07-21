@@ -12,6 +12,5 @@ pub struct CrawlerIpcJobStartRequest {
     pub exclude_countries: Option<String>,
     pub batch_id: Option<String>,
     pub api_key: String,
-    /// UI locale for user-facing job messages (`zh-CN` / `en-US`); defaults to zh-CN.
     pub locale: Option<String>,
 }

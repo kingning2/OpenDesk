@@ -15,7 +15,7 @@ export interface PageScaffoldProps extends React.HTMLAttributes<HTMLDivElement> 
 export function PageScaffold({
   subtitle,
   children,
-  containerWidth = "lg",
+  containerWidth = "full",
   containerPadding = "md",
   fill = false,
   className,

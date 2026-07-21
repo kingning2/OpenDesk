@@ -1,7 +1,7 @@
 /**
  * 有锁发行构建：先编 license-verifier，再 `tauri build --features license-lock`。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  *
  * 用法：

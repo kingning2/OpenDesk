@@ -3,7 +3,7 @@
  *
  * 将 [`LicenseActivationService`] 接到表单状态，并用 toast + 锁动画反馈每次操作。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 
@@ -20,7 +20,7 @@ const FAILURE_ANIM_MS = 700;
 /**
  * Hook 返回值：激活表单状态与操作。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 export interface UseLicenseActivateResult {
@@ -47,7 +47,7 @@ export interface UseLicenseActivateResult {
 /**
  * 等待指定毫秒；尊重 `prefers-reduced-motion` 时几乎立即返回。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  *
  * @param ms - 正常动画等待时长
@@ -65,7 +65,7 @@ function waitForAnim(ms: number): Promise<void> {
 /**
  * 管理激活面板交互。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  *
  * @param onActivated - 激活成功后的回调（通常用于刷新闸门）

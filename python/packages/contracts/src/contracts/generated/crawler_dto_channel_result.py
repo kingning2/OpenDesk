@@ -12,3 +12,7 @@ class CrawlerDtoChannelResult(TypedDict, total=False):
     email: str
     description: str
     custom_url: str
+    email_status: str
+    enrich_attempts: int
+    enrich_error: str
+    enriched_at: str

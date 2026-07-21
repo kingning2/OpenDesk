@@ -1,7 +1,7 @@
 /**
  * Agent Feature 页。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 
@@ -13,7 +13,7 @@ import { useAgentPing } from "./use-agent-ping";
 /**
  * Agent 连通性演示页。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @returns 页面节点

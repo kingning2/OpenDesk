@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://crawler/event/channel.email_enriched/v1",
+  "title": "crawler/channel.email_enriched",
+  "description": "Email enrichment finished for one channel (Worker result forwarded by main process).",
+  "type": "object",
+  "required": [
+    "event_id",
+    "occurred_at",
+    "job_id",
+    "platform",
+    "channel_id",
+    "email_status"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "occurred_at": {
+      "type": "string"
+    },
+    "job_id": {
+      "type": "string"
+    },
+    "platform": {
+      "type": "string"
+    },
+    "channel_id": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "email_status": {
+      "type": "string",
+      "description": "found_playwright | not_found | enrich_failed"
+    },
+    "enrich_attempts": {
+      "type": "integer"
+    },
+    "enrich_error": {
+      "type": "string"
+    },
+    "enriched_at": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

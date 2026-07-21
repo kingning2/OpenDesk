@@ -1,6 +1,6 @@
 //! 应用运行时状态组装。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-16
 
 use adapter::agent_sidecar::RuntimeAgentSidecar;
@@ -26,7 +26,7 @@ use std::sync::Arc;
 /// - 持有进程内 crawler 与 SQLite stores
 /// - 持有进程内事件总线
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 pub struct AppState {
     /// Sidecar 生命周期控制器。
@@ -53,7 +53,7 @@ pub struct AppState {
 /// - 无 `license-lock`：返回 [`UnlockedLicenseGate`]
 /// - 有 `license-lock`：优先 [`VerifierProcessLicense`]，失败则 fail-closed
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 ///
 /// # 返回值

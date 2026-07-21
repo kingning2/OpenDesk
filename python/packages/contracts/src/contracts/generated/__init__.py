@@ -6,6 +6,8 @@ from .agent_sidecar_ping_request import AgentSidecarPingRequest
 from .agent_sidecar_ping_response import AgentSidecarPingResponse
 from .crawler_dto_channel_result import CrawlerDtoChannelResult
 from .crawler_dto_job_config import CrawlerDtoJobConfig
+from .crawler_event_channel_accepted import CrawlerEventChannelAccepted
+from .crawler_event_channel_email_enriched import CrawlerEventChannelEmailEnriched
 from .crawler_event_job_completed import CrawlerEventJobCompleted
 from .crawler_event_job_failed import CrawlerEventJobFailed
 from .crawler_event_job_log import CrawlerEventJobLog
@@ -42,6 +44,8 @@ __all__ = [
     "AgentSidecarPingResponse",
     "CrawlerDtoChannelResult",
     "CrawlerDtoJobConfig",
+    "CrawlerEventChannelAccepted",
+    "CrawlerEventChannelEmailEnriched",
     "CrawlerEventJobCompleted",
     "CrawlerEventJobFailed",
     "CrawlerEventJobLog",

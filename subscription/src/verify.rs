@@ -1,6 +1,6 @@
 //! 本地 license 校验（OpenSSL + 机器码 + 过期）。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-16
 
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
@@ -17,7 +17,7 @@ use crate::machine_code::compute_machine_code;
 
 /// 校验输出 JSON（主程序解析）。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -90,7 +90,7 @@ fn resolve_effective_expiry(
 
 /// 执行本地校验，可选 nonce 挑战应答。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 ///
 /// # 参数

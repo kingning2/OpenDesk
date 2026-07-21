@@ -1,6 +1,6 @@
 //! 通过 spawn `license-verifier` 实现的有锁闸门适配器。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-16
 
 use std::path::{Path, PathBuf};
@@ -29,7 +29,7 @@ const LICENSE_CACHE_TTL: Duration = Duration::from_secs(30);
 /// - 激活成功后落盘 `.key` 或 `license.token`
 /// - 短 TTL 缓存 `ensure_licensed` 结果
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 pub struct VerifierProcessLicense {
     verifier_path: PathBuf,
@@ -48,7 +48,7 @@ struct CachedLicense {
 impl VerifierProcessLicense {
     /// 使用已知路径构造闸门（不强制完整性/密钥，供测试）。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     pub fn new(verifier_path: PathBuf, data_dir: PathBuf) -> Self {
         Self {
@@ -62,7 +62,7 @@ impl VerifierProcessLicense {
 
     /// 从环境解析路径，并强制完整性与 attestation 密钥。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     pub fn from_env() -> Result<Self, LicenseError> {
         let verifier_path = resolve_verifier_path()?;

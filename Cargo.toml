@@ -4,6 +4,7 @@ members = [
   "apps/desktop/src-tauri",
   "crates/app",
   "crates/crawler",
+  "crates/crawler-enrich",
   "crates/kernel",
   "crates/common",
   "crates/ports",
@@ -25,6 +26,7 @@ members = [
   "crates/vector",
   "crates/file",
   "crates/mail-net",
+  "crates/worker",
 ]
 exclude = ["subscription"]
 
@@ -50,3 +52,7 @@ diesel_migrations = "2.2"
 libsqlite3-sys = { version = "0.30", features = ["bundled"] }
 uuid = { version = "1", features = ["v4"] }
 dirs = "5"
+rand = "0.8"
+enigo = "0.3"
+screenshots = "0.8"
+imageproc = "0.25"

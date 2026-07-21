@@ -1,6 +1,6 @@
 //! 首次激活时间状态（本机落盘）。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-16
 
 use std::path::{Path, PathBuf};
@@ -12,7 +12,7 @@ const STATE_FILE_NAME: &str = "license.activated_at.json";
 
 /// 本机激活状态记录。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -27,7 +27,7 @@ pub struct ActivationState {
 ///
 /// 功能：读写 `license.activated_at.json`，按 token 指纹绑定首次激活时间。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 pub struct ActivationStateStore {
     state_dir: PathBuf,
@@ -36,7 +36,7 @@ pub struct ActivationStateStore {
 impl ActivationStateStore {
     /// 使用状态目录构造仓库。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     pub fn new(state_dir: impl Into<PathBuf>) -> Self {
         Self {
@@ -46,7 +46,7 @@ impl ActivationStateStore {
 
     /// 计算 token 指纹。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     pub fn fingerprint(token: &str) -> String {
         let mut hasher = Sha256::new();
@@ -60,7 +60,7 @@ impl ActivationStateStore {
 
     /// 读取或在首次通过时写入激活时间，并返回有效期截止时间。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     ///
     /// # 参数

@@ -3,7 +3,7 @@
  *
  * 高频操作：无进出场 / 共享布局动画；press 用 CSS `:active`。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 
@@ -15,7 +15,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 /**
  * 工作区标签项。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 export interface TabBarItem {
@@ -28,7 +28,7 @@ export interface TabBarItem {
 /**
  * `TabBar` 属性。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 export interface TabBarProps extends Omit<HTMLAttributes<HTMLDivElement>, "onSelect"> {
@@ -92,7 +92,7 @@ interface TabItemProps extends VariantProps<typeof tabItemVariants> {
 /**
  * 单个工作区标签。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @param props - 标签数据与回调
@@ -146,7 +146,7 @@ function TabItem({ item, active, embedded, onSelect, onClose }: TabItemProps) {
 /**
  * 工作区标签条。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @param props - 见 {@link TabBarProps}

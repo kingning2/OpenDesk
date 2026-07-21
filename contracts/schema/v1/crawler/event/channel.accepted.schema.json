@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://crawler/event/channel.accepted/v1",
+  "title": "crawler/channel.accepted",
+  "description": "One accepted channel row pushed when persisted (replaces results polling).",
+  "type": "object",
+  "required": [
+    "event_id",
+    "occurred_at",
+    "job_id",
+    "platform",
+    "channel_id",
+    "title",
+    "keyword",
+    "email_status"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "occurred_at": {
+      "type": "string"
+    },
+    "job_id": {
+      "type": "string"
+    },
+    "platform": {
+      "type": "string"
+    },
+    "keyword": {
+      "type": "string"
+    },
+    "channel_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string"
+    },
+    "subscriber_count": {
+      "type": "integer"
+    },
+    "email": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "custom_url": {
+      "type": "string"
+    },
+    "email_status": {
+      "type": "string",
+      "description": "found_api | pending_enrich | enriching | found_playwright | not_found | enrich_failed"
+    },
+    "enrich_attempts": {
+      "type": "integer"
+    },
+    "enrich_error": {
+      "type": "string"
+    },
+    "enriched_at": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

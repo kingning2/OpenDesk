@@ -9,6 +9,5 @@ export interface CrawlerIpcJobStartRequest {
   exclude_countries?: string;
   batch_id?: string;
   api_key: string;
-  /** UI locale for job status messages (`zh-CN` / `en-US`). */
   locale?: string;
 }
