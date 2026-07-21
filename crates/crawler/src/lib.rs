@@ -1,19 +1,31 @@
 //! In-process YouTube crawler for the desktop app.
 //!
 //! Jobs run entirely in Rust: a supervisor thread fans out keyword work to a small
-//! worker pool, calls the YouTube Data API with `reqwest`, and keeps operational
-//! progress in memory for existing IPC `job.status` / `job.logs` polling.
+//! worker pool, calls the YouTube Data API with `reqwest`, and pushes UI updates
+//! via [`CrawlerUiEmitter`] (Tauri Event). Email enrich enqueue is best-effort and
+//! never fails the main crawl.
+//!
+//! 作者：coisini
+//! 创建时间：2026-07-16
 
+mod emit;
 mod i18n;
 
+pub use emit::{CrawlerUiEmitter, CrawlerUiEvent, NoopCrawlerUiEmitter};
 pub use i18n::{empty_batch, need_batch, Locale};
 
 use common::contracts::{
-    CrawlerEventJobLog, CrawlerIpcJobCancelRequest, CrawlerIpcJobCancelResponse,
-    CrawlerIpcJobLogsRequest, CrawlerIpcJobLogsResponse, CrawlerIpcJobStartRequest,
-    CrawlerIpcJobStartResponse, CrawlerIpcJobStatusRequest, CrawlerIpcJobStatusResponse,
+    CrawlerEventChannelAccepted, CrawlerEventJobCompleted, CrawlerEventJobFailed,
+    CrawlerEventJobLog, CrawlerEventJobProgress, CrawlerEventJobStarted,
+    CrawlerIpcJobCancelRequest, CrawlerIpcJobCancelResponse, CrawlerIpcJobLogsRequest,
+    CrawlerIpcJobLogsResponse, CrawlerIpcJobStartRequest, CrawlerIpcJobStartResponse,
+    CrawlerIpcJobStatusRequest, CrawlerIpcJobStatusResponse,
 };
 use i18n as msg;
+use ports::background_job::{
+    BackgroundJobStore, CrawlerEmailEnrichPayload, EMAIL_STATUS_PENDING_ENRICH,
+    JOB_TYPE_CRAWLER_EMAIL_ENRICH,
+};
 use ports::crawler_channels::{ChannelRecord, CrawlerChannelStore};
 use reqwest::blocking::Client;
 use serde_json::Value;
@@ -28,10 +40,17 @@ const API_BASE: &str = "https://www.googleapis.com/youtube/v3";
 const USER_AGENT: &str = "OpenDeskCrawler/0.1";
 
 /// Process-wide crawl orchestrator keyed by `job_id`.
+///
+/// 作者：coisini
+/// 创建时间：2026-07-16
 #[derive(Clone)]
 pub struct CrawlerService {
     jobs: Arc<Mutex<HashMap<String, Arc<JobHandle>>>>,
     channels: Arc<dyn CrawlerChannelStore>,
+    /// UI event sink (Tauri). Swappable after app setup.
+    emitter: Arc<Mutex<Arc<dyn CrawlerUiEmitter>>>,
+    /// Optional `opendesk.db` job queue for email enrich (never blocks crawl).
+    jobs_queue: Arc<Mutex<Option<Arc<dyn BackgroundJobStore>>>>,
 }
 
 #[derive(Debug, Clone)]
@@ -67,6 +86,7 @@ struct JobHandle {
     seq: AtomicI64,
     /// Job 用户可见语言（启动时固定）。
     locale: Locale,
+    emitter: Arc<dyn CrawlerUiEmitter>,
 }
 
 #[derive(Clone)]
@@ -81,6 +101,7 @@ struct RunConfig {
     min_year_video_count: i64,
     exclude_countries: Vec<String>,
     channels: Arc<dyn CrawlerChannelStore>,
+    jobs_queue: Option<Arc<dyn BackgroundJobStore>>,
 }
 
 #[derive(Debug)]
@@ -91,13 +112,70 @@ enum CrawlError {
 }
 
 impl CrawlerService {
+    /// Create a crawler service with a no-op UI emitter.
+    ///
+    /// 作者：coisini
+    /// 创建时间：2026-07-16
+    ///
+    /// # 参数
+    /// - `channels` — accepted-channel store (`crawler.db`)
+    ///
+    /// # 返回值
+    /// Shared crawler service; call [`Self::attach_emitter`] after Tauri setup.
     pub fn new(channels: Arc<dyn CrawlerChannelStore>) -> Self {
         Self {
             jobs: Arc::new(Mutex::new(HashMap::new())),
             channels,
+            emitter: Arc::new(Mutex::new(
+                Arc::new(NoopCrawlerUiEmitter) as Arc<dyn CrawlerUiEmitter>
+            )),
+            jobs_queue: Arc::new(Mutex::new(None)),
         }
     }
 
+    /// Attach a UI emitter (typically Tauri). Safe to call once during app setup.
+    ///
+    /// 作者：coisini
+    /// 创建时间：2026-07-21
+    ///
+    /// # 参数
+    /// - `emitter` — event sink used by subsequent jobs
+    pub fn attach_emitter(&self, emitter: Arc<dyn CrawlerUiEmitter>) {
+        if let Ok(mut slot) = self.emitter.lock() {
+            *slot = emitter;
+        }
+    }
+
+    /// Attach optional background job store for email enrich enqueue.
+    ///
+    /// Enqueue failures are logged only and never fail the crawl.
+    ///
+    /// 作者：coisini
+    /// 创建时间：2026-07-21
+    ///
+    /// # 参数
+    /// - `jobs_queue` — `opendesk.db` background job store
+    pub fn attach_job_store(&self, jobs_queue: Arc<dyn BackgroundJobStore>) {
+        if let Ok(mut slot) = self.jobs_queue.lock() {
+            *slot = Some(jobs_queue);
+        }
+    }
+
+    fn current_emitter(&self) -> Arc<dyn CrawlerUiEmitter> {
+        self.emitter
+            .lock()
+            .map(|slot| slot.clone())
+            .unwrap_or_else(|_| Arc::new(NoopCrawlerUiEmitter) as Arc<dyn CrawlerUiEmitter>)
+    }
+
+    fn current_job_store(&self) -> Option<Arc<dyn BackgroundJobStore>> {
+        self.jobs_queue.lock().ok().and_then(|slot| slot.clone())
+    }
+
+    /// Start an in-process YouTube crawl job.
+    ///
+    /// 作者：coisini
+    /// 创建时间：2026-07-16
     pub fn start(
         &self,
         request: CrawlerIpcJobStartRequest,
@@ -117,7 +195,13 @@ impl CrawlerService {
 
         let job_id = Uuid::new_v4().to_string();
         let locale = Locale::parse(request.locale.as_deref());
-        let handle = Arc::new(JobHandle::new(job_id.clone(), platform.clone(), locale));
+        let emitter = self.current_emitter();
+        let handle = Arc::new(JobHandle::new(
+            job_id.clone(),
+            platform.clone(),
+            locale,
+            emitter.clone(),
+        ));
         self.jobs
             .lock()
             .map_err(|error| error.to_string())?
@@ -135,6 +219,7 @@ impl CrawlerService {
             min_year_video_count: request.min_year_video_count.unwrap_or(10).max(0),
             exclude_countries: split_csv(request.exclude_countries.as_deref()),
             channels: self.channels.clone(),
+            jobs_queue: self.current_job_store(),
         };
         let trace_id = request.trace_id.clone();
         thread::Builder::new()
@@ -199,6 +284,7 @@ impl CrawlerService {
     /// Spawn up to four worker threads; each claims the next keyword index atomically.
     fn run_job(&self, handle: Arc<JobHandle>, config: RunConfig) {
         handle.set_running(config.keywords.len());
+        handle.emit_started(&config.keywords);
         handle.push_log(
             &config.platform,
             "job_started",
@@ -360,7 +446,12 @@ impl CrawlerService {
 }
 
 impl JobHandle {
-    fn new(job_id: String, platform: String, locale: Locale) -> Self {
+    fn new(
+        job_id: String,
+        platform: String,
+        locale: Locale,
+        emitter: Arc<dyn CrawlerUiEmitter>,
+    ) -> Self {
         Self {
             snapshot: Mutex::new(JobSnapshot {
                 job_id,
@@ -383,7 +474,49 @@ impl JobHandle {
             cancel_requested: AtomicBool::new(false),
             seq: AtomicI64::new(0),
             locale,
+            emitter,
         }
+    }
+
+    fn emit_started(&self, keywords: &[String]) {
+        let (job_id, platform) = match self.snapshot.lock() {
+            Ok(snapshot) => (snapshot.job_id.clone(), snapshot.platform.clone()),
+            Err(_) => return,
+        };
+        self.emitter.emit_job_started(&CrawlerEventJobStarted {
+            event_id: Uuid::new_v4().to_string(),
+            occurred_at: now_string(),
+            job_id,
+            platform,
+            keywords: Some(keywords.join(",")),
+        });
+        self.emit_progress_snapshot();
+    }
+
+    fn emit_progress_snapshot(&self) {
+        let Ok(snapshot) = self.snapshot.lock() else {
+            return;
+        };
+        self.emitter.emit_job_progress(&CrawlerEventJobProgress {
+            event_id: Uuid::new_v4().to_string(),
+            occurred_at: now_string(),
+            job_id: snapshot.job_id.clone(),
+            platform: snapshot.platform.clone(),
+            status: Some(snapshot.status.clone()),
+            message: snapshot.message.clone(),
+            stop_reason: snapshot.stop_reason.clone(),
+            current_keyword: snapshot.current_keyword.clone(),
+            scanned_count: snapshot.scanned_count,
+            accepted_count: snapshot.accepted_count,
+            quota_used: Some(snapshot.quota_used),
+            search_pages: None,
+            keyword_scanned: Some(snapshot.keyword_scanned),
+            keyword_accepted: Some(snapshot.keyword_accepted),
+            keywords_total: Some(snapshot.keywords_total),
+            keywords_done: Some(snapshot.keywords_done),
+            keyword_stats_json: Some(keyword_stats_json(&snapshot.keyword_stats)),
+            error_message: snapshot.error_message.clone(),
+        });
     }
 
     fn set_running(&self, keywords_total: usize) {
@@ -393,6 +526,7 @@ impl JobHandle {
             snapshot.keywords_done = 0;
             snapshot.message = Some(msg::prepare_keywords(self.locale, keywords_total));
         }
+        self.emit_progress_snapshot();
     }
 
     fn set_cancel_requested(&self) {
@@ -403,6 +537,7 @@ impl JobHandle {
                 snapshot.message = Some(msg::cancelled(self.locale));
             }
         }
+        self.emit_progress_snapshot();
     }
 
     fn set_progress(
@@ -438,6 +573,7 @@ impl JobHandle {
                 keyword_accepted,
             );
         }
+        self.emit_progress_snapshot();
     }
 
     fn set_completed(
@@ -446,16 +582,33 @@ impl JobHandle {
         quota_used: i64,
         scanned_count: i64,
         accepted_count: i64,
-        _duration_ms: i64,
+        duration_ms: i64,
     ) {
-        if let Ok(mut snapshot) = self.snapshot.lock() {
-            snapshot.status = "completed".to_string();
-            snapshot.stop_reason = Some(stop_reason.to_string());
-            snapshot.quota_used = quota_used;
-            snapshot.scanned_count = scanned_count;
-            snapshot.accepted_count = accepted_count;
-            snapshot.message = Some(msg::stop_message(self.locale, stop_reason));
-        }
+        let (job_id, platform) = {
+            if let Ok(mut snapshot) = self.snapshot.lock() {
+                snapshot.status = "completed".to_string();
+                snapshot.stop_reason = Some(stop_reason.to_string());
+                snapshot.quota_used = quota_used;
+                snapshot.scanned_count = scanned_count;
+                snapshot.accepted_count = accepted_count;
+                snapshot.message = Some(msg::stop_message(self.locale, stop_reason));
+                (snapshot.job_id.clone(), snapshot.platform.clone())
+            } else {
+                return;
+            }
+        };
+        self.emit_progress_snapshot();
+        self.emitter.emit_job_completed(&CrawlerEventJobCompleted {
+            event_id: Uuid::new_v4().to_string(),
+            occurred_at: now_string(),
+            job_id,
+            platform,
+            stop_reason: stop_reason.to_string(),
+            scanned_count,
+            accepted_count,
+            quota_used: Some(quota_used),
+            duration_ms: Some(duration_ms),
+        });
     }
 
     fn set_cancelled(&self) {
@@ -464,6 +617,28 @@ impl JobHandle {
             snapshot.stop_reason = Some("cancelled".to_string());
             snapshot.message = Some(msg::cancelled(self.locale));
         }
+        self.emit_progress_snapshot();
+        let (job_id, platform, scanned, accepted, quota) = match self.snapshot.lock() {
+            Ok(snapshot) => (
+                snapshot.job_id.clone(),
+                snapshot.platform.clone(),
+                snapshot.scanned_count,
+                snapshot.accepted_count,
+                snapshot.quota_used,
+            ),
+            Err(_) => return,
+        };
+        self.emitter.emit_job_completed(&CrawlerEventJobCompleted {
+            event_id: Uuid::new_v4().to_string(),
+            occurred_at: now_string(),
+            job_id,
+            platform,
+            stop_reason: "cancelled".to_string(),
+            scanned_count: scanned,
+            accepted_count: accepted,
+            quota_used: Some(quota),
+            duration_ms: None,
+        });
     }
 
     fn mark_keyword_done(&self) {
@@ -473,15 +648,30 @@ impl JobHandle {
             let total = snapshot.keywords_total;
             snapshot.message = Some(msg::keyword_done(self.locale, done, total));
         }
+        self.emit_progress_snapshot();
     }
 
     fn set_failed(&self, message: String) {
-        if let Ok(mut snapshot) = self.snapshot.lock() {
-            snapshot.status = "failed".to_string();
-            snapshot.stop_reason = Some("failed".to_string());
-            snapshot.error_message = Some(message.clone());
-            snapshot.message = Some(msg::failed(self.locale, &message));
-        }
+        let (job_id, platform) = {
+            if let Ok(mut snapshot) = self.snapshot.lock() {
+                snapshot.status = "failed".to_string();
+                snapshot.stop_reason = Some("failed".to_string());
+                snapshot.error_message = Some(message.clone());
+                snapshot.message = Some(msg::failed(self.locale, &message));
+                (snapshot.job_id.clone(), snapshot.platform.clone())
+            } else {
+                return;
+            }
+        };
+        self.emit_progress_snapshot();
+        self.emitter.emit_job_failed(&CrawlerEventJobFailed {
+            event_id: Uuid::new_v4().to_string(),
+            occurred_at: now_string(),
+            job_id,
+            platform,
+            error_code: "crawl_failed".to_string(),
+            message,
+        });
     }
 
     fn push_log(
@@ -514,6 +704,7 @@ impl JobHandle {
         if let Ok(mut logs) = self.logs.lock() {
             logs.push(log.clone());
         }
+        self.emitter.emit_job_log(&log);
         tracing::info!(
             target: "crawler",
             job_id = %log.job_id,
@@ -749,6 +940,9 @@ fn crawl_keyword(
                     Some(keyword.to_string()),
                     None,
                 );
+            } else {
+                emit_channel_accepted(handle, &record);
+                maybe_enqueue_email_enrich(handle, &config, &record);
             }
 
             keyword_accepted += 1;
@@ -1080,5 +1274,105 @@ fn extract_email(description: &str) -> Option<String> {
         Some(token)
     } else {
         None
+    }
+}
+
+/// Push [`crate::CrawlerUiEvent::ChannelAccepted`] for UI list updates without polling.
+///
+/// 作者：coisini
+/// 创建时间：2026-07-21
+fn emit_channel_accepted(handle: &JobHandle, record: &ChannelRecord) {
+    handle
+        .emitter
+        .emit_channel_accepted(&CrawlerEventChannelAccepted {
+            event_id: Uuid::new_v4().to_string(),
+            occurred_at: now_string(),
+            job_id: record.job_id.clone(),
+            platform: record.platform.clone(),
+            keyword: record.keyword.clone(),
+            channel_id: record.channel_id.clone(),
+            title: record.title.clone(),
+            country: record.country.clone(),
+            subscriber_count: record.subscriber_count,
+            email: record.email.clone(),
+            description: record.description.clone(),
+            custom_url: record.custom_url.clone(),
+            email_status: record.email_status.clone(),
+            enrich_attempts: Some(record.enrich_attempts as i64),
+            enrich_error: record.enrich_error.clone(),
+            enriched_at: record.enriched_at.clone(),
+        });
+}
+
+/// Enqueue email enrich when description had no email — never fails the crawl.
+///
+/// 作者：coisini
+/// 创建时间：2026-07-21
+fn maybe_enqueue_email_enrich(handle: &JobHandle, config: &RunConfig, record: &ChannelRecord) {
+    if record.email_status != EMAIL_STATUS_PENDING_ENRICH {
+        return;
+    }
+    let Some(jobs_queue) = config.jobs_queue.as_ref() else {
+        handle.push_log(
+            &config.platform,
+            "enrich_skip",
+            format!(
+                "email enrich queue unavailable; channel={} kept",
+                record.channel_id
+            ),
+            Some(record.keyword.clone()),
+            None,
+        );
+        return;
+    };
+
+    let payload = CrawlerEmailEnrichPayload {
+        crawler_job_id: record.job_id.clone(),
+        channel_id: record.channel_id.clone(),
+        platform: record.platform.clone(),
+        custom_url: record.custom_url.clone(),
+        title: record.title.clone(),
+        attempt: 1,
+    };
+    let payload_json = match serde_json::to_string(&payload) {
+        Ok(value) => value,
+        Err(error) => {
+            handle.push_log(
+                &config.platform,
+                "enrich_skip",
+                format!("enrich payload serialize failed: {error}"),
+                Some(record.keyword.clone()),
+                None,
+            );
+            return;
+        }
+    };
+
+    match jobs_queue.enqueue(JOB_TYPE_CRAWLER_EMAIL_ENRICH, &payload_json) {
+        Ok(job_id) => {
+            handle.push_log(
+                &config.platform,
+                "enrich_enqueued",
+                format!(
+                    "email enrich queued background_job={job_id} channel={}",
+                    record.channel_id
+                ),
+                Some(record.keyword.clone()),
+                None,
+            );
+        }
+        Err(error) => {
+            // Side path only — main crawl must continue.
+            handle.push_log(
+                &config.platform,
+                "enrich_skip",
+                format!(
+                    "email enrich enqueue failed (non-blocking): {error}; channel={} kept",
+                    record.channel_id
+                ),
+                Some(record.keyword.clone()),
+                None,
+            );
+        }
     }
 }
