@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "opendesk://crawler/event/job.progress/v1",
   "title": "crawler/job.progress",
+  "description": "Crawl job progress snapshot pushed to UI (replaces status polling).",
   "type": "object",
   "required": ["event_id", "occurred_at", "job_id", "platform", "scanned_count", "accepted_count"],
   "properties": {
@@ -15,6 +16,17 @@
       "type": "string"
     },
     "platform": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "description": "queued | running | completed | failed | cancelled"
+    },
+    "message": {
+      "type": "string",
+      "description": "Localized progress message for UI."
+    },
+    "stop_reason": {
       "type": "string"
     },
     "current_keyword": {
@@ -39,6 +51,19 @@
     "keyword_accepted": {
       "type": "integer",
       "description": "Channels accepted for current_keyword so far."
+    },
+    "keywords_total": {
+      "type": "integer"
+    },
+    "keywords_done": {
+      "type": "integer"
+    },
+    "keyword_stats_json": {
+      "type": "string",
+      "description": "JSON array of {keyword, scanned, accepted}."
+    },
+    "error_message": {
+      "type": "string"
     }
   },
   "additionalProperties": false

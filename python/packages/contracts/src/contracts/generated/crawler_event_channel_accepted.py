@@ -3,8 +3,12 @@
 from typing import TypedDict
 
 
-class CrawlerDtoChannelResult(TypedDict, total=False):
+class CrawlerEventChannelAccepted(TypedDict, total=False):
+    event_id: str
+    occurred_at: str
+    job_id: str
     platform: str
+    keyword: str
     channel_id: str
     title: str
     country: str

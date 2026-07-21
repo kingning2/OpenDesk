@@ -1,12 +1,33 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "opendesk://crawler/dto/channel_result/v1",
-  "title": "crawler/channel_result",
-  "description": "One crawled channel result. Fields common across platforms; platform-specific extras deferred.",
+  "$id": "opendesk://crawler/event/channel.accepted/v1",
+  "title": "crawler/channel.accepted",
+  "description": "One accepted channel row pushed when persisted (replaces results polling).",
   "type": "object",
-  "required": ["platform", "channel_id", "title"],
+  "required": [
+    "event_id",
+    "occurred_at",
+    "job_id",
+    "platform",
+    "channel_id",
+    "title",
+    "keyword",
+    "email_status"
+  ],
   "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "occurred_at": {
+      "type": "string"
+    },
+    "job_id": {
+      "type": "string"
+    },
     "platform": {
+      "type": "string"
+    },
+    "keyword": {
       "type": "string"
     },
     "channel_id": {

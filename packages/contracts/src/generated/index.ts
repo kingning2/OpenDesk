@@ -6,6 +6,8 @@ export type { AgentSidecarPingRequest } from "./agent_sidecar_ping_request";
 export type { AgentSidecarPingResponse } from "./agent_sidecar_ping_response";
 export type { CrawlerDtoChannelResult } from "./crawler_dto_channel_result";
 export type { CrawlerDtoJobConfig } from "./crawler_dto_job_config";
+export type { CrawlerEventChannelAccepted } from "./crawler_event_channel_accepted";
+export type { CrawlerEventChannelEmailEnriched } from "./crawler_event_channel_email_enriched";
 export type { CrawlerEventJobCompleted } from "./crawler_event_job_completed";
 export type { CrawlerEventJobFailed } from "./crawler_event_job_failed";
 export type { CrawlerEventJobLog } from "./crawler_event_job_log";
