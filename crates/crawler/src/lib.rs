@@ -942,7 +942,7 @@ fn crawl_keyword(
                 );
             } else {
                 emit_channel_accepted(handle, &record);
-                maybe_enqueue_email_enrich(handle, &config, &record);
+                maybe_enqueue_email_enrich(handle, config, &record);
             }
 
             keyword_accepted += 1;

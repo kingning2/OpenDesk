@@ -35,7 +35,7 @@ pub fn launch_chrome(url: &str, chrome_path: Option<&PathBuf>) -> Result<(), Enr
     let executable = chrome_path
         .cloned()
         .or_else(find_chrome)
-        .ok_or_else(|| EnrichError::ChromeNotFound)?;
+        .ok_or(EnrichError::ChromeNotFound)?;
 
     tracing::info!(%url, path = %executable.display(), "launching Chrome for RPA enrich");
 
