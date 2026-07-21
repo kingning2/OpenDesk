@@ -1,7 +1,7 @@
 /**
  * 带无障碍标签的图标按钮。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 
@@ -12,7 +12,7 @@ import { cn } from "../lib/cn";
 /**
  * `IconButton` 属性。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 export interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -23,7 +23,7 @@ export interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEl
 /**
  * 紧凑图标按钮。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @param props - 见 {@link IconButtonProps}
@@ -35,7 +35,8 @@ export function IconButton({ label, className, children, ...props }: IconButtonP
       type="button"
       aria-label={label}
       className={cn(
-        "inline-flex size-8 cursor-pointer items-center justify-center rounded-[var(--radius-sm)] text-muted-foreground transition-[color,background-color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-muted/60 hover:text-foreground active:scale-[0.97]",
+        "inline-flex size-8 cursor-pointer items-center justify-center rounded-[var(--radius-sm)] text-muted-foreground transition-[color,background-color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97]",
+        "[@media(hover:hover)_and_(pointer:fine)]:hover:bg-muted/60 [@media(hover:hover)_and_(pointer:fine)]:hover:text-foreground",
         className,
       )}
       {...props}

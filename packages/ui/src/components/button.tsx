@@ -5,14 +5,17 @@ import * as React from "react";
 import { cn } from "../lib/cn";
 
 const buttonVariants = cva(
-  "inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-md)] text-[length:var(--text-sm)] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-md)] text-[length:var(--text-sm)] font-medium transition-[color,background-color,border-color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.97]",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        outline: "border border-border bg-transparent hover:bg-muted",
-        ghost: "hover:bg-muted",
-        secondary: "bg-muted text-foreground hover:bg-muted/80",
+        default:
+          "bg-primary text-primary-foreground [@media(hover:hover)_and_(pointer:fine)]:hover:bg-primary/90",
+        outline:
+          "border border-border bg-transparent [@media(hover:hover)_and_(pointer:fine)]:hover:bg-muted",
+        ghost: "[@media(hover:hover)_and_(pointer:fine)]:hover:bg-muted",
+        secondary:
+          "bg-muted text-foreground [@media(hover:hover)_and_(pointer:fine)]:hover:bg-muted/80",
       },
       size: {
         default: "h-9 px-3",
