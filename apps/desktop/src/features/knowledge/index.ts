@@ -10,5 +10,3 @@ export const knowledgeFeature = {
     icon: BookOpen,
   },
 };
-
-export { KnowledgePage } from "./knowledge-page";

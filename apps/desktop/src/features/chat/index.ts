@@ -10,5 +10,3 @@ export const chatFeature = {
     icon: MessageSquare,
   },
 };
-
-export { ChatPage } from "./chat-page";

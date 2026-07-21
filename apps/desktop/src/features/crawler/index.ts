@@ -11,5 +11,4 @@ export const crawlerFeature = {
   },
 };
 
-export { CrawlerPage } from "./crawler-page";
 export { useCrawlerJob } from "./use-crawler-job";
