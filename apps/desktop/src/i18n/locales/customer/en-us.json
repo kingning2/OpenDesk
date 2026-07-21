@@ -1,0 +1,67 @@
+{
+  "title": "Customers",
+  "subtitle": "Business customer profiles: list, detail, create and edit",
+  "listTitle": "Customer list",
+  "detailTitle": "Customer detail",
+  "createTitle": "New customer",
+  "create": "New",
+  "edit": "Edit",
+  "save": "Save",
+  "saving": "Saving…",
+  "cancel": "Cancel",
+  "search": "Search",
+  "searchPlaceholder": "Search by email or name",
+  "total": "{{count}} customers",
+  "emptyList": "No customers yet. Click New to add one.",
+  "selectHint": "Select a customer on the left, or create a new one",
+  "emailDuplicate": "This email already exists. Use a different email.",
+  "emailRequired": "Email is required",
+  "fields": {
+    "displayName": "Display name",
+    "email": "Email",
+    "whatsappPhone": "WhatsApp",
+    "sourceChannel": "Source channel",
+    "lifecycleStatus": "Lifecycle",
+    "outreachStage": "Outreach stage",
+    "quotedPrice": "Quoted price",
+    "quotedCurrency": "Currency",
+    "pricingTier": "Pricing tier",
+    "cooperationStatus": "Cooperation status",
+    "packageName": "Package",
+    "monthlyFee": "Monthly fee",
+    "contractStart": "Contract start",
+    "contractEnd": "Contract end",
+    "notes": "Notes"
+  },
+  "source": {
+    "manual": "Manual",
+    "youtube": "YouTube"
+  },
+  "lifecycle": {
+    "new": "New",
+    "contacted": "Contacted",
+    "negotiating": "Negotiating",
+    "won": "Won",
+    "lost": "Lost",
+    "paused": "Paused"
+  },
+  "outreach": {
+    "no_stage": "No stage",
+    "stage1": "Stage 1",
+    "stage2": "Stage 2",
+    "stage3": "Stage 3",
+    "stage4": "Stage 4",
+    "stage5": "Stage 5",
+    "stage6": "Stage 6",
+    "stage7": "Stage 7",
+    "s_bounce": "Bounced",
+    "archived": "Archived"
+  },
+  "cooperation": {
+    "none": "None",
+    "negotiating": "Negotiating",
+    "active": "Active",
+    "paused": "Paused",
+    "terminated": "Terminated"
+  }
+}

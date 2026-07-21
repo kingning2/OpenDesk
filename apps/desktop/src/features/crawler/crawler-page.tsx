@@ -5,18 +5,16 @@
 import { useMemo, useRef, useState } from "react";
 import {
   Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
   PageScaffold,
-  ScrollArea,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+  WorkspaceSplit,
+  WorkspaceSplitPane,
+  WorkspaceSplitTitle,
+  WorkspaceSplitToolbar,
   useTheme,
 } from "@desk/ui";
 import { useSettingsDialog } from "@feature/setting";
@@ -644,198 +642,201 @@ export function CrawlerPage() {
   }
 
   return (
-    <PageScaffold fill containerWidth="full" containerPadding="sm" subtitle={t("crawler.subtitle")}>
-      <div className="flex min-h-0 flex-1 flex-col gap-3">
-        <Card variant="glass" padding="sm" className="shrink-0">
-          <div className="grid gap-3 lg:grid-cols-[auto_minmax(180px,0.7fr)_auto] lg:items-end">
-            <div className="flex items-end gap-2">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,text/csv"
-                className="hidden"
-                disabled={importing || busy}
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  if (file) {
-                    void importCsvFile(file);
-                  }
-                  event.target.value = "";
-                }}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                disabled={importing || busy}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {importing ? t("crawler.importing") : t("crawler.importKeywords")}
-              </Button>
-            </div>
-
-            <label className="block min-w-[180px] space-y-1.5">
-              <span className="text-[length:var(--text-sm)] text-muted-foreground">
-                {t("crawler.keywordBatch")}
-              </span>
-              {batches.length === 0 ? (
-                <Select disabled>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("crawler.importKeywordsFirst")} />
-                  </SelectTrigger>
-                </Select>
-              ) : (
-                <Select value={batchId} onValueChange={setBatchId} disabled={busy}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("crawler.selectBatch")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {batches.map((row, index) => (
-                      <SelectItem key={row.batch_id} value={row.batch_id}>
-                        {batchLabel(row, index, t)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </label>
-
-            <div className="flex items-end gap-2 lg:justify-end">
-              <Button type="button" disabled={busy || !canStart} onClick={handleStart}>
-                {busy ? t("crawler.crawling") : t("crawler.startCrawl")}
-              </Button>
-              <Button type="button" variant="outline" disabled={!busy} onClick={() => void cancel()}>
-                {t("crawler.stop")}
-              </Button>
-            </div>
+    <PageScaffold fill containerPadding="none" className="space-y-0">
+      {/* ── 顶部工具栏 ── */}
+      <div className="shrink-0 border-b border-border/70 px-4 py-3">
+        <div className="grid gap-3 lg:grid-cols-[auto_minmax(180px,0.7fr)_auto] lg:items-end">
+          <div className="flex items-end gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,text/csv"
+              className="hidden"
+              disabled={importing || busy}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) {
+                  void importCsvFile(file);
+                }
+                event.target.value = "";
+              }}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              disabled={importing || busy}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {importing ? t("crawler.importing") : t("crawler.importKeywords")}
+            </Button>
           </div>
 
-          {importMessage ? (
-            <p className="mt-3 text-[length:var(--text-sm)] text-muted-foreground">{importMessage}</p>
-          ) : null}
-          {!apiKeyLoading && !apiKeyConfigured ? (
-            <p className="mt-3 rounded-[var(--radius-md)] border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-[length:var(--text-sm)] text-amber-700 dark:text-amber-300">
-              {t("crawler.needApiKeyPrefix")}{" "}
-              <button
-                type="button"
-                className="cursor-pointer font-medium underline underline-offset-4"
-                onClick={openSettings}
-              >
-                {t("crawler.settingsLink")}
-              </button>{" "}
-              {t("crawler.needApiKeySuffix")}
-            </p>
-          ) : null}
-          {isQuotaStop ? (
-            <p className="mt-3 rounded-[var(--radius-md)] border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-[length:var(--text-sm)] text-amber-700 dark:text-amber-300">
-              {t("crawler.quotaPaused")}
-            </p>
-          ) : null}
-          {isFailed ? (
-            <p className="mt-3 rounded-[var(--radius-md)] border border-red-500/40 bg-red-500/10 px-3 py-2 text-[length:var(--text-sm)] text-red-600 dark:text-red-300">
-              {error
-                ? t("crawler.crawlFailedWithError", { error })
-                : t("crawler.crawlFailed")}
-            </p>
-          ) : null}
-          {!isFailed && error ? (
-            <p className="mt-3 text-[length:var(--text-sm)] text-red-500">{error}</p>
-          ) : null}
-          <KeywordProgressBanner
-            done={keywordsDone}
-            total={keywordsTotal}
-            active={busy}
-            message={message}
-          />
-        </Card>
+          <label className="block min-w-[180px] space-y-1.5">
+            <span className="text-[length:var(--text-sm)] text-muted-foreground">
+              {t("crawler.keywordBatch")}
+            </span>
+            {batches.length === 0 ? (
+              <Select disabled>
+                <SelectTrigger>
+                  <SelectValue placeholder={t("crawler.importKeywordsFirst")} />
+                </SelectTrigger>
+              </Select>
+            ) : (
+              <Select value={batchId} onValueChange={setBatchId} disabled={busy}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t("crawler.selectBatch")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {batches.map((row, index) => (
+                    <SelectItem key={row.batch_id} value={row.batch_id}>
+                      {batchLabel(row, index, t)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </label>
 
-        <div className="grid min-h-0 flex-1 gap-3 xl:grid-cols-[1.45fr_1fr]">
-          <Card variant="glass" padding="none" className="flex min-h-0 flex-col overflow-hidden">
-            <CardHeader compact className="shrink-0">
-              <CardTitle>{t("crawler.flowTitle")}</CardTitle>
-              <CardDescription>{t("crawler.flowDescription")}</CardDescription>
-            </CardHeader>
-            <CardContent padding="none" className="min-h-0 flex-1">
-              <div className="h-full min-h-[280px] w-full">
-                <ReactFlow
-                  fitView
-                  fitViewOptions={{ padding: 0.35, minZoom: 0.85, maxZoom: 1 }}
-                  colorMode={(resolvedTheme === "dark" ? "dark" : "light") as ColorMode}
-                  nodes={nodes}
-                  edges={edges}
-                  nodeTypes={nodeTypes}
-                  nodesDraggable={false}
-                  nodesConnectable={false}
-                  elementsSelectable
-                  selectNodesOnDrag={false}
-                  panOnDrag={false}
-                  zoomOnScroll={false}
-                  preventScrolling
-                  proOptions={{ hideAttribution: true }}
-                  className="bg-transparent"
-                  onNodeClick={(_event, node) => handleStageSelect(node.id as FlowStage)}
-                >
-                  <Background gap={18} color="var(--color-border)" />
-                </ReactFlow>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card variant="glass" padding="none" className="flex min-h-0 flex-col overflow-hidden">
-            <CardHeader compact className="shrink-0 space-y-3">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <CardTitle>{stageLabel(selectedStage, t)}</CardTitle>
-                  <CardDescription>
-                    {panelView === "process"
-                      ? t("crawler.panelProcessDesc")
-                      : t("crawler.panelResultsDesc")}
-                  </CardDescription>
-                </div>
-                <div className="flex shrink-0 gap-1 rounded-[var(--radius-md)] border border-border bg-card/40 p-0.5">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={panelView === "process" ? "default" : "ghost"}
-                    onClick={() => setPanelView("process")}
-                  >
-                    {t("crawler.process")}
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={panelView === "results" ? "default" : "ghost"}
-                    onClick={() => setPanelView("results")}
-                  >
-                    {t("crawler.results")}
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-
-            <ScrollArea className="min-h-0 flex-1 p-[10px]">
-              <DetailPanel
-                stage={selectedStage}
-                view={panelView}
-                selectedBatch={selectedBatch}
-                batches={batches}
-                batchId={batchId}
-                importMessage={importMessage}
-                statusText={statusText}
-                currentKeyword={currentKeyword}
-                scannedCount={scannedCount}
-                acceptedCount={acceptedCount}
-                logs={logs}
-                keywordStats={keywordStats}
-                channelResults={channelResults}
-                message={message}
-                keywordsDone={keywordsDone}
-                keywordsTotal={keywordsTotal}
-                busy={busy}
-              />
-            </ScrollArea>
-          </Card>
+          <div className="flex items-end gap-2 lg:justify-end">
+            <Button type="button" disabled={busy || !canStart} onClick={handleStart}>
+              {busy ? t("crawler.crawling") : t("crawler.startCrawl")}
+            </Button>
+            <Button type="button" variant="outline" disabled={!busy} onClick={() => void cancel()}>
+              {t("crawler.stop")}
+            </Button>
+          </div>
         </div>
+
+        {importMessage ? (
+          <p className="mt-3 text-[length:var(--text-sm)] text-muted-foreground">{importMessage}</p>
+        ) : null}
+        {!apiKeyLoading && !apiKeyConfigured ? (
+          <p className="mt-3 rounded-[var(--radius-md)] border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-[length:var(--text-sm)] text-amber-700 dark:text-amber-300">
+            {t("crawler.needApiKeyPrefix")}{" "}
+            <button
+              type="button"
+              className="cursor-pointer font-medium underline underline-offset-4"
+              onClick={openSettings}
+            >
+              {t("crawler.settingsLink")}
+            </button>{" "}
+            {t("crawler.needApiKeySuffix")}
+          </p>
+        ) : null}
+        {isQuotaStop ? (
+          <p className="mt-3 rounded-[var(--radius-md)] border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-[length:var(--text-sm)] text-amber-700 dark:text-amber-300">
+            {t("crawler.quotaPaused")}
+          </p>
+        ) : null}
+        {isFailed ? (
+          <p className="mt-3 rounded-[var(--radius-md)] border border-red-500/40 bg-red-500/10 px-3 py-2 text-[length:var(--text-sm)] text-red-600 dark:text-red-300">
+            {error
+              ? t("crawler.crawlFailedWithError", { error })
+              : t("crawler.crawlFailed")}
+          </p>
+        ) : null}
+        {!isFailed && error ? (
+          <p className="mt-3 text-[length:var(--text-sm)] text-red-500">{error}</p>
+        ) : null}
+        <KeywordProgressBanner
+          done={keywordsDone}
+          total={keywordsTotal}
+          active={busy}
+          message={message}
+        />
       </div>
+
+      {/* ── 流程图 + 详情分栏 ── */}
+      <WorkspaceSplit className="min-h-0 flex-1 border-0" defaultStartWidth={560} minStartWidth={360} maxStartWidth={800}>
+        <WorkspaceSplitPane side="start" scroll={false}
+          header={
+            <WorkspaceSplitToolbar>
+              <div>
+                <WorkspaceSplitTitle>{t("crawler.flowTitle")}</WorkspaceSplitTitle>
+                <p className="text-[length:var(--text-xs)] text-muted-foreground">{t("crawler.flowDescription")}</p>
+              </div>
+            </WorkspaceSplitToolbar>
+          }
+        >
+          <div className="h-full min-h-[280px] w-full">
+            <ReactFlow
+              fitView
+              fitViewOptions={{ padding: 0.35, minZoom: 0.85, maxZoom: 1 }}
+              colorMode={(resolvedTheme === "dark" ? "dark" : "light") as ColorMode}
+              nodes={nodes}
+              edges={edges}
+              nodeTypes={nodeTypes}
+              nodesDraggable={false}
+              nodesConnectable={false}
+              elementsSelectable
+              selectNodesOnDrag={false}
+              panOnDrag={false}
+              zoomOnScroll={false}
+              preventScrolling
+              proOptions={{ hideAttribution: true }}
+              className="bg-transparent"
+              onNodeClick={(_event, node) => handleStageSelect(node.id as FlowStage)}
+            >
+              <Background gap={18} color="var(--color-border)" />
+            </ReactFlow>
+          </div>
+        </WorkspaceSplitPane>
+
+        <WorkspaceSplitPane
+          header={
+            <WorkspaceSplitToolbar className="justify-between">
+              <div>
+                <WorkspaceSplitTitle>{stageLabel(selectedStage, t)}</WorkspaceSplitTitle>
+                <p className="text-[length:var(--text-xs)] text-muted-foreground">
+                  {panelView === "process"
+                    ? t("crawler.panelProcessDesc")
+                    : t("crawler.panelResultsDesc")}
+                </p>
+              </div>
+              <div className="flex shrink-0 gap-1 rounded-[var(--radius-md)] border border-border bg-card/40 p-0.5">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={panelView === "process" ? "default" : "ghost"}
+                  onClick={() => setPanelView("process")}
+                >
+                  {t("crawler.process")}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={panelView === "results" ? "default" : "ghost"}
+                  onClick={() => setPanelView("results")}
+                >
+                  {t("crawler.results")}
+                </Button>
+              </div>
+            </WorkspaceSplitToolbar>
+          }
+        >
+          <div className="p-3">
+            <DetailPanel
+              stage={selectedStage}
+              view={panelView}
+              selectedBatch={selectedBatch}
+              batches={batches}
+              batchId={batchId}
+              importMessage={importMessage}
+              statusText={statusText}
+              currentKeyword={currentKeyword}
+              scannedCount={scannedCount}
+              acceptedCount={acceptedCount}
+              logs={logs}
+              keywordStats={keywordStats}
+              channelResults={channelResults}
+              message={message}
+              keywordsDone={keywordsDone}
+              keywordsTotal={keywordsTotal}
+              busy={busy}
+            />
+          </div>
+        </WorkspaceSplitPane>
+      </WorkspaceSplit>
     </PageScaffold>
   );
 }

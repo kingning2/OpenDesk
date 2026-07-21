@@ -5,6 +5,7 @@ import { AgentPage } from "@feature/agent";
 import { ChatPage } from "@feature/chat";
 import { CrawlerPage } from "@feature/crawler";
 import { MailPage } from "@feature/mail";
+import { CustomerPage } from "@feature/customer";
 import { KnowledgePage } from "@feature/knowledge";
 
 export const appRouter = createBrowserRouter([
@@ -17,6 +18,7 @@ export const appRouter = createBrowserRouter([
       { path: "features/crawler", element: <CrawlerPage /> },
       { path: "features/chat", element: <ChatPage /> },
       { path: "features/mail", element: <MailPage /> },
+      { path: "features/customer", element: <CustomerPage /> },
       { path: "features/knowledge", element: <KnowledgePage /> },
     ],
   },

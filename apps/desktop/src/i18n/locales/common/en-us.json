@@ -18,6 +18,7 @@
     "mail": "Mail",
     "knowledge": "Knowledge",
     "crawler": "Crawler",
+    "customer": "Customers",
     "settings": "Settings"
   },
   "meta": {
@@ -31,6 +32,8 @@
     "chatDescription": "Customer conversation workspace",
     "mail": "Mail",
     "mailDescription": "Inbound and outbound mail handling",
+    "customer": "Customers",
+    "customerDescription": "Business customer profiles and cooperation",
     "knowledge": "Knowledge",
     "knowledgeDescription": "Knowledge base and retrieval",
     "settings": "Settings",

@@ -1,0 +1,67 @@
+{
+  "title": "客户",
+  "subtitle": "商务客户档案：列表、详情与新建编辑",
+  "listTitle": "客户列表",
+  "detailTitle": "客户详情",
+  "createTitle": "新建客户",
+  "create": "新建",
+  "edit": "编辑",
+  "save": "保存",
+  "saving": "保存中…",
+  "cancel": "取消",
+  "search": "搜索",
+  "searchPlaceholder": "按邮箱或名称搜索",
+  "total": "共 {{count}} 位客户",
+  "emptyList": "暂无客户，点击「新建」添加",
+  "selectHint": "从左侧选择客户，或新建一位客户",
+  "emailDuplicate": "该邮箱已存在，请使用其他邮箱",
+  "emailRequired": "邮箱为必填项",
+  "fields": {
+    "displayName": "显示名称",
+    "email": "邮箱",
+    "whatsappPhone": "WhatsApp",
+    "sourceChannel": "来源渠道",
+    "lifecycleStatus": "生命周期",
+    "outreachStage": "建联阶段",
+    "quotedPrice": "当前报价",
+    "quotedCurrency": "币种",
+    "pricingTier": "报价阶梯",
+    "cooperationStatus": "合作状态",
+    "packageName": "合作套餐",
+    "monthlyFee": "月费",
+    "contractStart": "合作开始",
+    "contractEnd": "合作结束",
+    "notes": "备注"
+  },
+  "source": {
+    "manual": "手动录入",
+    "youtube": "YouTube"
+  },
+  "lifecycle": {
+    "new": "新建",
+    "contacted": "已联系",
+    "negotiating": "洽谈中",
+    "won": "已成交",
+    "lost": "已流失",
+    "paused": "已暂停"
+  },
+  "outreach": {
+    "no_stage": "未分阶段",
+    "stage1": "阶段 1",
+    "stage2": "阶段 2",
+    "stage3": "阶段 3",
+    "stage4": "阶段 4",
+    "stage5": "阶段 5",
+    "stage6": "阶段 6",
+    "stage7": "阶段 7",
+    "s_bounce": "退信",
+    "archived": "已归档"
+  },
+  "cooperation": {
+    "none": "无合作",
+    "negotiating": "洽谈中",
+    "active": "合作中",
+    "paused": "已暂停",
+    "terminated": "已终止"
+  }
+}

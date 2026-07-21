@@ -18,6 +18,7 @@
     "mail": "Mail",
     "knowledge": "Knowledge",
     "crawler": "采集",
+    "customer": "客户",
     "settings": "设置"
   },
   "meta": {
@@ -31,6 +32,8 @@
     "chatDescription": "客户会话工作区",
     "mail": "Mail",
     "mailDescription": "收发邮件处理",
+    "customer": "客户",
+    "customerDescription": "商务客户档案与合作关系",
     "knowledge": "Knowledge",
     "knowledgeDescription": "知识库与检索",
     "settings": "设置",

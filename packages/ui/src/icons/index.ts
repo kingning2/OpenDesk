@@ -15,6 +15,7 @@ export {
   Square,
   SquaresUnite,
   Sun,
+  Users,
   X,
   Youtube,
 } from "lucide-react";

@@ -3,6 +3,7 @@ import { HomePage } from "./pages/home-page";
 import { AgentPage } from "@feature/agent";
 import { ChatPage } from "@feature/chat";
 import { CrawlerPage } from "@feature/crawler";
+import { CustomerPage } from "@feature/customer";
 import { MailPage } from "@feature/mail";
 import { KnowledgePage } from "@feature/knowledge";
 import { cn } from "@desk/ui";
@@ -12,6 +13,7 @@ const WORKSPACE_PAGES: Record<string, ComponentType> = {
   "/": HomePage,
   "/features/agent": AgentPage,
   "/features/crawler": CrawlerPage,
+  "/features/customer": CustomerPage,
   "/features/chat": ChatPage,
   "/features/mail": MailPage,
   "/features/knowledge": KnowledgePage,

@@ -39,6 +39,10 @@ const pageMetaByPath: Record<string, PageMeta> = {
     titleKey: "meta.mail",
     descriptionKey: "meta.mailDescription",
   },
+  "/features/customer": {
+    titleKey: "meta.customer",
+    descriptionKey: "meta.customerDescription",
+  },
   "/features/knowledge": {
     titleKey: "meta.knowledge",
     descriptionKey: "meta.knowledgeDescription",
