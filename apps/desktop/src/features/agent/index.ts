@@ -11,5 +11,4 @@ export const agentFeature = {
   },
 };
 
-export { AgentPage } from "./agent-page";
 export { useAgentPing } from "./use-agent-ping";
