@@ -10,5 +10,3 @@ export const mailFeature = {
     icon: Mail,
   },
 };
-
-export { MailPage } from "./mail-page";
