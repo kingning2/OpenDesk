@@ -1092,16 +1092,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "desktop"
-version = "0.1.0"
-dependencies = [
- "app",
- "tauri",
- "tauri-build",
- "tauri-plugin-opener",
-]
-
-[[package]]
 name = "diesel"
 version = "2.3.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3526,6 +3516,16 @@ dependencies = [
  "dunce",
  "is-wsl",
  "libc",
+]
+
+[[package]]
+name = "opendesk"
+version = "0.1.0"
+dependencies = [
+ "app",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-opener",
 ]
 
 [[package]]

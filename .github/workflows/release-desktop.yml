@@ -269,7 +269,8 @@ jobs:
           gh release upload "$env:TAG" "${{ steps.package.outputs.installer }}" "${{ steps.package.outputs.zip }}" --repo "$env:GH_REPO" --clobber
 
   build-macos-intel:
-    runs-on: macos-13
+    # macos-13 已下线；Intel x86_64 用 macos-15-intel，否则会永久排队。
+    runs-on: macos-15-intel
     needs: create-release
     steps:
       - uses: actions/checkout@v4
