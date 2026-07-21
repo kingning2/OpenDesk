@@ -2,7 +2,6 @@
  * YouTube crawler page — flow monitor with stage-linked detail panel.
  */
 
-import { Link } from "react-router";
 import { useMemo, useRef, useState } from "react";
 import {
   Button,
@@ -20,6 +19,7 @@ import {
   SelectValue,
   useTheme,
 } from "@desk/ui";
+import { useSettingsDialog } from "@feature/setting";
 import {
   Background,
   ColorMode,
@@ -459,6 +459,7 @@ function DetailPanel({
 export function CrawlerPage() {
   const t = useT();
   const { resolvedTheme } = useTheme();
+  const { openSettings } = useSettingsDialog();
   const {
     apiKeyConfigured,
     apiKeyLoading,
@@ -714,9 +715,13 @@ export function CrawlerPage() {
           {!apiKeyLoading && !apiKeyConfigured ? (
             <p className="mt-3 rounded-[var(--radius-md)] border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-[length:var(--text-sm)] text-amber-700 dark:text-amber-300">
               {t("crawler.needApiKeyPrefix")}{" "}
-              <Link to="/settings" className="font-medium underline underline-offset-4">
+              <button
+                type="button"
+                className="cursor-pointer font-medium underline underline-offset-4"
+                onClick={openSettings}
+              >
                 {t("crawler.settingsLink")}
-              </Link>{" "}
+              </button>{" "}
               {t("crawler.needApiKeySuffix")}
             </p>
           ) : null}

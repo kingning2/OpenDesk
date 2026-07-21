@@ -5,7 +5,6 @@ import { ChatPage } from "@feature/chat";
 import { CrawlerPage } from "@feature/crawler";
 import { MailPage } from "@feature/mail";
 import { KnowledgePage } from "@feature/knowledge";
-import { SettingsPage } from "@feature/setting";
 import { cn } from "@desk/ui";
 
 /** Static workspace routes — mounted once per open tab (keep-alive). */
@@ -16,7 +15,6 @@ const WORKSPACE_PAGES: Record<string, ComponentType> = {
   "/features/chat": ChatPage,
   "/features/mail": MailPage,
   "/features/knowledge": KnowledgePage,
-  "/settings": SettingsPage,
 };
 
 export interface WorkspaceOutletProps {

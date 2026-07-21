@@ -1,14 +1,14 @@
 /**
  * 路由 → 页面元信息（标题 / 描述使用 i18n key）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 
 /**
  * 页面元信息。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 export interface PageMeta {
@@ -43,16 +43,12 @@ const pageMetaByPath: Record<string, PageMeta> = {
     titleKey: "meta.knowledge",
     descriptionKey: "meta.knowledgeDescription",
   },
-  "/settings": {
-    titleKey: "meta.settings",
-    descriptionKey: "meta.settingsDescription",
-  },
 };
 
 /**
  * 按路径取页面元信息。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @param pathname - 路由路径

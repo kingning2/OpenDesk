@@ -1,7 +1,7 @@
 /**
  * 工作区标签状态（打开路径 + 选择 / 关闭）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 
@@ -16,7 +16,7 @@ import type { TabBarItem } from "./layout";
 /**
  * 管理工作区多标签打开路径与导航。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @returns 标签列表与操作回调
@@ -28,6 +28,9 @@ export function useWorkspaceTabs() {
   const [openPaths, setOpenPaths] = useState(() => [pathname]);
 
   const ensureTab = useCallback((path: string) => {
+    if (path === "/settings") {
+      return;
+    }
     setOpenPaths((current) => (current.includes(path) ? current : [...current, path]));
   }, []);
 
