@@ -34,5 +34,14 @@ export type { CrawlerSidecarJobStartRequest } from "./crawler_sidecar_job_start_
 export type { CrawlerSidecarJobStartResponse } from "./crawler_sidecar_job_start_response";
 export type { CrawlerSidecarJobStatusRequest } from "./crawler_sidecar_job_status_request";
 export type { CrawlerSidecarJobStatusResponse } from "./crawler_sidecar_job_status_response";
+export type { CustomerDtoProfile } from "./customer_dto_profile";
+export type { CustomerIpcCreateRequest } from "./customer_ipc_create_request";
+export type { CustomerIpcCreateResponse } from "./customer_ipc_create_response";
+export type { CustomerIpcGetRequest } from "./customer_ipc_get_request";
+export type { CustomerIpcGetResponse } from "./customer_ipc_get_response";
+export type { CustomerIpcListRequest } from "./customer_ipc_list_request";
+export type { CustomerIpcListResponse } from "./customer_ipc_list_response";
+export type { CustomerIpcUpdateRequest } from "./customer_ipc_update_request";
+export type { CustomerIpcUpdateResponse } from "./customer_ipc_update_response";
 export type { RuntimeEventSidecarRestarted } from "./runtime_event_sidecar_restarted";
 export type { RuntimeLogEntry } from "./runtime_log_entry";

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://customer/ipc/list.request/v1",
+  "title": "customer/list.request",
+  "description": "Tauri IPC: list customers with optional search and pagination.",
+  "type": "object",
+  "properties": {
+    "trace_id": { "type": "string" },
+    "search": { "type": "string" },
+    "limit": { "type": "integer" },
+    "offset": { "type": "integer" }
+  },
+  "additionalProperties": false
+}

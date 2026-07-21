@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://customer/dto/profile/v1",
+  "title": "customer/profile",
+  "description": "Customer profile DTO for list, detail, and IPC payloads.",
+  "type": "object",
+  "required": [
+    "id",
+    "email",
+    "source_channel",
+    "lifecycle_status",
+    "outreach_stage",
+    "cooperation_status",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "display_name": { "type": "string" },
+    "email": { "type": "string" },
+    "whatsapp_phone": { "type": "string" },
+    "source_channel": { "type": "string" },
+    "source_meta": { "type": "string" },
+    "lifecycle_status": { "type": "string" },
+    "outreach_stage": { "type": "string" },
+    "quoted_price": { "type": "number" },
+    "quoted_currency": { "type": "string" },
+    "quoted_at": { "type": "string" },
+    "pricing_tier": { "type": "string" },
+    "cooperation_status": { "type": "string" },
+    "package_name": { "type": "string" },
+    "monthly_fee": { "type": "number" },
+    "contract_start": { "type": "string" },
+    "contract_end": { "type": "string" },
+    "notes": { "type": "string" },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" }
+  },
+  "additionalProperties": false
+}

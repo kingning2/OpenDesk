@@ -34,6 +34,15 @@ from .crawler_sidecar_job_start_request import CrawlerSidecarJobStartRequest
 from .crawler_sidecar_job_start_response import CrawlerSidecarJobStartResponse
 from .crawler_sidecar_job_status_request import CrawlerSidecarJobStatusRequest
 from .crawler_sidecar_job_status_response import CrawlerSidecarJobStatusResponse
+from .customer_dto_profile import CustomerDtoProfile
+from .customer_ipc_create_request import CustomerIpcCreateRequest
+from .customer_ipc_create_response import CustomerIpcCreateResponse
+from .customer_ipc_get_request import CustomerIpcGetRequest
+from .customer_ipc_get_response import CustomerIpcGetResponse
+from .customer_ipc_list_request import CustomerIpcListRequest
+from .customer_ipc_list_response import CustomerIpcListResponse
+from .customer_ipc_update_request import CustomerIpcUpdateRequest
+from .customer_ipc_update_response import CustomerIpcUpdateResponse
 from .runtime_event_sidecar_restarted import RuntimeEventSidecarRestarted
 from .runtime_log_entry import RuntimeLogEntry
 
@@ -72,6 +81,15 @@ __all__ = [
     "CrawlerSidecarJobStartResponse",
     "CrawlerSidecarJobStatusRequest",
     "CrawlerSidecarJobStatusResponse",
+    "CustomerDtoProfile",
+    "CustomerIpcCreateRequest",
+    "CustomerIpcCreateResponse",
+    "CustomerIpcGetRequest",
+    "CustomerIpcGetResponse",
+    "CustomerIpcListRequest",
+    "CustomerIpcListResponse",
+    "CustomerIpcUpdateRequest",
+    "CustomerIpcUpdateResponse",
     "RuntimeEventSidecarRestarted",
     "RuntimeLogEntry",
 ]

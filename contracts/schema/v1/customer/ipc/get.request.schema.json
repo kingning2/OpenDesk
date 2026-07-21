@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://customer/ipc/get.request/v1",
+  "title": "customer/get.request",
+  "description": "Tauri IPC: fetch one customer by id.",
+  "type": "object",
+  "required": ["id"],
+  "properties": {
+    "trace_id": { "type": "string" },
+    "id": { "type": "string" }
+  },
+  "additionalProperties": false
+}

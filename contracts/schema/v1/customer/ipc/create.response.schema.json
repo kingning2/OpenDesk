@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://customer/ipc/create.response/v1",
+  "title": "customer/create.response",
+  "description": "Tauri IPC: create customer response.",
+  "type": "object",
+  "required": ["ok", "profile_json"],
+  "properties": {
+    "ok": { "type": "boolean" },
+    "profile_json": { "type": "string" },
+    "trace_id": { "type": "string" }
+  },
+  "additionalProperties": false
+}

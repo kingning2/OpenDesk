@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://customer/ipc/list.response/v1",
+  "title": "customer/list.response",
+  "description": "Tauri IPC: customer list response.",
+  "type": "object",
+  "required": ["ok", "customers_json", "total"],
+  "properties": {
+    "ok": { "type": "boolean" },
+    "customers_json": { "type": "string" },
+    "total": { "type": "integer" },
+    "trace_id": { "type": "string" }
+  },
+  "additionalProperties": false
+}

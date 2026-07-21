@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://customer/ipc/create.request/v1",
+  "title": "customer/create.request",
+  "description": "Tauri IPC: create a customer profile.",
+  "type": "object",
+  "required": ["email"],
+  "properties": {
+    "trace_id": { "type": "string" },
+    "display_name": { "type": "string" },
+    "email": { "type": "string" },
+    "whatsapp_phone": { "type": "string" },
+    "source_channel": { "type": "string" },
+    "source_meta": { "type": "string" },
+    "lifecycle_status": { "type": "string" },
+    "outreach_stage": { "type": "string" },
+    "quoted_price": { "type": "number" },
+    "quoted_currency": { "type": "string" },
+    "quoted_at": { "type": "string" },
+    "pricing_tier": { "type": "string" },
+    "cooperation_status": { "type": "string" },
+    "package_name": { "type": "string" },
+    "monthly_fee": { "type": "number" },
+    "contract_start": { "type": "string" },
+    "contract_end": { "type": "string" },
+    "notes": { "type": "string" }
+  },
+  "additionalProperties": false
+}
