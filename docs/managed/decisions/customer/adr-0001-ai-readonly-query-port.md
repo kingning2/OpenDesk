@@ -61,7 +61,7 @@ Python Agent
 | 创建/编辑客户 | React UI → Rust IPC → UseCase |
 | 更新报价、合作状态 | React UI → Rust IPC → UseCase + 审计表 |
 | 发送邮件 | React UI → Rust mail-net → SMTP |
-| 发送 WhatsApp | React UI → Rust channel → Business API |
+| 发送 WhatsApp | React UI → Rust channel → **opendesk-worker（Baileys）** |
 | 记录沟通时间线 | Rust UseCase（在发信/收信/人工备注时写入） |
 
 ### 5. AI 生成前强制上下文

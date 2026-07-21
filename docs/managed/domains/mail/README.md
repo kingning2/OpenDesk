@@ -2,14 +2,17 @@
 
 ## 职责
 
-通过 **用户自有 SMTP** 发送商务邮件，并将发信记录关联到客户时间线。
+通过 **用户自有 SMTP/IMAP** 完成商务邮件收发，并将往来关联到客户时间线。
 
 - SMTP 账号配置（凭据安全存储）
-- **邮件模板**管理（内置 + 自定义）、变量渲染
+- **多邮箱账号**与 IMAP 增量同步（Worker `imap_sync` job）
+- **收件箱 UI**：列表、详情、筛选、收藏、已发件
+- **邮件模板**管理（内置 + 自定义）、变量渲染；**话术库**见 [Workflow](../workflow/README.md)
 - 撰写邮件：**先选模板 → 填充变量 → 编辑 → 发送**
-- 发送、重试、失败原因
-- 发件本地记录（含 `template_id`、主题、正文、发送状态）
-- **客户邮件回复**：**IMAP 自动收信**（[CHG-029](../../changes/2026/07/chg-20260720-029-imap-inbound-sync.md)）+ **手动录入兜底**（[CHG-026](../../changes/2026/07/chg-20260720-026-mail-inbound-reply-record.md)）
+- 发送、重试、失败原因；**待发队列**（调度生成草稿，**人审确认后发送**）
+- 发件/收件本地记录（含 `template_id`、方向、状态）
+- **IMAP 自动收信**（[CHG-029](../../changes/2026/07/chg-20260720-029-imap-inbound-sync.md)）+ **手动录入兜底**（[CHG-026](../../changes/2026/07/chg-20260720-026-mail-inbound-reply-record.md)）
+- **开信追踪**（本地像素 `mail_open_event`；远程 kol-service 同步暂缓）
 - 为 AI 邮件润色提供已填充模板正文作为输入（发送仍由本领域执行）
 
 ## 非职责
@@ -23,18 +26,21 @@
 ## 稳定边界
 
 ```text
-React（模板管理 / 选模板 / 写信 / 发送 UI）
+React（收件箱 / 模板 / 写信 / 发送 UI）
   → Tauri IPC（mail/*）
   → Rust mail UseCase
+      ├── InboxRepository（列表/详情/收藏）
       ├── TemplateRepository（CRUD）
       ├── TemplateRenderer（{{变量}} ← customer + pricing + sender）
-      └── SendMail → mail-net（SMTP）
+      ├── PendingSendQueue（人审待发）
+      └── SendMail → mail-net（SMTP/IMAP）
+  → Worker imap_sync / mail_body_fetch
   → 写入 mail_message + customer_timeline
 ```
 
 **硬规则：**
 
-- 只有 Rust `mail-net` 接触 SMTP 服务器
+- 只有 Rust `mail-net` 接触 SMTP/IMAP 服务器
 - **变量填充在 Rust 完成**，不交给 Python 拼字符串
 - 发送必须带 `customer_id`；须记录 `template_id`
 - AI 产出为润色草稿；**发送按钮仅人工触发**
@@ -46,7 +52,7 @@ React（模板管理 / 选模板 / 写信 / 发送 UI）
 | Rust crate | `crates/mail/`（骨架）, `crates/mail-net/`（骨架） |
 | Contract | `contracts/schema/v1/mail/`（待建） |
 | React Feature | `apps/desktop/src/features/mail/`（当前为占位页） |
-| Epic 子任务 | [CHG-015](../../changes/2026/07/chg-20260720-015-smtp-mail-send.md)、[CHG-026](../../changes/2026/07/chg-20260720-026-mail-inbound-reply-record.md)、[CHG-029](../../changes/2026/07/chg-20260720-029-imap-inbound-sync.md) |
+| Epic 子任务 | [CHG-015](../../changes/2026/07/chg-20260720-015-smtp-mail-send.md)、[CHG-026](../../changes/2026/07/chg-20260720-026-mail-inbound-reply-record.md)、[CHG-029](../../changes/2026/07/chg-20260720-029-imap-inbound-sync.md)；扩展见 [EPIC-20260721-001](../../changes/2026/07/epic-20260721-001-email-agent-port.md) |
 
 ## 数据模型（MVP 目标）
 
@@ -94,7 +100,29 @@ MVP 启动时 Rust migration **种子内置模板**（至少覆盖各 `template_
 | `received_at` | 入站收到时间（inbound 时） |
 | `error_message` | 失败原因 |
 | `sent_at` | 发送成功时间 |
+| `imap_uid` / `imap_folder` | IMAP 同步键（inbound） |
+| `is_favorite` | 收藏标记 |
+| `open_tracking_id` | 开信像素 id（outbound 可选） |
 | `created_at` | 创建时间 |
+
+### `mail_open_event`
+
+| 字段 | 说明 |
+|------|------|
+| `id` | 主键 |
+| `mail_message_id` | 外键 |
+| `opened_at` | 首次打开时间 |
+| `open_count` | 累计次数 |
+
+### `pending_send_queue`
+
+| 字段 | 说明 |
+|------|------|
+| `id` | 主键 |
+| `customer_id` | 外键 |
+| `draft_subject` / `draft_body` | 待发草稿 |
+| `status` | `draft` / `awaiting_confirm` / `sent` / `cancelled` |
+| `scheduled_at` | 计划提醒时间（到点仍须人审） |
 
 ## 模板变量（Rust 渲染）
 
@@ -124,3 +152,4 @@ MVP 启动时 Rust migration **种子内置模板**（至少覆盖各 `template_
 - MVP 须 **模板 + 发信 + IMAP 收信 + 手动兜底** 同时交付（M2）
 - 凭据不得写入普通日志或 Contract payload 明文传输
 - 依赖 Customer 领域 M1 完成后才能渲染客户变量
+- 待发队列 **禁止** 到点自动 SMTP 发送；仅提升为「待确认」状态

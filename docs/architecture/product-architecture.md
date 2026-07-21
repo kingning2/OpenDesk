@@ -4,7 +4,7 @@
 
 本文描述 OpenDesk **商务工作台**的目标产品架构：YouTube 获客 → 邮件谈价 → WhatsApp 桌面辅助（翻译/建议，人发）。
 
-> **当前仓库阶段：** Architecture Skeleton + 部分垂直切片（UI Shell、Agent Ping、YouTube 爬虫、Sidecar 生命周期）。客户档案、SMTP 发信、价目表、AI 只读查库、WhatsApp Business 等 **尚未交付**。
+> **当前仓库阶段：** Architecture Skeleton + 部分垂直切片（UI Shell、Agent Ping、YouTube 爬虫、Sidecar 生命周期）。客户档案、SMTP/IMAP 邮件、价目表、AI 只读查库、WhatsApp Baileys 等 **尚未交付**。
 
 **实施级任务分解**不在本文重复，见 [`docs/managed/roadmaps/mvp-sales-workbench.md`](../managed/roadmaps/mvp-sales-workbench.md) 及下属 Epic / Change Record。
 
@@ -12,7 +12,7 @@
 
 ### 2.1 定位
 
-OpenDesk 是面向 B2B 商务场景的 **本地优先 AI 商务桌面**：从 YouTube 等渠道获取潜客邮箱，通过 **自有 SMTP** 邮件讨论价格与推进合作；WhatsApp Business 作为 **辅助渠道**——在桌面查看消息、自动翻译、AI 建议回复，**由人工点击发送**。
+OpenDesk 是面向 B2B 商务场景的 **本地优先 AI 商务桌面**：从 YouTube 等渠道获取潜客邮箱，通过 **自有 SMTP/IMAP** 邮件讨论价格与推进合作；WhatsApp 作为 **辅助渠道**——在桌面通过 **Baileys 协议桥**查看消息、自动翻译、AI 建议回复，**由人工点击发送**。
 
 ### 2.2 不是什么
 
@@ -28,7 +28,7 @@ OpenDesk 是面向 B2B 商务场景的 **本地优先 AI 商务桌面**：从 Yo
 | 邮件谈价 | 主商务通道；**邮件模板** + SMTP 发信；往来留痕 |
 | 客户记忆 | 每位客户的来源、报价、合作套餐/月费/合约、沟通历史结构化存储 |
 | AI 辅助 | 懂价目表与客户档案；**只读查库**；起草邮件 / 建议 WA 回复 |
-| WhatsApp 辅助 | Business API 桌面收发；翻译 + 建议；**人发** |
+| WhatsApp 辅助 | **Baileys 协议桥**（Worker）桌面收发；翻译 + 建议；**人发** |
 
 ## 3. 架构原则
 
@@ -64,7 +64,7 @@ flowchart TB
 
     subgraph External["外部系统"]
         SMTP[User SMTP]
-        WA[WhatsApp Business API]
+        WA[WhatsApp Baileys Worker]
         LLM[Cloud / Local LLM]
     end
 
@@ -106,7 +106,7 @@ flowchart TB
 - 客户/报价/合作/时间线持久化
 - **邮件模板** CRUD、变量渲染（客户/价目/发件人 → 主题与正文）
 - SMTP 发信（`mail-net`）
-- WhatsApp Business API 适配（`channel`）
+- WhatsApp **Baileys 协议桥**适配（`channel` + `opendesk-worker`）
 - AI 只读 Query Port 执行与脱敏
 - Sidecar 生命周期、审计、密钥存储
 - 爬虫结果导入客户
@@ -303,7 +303,7 @@ sequenceDiagram
 | M2 邮件谈价 | 客户详情「写邮件」+ **选模板** | `mail_template` 渲染 → `mail_message` + timeline | 客户邮箱收到邮件 |
 | M3 AI 润色 | 「AI 润色」按钮（基于当前模板） | Query Port → 草稿 | 编辑器中的可发送正文 |
 | M4 状态审计 | 改价/改合作 UI | `quote_history` + timeline | 更新后的客户档案 |
-| M5 WA 辅助 | WA webhook / 发信按钮 | `channel_message` + timeline | 客户 WA 收到回复 |
+| M5 WA 辅助 | Baileys Worker 同步 / 发信按钮 | `channel_message` + timeline | 客户 WA 收到回复 |
 
 ## 7. 核心业务流程（文字摘要）
 
@@ -367,10 +367,10 @@ YouTube 爬虫完成
 ### 7.3 WhatsApp 辅助（MVP 后期）
 
 ```text
-WA 入站 → Rust webhook 验签 → 入库 → UI 展示
+WA 入站 → opendesk-worker（Baileys）→ Rust 标准化 → 入库 → UI 展示
 → 自动/手动翻译
 → AI 建议回复（只读客户上下文）
-→ 用户编辑 → 点击发送 → Rust → Business API
+→ 用户编辑 → 点击发送 → Rust → Worker 出站
 → timeline(wa_in / wa_out)
 ```
 
@@ -404,7 +404,7 @@ AI 任务带 customer_id
 
 - SMTP / WA / 模型密钥：系统安全存储，不进普通日志
 - AI 返回 DTO 脱敏
-- WA webhook 验签；出站须 `sent_by=human`
+- Baileys 会话在 Worker；出站须 `sent_by=human` 且经 UI IPC
 - 发送与改价操作可审计
 
 ## 10. MVP 交付阶段
@@ -417,7 +417,7 @@ AI 任务带 customer_id
 | M2 | SMTP 发信 + **IMAP 收信** + 时间线 + 手动兜底 |
 | M3 | 价目表 + AI 只读 Query + 邮件 AI 起草 + LLM 配置 + **纠错记忆** |
 | M4 | 报价/合作变更审计 |
-| M5 | WhatsApp Business 辅助（译/建议/人发）+ **webhook 部署** |
+| M5 | WhatsApp **Baileys** 辅助（译/建议/人发）+ QR 登录 |
 | M6 | Worker + OCR + **商务场景** |
 
 ## 11. 相关文档
@@ -425,7 +425,8 @@ AI 任务带 customer_id
 | 文档 | 用途 |
 |------|------|
 | [`docs/managed/MVP_REVIEW.md`](../managed/MVP_REVIEW.md) | **GitHub 评审入口** |
-| [`docs/architecture/whatsapp-webhook-deployment.md`](whatsapp-webhook-deployment.md) | WA webhook 部署手册 |
+| [`docs/managed/roadmaps/email-agent-port-branches.md`](../managed/roadmaps/email-agent-port-branches.md) | email-agent 迁入分支命令 |
+| [`docs/managed/decisions/channel/adr-0006-whatsapp-baileys-worker.md`](../managed/decisions/channel/adr-0006-whatsapp-baileys-worker.md) | WA Baileys 架构决策 |
 | [`docs/managed/roadmaps/mvp-sales-workbench.md`](../managed/roadmaps/mvp-sales-workbench.md) | 里程碑与子任务索引 |
 | [`docs/managed/decisions/customer/adr-0001-ai-readonly-query-port.md`](../managed/decisions/customer/adr-0001-ai-readonly-query-port.md) | AI 只读查库决策 |
 | [`docs/managed/decisions/agent/adr-0005-ai-correction-memory.md`](../managed/decisions/agent/adr-0005-ai-correction-memory.md) | AI 纠错记忆 |

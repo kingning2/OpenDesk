@@ -2,11 +2,13 @@
 id: ADR-0004-whatsapp-webhook-deployment
 title: WhatsApp Business Webhook 部署与开发接入
 type: adr
-status: accepted
+status: superseded
 domain: channel
 created: 2026-07-20
-updated: 2026-07-20
+updated: 2026-07-21
 deciders: product-owner
+supersedes: none
+superseded_by: ADR-0006-whatsapp-baileys-worker
 related:
   - CHG-20260720-020-whatsapp-business-assist
   - EPIC-20260720-001-mvp-sales-workbench
@@ -14,9 +16,11 @@ related:
 
 # WhatsApp Business Webhook 部署与开发接入
 
+> **Superseded by [ADR-0006](adr-0006-whatsapp-baileys-worker.md)**（2026-07-21）。WhatsApp 通道改为 opendesk-worker Baileys 协议桥，不再采用 Business Cloud API + Webhook。下文保留历史决策记录。
+
 ## Status
 
-Accepted — MVP 必须交付可操作的部署文档与最小 dev 方案。
+~~Accepted~~ **Superseded** — 见 [ADR-0006](adr-0006-whatsapp-baileys-worker.md)。
 
 ## Context
 

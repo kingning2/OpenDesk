@@ -6,6 +6,7 @@
 
 - 套餐/产品定义
 - 阶梯规则（数量档、地区、时长等——MVP 可先简化）
+- **YouTube 频道定价引擎**（RSS/页面解析，参考 email-agent `yt-pricing.ts`；无 API Key 模式可选）
 - 对外只读查询（含 AI `pricing.list` / `pricing.match`）
 - 管理 UI（增删改套餐与阶梯）
 
@@ -43,7 +44,7 @@ AI Agent
 | 存储 | `crates/storage/src/pricing_db/` |
 | Contract | `contracts/schema/v1/pricing/` |
 | React | `apps/desktop/src/features/pricing/` 或 settings 子页 |
-| Epic 子任务 | [CHG-016](../../changes/2026/07/chg-20260720-016-pricing-catalog.md) |
+| Epic 子任务 | [CHG-016](../../changes/2026/07/chg-20260720-016-pricing-catalog.md)；YT 引擎见 [EPIC-20260721-001](../../changes/2026/07/epic-20260721-001-email-agent-port.md) Phase 4 |
 
 ## 数据模型（MVP 目标）
 
@@ -68,6 +69,17 @@ AI Agent
 | `min_quantity` / `max_quantity` | 数量区间（可空表示不限） |
 | `unit_price` / `monthly_fee` | 单价或月费 |
 | `conditions_json` | 扩展条件（地区等） |
+
+### `pricing_result`（YT 定价引擎输出，规划）
+
+| 字段 | 说明 |
+|------|------|
+| `id` | 主键 |
+| `customer_id` | 可选关联 |
+| `channel_url` | YouTube 频道 |
+| `estimated_price` | 估算报价 |
+| `factors_json` | 系数与中间结果 |
+| `computed_at` | 计算时间 |
 
 MVP 可支持 **手动 CSV/JSON 导入** 作为快捷方式，但须有 Rust 校验与 UI 展示。
 

@@ -49,7 +49,8 @@ React（客户详情/编辑 UI）
 | Contract | `contracts/schema/v1/customer/` |
 | React Feature | `apps/desktop/src/features/customer/`（新建） |
 | ADR | [ADR-0001-ai-readonly-query-port](../../decisions/customer/adr-0001-ai-readonly-query-port.md) |
-| Epic | [EPIC-20260720-001-mvp-sales-workbench](../../changes/2026/07/epic-20260720-001-mvp-sales-workbench.md) |
+| Epic | [EPIC-20260720-001](../../changes/2026/07/epic-20260720-001-mvp-sales-workbench.md)、[EPIC-20260721-001 email-agent 扩展](../../changes/2026/07/epic-20260721-001-email-agent-port.md) |
+| Workflow | 阶段规则见 [workflow/README.md](../workflow/README.md) |
 
 ## 客户数据模型（MVP 目标）
 
@@ -64,6 +65,7 @@ React（客户详情/编辑 UI）
 | `source_channel` | enum | MVP 固定 `youtube` |
 | `source_meta` | JSON | 频道 id、URL、标题等 |
 | `lifecycle_status` | enum | `new` / `contacted` / `negotiating` / `won` / `lost` / `paused` |
+| `outreach_stage` | enum | 建联细阶段（email-agent 对齐）：`no_stage`, `stage1`~`stage7`, `s_bounce`, `archived` 及归档子状态（见 Contract `customer/outreach_stage`） |
 | `quoted_price` | decimal? | 当前报价 |
 | `quoted_currency` | text? | 币种 |
 | `quoted_at` | datetime? | 当前报价日期 |
@@ -92,6 +94,7 @@ React（客户详情/编辑 UI）
 
 ## 当前约束
 
-- AI **不得**修改本领域任何表（ADR-0001）
+- AI **不得**修改本领域任何表（ADR-0001）；`outreach_stage` 变更仅 UI/Rust，Agent 只可**建议**
+- Gbyte 渠道同步 **暂缓**（见 [kol/README.md](../kol/README.md)）
 - 邮箱在 MVP 内 **全局唯一**（去重键）
 - 所有写操作须记录 `updated_at`；报价/合作变更须写历史表

@@ -1,6 +1,12 @@
 # WhatsApp Business Webhook 部署手册
 
-本文是 MVP **M5 必交付**运维文档，对应 [ADR-0004](../managed/decisions/channel/adr-0004-whatsapp-webhook-deployment.md) 与 [CHG-020](../managed/changes/2026/07/chg-20260720-020-whatsapp-business-assist.md)。
+> **已废弃（2026-07-21）** — WhatsApp 通道已改为 [ADR-0006](../managed/decisions/channel/adr-0006-whatsapp-baileys-worker.md) **Baileys Worker** 方案，不再使用 Business Cloud API + Webhook。下文仅作历史参考。
+
+---
+
+# WhatsApp Business Webhook 部署手册（历史）
+
+本文曾对应已 superseded 的 [ADR-0004](../managed/decisions/channel/adr-0004-whatsapp-webhook-deployment.md) 与旧版 [CHG-020](../managed/changes/2026/07/chg-20260720-020-whatsapp-business-assist.md)。
 
 ## 1. 架构概览
 
