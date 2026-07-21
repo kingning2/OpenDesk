@@ -14,7 +14,7 @@ use diesel::sqlite::SqliteConnection;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use ports::repository::StoreError;
 
-pub use models::{BackgroundJobRow, NewBackgroundJob};
+pub use models::{BackgroundJobRow, CustomerRow, NewBackgroundJob, NewCustomerRow};
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations-opendesk");
 
