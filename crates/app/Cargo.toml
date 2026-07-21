@@ -15,6 +15,7 @@ common = { path = "../common" }
 adapter = { path = "../adapter" }
 agent = { path = "../agent" }
 crawler = { path = "../crawler" }
+customer = { path = "../customer" }
 ports = { path = "../ports" }
 storage = { path = "../storage" }
 runtime = { path = "../runtime" }

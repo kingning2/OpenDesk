@@ -16,8 +16,8 @@ use adapter::agent_sidecar::RuntimeAgentSidecar;
 use commands::{
     agent_ping, crawler_job_cancel, crawler_job_logs, crawler_job_results, crawler_job_start,
     crawler_job_status, crawler_keywords_batches, crawler_keywords_import,
-    crawler_youtube_api_key_get, crawler_youtube_api_key_set, license_activate,
-    license_machine_code, license_status,
+    crawler_youtube_api_key_get, crawler_youtube_api_key_set, customer_create, customer_get,
+    customer_list, customer_update, license_activate, license_machine_code, license_status,
 };
 use crawler::{CrawlerService, CrawlerUiEmitter};
 use crawler_emit::TauriCrawlerEmitter;
@@ -28,6 +28,7 @@ use ports::background_job::BackgroundJobStore;
 use ports::crawler_channels::CrawlerChannelStore;
 use ports::crawler_keywords::CrawlerKeywordStore;
 use ports::crawler_settings::CrawlerSettingsStore;
+use ports::customer::CustomerStore;
 use runtime::sidecar::lifecycle::{SidecarConfig, SidecarLifecycle};
 use state::{build_license_gate, AppState};
 use std::sync::Arc;
@@ -36,6 +37,7 @@ use storage::crawler_channels::SqliteCrawlerChannelStore;
 use storage::crawler_db::CrawlerDb;
 use storage::crawler_keywords::SqliteCrawlerKeywordStore;
 use storage::crawler_settings::SqliteCrawlerSettingsStore;
+use storage::customer::SqliteCustomerStore;
 use storage::opendesk_db::OpendeskDb;
 use tauri::Manager;
 
@@ -62,7 +64,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
     let db_path = crawler_db_path();
     let opendesk_db = OpendeskDb::open(opendesk_db_path()).expect("open opendesk database");
     let job_store =
-        Arc::new(SqliteBackgroundJobStore::new(opendesk_db)) as Arc<dyn BackgroundJobStore>;
+        Arc::new(SqliteBackgroundJobStore::new(opendesk_db.clone())) as Arc<dyn BackgroundJobStore>;
     let crawler_db = CrawlerDb::open(&db_path).expect("open crawler database");
     let channels_store = Arc::new(SqliteCrawlerChannelStore::new(crawler_db.clone()))
         as Arc<dyn CrawlerChannelStore>;
@@ -72,6 +74,8 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
     crawler.attach_job_store(job_store);
     let keywords_store =
         Arc::new(SqliteCrawlerKeywordStore::new(crawler_db)) as Arc<dyn CrawlerKeywordStore>;
+    let customer_store =
+        Arc::new(SqliteCustomerStore::new(opendesk_db.clone())) as Arc<dyn CustomerStore>;
     let app_state = AppState {
         lifecycle: lifecycle.clone(),
         gateway,
@@ -80,6 +84,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
         keywords_store,
         channels_store,
         settings_store,
+        customer_store,
         event_bus,
     };
 
@@ -113,7 +118,11 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             crawler_keywords_import,
             crawler_keywords_batches,
             crawler_youtube_api_key_get,
-            crawler_youtube_api_key_set
+            crawler_youtube_api_key_set,
+            customer_list,
+            customer_get,
+            customer_create,
+            customer_update
         ])
         .build(context)?
         .run(move |app_handle, event| {

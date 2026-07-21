@@ -13,6 +13,7 @@ use kernel::event::InMemoryEventBus;
 use ports::crawler_channels::CrawlerChannelStore;
 use ports::crawler_keywords::CrawlerKeywordStore;
 use ports::crawler_settings::CrawlerSettingsStore;
+use ports::customer::CustomerStore;
 use ports::license::LicenseGate;
 use runtime::sidecar::lifecycle::SidecarLifecycle;
 use std::sync::Arc;
@@ -42,6 +43,8 @@ pub struct AppState {
     pub channels_store: Arc<dyn CrawlerChannelStore>,
     /// Crawler key-value settings (`crawler_setting` SQLite table).
     pub settings_store: Arc<dyn CrawlerSettingsStore>,
+    /// Business customer profiles (`customer` SQLite table in opendesk.db).
+    pub customer_store: Arc<dyn CustomerStore>,
     #[allow(dead_code)]
     pub event_bus: Arc<InMemoryEventBus>,
 }
