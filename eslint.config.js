@@ -12,6 +12,7 @@ export default tseslint.config(
       "**/node_modules/**",
       "**/.venv/**",
       "**/pnpm-lock.yaml",
+      "tooling/strawberry-perl/**",
     ],
   },
   js.configs.recommended,
