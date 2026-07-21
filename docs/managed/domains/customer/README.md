@@ -88,9 +88,9 @@ React（客户详情/编辑 UI）
 
 ## 当前状态
 
-**尚未实现。** 仓库仅有 `crates/user`、`crates/tenant` 骨架，无客户 CRM 表与 UI。
+**已实现（CHG-013）。** `opendesk.db` 含 customer / quote_history / customer_timeline / cooperation_audit 表；桌面端提供客户列表、详情、新建与编辑 UI；邮箱全局唯一。
 
-实施顺序见 [CHG-013](../../changes/2026/07/chg-20260720-013-customer-profile-model.md)。
+后续：爬虫导入见 [CHG-014](../../changes/2026/07/chg-20260720-014-crawler-lead-import.md)。
 
 ## 当前约束
 

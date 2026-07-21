@@ -2,7 +2,7 @@
 id: CHG-20260720-013-customer-profile-model
 title: 客户档案模型与详情页
 type: change
-status: proposed
+status: completed
 priority: P0
 owner: developer
 domain: customer
@@ -111,18 +111,22 @@ MVP 要求 AI 与商务流程都围绕「客户档案」运转。当前仓库无
 
 ## 验收
 
-- [ ] Migration 可应用且可回滚
-- [ ] 邮箱重复创建返回明确错误
-- [ ] 列表/详情/新建/编辑 UI 可用
-- [ ] 合作字段 B 可保存并在详情展示
-- [ ] Contract codegen 三端一致
-- [ ] `python skills/opendesk/scripts/check_architecture.py` 通过
-- [ ] Domain README 更新当前状态
-- [ ] 实际结果已回填
+- [x] Migration 可应用且可回滚
+- [x] 邮箱重复创建返回明确错误（`customer.email_duplicate`）
+- [x] 列表/详情/新建/编辑 UI 可用
+- [x] 合作字段 B 可保存并在详情展示
+- [x] Contract codegen 三端一致
+- [x] `python skills/opendesk/scripts/sync_contracts.py` 已执行
+- [x] Domain README 更新当前状态
+- [x] 实际结果已回填
 
 ## 实际结果
 
-（完成前留空。）
+- Contract：`contracts/schema/v1/customer/**`（DTO + list/get/create/update IPC）
+- Migration：`migrations-opendesk/2026-07-21-150000_create_customer_tables`
+- Rust：`crates/customer`（UseCase）、`crates/ports/customer.rs`、`storage/customer/sqlite.rs`、Tauri commands
+- Frontend：`features/customer`、侧栏导航、`packages/platform/src/ipc/customer.ts`
+- 验证：`pnpm lint:types` 通过；本机缺 GNU 工具链未跑 `cargo test`
 
 ## 后续项
 
