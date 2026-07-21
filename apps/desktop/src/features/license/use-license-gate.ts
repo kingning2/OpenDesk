@@ -3,7 +3,7 @@
  *
  * 将 [`LicenseGateController`] 接到组件状态；校验失败时用 toast 提示。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 
@@ -15,7 +15,7 @@ import type { LicenseStatus } from "@desk/platform/ipc/license";
 /**
  * Hook 返回值：闸门加载态与刷新入口。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 export interface UseLicenseGateResult {
@@ -34,7 +34,7 @@ export interface UseLicenseGateResult {
 /**
  * 订阅授权闸门状态。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  *
  * @returns 闸门 UI 所需状态与 refresh

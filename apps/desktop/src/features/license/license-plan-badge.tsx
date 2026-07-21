@@ -1,7 +1,7 @@
 /**
  * 侧栏底部套餐入口（按钮 + 详情弹窗）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 
@@ -23,7 +23,7 @@ const TICK_MS = 60_000;
  *
  * 仅在「有锁 + 已激活 + 有 expiresAt」时渲染。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  *
  * @returns 入口节点；不满足条件时返回 `null`

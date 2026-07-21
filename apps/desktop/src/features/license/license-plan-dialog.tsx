@@ -1,7 +1,7 @@
 /**
  * 套餐详情弹窗。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 
@@ -24,7 +24,7 @@ import {
 /**
  * 套餐详情弹窗属性。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 export interface LicensePlanDialogProps {
@@ -43,7 +43,7 @@ export interface LicensePlanDialogProps {
 /**
  * 详情行。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 function DetailRow({ label, value }: { label: string; value: string }) {
@@ -58,7 +58,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 /**
  * 展示完整套餐与授权信息的模态弹窗。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  *
  * @param props - 弹窗属性

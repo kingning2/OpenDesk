@@ -1,6 +1,6 @@
 //! Build script：混淆公钥、派生盐；可选编译 Slint UI。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-16
 
 use std::env;

@@ -1,6 +1,6 @@
 //! Background job queue port for Worker coordination.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-20
 
 use serde::{Deserialize, Serialize};

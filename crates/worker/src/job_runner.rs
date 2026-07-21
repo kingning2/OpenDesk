@@ -1,6 +1,6 @@
 //! Claim and dispatch `background_job` rows.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-20
 
 use std::sync::Arc;
@@ -29,7 +29,7 @@ pub enum RunnerError {
 impl JobRunner {
     /// Create a runner bound to shared SQLite stores.
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-20
     pub fn new(
         job_store: Arc<dyn BackgroundJobStore>,
@@ -47,7 +47,7 @@ impl JobRunner {
     /// - `Ok(true)` — a job was claimed (success or failure already persisted)
     /// - `Ok(false)` — queue empty
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-20
     pub async fn poll_once(&self) -> Result<bool, RunnerError> {
         let Some(job) = self.job_store.claim_next(None)? else {

@@ -1,6 +1,6 @@
 //! Shared SQLite connection + migrations for `opendesk.db`.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-20
 
 mod models;
@@ -34,7 +34,7 @@ impl OpendeskDb {
     /// - `Ok(OpendeskDb)` — connection ready with WAL enabled
     /// - `Err(StoreError)` — migration or filesystem failure
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-20
     pub fn open(path: impl AsRef<Path>) -> Result<Self, StoreError> {
         if let Some(parent) = path.as_ref().parent() {
@@ -61,7 +61,7 @@ impl OpendeskDb {
 
     /// Run `f` with an exclusive lock on the underlying connection.
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-20
     pub fn with_conn<F, T>(&self, f: F) -> Result<T, StoreError>
     where

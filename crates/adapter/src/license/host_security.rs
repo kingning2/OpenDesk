@@ -1,6 +1,6 @@
 //! License verifier 主机侧 attestation / 完整性工具。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-16
 
 use std::path::Path;
@@ -19,7 +19,7 @@ type HmacSha256 = Hmac<Sha256>;
 /// - 计算 / 校验 verifier 文件 SHA-256
 /// - 生成 nonce 并校验 HMAC attestation
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 pub struct LicenseHostSecurity {
     attest_key: Vec<u8>,
@@ -29,7 +29,7 @@ pub struct LicenseHostSecurity {
 impl LicenseHostSecurity {
     /// 从编译期嵌入的环境常量构造。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     ///
     /// # 返回值
@@ -45,7 +45,7 @@ impl LicenseHostSecurity {
 
     /// 使用显式密钥构造（单测）。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     pub fn new(attest_key: Vec<u8>, expected_sha256: impl Into<String>) -> Self {
         Self {
@@ -56,7 +56,7 @@ impl LicenseHostSecurity {
 
     /// 是否已嵌入 attestation 密钥。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     pub fn has_attest_key(&self) -> bool {
         !self.attest_key.is_empty()
@@ -64,7 +64,7 @@ impl LicenseHostSecurity {
 
     /// 校验 verifier 二进制哈希（期望为空则跳过并打日志由调用方处理）。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     ///
     /// # 参数
@@ -96,7 +96,7 @@ impl LicenseHostSecurity {
 
     /// 生成挑战 nonce。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     pub fn generate_nonce(&self) -> String {
         let mut hasher = Sha256::new();
@@ -112,7 +112,7 @@ impl LicenseHostSecurity {
 
     /// 校验 verifier 返回的 attestation。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     pub fn verify_attestation(
         &self,

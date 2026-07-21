@@ -1,7 +1,7 @@
 /**
  * License feature 公开导出。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 

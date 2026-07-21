@@ -1,6 +1,6 @@
 //! OpenSSL（vendored）RSA-PSS + SHA-256 签验封装。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-16
 
 use openssl::hash::MessageDigest;
@@ -15,14 +15,14 @@ use openssl::sign::{RsaPssSaltlen, Signer, Verifier};
 /// - 使用静态链接的 OpenSSL 做 RSA-PSS(SHA-256) 签名与验签
 /// - 盐长度固定为 digest length，与历史 `rsa` crate 默认行为对齐
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 pub struct OpenSslRsaPss;
 
 impl OpenSslRsaPss {
     /// 构造服务（无状态）。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     ///
     /// # 返回值
@@ -34,7 +34,7 @@ impl OpenSslRsaPss {
 
     /// 使用 PKCS#8 PEM 私钥对消息做 RSA-PSS(SHA-256) 签名。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     ///
     /// # 参数
@@ -57,7 +57,7 @@ impl OpenSslRsaPss {
 
     /// 使用 PKCS#8 / SPKI PEM 公钥验签。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     ///
     /// # 参数

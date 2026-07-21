@@ -1,6 +1,6 @@
 //! enigo mouse simulation (pyautogui-style).
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-20
 
 use std::thread;
@@ -13,7 +13,7 @@ use super::flow::EnrichError;
 
 /// Click `(x, y)` with small random jitter and delay to mimic human input.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-20
 pub fn click_human_like(x: i32, y: i32, jitter_px: i32) -> Result<(), EnrichError> {
     let mut rng = rand::thread_rng();
@@ -48,7 +48,7 @@ pub fn click_human_like(x: i32, y: i32, jitter_px: i32) -> Result<(), EnrichErro
 
 /// Hint that Chrome should be focused; user may need to click the window once.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-20
 pub fn focus_hint() {
     tracing::info!("ensure Chrome is visible and focused; RPA clicks use screen coordinates");

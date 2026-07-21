@@ -2,7 +2,7 @@
 //!
 //! 使用 `imageproc` 纯 Rust 实现，避免系统 OpenCV 链接依赖。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-20
 
 use std::path::Path;
@@ -22,7 +22,7 @@ pub struct MatchPoint {
 
 /// Locate `template_path` on `screen` using normalized cross-correlation.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-20
 pub fn find_template(
     screen: &RgbaImage,
@@ -68,7 +68,7 @@ pub fn find_template(
 
 /// Return whether `captcha` template matches with at least `threshold`.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-20
 pub fn captcha_visible(screen: &RgbaImage, captcha_template: &Path, threshold: f64) -> bool {
     find_template(screen, captcha_template, threshold).is_ok()

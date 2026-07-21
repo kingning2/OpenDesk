@@ -1,6 +1,6 @@
 //! OpenDesk 激活码签发 GUI（Slint）。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-16
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
@@ -13,7 +13,7 @@ slint::include_modules!();
 
 /// GUI 入口：打开签发窗口。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 ///
 /// # 返回值

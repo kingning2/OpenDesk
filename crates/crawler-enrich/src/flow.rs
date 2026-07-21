@@ -1,6 +1,6 @@
 //! RPA orchestration: Chrome → template clicks → captcha wait → OCR.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-20
 
 use std::path::PathBuf;
@@ -67,7 +67,7 @@ pub enum EnrichError {
 
 /// Run the full RPA enrichment synchronously (call from `spawn_blocking`).
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-20
 pub fn run(target: &ChannelTarget, config: &EnrichConfig) -> Result<Option<String>, EnrichError> {
     let url = build_channel_url(target);

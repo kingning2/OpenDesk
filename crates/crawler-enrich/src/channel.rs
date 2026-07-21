@@ -1,6 +1,6 @@
 //! YouTube channel URL helpers and Chrome launcher.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-20
 
 use std::path::PathBuf;
@@ -11,7 +11,7 @@ use super::ChannelTarget;
 
 /// Build the channel **home** URL (not `/about`).
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-20
 pub fn build_channel_url(target: &ChannelTarget) -> String {
     if let Some(custom_url) = target.custom_url.as_deref() {
@@ -29,7 +29,7 @@ pub fn build_channel_url(target: &ChannelTarget) -> String {
 
 /// Launch Chrome with the channel URL in a new window.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-20
 pub fn launch_chrome(url: &str, chrome_path: Option<&PathBuf>) -> Result<(), EnrichError> {
     let executable = chrome_path

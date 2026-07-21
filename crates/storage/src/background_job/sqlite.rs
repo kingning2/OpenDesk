@@ -19,7 +19,7 @@ pub struct SqliteBackgroundJobStore {
 impl SqliteBackgroundJobStore {
     /// Open `opendesk.db` and return a job store handle.
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-20
     pub fn open(path: impl AsRef<Path>) -> Result<Self, StoreError> {
         Ok(Self {

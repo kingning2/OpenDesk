@@ -1,7 +1,7 @@
 /**
  * 桌面壳布局组件导出。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 

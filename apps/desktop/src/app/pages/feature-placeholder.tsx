@@ -1,7 +1,7 @@
 /**
  * Feature 占位页。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 
@@ -12,7 +12,7 @@ import { useT } from "../../i18n";
 /**
  * 占位页属性。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 export interface FeaturePlaceholderPageProps {
@@ -25,7 +25,7 @@ export interface FeaturePlaceholderPageProps {
 /**
  * 开发中 Feature 的占位展示。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @param props - 见 {@link FeaturePlaceholderPageProps}

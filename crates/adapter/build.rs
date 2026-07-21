@@ -1,6 +1,6 @@
 //! Adapter build：嵌入 verifier SHA-256、attestation 密钥，以及 Windows MSVC 目标 triple。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-16
 
 use std::env;
@@ -30,7 +30,7 @@ fn main() {
 
 /// Windows 上固定映射为 `*-windows-msvc`，与 bundled verifier 命名一致。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 fn license_target_triple() -> String {
     let target = env::var("TARGET").unwrap_or_else(|_| "unknown".into());

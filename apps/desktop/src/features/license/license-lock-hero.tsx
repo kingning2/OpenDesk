@@ -3,7 +3,7 @@
  *
  * 用于启动校验、未激活遮罩等场景，统一锁动画视觉。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 
@@ -13,7 +13,7 @@ import { LicenseLockGlyph, type LicenseLockAnim } from "./license-lock-glyph";
 /**
  * 锁居中展示组件属性。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 export interface LicenseLockHeroProps {
@@ -32,7 +32,7 @@ export interface LicenseLockHeroProps {
 /**
  * 圆形锁按钮与说明文案。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  *
  * @param props - 组件属性

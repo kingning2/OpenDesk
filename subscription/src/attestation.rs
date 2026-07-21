@@ -1,6 +1,6 @@
 //! Verifier 挑战应答（HMAC-SHA256）。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-16
 
 use hmac::{Hmac, Mac};
@@ -15,7 +15,7 @@ type HmacSha256 = Hmac<Sha256>;
 /// - 根据 nonce 与校验结果字段生成/校验 HMAC
 /// - 防止「永远返回 valid」的伪造 verifier 轻易替换
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 pub struct AttestationService {
     key: Vec<u8>,
@@ -24,7 +24,7 @@ pub struct AttestationService {
 impl AttestationService {
     /// 使用原始密钥构造服务。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     ///
     /// # 参数
@@ -40,7 +40,7 @@ impl AttestationService {
 
     /// 计算 attestation 十六进制字符串。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     ///
     /// # 参数
@@ -72,7 +72,7 @@ impl AttestationService {
 
     /// 校验 attestation 是否匹配。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     ///
     /// # 参数

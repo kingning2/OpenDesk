@@ -5,7 +5,7 @@
 //! 流程：打开 Chrome 频道主页 → 截屏匹配 `…more` → 点击 → 匹配
 //! `View email address` → 点击 → 若出现 reCAPTCHA 则等待人工完成 → OCR 读邮箱。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-20
 
 mod capture;
@@ -43,7 +43,7 @@ pub struct ChannelTarget {
 /// - `Ok(None)` — flow completed but no email detected
 /// - `Err(EnrichError)` — browser, template, captcha timeout, or OCR failure
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-20
 pub async fn fetch_email_about_page(
     target: &ChannelTarget,

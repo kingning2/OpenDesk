@@ -6,7 +6,7 @@
  * - Token / `.key` 激活
  * - 文件字节转 Base64
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 
@@ -19,7 +19,7 @@ import {
 /**
  * 激活操作结果。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 export interface LicenseActivationResult {
@@ -34,7 +34,7 @@ export interface LicenseActivationResult {
 /**
  * 有状态的激活流程服务（不依赖 React）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 export class LicenseActivationService {
@@ -43,7 +43,7 @@ export class LicenseActivationService {
   /**
    * 构造激活服务。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-16
    */
   public constructor() {}
@@ -51,7 +51,7 @@ export class LicenseActivationService {
   /**
    * 当前缓存的设备码。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-16
    *
    * @returns 设备码字符串，未加载时为空串
@@ -63,7 +63,7 @@ export class LicenseActivationService {
   /**
    * 从后端加载本机设备码并缓存。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-16
    *
    * @returns 设备码
@@ -78,7 +78,7 @@ export class LicenseActivationService {
   /**
    * 将设备码写入剪贴板。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-16
    *
    * @returns 成功或失败的提示文案
@@ -102,7 +102,7 @@ export class LicenseActivationService {
   /**
    * 使用粘贴的 token 激活。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-16
    *
    * @param token - 激活 token 原文
@@ -117,7 +117,7 @@ export class LicenseActivationService {
   /**
    * 使用 `.key` 文件激活。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-16
    *
    * @param file - 用户选择的 key 文件
@@ -131,7 +131,7 @@ export class LicenseActivationService {
   /**
    * 将文件内容编码为标准 Base64。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-16
    *
    * @param file - 输入文件
@@ -150,7 +150,7 @@ export class LicenseActivationService {
   /**
    * 统一执行激活并规范化成功/失败消息。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-16
    *
    * @param invokeActivate - 实际 IPC 调用

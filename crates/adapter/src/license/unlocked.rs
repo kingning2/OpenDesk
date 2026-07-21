@@ -1,6 +1,6 @@
 //! 无锁构建的 License 闸门适配器。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-16
 
 use async_trait::async_trait;
@@ -14,14 +14,14 @@ use ports::license::{LicenseError, LicenseGate};
 /// - 始终报告已激活且闸门关闭
 /// - 不依赖 license-verifier 二进制
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 pub struct UnlockedLicenseGate;
 
 impl UnlockedLicenseGate {
     /// 构造无锁闸门实例。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     ///
     /// # 返回值

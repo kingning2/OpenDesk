@@ -1,7 +1,7 @@
 /**
  * 统一的 Zustand store 工厂。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 
@@ -11,7 +11,7 @@ import type { StoreApi } from "zustand";
 /**
  * `createDeskStore` 返回的 React store hook 类型。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 export type DeskStore<T> = UseBoundStore<StoreApi<T>>;
@@ -21,7 +21,7 @@ export type DeskStore<T> = UseBoundStore<StoreApi<T>>;
  *
  * 命名建议：`chatStore`、`userStore`（见 frontend 规范）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @typeParam T - store 状态（含 actions）形状

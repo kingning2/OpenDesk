@@ -1,6 +1,6 @@
 //! `.key` 文件编解码（混淆盐来自构建期派生常量）。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-16
 
 use crate::embedded::EmbeddedMaterials;
@@ -31,7 +31,7 @@ fn try_decode_with_salt(payload: &[u8], salt: &[u8]) -> Option<String> {
 
 /// 将 token 编码为二进制 `.key`。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 pub fn encode_key_file_bytes(token: &str) -> Result<Vec<u8>, String> {
     let token = token.trim();
@@ -52,7 +52,7 @@ pub fn encode_key_file_bytes(token: &str) -> Result<Vec<u8>, String> {
 
 /// 解码 `.key` 字节为 token（新盐失败时回退旧盐）。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 pub fn decode_key_file_bytes(bytes: &[u8]) -> Result<String, String> {
     if bytes.len() < 9 {
@@ -85,7 +85,7 @@ pub fn decode_key_file_bytes(bytes: &[u8]) -> Result<String, String> {
 
 /// 从 CLI 参数解析 token 输入。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 pub fn resolve_token_input(
     token: Option<String>,

@@ -3,7 +3,7 @@
  *
  * 在 `App` 层共享 [`useLicenseGate`] 结果，避免子树重复拉取 IPC。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 
@@ -15,7 +15,7 @@ const LicenseGateContext = createContext<UseLicenseGateResult | null>(null);
 /**
  * Context Provider 属性。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 export interface LicenseGateProviderProps {
@@ -28,7 +28,7 @@ export interface LicenseGateProviderProps {
 /**
  * 注入授权闸门状态。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  *
  * @param props - Provider 属性
@@ -43,7 +43,7 @@ export function LicenseGateProvider({ value, children }: LicenseGateProviderProp
 /**
  * 读取共享的授权闸门状态。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  *
  * @returns 闸门 Hook 返回值

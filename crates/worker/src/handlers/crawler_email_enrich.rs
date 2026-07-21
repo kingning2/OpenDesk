@@ -1,6 +1,6 @@
 //! Handle `crawler_email_enrich` background jobs.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-20
 
 use std::sync::Arc;
@@ -28,7 +28,7 @@ pub enum HandlerError {
 
 /// Execute one crawler email enrichment job.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-20
 pub async fn handle(
     job: &BackgroundJobRecord,

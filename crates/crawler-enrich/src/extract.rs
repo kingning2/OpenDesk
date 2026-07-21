@@ -1,11 +1,11 @@
 //! Best-effort email extraction shared with stage-1 API crawler rules.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-20
 
 /// Extract the first plausible email token from free text.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-20
 pub fn extract_email(text: &str) -> Option<String> {
     let normalized = text

@@ -1,7 +1,7 @@
 /**
  * 未激活时的模糊遮罩与激活面板。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 
@@ -13,7 +13,7 @@ import { useLicenseActivate } from "./use-license-activate";
 /**
  * 激活遮罩组件属性。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 export interface LicenseLockOverlayProps {
@@ -24,7 +24,7 @@ export interface LicenseLockOverlayProps {
 /**
  * 根据锁动画相位生成锁下方文案。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  *
  * @param lockAnim - 锁动画相位
@@ -45,7 +45,7 @@ function lockCaption(
 /**
  * 全屏模糊遮罩 + 可展开的激活卡片。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  *
  * @param props - 组件属性

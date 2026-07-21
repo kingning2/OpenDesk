@@ -1,7 +1,7 @@
 /**
  * 应用根组件：多语言、路由与授权门禁。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 
@@ -21,7 +21,7 @@ import "./globals.css";
 /**
  * 授权门禁与路由壳（需在 I18nProvider 内）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @returns 壳节点
@@ -77,7 +77,7 @@ function AppChrome() {
 /**
  * 应用根组件。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @returns 根节点

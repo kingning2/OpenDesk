@@ -1,7 +1,7 @@
 /**
  * 桌面壳主工作区画布。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 
@@ -11,7 +11,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 /**
  * `MainPanel` 属性。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 export interface MainPanelProps extends HTMLAttributes<HTMLElement> {
@@ -24,7 +24,7 @@ export interface MainPanelProps extends HTMLAttributes<HTMLElement> {
 /**
  * 主面板：shell 底色外框 + workspace 圆角画布。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @param props - 见 {@link MainPanelProps}

@@ -1,14 +1,14 @@
 /**
  * 将授权过期时间格式化为剩余时长文案。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 
 /**
  * 剩余时长展示结果。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 export interface LicenseRemainingLabel {
@@ -23,7 +23,7 @@ export interface LicenseRemainingLabel {
 /**
  * 根据 Unix 秒级过期时间计算剩余时长文案。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  *
  * @param expiresAt - 过期时间（Unix 秒）
@@ -79,7 +79,7 @@ export function formatLicenseRemaining(
 /**
  * 侧栏按钮用的短剩余时长（如「23时」「30天」）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  *
  * @param expiresAt - 过期时间（Unix 秒）
@@ -108,7 +108,7 @@ export function formatLicenseRemainingShort(
 /**
  * 弹窗用的详细剩余时长（如「剩余 23 小时 15 分钟」）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  *
  * @param expiresAt - 过期时间（Unix 秒）
@@ -139,7 +139,7 @@ export function formatLicenseRemainingDetailed(
 /**
  * 将 Unix 秒格式化为本地到期时间字符串。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  *
  * @param expiresAt - 过期时间（Unix 秒）

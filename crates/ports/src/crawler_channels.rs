@@ -1,6 +1,6 @@
 //! Crawler accepted-channel persistence port.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-20
 
 use crate::background_job::{EMAIL_STATUS_FOUND_API, EMAIL_STATUS_PENDING_ENRICH};
@@ -36,7 +36,7 @@ pub struct EmailEnrichResult {
 impl ChannelRecord {
     /// Derive initial `email_status` from whether description already contained an email.
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-20
     pub fn initial_email_status(email: &Option<String>) -> &'static str {
         match email.as_deref() {

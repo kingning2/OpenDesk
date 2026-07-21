@@ -1,6 +1,6 @@
 //! 有锁构建但 verifier 不可用时的 fail-closed 闸门。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-16
 
 use async_trait::async_trait;
@@ -14,7 +14,7 @@ use ports::license::{LicenseError, LicenseGate};
 /// - 在 `license-lock` 开启但 verifier 初始化失败时使用
 /// - 状态查询返回未激活，并暴露初始化错误原因
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-16
 pub struct FailClosedLicenseGate {
     /// 初始化失败原因，会写入 status.reason 与错误返回值。
@@ -24,7 +24,7 @@ pub struct FailClosedLicenseGate {
 impl FailClosedLicenseGate {
     /// 使用初始化失败原因构造 fail-closed 闸门。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-16
     ///
     /// # 参数

@@ -4,7 +4,7 @@
  * 支持按路由（namespace）拆分资源；`t("crawler.status.idle")` 会解析为
  * namespace=`crawler`、key=`status.idle`。未知首段回落到 `defaultNS`（通常为 `common`）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 
@@ -21,7 +21,7 @@ import type { Messages, TranslateParams } from "./types";
 /**
  * 某一语言下各 namespace 的文案表。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 export type LocaleNamespaces = Record<string, Messages>;
@@ -29,7 +29,7 @@ export type LocaleNamespaces = Record<string, Messages>;
 /**
  * `createI18n` 配置。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @typeParam Locale - 语言代码联合类型
@@ -57,7 +57,7 @@ export interface CreateI18nOptions<Locale extends string> {
 /**
  * `useI18n` 返回值。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @typeParam Locale - 语言代码
@@ -84,7 +84,7 @@ export interface I18nApi<Locale extends string> {
 /**
  * `createI18n` 返回的实例。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @typeParam Locale - 语言代码
@@ -129,7 +129,7 @@ function readPersistedLocale<Locale extends string>(
 /**
  * 将 `crawler.status.idle` 拆成 namespace + 剩余 key。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @param key - 调用方传入的点分 key
@@ -157,7 +157,7 @@ export function resolveNamespaceKey(
 /**
  * 创建基于 i18next 的多语言实例（按路由 namespace）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  *
  * @typeParam Locale - 语言代码

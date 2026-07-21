@@ -7,7 +7,7 @@
  * - success：锁对半裂开
  * - failure：锁加固（加厚 + 收紧）
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 
@@ -16,7 +16,7 @@ import { cn, motion, spring } from "@desk/ui";
 /**
  * 锁动画相位。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 export type LicenseLockAnim =
@@ -28,7 +28,7 @@ export type LicenseLockAnim =
 /**
  * 锁图标动画组件属性。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  */
 export interface LicenseLockGlyphProps {
@@ -41,7 +41,7 @@ export interface LicenseLockGlyphProps {
 /**
  * 可裂开 / 可加固的锁 SVG。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-16
  *
  * @param props - 组件属性

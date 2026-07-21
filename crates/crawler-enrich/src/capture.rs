@@ -1,6 +1,6 @@
 //! Full-screen capture for template matching.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-20
 
 use image::RgbaImage;
@@ -10,7 +10,7 @@ use super::flow::EnrichError;
 
 /// Capture the primary display as an RGBA image.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-20
 pub fn capture_primary_screen() -> Result<RgbaImage, EnrichError> {
     let screens = Screen::all().map_err(|error| EnrichError::Capture(error.to_string()))?;

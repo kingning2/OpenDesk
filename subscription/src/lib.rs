@@ -1,6 +1,6 @@
 //! Offline activation + license verification library.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-16
 
 pub mod activation_state;
