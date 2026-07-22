@@ -26,6 +26,7 @@ diesel::table! {
         enrich_attempts -> Integer,
         enrich_error -> Nullable<Text>,
         enriched_at -> Nullable<Text>,
+        verified_email -> Nullable<Text>,
     }
 }
 

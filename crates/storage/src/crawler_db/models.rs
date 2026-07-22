@@ -29,6 +29,7 @@ pub struct NewCrawlerChannel {
     pub enrich_attempts: i32,
     pub enrich_error: Option<String>,
     pub enriched_at: Option<String>,
+    pub verified_email: Option<String>,
 }
 
 #[derive(Debug, Queryable, Selectable)]
@@ -50,4 +51,5 @@ pub struct CrawlerChannelRow {
     pub enrich_attempts: i32,
     pub enrich_error: Option<String>,
     pub enriched_at: Option<String>,
+    pub verified_email: Option<String>,
 }
