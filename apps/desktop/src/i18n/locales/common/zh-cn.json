@@ -16,6 +16,7 @@
     "agent": "Agent",
     "chat": "Chat",
     "mail": "Mail",
+    "workflow": "话术库",
     "knowledge": "Knowledge",
     "crawler": "采集",
     "customer": "客户",
@@ -41,5 +42,6 @@
   },
   "placeholder": {
     "developing": "该功能正在开发中。"
-  }
+  },
+  "loading": "加载中…"
 }

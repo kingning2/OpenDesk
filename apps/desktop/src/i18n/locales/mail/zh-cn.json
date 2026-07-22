@@ -1,4 +1,70 @@
 {
-  "title": "Mail",
-  "description": "收发邮件处理 — 开发中。"
+  "title": "邮件",
+  "description": "收发商务邮件。",
+  "workspace": "邮件工作台",
+  "refresh": "刷新",
+  "statusLoading": "正在加载邮件数据…",
+  "statusReady": "邮件工作台已就绪。",
+  "statusSelectFirst": "请先选择客户与模板。",
+  "statusTemplateApplied": "模板已套用。",
+  "statusAccountSaved": "邮件账号已保存。",
+  "statusSent": "出站邮件已记录：{{id}}",
+  "statusInboundRecorded": "入站邮件已记录：{{id}}",
+  "statusInboundValidation": "记录入站邮件需要选择客户、填写发件人地址和主题。",
+  "statusSendValidation": "请选择客户、账号、模板，并填写主题和正文。",
+  "accounts": {
+    "title": "发件账号",
+    "all": "全部账号",
+    "bind": "绑定邮箱",
+    "bindTitle": "绑定新邮箱"
+  },
+  "list": {
+    "title": "客户列表",
+    "searchPlaceholder": "搜索客户…",
+    "total": "共 {{count}} 位",
+    "empty": "暂无客户"
+  },
+  "preview": {
+    "emptyTitle": "未选择客户",
+    "empty": "点击左侧客户查看并回复邮件"
+  },
+  "modal": {
+    "cancel": "取消"
+  },
+  "compose": {
+    "title": "写信",
+    "customer": "客户",
+    "customerPlaceholder": "选择客户",
+    "template": "模板",
+    "templatePlaceholder": "选择模板",
+    "account": "发件账号",
+    "accountPlaceholder": "选择账号",
+    "applyTemplate": "套用模板",
+    "subject": "主题",
+    "body": "正文",
+    "send": "记录出站邮件",
+    "sending": "保存中…"
+  },
+  "settings": {
+    "title": "设置 & 手动录入",
+    "selectedCustomer": "当前客户：{{name}}",
+    "noCustomer": "未选择",
+    "accountLabel": "账号名称",
+    "fromAddress": "发件地址",
+    "fromName": "发件人名称",
+    "smtpHost": "SMTP 服务器",
+    "smtpPort": "SMTP 端口",
+    "username": "用户名",
+    "password": "密码",
+    "saveAccount": "保存账号",
+    "savingAccount": "保存中…"
+  },
+  "inbound": {
+    "modalTitle": "手动录入回复",
+    "from": "回复发件人",
+    "subject": "回复主题",
+    "body": "回复正文",
+    "record": "手动录入回复",
+    "recording": "录入中…"
+  }
 }

@@ -104,7 +104,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [section, setSection] = useState<SettingsSectionId>("language");
   const [draftLocale, setDraftLocale] = useState<AppLocale>(locale);
   const [localeSavedMessage, setLocaleSavedMessage] = useState("");
-  const [confirmExit, setConfirmExit] = useState(false);
   const [exitPendingAction, setExitPendingAction] = useState<"close" | "crawler" | null>(
     null,
   );
@@ -115,13 +114,13 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     if (open) {
       setDraftLocale(locale);
       setLocaleSavedMessage("");
-      setConfirmExit(false);
       setExitPendingAction(null);
     }
   }
 
   const localeDirty = draftLocale !== locale;
   const isDirty = localeDirty || youtubeDirty;
+  const confirmExit = exitPendingAction != null;
   /**
    * 保存当前脏字段（语言草稿 + YouTube 密钥）。
    *
@@ -166,7 +165,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
    * @param action - 关闭目标
    */
   function finishExit(action: "close" | "crawler") {
-    setConfirmExit(false);
     setExitPendingAction(null);
     onOpenChange(false);
     if (action === "crawler") {
@@ -185,7 +183,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   function requestExit(action: "close" | "crawler") {
     if (isDirty) {
       setExitPendingAction(action);
-      setConfirmExit(true);
       return;
     }
     finishExit(action);
@@ -427,7 +424,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     type="button"
                     variant="ghost"
                     onClick={() => {
-                      setConfirmExit(false);
                       setExitPendingAction(null);
                     }}
                   >

@@ -1,4 +1,70 @@
 {
   "title": "Mail",
-  "description": "Inbound and outbound mail — in development."
+  "description": "Inbound and outbound mail.",
+  "workspace": "Mail Workspace",
+  "refresh": "Refresh",
+  "statusLoading": "Loading mail data…",
+  "statusReady": "Mail workspace ready.",
+  "statusSelectFirst": "Choose a customer and template first.",
+  "statusTemplateApplied": "Template applied.",
+  "statusAccountSaved": "Mail account saved.",
+  "statusSent": "Outbound message recorded: {{id}}",
+  "statusInboundRecorded": "Inbound message recorded: {{id}}",
+  "statusInboundValidation": "Inbound record needs customer, from address, and subject.",
+  "statusSendValidation": "Customer, account, template, subject, and body are required.",
+  "accounts": {
+    "title": "Accounts",
+    "all": "All accounts",
+    "bind": "Bind mailbox",
+    "bindTitle": "Bind new mailbox"
+  },
+  "list": {
+    "title": "Customers",
+    "searchPlaceholder": "Search customers…",
+    "total": "{{count}} customers",
+    "empty": "No customers yet"
+  },
+  "preview": {
+    "emptyTitle": "No customer selected",
+    "empty": "Select a customer on the left to preview and reply"
+  },
+  "modal": {
+    "cancel": "Cancel"
+  },
+  "compose": {
+    "title": "Compose",
+    "customer": "Customer",
+    "customerPlaceholder": "Select customer",
+    "template": "Template",
+    "templatePlaceholder": "Select template",
+    "account": "Account",
+    "accountPlaceholder": "Select account",
+    "applyTemplate": "Apply Template",
+    "subject": "Subject",
+    "body": "Body",
+    "send": "Record Outbound Mail",
+    "sending": "Saving…"
+  },
+  "settings": {
+    "title": "Settings & Manual Inbound",
+    "selectedCustomer": "Selected customer: {{name}}",
+    "noCustomer": "None",
+    "accountLabel": "Account label",
+    "fromAddress": "From address",
+    "fromName": "From name",
+    "smtpHost": "SMTP host",
+    "smtpPort": "SMTP port",
+    "username": "Username",
+    "password": "Password",
+    "saveAccount": "Save Account",
+    "savingAccount": "Saving…"
+  },
+  "inbound": {
+    "modalTitle": "Record inbound reply",
+    "from": "Reply from",
+    "subject": "Reply subject",
+    "body": "Reply body",
+    "record": "Record Inbound Reply",
+    "recording": "Recording…"
+  }
 }

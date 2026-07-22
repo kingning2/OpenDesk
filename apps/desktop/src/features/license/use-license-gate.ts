@@ -44,7 +44,6 @@ export function useLicenseGate(): UseLicenseGateResult {
   const [status, setStatus] = useState<LicenseStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [gateBlocks, setGateBlocks] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
   const didNotifyError = useRef(false);
 
@@ -54,7 +53,6 @@ export function useLicenseGate(): UseLicenseGateResult {
       if (cancelled) return;
       setStatus(snapshot.status);
       setError(snapshot.error);
-      setGateBlocks(snapshot.gateBlocks);
       setLoading(false);
       if (snapshot.error && !didNotifyError.current) {
         didNotifyError.current = true;
@@ -74,6 +72,8 @@ export function useLicenseGate(): UseLicenseGateResult {
     setLoading(true);
     setReloadToken((value) => value + 1);
   }
+
+  const gateBlocks = status != null && status.gateEnabled && !status.activated;
 
   return { status, loading, error, gateBlocks, refresh };
 }

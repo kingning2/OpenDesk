@@ -114,11 +114,8 @@ function applyProgress(
     setStopReason: (value: string) => void;
     setMessage: (value: string) => void;
     setCurrentKeyword: (value: string) => void;
-    setKeywordAccepted: (value: number) => void;
-    setKeywordScanned: (value: number) => void;
     setAcceptedCount: (value: number) => void;
     setScannedCount: (value: number) => void;
-    setQuotaUsed: (value: number) => void;
     setKeywordsTotal: (value: number) => void;
     setKeywordsDone: (value: number) => void;
     setKeywordStats: (value: KeywordStatRow[]) => void;
@@ -131,11 +128,8 @@ function applyProgress(
   setters.setStopReason(payload.stop_reason ?? "");
   setters.setMessage(payload.message ?? "");
   setters.setCurrentKeyword(payload.current_keyword ?? "");
-  setters.setKeywordAccepted(payload.keyword_accepted ?? 0);
-  setters.setKeywordScanned(payload.keyword_scanned ?? 0);
   setters.setAcceptedCount(payload.accepted_count ?? 0);
   setters.setScannedCount(payload.scanned_count ?? 0);
-  setters.setQuotaUsed(payload.quota_used ?? 0);
   setters.setKeywordsTotal(payload.keywords_total ?? 0);
   setters.setKeywordsDone(payload.keywords_done ?? 0);
   if (payload.error_message) {
@@ -195,11 +189,8 @@ export function useCrawlerJob() {
   /** 后端已按 locale 翻译的 job message。 */
   const [message, setMessage] = useState("");
   const [currentKeyword, setCurrentKeyword] = useState("");
-  const [keywordAccepted, setKeywordAccepted] = useState(0);
-  const [keywordScanned, setKeywordScanned] = useState(0);
   const [acceptedCount, setAcceptedCount] = useState(0);
   const [scannedCount, setScannedCount] = useState(0);
-  const [quotaUsed, setQuotaUsed] = useState(0);
   const [keywordsTotal, setKeywordsTotal] = useState(0);
   const [keywordsDone, setKeywordsDone] = useState(0);
   const [keywordStats, setKeywordStats] = useState<KeywordStatRow[]>([]);
@@ -271,11 +262,8 @@ export function useCrawlerJob() {
           setStopReason,
           setMessage,
           setCurrentKeyword,
-          setKeywordAccepted,
-          setKeywordScanned,
           setAcceptedCount,
           setScannedCount,
-          setQuotaUsed,
           setKeywordsTotal,
           setKeywordsDone,
           setKeywordStats,
@@ -336,7 +324,6 @@ export function useCrawlerJob() {
         setStopReason(payload.stop_reason);
         setAcceptedCount(payload.accepted_count);
         setScannedCount(payload.scanned_count);
-        setQuotaUsed(payload.quota_used ?? 0);
         setBusy(false);
       },
       onFailed: (payload: CrawlerEventJobFailed) => {
@@ -413,9 +400,6 @@ export function useCrawlerJob() {
     setChannelResults([]);
     setAcceptedCount(0);
     setScannedCount(0);
-    setKeywordAccepted(0);
-    setKeywordScanned(0);
-    setQuotaUsed(0);
     setKeywordsTotal(0);
     setKeywordsDone(0);
     jobIdRef.current = null;
@@ -482,11 +466,8 @@ export function useCrawlerJob() {
     stopReason,
     message,
     currentKeyword,
-    keywordAccepted,
-    keywordScanned,
     acceptedCount,
     scannedCount,
-    quotaUsed,
     keywordsTotal,
     keywordsDone,
     keywordStats,

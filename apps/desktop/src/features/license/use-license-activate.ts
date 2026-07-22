@@ -77,7 +77,6 @@ export function useLicenseActivate(
   const [service] = useState(() => new LicenseActivationService());
   const [machineCode, setMachineCode] = useState("");
   const [token, setToken] = useState("");
-  const [busy, setBusy] = useState(false);
   const [lockAnim, setLockAnim] = useState<LicenseLockAnim>("idle");
   const [message, setMessage] = useState<string | null>(null);
 
@@ -113,13 +112,11 @@ export function useLicenseActivate(
     run: () => ReturnType<LicenseActivationService["activateWithToken"]>,
   ) {
     const pending = "正在校验激活码…";
-    setBusy(true);
     setLockAnim("busy");
     setMessage(pending);
     const toastId = toast.loading(pending);
     const result = await run();
     setMessage(result.message);
-    setBusy(false);
 
     if (result.ok) {
       setLockAnim("success");
@@ -142,6 +139,8 @@ export function useLicenseActivate(
   async function activateWithKeyFile(file: File) {
     await runActivate(() => service.activateWithKeyFile(file));
   }
+
+  const busy = lockAnim === "busy";
 
   return {
     machineCode,

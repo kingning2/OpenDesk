@@ -6,7 +6,8 @@
  */
 
 import { type ComponentType, useEffect, useState } from "react";
-import { cn } from "@desk/ui";
+import { cn, LoadingState } from "@desk/ui";
+import { useT } from "../i18n";
 import { HomePage } from "./pages/home-page";
 
 type PageLoader = () => Promise<ComponentType>;
@@ -32,6 +33,10 @@ const PAGE_LOADERS: Record<string, PageLoader> = {
   "/features/mail": async () => {
     const { MailPage } = await import("@feature/mail/mail-page");
     return MailPage;
+  },
+  "/features/workflow": async () => {
+    const { WorkflowPage } = await import("@feature/workflow/workflow-page");
+    return WorkflowPage;
   },
   "/features/knowledge": async () => {
     const { KnowledgePage } = await import("@feature/knowledge/knowledge-page");
@@ -79,6 +84,7 @@ export interface WorkspaceOutletProps {
  * @param props.active - 是否为当前激活标签
  */
 function WorkspaceTab({ path, active }: { path: string; active: boolean }) {
+  const t = useT();
   const [Page, setPage] = useState<ComponentType | null>(() => pageCache.get(path) ?? null);
 
   useEffect(() => {
@@ -100,13 +106,13 @@ function WorkspaceTab({ path, active }: { path: string; active: boolean }) {
     return (
       <div
         className={cn(
-          "min-h-0 flex-1 items-center justify-center text-muted-foreground",
+          "min-h-0 flex-1 items-center justify-center",
           active ? "flex" : "hidden",
         )}
         aria-hidden={!active}
-        aria-busy="true"
-        role="status"
-      />
+      >
+        <LoadingState label={t("loading")} size="lg" />
+      </div>
     );
   }
 

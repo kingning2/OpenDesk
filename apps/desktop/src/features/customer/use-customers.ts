@@ -36,10 +36,11 @@ export function useCustomers() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<CustomerProfile | null>(null);
   const [mode, setMode] = useState<CustomerPanelMode>("empty");
   const [formValues, setFormValues] = useState<CustomerFormValues>(emptyCustomerFormValues());
+
+  const selectedId = selectedProfile?.id ?? null;
 
   const refreshList = useCallback(async (query = search) => {
     setLoading(true);
@@ -83,7 +84,6 @@ export function useCustomers() {
     setError(null);
     try {
       const profile = await customerGet(id);
-      setSelectedId(id);
       setSelectedProfile(profile);
       setFormValues(profileToFormValues(profile));
       setMode("view");
@@ -95,7 +95,6 @@ export function useCustomers() {
   }, []);
 
   const startCreate = useCallback(() => {
-    setSelectedId(null);
     setSelectedProfile(null);
     setFormValues(emptyCustomerFormValues());
     setMode("create");
@@ -127,7 +126,6 @@ export function useCustomers() {
       if (mode === "create") {
         const profile = await customerCreate(formValuesToCreatePayload(formValues));
         await refreshList();
-        setSelectedId(profile.id);
         setSelectedProfile(profile);
         setFormValues(profileToFormValues(profile));
         setMode("view");

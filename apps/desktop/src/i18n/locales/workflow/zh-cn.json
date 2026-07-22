@@ -1,0 +1,36 @@
+{
+  "title": "话术库",
+  "description": "KOL 合作与代理话术管理。",
+  "searchPlaceholder": "搜索话术…",
+  "categoryAll": "全部",
+  "empty": "暂无话术，点击「新建」添加。",
+  "total": "共 {{count}} 条",
+  "copy": "复制",
+  "copied": "已复制",
+  "new": "新建",
+  "edit": "编辑",
+  "delete": "删除",
+  "deleteConfirm": "确定删除「{{title}}」吗？",
+  "cancel": "取消",
+  "save": "保存",
+  "saving": "保存中…",
+  "fields": {
+    "title": "标题",
+    "stage": "阶段",
+    "trigger": "触发场景",
+    "description": "说明",
+    "fromStage": "来自阶段",
+    "toStage": "到达阶段",
+    "tags": "标签（逗号分隔）",
+    "body": "话术正文",
+    "categoryL1": "一级分类",
+    "categoryL2": "二级分类",
+    "needsBossInput": "需要老板确认",
+    "bossInputHint": "确认提示",
+    "sortOrder": "排序"
+  },
+  "form": {
+    "createTitle": "新建话术",
+    "editTitle": "编辑话术"
+  }
+}

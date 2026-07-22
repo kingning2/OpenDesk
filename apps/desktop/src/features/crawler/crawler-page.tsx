@@ -746,43 +746,10 @@ export function CrawlerPage() {
         />
       </div>
 
-      {/* ── 流程图 + 详情分栏 ── */}
-      <WorkspaceSplit className="min-h-0 flex-1 border-0" defaultStartWidth={560} minStartWidth={360} maxStartWidth={800}>
-        <WorkspaceSplitPane side="start" scroll={false}
-          header={
-            <WorkspaceSplitToolbar>
-              <div>
-                <WorkspaceSplitTitle>{t("crawler.flowTitle")}</WorkspaceSplitTitle>
-                <p className="text-[length:var(--text-xs)] text-muted-foreground">{t("crawler.flowDescription")}</p>
-              </div>
-            </WorkspaceSplitToolbar>
-          }
-        >
-          <div className="h-full min-h-[280px] w-full">
-            <ReactFlow
-              fitView
-              fitViewOptions={{ padding: 0.35, minZoom: 0.85, maxZoom: 1 }}
-              colorMode={(resolvedTheme === "dark" ? "dark" : "light") as ColorMode}
-              nodes={nodes}
-              edges={edges}
-              nodeTypes={nodeTypes}
-              nodesDraggable={false}
-              nodesConnectable={false}
-              elementsSelectable
-              selectNodesOnDrag={false}
-              panOnDrag={false}
-              zoomOnScroll={false}
-              preventScrolling
-              proOptions={{ hideAttribution: true }}
-              className="bg-transparent"
-              onNodeClick={(_event, node) => handleStageSelect(node.id as FlowStage)}
-            >
-              <Background gap={18} color="var(--color-border)" />
-            </ReactFlow>
-          </div>
-        </WorkspaceSplitPane>
-
+      {/* ── 关键词库（左）+ 采集流程（右）── */}
+      <WorkspaceSplit className="min-h-0 flex-1 border-0" defaultStartWidth={300} minStartWidth={240} maxStartWidth={420}>
         <WorkspaceSplitPane
+          side="start"
           header={
             <WorkspaceSplitToolbar className="justify-between">
               <div>
@@ -834,6 +801,41 @@ export function CrawlerPage() {
               keywordsTotal={keywordsTotal}
               busy={busy}
             />
+          </div>
+        </WorkspaceSplitPane>
+
+        <WorkspaceSplitPane
+          scroll={false}
+          header={
+            <WorkspaceSplitToolbar>
+              <div>
+                <WorkspaceSplitTitle>{t("crawler.flowTitle")}</WorkspaceSplitTitle>
+                <p className="text-[length:var(--text-xs)] text-muted-foreground">{t("crawler.flowDescription")}</p>
+              </div>
+            </WorkspaceSplitToolbar>
+          }
+        >
+          <div className="h-full min-h-[280px] w-full">
+            <ReactFlow
+              fitView
+              fitViewOptions={{ padding: 0.35, minZoom: 0.85, maxZoom: 1 }}
+              colorMode={(resolvedTheme === "dark" ? "dark" : "light") as ColorMode}
+              nodes={nodes}
+              edges={edges}
+              nodeTypes={nodeTypes}
+              nodesDraggable={false}
+              nodesConnectable={false}
+              elementsSelectable
+              selectNodesOnDrag={false}
+              panOnDrag={false}
+              zoomOnScroll={false}
+              preventScrolling
+              proOptions={{ hideAttribution: true }}
+              className="bg-transparent"
+              onNodeClick={(_event, node) => handleStageSelect(node.id as FlowStage)}
+            >
+              <Background gap={18} color="var(--color-border)" />
+            </ReactFlow>
           </div>
         </WorkspaceSplitPane>
       </WorkspaceSplit>

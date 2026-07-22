@@ -1,0 +1,36 @@
+{
+  "title": "Scripts",
+  "description": "KOL and agency reply script library.",
+  "searchPlaceholder": "Search scripts…",
+  "categoryAll": "All",
+  "empty": "No scripts yet. Click New to add one.",
+  "total": "{{count}} scripts",
+  "copy": "Copy",
+  "copied": "Copied",
+  "new": "New",
+  "edit": "Edit",
+  "delete": "Delete",
+  "deleteConfirm": "Delete {{title}}?",
+  "cancel": "Cancel",
+  "save": "Save",
+  "saving": "Saving…",
+  "fields": {
+    "title": "Title",
+    "stage": "Stage",
+    "trigger": "Trigger",
+    "description": "Description",
+    "fromStage": "From stage",
+    "toStage": "To stage",
+    "tags": "Tags (comma-separated)",
+    "body": "Script body",
+    "categoryL1": "Category L1",
+    "categoryL2": "Category L2",
+    "needsBossInput": "Needs boss input",
+    "bossInputHint": "Boss input hint",
+    "sortOrder": "Sort order"
+  },
+  "form": {
+    "createTitle": "New script",
+    "editTitle": "Edit script"
+  }
+}

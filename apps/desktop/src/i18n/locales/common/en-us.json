@@ -16,6 +16,7 @@
     "agent": "Agent",
     "chat": "Chat",
     "mail": "Mail",
+    "workflow": "Scripts",
     "knowledge": "Knowledge",
     "crawler": "Crawler",
     "customer": "Customers",
@@ -41,5 +42,6 @@
   },
   "placeholder": {
     "developing": "This feature is under development."
-  }
+  },
+  "loading": "Loading…"
 }
