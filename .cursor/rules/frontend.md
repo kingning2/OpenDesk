@@ -1,5 +1,5 @@
 ---
-description: OpenDesk frontend stack — React Compiler, shadcn/Radix, Tailwind, Motion, Zustand store, Apple-style design tokens in @desk/ui
+description: OpenDesk frontend stack — React Compiler, shadcn/Radix, Tailwind, Motion, useState+Zustand, Feature hooks for IPC
 globs: apps/desktop/**/*.{ts,tsx},packages/ui/**/*.{ts,tsx},packages/platform/**/*.{ts,tsx},packages/store/**/*.{ts,tsx},packages/i18n/**/*.{ts,tsx}
 alwaysApply: false
 ---
@@ -15,7 +15,8 @@ alwaysApply: false
 | ----------- | ---------------------- | ------------------------------------------ |
 | 编译          | **React Compiler**        | 必须启用，禁止仅靠手动 `useMemo`/`useCallback` 优化     |
 | 组件基座        | **shadcn/ui + Radix UI**  | 组件源码在 `packages/ui`，可改不可绕                  |
-| 状态          | **Zustand**               | 经 `@desk/store`；业务 store 放 Feature / 壳层     |
+| 本地 / 共享状态   | **useState + Zustand**    | 本地用 `useState`；跨页共享 UI 经 `@desk/store`；细则见 [react-state.mdc](react-state.mdc) |
+| 服务器 / IPC 数据 | **Feature hooks**         | 经 `@desk/platform` 拉取并缓存在 Feature hook；**禁止**复制进 Zustand；**不强制** TanStack Query |
 | 多语言        | **`@desk/i18n`**          | `createI18n`；文案字典放 app                       |
 | 样式          | **Tailwind CSS**          | 仅允许在 `packages/ui` 内写 utility；Feature 禁止裸用 |
 | 动画          | **Motion**                | Spring / 过渡；禁止 Feature 直接写 CSS animation   |
@@ -115,7 +116,8 @@ Feature 只通过 `@desk/platform/ipc` 调 Rust，禁止 `invoke()` 与 `@tauri-
 - Feature 必须放在 `apps/desktop/src/features/{chat,mail,workflow,...}` 下
 - 每个 feature 目录仅使用短名（一个词优先）
 - IPC 调用必须通过 `packages/platform/src/ipc` 封装；组件内禁止直接 `@tauri-apps/api` 调用
-- 客户端状态经 `@desk/store`（Zustand）；业务 store 定义在 Feature / 壳层，禁止把领域状态塞进 `packages/store`
+- 客户端**共享 UI**状态经 `@desk/store`（Zustand）；业务 store 定义在 Feature / 壳层，禁止把领域列表/IPC 结果塞进 `packages/store`
+- 状态分类与自检见 [react-state.mdc](react-state.mdc)（本地 `useState`、共享 Zustand、IPC 用 Feature hook；不强制 TanStack Query）
 
 ## 命名规范
 
