@@ -7,3 +7,4 @@ export function call<T>(command: string, payload?: Record<string, unknown>) {
 export * from "./customer";
 export * from "./mail";
 export * from "./workflow";
+export * from "./llm-settings";

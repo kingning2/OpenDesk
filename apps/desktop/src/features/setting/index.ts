@@ -15,3 +15,6 @@ export { SettingsDialogProvider } from "./settings-dialog-provider";
 export { useSettingsDialog } from "./settings-dialog-store";
 export type { SettingsDialogContextValue } from "./settings-dialog-store";
 export { useYoutubeApiKeySettings } from "./use-youtube-api-key-settings";
+export { useLlmSettings } from "./use-llm-settings";
+export { LlmSettingsPanel } from "./llm-settings-panel";
+export type { LlmSettingsPanelProps } from "./llm-settings-panel";

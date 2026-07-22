@@ -22,13 +22,15 @@ import {
   SelectValue,
   cn,
 } from "@desk/ui";
-import { Languages, X, Youtube, type LucideIcon } from "@desk/ui/icons";
+import { Languages, Bot, X, Youtube, type LucideIcon } from "@desk/ui/icons";
 import { useI18n } from "../../i18n";
 import type { AppLocale } from "../../i18n";
+import { LlmSettingsPanel } from "./llm-settings-panel";
+import { useLlmSettings } from "./use-llm-settings";
 import { useYoutubeApiKeySettings } from "./use-youtube-api-key-settings";
 
 /** 设置侧栏分区 id。 */
-type SettingsSectionId = "language" | "youtube";
+type SettingsSectionId = "language" | "youtube" | "llm";
 
 /**
  * `SettingsDialog` 属性。
@@ -73,7 +75,10 @@ const NAV_GROUPS: NavGroup[] = [
   },
   {
     labelKey: "settings.navIntegrations",
-    items: [{ id: "youtube", labelKey: "settings.navYoutube", icon: Youtube }],
+    items: [
+      { id: "llm", labelKey: "settings.navLlm", icon: Bot },
+      { id: "youtube", labelKey: "settings.navYoutube", icon: Youtube },
+    ],
   },
 ];
 
@@ -101,6 +106,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     dirty: youtubeDirty,
     configured,
   } = useYoutubeApiKeySettings();
+  const llm = useLlmSettings();
   const [section, setSection] = useState<SettingsSectionId>("language");
   const [draftLocale, setDraftLocale] = useState<AppLocale>(locale);
   const [localeSavedMessage, setLocaleSavedMessage] = useState("");
@@ -119,10 +125,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   }
 
   const localeDirty = draftLocale !== locale;
-  const isDirty = localeDirty || youtubeDirty;
+  const isDirty = localeDirty || youtubeDirty || llm.dirty;
   const confirmExit = exitPendingAction != null;
   /**
-   * 保存当前脏字段（语言草稿 + YouTube 密钥）。
+   * 保存当前脏字段（语言草稿 + YouTube 密钥 + LLM）。
    *
    * @author coisini
    * @created 2026-07-21
@@ -137,6 +143,9 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       }
       if (youtubeDirty) {
         await save();
+      }
+      if (llm.dirty) {
+        await llm.save();
       }
       return true;
     } catch {
@@ -154,6 +163,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     setDraftLocale(locale);
     setLocaleSavedMessage("");
     discard();
+    llm.discard();
   }
 
   /**
@@ -205,7 +215,11 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   }
 
   const sectionTitle =
-    section === "language" ? t("settings.language") : t("settings.youtubeTitle");
+    section === "language"
+      ? t("settings.language")
+      : section === "llm"
+        ? t("settings.llmTitle")
+        : t("settings.youtubeTitle");
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -328,6 +342,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     ) : null}
                   </div>
                 </section>
+              ) : section === "llm" ? (
+                <LlmSettingsPanel llm={llm} />
               ) : (
                 <section className="flex max-w-lg flex-col gap-8">
                   <p className="text-[length:var(--text-sm)] leading-relaxed text-muted-foreground">
@@ -441,7 +457,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   </Button>
                   <Button
                     type="button"
-                    disabled={saving}
+                    disabled={saving || llm.saving}
                     onClick={() => {
                       void (async () => {
                         const ok = await saveAll();
@@ -451,7 +467,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                       })();
                     }}
                   >
-                    {saving ? t("settings.saving") : t("settings.unsavedSave")}
+                    {saving || llm.saving ? t("settings.saving") : t("settings.unsavedSave")}
                   </Button>
                 </div>
               </div>
