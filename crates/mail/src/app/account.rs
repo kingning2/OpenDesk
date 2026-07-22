@@ -37,16 +37,14 @@ pub struct SaveMailAccount;
 impl SaveMailAccount {
     /// Create or update one mail account configuration.
     ///
+    /// Empty password on update keeps the existing keyring secret.
+    ///
     /// 作者：Xiaoman
     /// 创建时间：2026-07-21
     pub fn execute<S: MailStore + ?Sized>(
         store: &S,
         request: MailIpcAccountSaveRequest,
     ) -> Result<MailIpcAccountListResponse, String> {
-        if request.password.trim().is_empty() {
-            return Err("mail.account.password_required".to_string());
-        }
-
         store
             .save_account(MailAccountWriteInput {
                 id: request.id,

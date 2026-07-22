@@ -7,7 +7,7 @@ use common::contracts::{
     WorkflowIpcSnippetDeleteRequest, WorkflowIpcSnippetListRequest, WorkflowIpcSnippetListResponse,
     WorkflowIpcSnippetSaveRequest,
 };
-use ports::workflow::{ScriptSnippetStore, ScriptSnippetWriteInput};
+use ports::workflow::ScriptSnippetWriteInput;
 
 use crate::state::AppState;
 

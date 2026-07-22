@@ -37,6 +37,8 @@ diesel::table! {
         notes -> Nullable<Text>,
         created_at -> Text,
         updated_at -> Text,
+        extra_json -> Nullable<Text>,
+        source_ref -> Nullable<Text>,
     }
 }
 
@@ -101,6 +103,9 @@ diesel::table! {
         open_tracking_id -> Nullable<Text>,
         created_at -> Text,
         updated_at -> Text,
+        to_address -> Nullable<Text>,
+        from_address -> Nullable<Text>,
+        source_ref -> Nullable<Text>,
     }
 }
 
@@ -177,12 +182,51 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    mail_imap_sync_state (account_id, folder) {
+        account_id -> Text,
+        folder -> Text,
+        uidvalidity -> BigInt,
+        highest_modseq -> Text,
+        last_uid -> BigInt,
+        last_sync_at -> Nullable<Text>,
+        full_synced -> Bool,
+    }
+}
+
+diesel::table! {
+    mail_pending_send (id) {
+        id -> Text,
+        account_id -> Nullable<Text>,
+        recipients_json -> Text,
+        subject -> Text,
+        body_text -> Text,
+        body_html -> Nullable<Text>,
+        status -> Text,
+        scheduled_at -> Nullable<Text>,
+        source_ref -> Nullable<Text>,
+        created_at -> Text,
+        updated_at -> Text,
+    }
+}
+
+diesel::table! {
+    legacy_json_doc (id) {
+        id -> Text,
+        kind -> Text,
+        payload_json -> Text,
+        updated_at -> Text,
+    }
+}
+
 diesel::joinable!(quote_history -> customer (customer_id));
 diesel::joinable!(customer_timeline -> customer (customer_id));
 diesel::joinable!(cooperation_audit -> customer (customer_id));
 diesel::joinable!(mail_message -> customer (customer_id));
 diesel::joinable!(mail_message -> mail_account (account_id));
 diesel::joinable!(mail_message -> mail_template (template_id));
+diesel::joinable!(mail_imap_sync_state -> mail_account (account_id));
+diesel::joinable!(mail_pending_send -> mail_account (account_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     background_job,
@@ -195,4 +239,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     cooperation_audit,
     script_snippet,
     llm_setting,
+    mail_imap_sync_state,
+    mail_pending_send,
+    legacy_json_doc,
 );

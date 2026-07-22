@@ -1,13 +1,14 @@
-//! Mail template listing and rendering use cases.
+//! Mail template listing, rendering, and custom save use cases.
 //!
 //! 作者：Xiaoman
 //! 创建时间：2026-07-21
 
 use common::contracts::{
     MailIpcTemplateApplyRequest, MailIpcTemplateApplyResponse, MailIpcTemplateListResponse,
+    MailIpcTemplateSaveRequest,
 };
 use ports::customer::CustomerStore;
-use ports::mail::MailStore;
+use ports::mail::{MailStore, MailTemplateWriteInput};
 
 use super::mapper::templates_to_json;
 use crate::domain::DEFAULT_SENDER_NAME;
@@ -39,6 +40,61 @@ impl ListMailTemplates {
             templates_json: templates_to_json(&templates)?,
             total: templates.len() as i64,
         })
+    }
+}
+
+/// Create or update a custom mail template.
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-07-22
+pub struct SaveMailTemplate;
+
+impl SaveMailTemplate {
+    /// Persist one custom template and return the refreshed list.
+    ///
+    /// 作者：Xiaoman
+    /// 创建时间：2026-07-22
+    ///
+    /// # 参数
+    ///
+    /// * `store` - Mail template store
+    /// * `request` - Template save request
+    ///
+    /// # 返回值
+    ///
+    /// Updated template list response.
+    pub fn execute<S: MailStore + ?Sized>(
+        store: &S,
+        request: MailIpcTemplateSaveRequest,
+    ) -> Result<MailIpcTemplateListResponse, String> {
+        let intent = request.template_intent.trim();
+        if intent.is_empty() {
+            return Err("mail.template.intent_required".to_string());
+        }
+        if request.name.trim().is_empty() {
+            return Err("mail.template.name_required".to_string());
+        }
+        if request.subject_template.trim().is_empty()
+            || request.body_text_template.trim().is_empty()
+        {
+            return Err("mail.template.content_required".to_string());
+        }
+
+        store
+            .save_template(MailTemplateWriteInput {
+                id: request.id,
+                name: request.name.trim().to_string(),
+                template_intent: intent.to_string(),
+                subject_template: request.subject_template,
+                body_text_template: request.body_text_template,
+                body_html_template: request.body_html_template,
+                locale: request.locale,
+                is_active: request.is_active.unwrap_or(true),
+                sort_order: request.sort_order.unwrap_or(100),
+            })
+            .map_err(|error| error.to_string())?;
+
+        ListMailTemplates::execute(store)
     }
 }
 
@@ -145,5 +201,28 @@ fn render_text(
     )
     .replace("{{sender.name}}", sender_name)
     .replace("{{sender.email}}", sender_email)
-    .replace("{{today.date}}", "today")
+    .replace("{{today.date}}", &today_date())
+}
+
+fn today_date() -> String {
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    let secs = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_secs())
+        .unwrap_or(0);
+    // UTC YYYY-MM-DD without extra chrono dependency.
+    const DAY: u64 = 86_400;
+    let days = secs / DAY;
+    let z = days + 719_468;
+    let era = z / 146_097;
+    let doe = z.saturating_sub(era * 146_097);
+    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
+    let y = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let year = if m <= 2 { y + 1 } else { y };
+    format!("{year:04}-{m:02}-{d:02}")
 }

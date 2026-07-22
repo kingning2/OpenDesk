@@ -10,3 +10,7 @@ diesel_migrations = { workspace = true }
 libsqlite3-sys = { workspace = true }
 uuid = { workspace = true }
 keyring = { workspace = true }
+
+[[example]]
+name = "opendesk_migrate"
+path = "examples/opendesk_migrate.rs"

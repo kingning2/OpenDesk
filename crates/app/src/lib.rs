@@ -19,8 +19,8 @@ use commands::{
     crawler_youtube_api_key_get, crawler_youtube_api_key_set, customer_create, customer_get,
     customer_list, customer_update, license_activate, license_machine_code, license_status,
     llm_settings_get, llm_settings_save, llm_test_connection, mail_account_list, mail_account_save,
-    mail_record_inbound, mail_send, mail_template_apply, mail_template_list,
-    workflow_snippet_delete, workflow_snippet_list, workflow_snippet_save,
+    mail_message_list, mail_record_inbound, mail_send, mail_template_apply, mail_template_list,
+    mail_template_save, workflow_snippet_delete, workflow_snippet_list, workflow_snippet_save,
 };
 use crawler::{CrawlerService, CrawlerUiEmitter};
 use crawler_emit::TauriCrawlerEmitter;
@@ -161,9 +161,11 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             customer_create,
             customer_update,
             mail_template_list,
+            mail_template_save,
             mail_template_apply,
             mail_account_list,
             mail_account_save,
+            mail_message_list,
             mail_send,
             mail_record_inbound,
             workflow_snippet_list,

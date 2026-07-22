@@ -4,13 +4,14 @@
 //! 创建时间：2026-07-21
 
 use common::contracts::{
-    MailIpcAccountListResponse, MailIpcAccountSaveRequest, MailIpcRecordInboundRequest,
-    MailIpcRecordInboundResponse, MailIpcSendRequest, MailIpcSendResponse,
-    MailIpcTemplateApplyRequest, MailIpcTemplateApplyResponse, MailIpcTemplateListResponse,
+    MailIpcAccountListResponse, MailIpcAccountSaveRequest, MailIpcMessageListRequest,
+    MailIpcMessageListResponse, MailIpcRecordInboundRequest, MailIpcRecordInboundResponse,
+    MailIpcSendRequest, MailIpcSendResponse, MailIpcTemplateApplyRequest,
+    MailIpcTemplateApplyResponse, MailIpcTemplateListResponse, MailIpcTemplateSaveRequest,
 };
 use mail::app::{
-    ApplyMailTemplate, ListMailAccounts, ListMailTemplates, RecordInboundMail, SaveMailAccount,
-    SendMail,
+    ApplyMailTemplate, ListMailAccounts, ListMailMessages, ListMailTemplates, RecordInboundMail,
+    SaveMailAccount, SaveMailTemplate, SendMail,
 };
 
 use crate::state::AppState;
@@ -25,6 +26,21 @@ pub async fn mail_template_list(
 ) -> Result<MailIpcTemplateListResponse, String> {
     let store = state.mail_store.clone();
     tauri::async_runtime::spawn_blocking(move || ListMailTemplates::execute(store.as_ref()))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
+/// Create or update a custom mail template.
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-07-22
+#[tauri::command]
+pub async fn mail_template_save(
+    state: tauri::State<'_, AppState>,
+    request: MailIpcTemplateSaveRequest,
+) -> Result<MailIpcTemplateListResponse, String> {
+    let store = state.mail_store.clone();
+    tauri::async_runtime::spawn_blocking(move || SaveMailTemplate::execute(store.as_ref(), request))
         .await
         .map_err(|error| error.to_string())?
 }
@@ -76,7 +92,22 @@ pub async fn mail_account_save(
         .map_err(|error| error.to_string())?
 }
 
-/// Record one outbound email.
+/// List local inbox/sent messages.
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-07-22
+#[tauri::command]
+pub async fn mail_message_list(
+    state: tauri::State<'_, AppState>,
+    request: MailIpcMessageListRequest,
+) -> Result<MailIpcMessageListResponse, String> {
+    let store = state.mail_store.clone();
+    tauri::async_runtime::spawn_blocking(move || ListMailMessages::execute(store.as_ref(), request))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
+/// Send one outbound email via SMTP and persist the result.
 ///
 /// 作者：Xiaoman
 /// 创建时间：2026-07-21
