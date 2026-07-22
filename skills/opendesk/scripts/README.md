@@ -29,6 +29,7 @@ OpenDesk 脚手架与架构检查脚本。均需从仓库根目录运行。
 | `check_contracts.py` | Schema JSON 合法性 |
 | `lint_all.py` | 运行 `pnpm lint` |
 | `generate_tree.py` | 项目树 |
+| `migrate_email_agent.py` | email-agent 真实数据迁入 `opendesk.db`（不含日志） |
 
 ## 示例
 
