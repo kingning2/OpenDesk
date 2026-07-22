@@ -2,3 +2,10 @@
 name = "mail"
 version.workspace = true
 edition.workspace = true
+
+[dependencies]
+common = { path = "../common" }
+customer = { path = "../customer" }
+ports = { path = "../ports" }
+serde_json = { workspace = true }
+uuid = { workspace = true }
