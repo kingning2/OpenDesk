@@ -22,6 +22,10 @@ export { ThemeToggle } from "./theme-toggle";
 export type { ThemeToggleProps } from "./theme-toggle";
 export { IconButton } from "./icon-button";
 export type { IconButtonProps } from "./icon-button";
+export { Spinner, spinnerVariants } from "./spinner";
+export type { SpinnerProps } from "./spinner";
+export { LoadingState } from "./loading-state";
+export type { LoadingStateProps } from "./loading-state";
 export {
   Dialog,
   DialogPortal,

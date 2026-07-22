@@ -16,6 +16,7 @@ adapter = { path = "../adapter" }
 agent = { path = "../agent" }
 crawler = { path = "../crawler" }
 customer = { path = "../customer" }
+mail = { path = "../mail" }
 ports = { path = "../ports" }
 storage = { path = "../storage" }
 runtime = { path = "../runtime" }

@@ -18,6 +18,8 @@ use commands::{
     crawler_job_status, crawler_keywords_batches, crawler_keywords_import,
     crawler_youtube_api_key_get, crawler_youtube_api_key_set, customer_create, customer_get,
     customer_list, customer_update, license_activate, license_machine_code, license_status,
+    mail_account_list, mail_account_save, mail_record_inbound, mail_send, mail_template_apply,
+    mail_template_list, workflow_snippet_delete, workflow_snippet_list, workflow_snippet_save,
 };
 use crawler::{CrawlerService, CrawlerUiEmitter};
 use crawler_emit::TauriCrawlerEmitter;
@@ -38,7 +40,9 @@ use storage::crawler_db::CrawlerDb;
 use storage::crawler_keywords::SqliteCrawlerKeywordStore;
 use storage::crawler_settings::SqliteCrawlerSettingsStore;
 use storage::customer::SqliteCustomerStore;
+use storage::mail::SqliteMailStore;
 use storage::opendesk_db::OpendeskDb;
+use storage::workflow::SqliteScriptSnippetStore;
 use tauri::Manager;
 
 /// 启动桌面应用：打开数据库、挂载 crawler emitter、注册 IPC、运行事件循环。
@@ -76,6 +80,10 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
         Arc::new(SqliteCrawlerKeywordStore::new(crawler_db)) as Arc<dyn CrawlerKeywordStore>;
     let customer_store =
         Arc::new(SqliteCustomerStore::new(opendesk_db.clone())) as Arc<dyn CustomerStore>;
+    let mail_store =
+        Arc::new(SqliteMailStore::new(opendesk_db.clone())) as Arc<dyn ports::mail::MailStore>;
+    let snippet_store = Arc::new(SqliteScriptSnippetStore::new(opendesk_db.clone()))
+        as Arc<dyn ports::workflow::ScriptSnippetStore>;
     let app_state = AppState {
         lifecycle: lifecycle.clone(),
         gateway,
@@ -85,6 +93,8 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
         channels_store,
         settings_store,
         customer_store,
+        mail_store,
+        snippet_store,
         event_bus,
     };
 
@@ -122,7 +132,16 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             customer_list,
             customer_get,
             customer_create,
-            customer_update
+            customer_update,
+            mail_template_list,
+            mail_template_apply,
+            mail_account_list,
+            mail_account_save,
+            mail_send,
+            mail_record_inbound,
+            workflow_snippet_list,
+            workflow_snippet_save,
+            workflow_snippet_delete
         ])
         .build(context)?
         .run(move |app_handle, event| {

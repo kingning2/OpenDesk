@@ -3,6 +3,7 @@
 //! - [`agent`] — Agent / sidecar ping
 //! - [`license`] — 授权状态与激活
 //! - [`crawler`] — 爬虫 job / 关键词 / settings
+//! - [`mail`] — 邮件模板 / 账号 / 发信 / 入站记录
 //!
 //! 作者：coisini
 //! 创建时间：2026-07-21
@@ -11,6 +12,8 @@ pub mod agent;
 pub mod crawler;
 pub mod customer;
 pub mod license;
+pub mod mail;
+pub mod workflow;
 
 pub use agent::agent_ping;
 pub use crawler::{
@@ -20,3 +23,8 @@ pub use crawler::{
 };
 pub use customer::{customer_create, customer_get, customer_list, customer_update};
 pub use license::{license_activate, license_machine_code, license_status};
+pub use mail::{
+    mail_account_list, mail_account_save, mail_record_inbound, mail_send, mail_template_apply,
+    mail_template_list,
+};
+pub use workflow::{workflow_snippet_delete, workflow_snippet_list, workflow_snippet_save};
