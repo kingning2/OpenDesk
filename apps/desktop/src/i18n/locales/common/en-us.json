@@ -19,6 +19,7 @@
     "workflow": "Scripts",
     "knowledge": "Knowledge",
     "crawler": "Crawler",
+    "crawlerResults": "Results",
     "customer": "Customers",
     "settings": "Settings"
   },
@@ -29,6 +30,8 @@
     "agentDescription": "Sidecar connectivity vertical slice",
     "crawler": "Crawler",
     "crawlerDescription": "YouTube channel crawl with process logs",
+    "crawlerResults": "Crawl results",
+    "crawlerResultsDescription": "Persisted channel list with filters",
     "chat": "Chat",
     "chatDescription": "Customer conversation workspace",
     "mail": "Mail",

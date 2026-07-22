@@ -22,6 +22,10 @@ const PAGE_LOADERS: Record<string, PageLoader> = {
     const { CrawlerPage } = await import("@feature/crawler/crawler-page");
     return CrawlerPage;
   },
+  "/features/crawler-results": async () => {
+    const { CrawlerResultsPage } = await import("@feature/crawler-results/crawler-results-page");
+    return CrawlerResultsPage;
+  },
   "/features/customer": async () => {
     const { CustomerPage } = await import("@feature/customer/customer-page");
     return CustomerPage;

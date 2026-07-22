@@ -1,0 +1,48 @@
+{
+  "title": "Crawl results",
+  "subtitle": "Persisted YouTube channels from crawler.db",
+  "refresh": "Refresh",
+  "resetFilters": "Reset filters",
+  "total": "{count} channels",
+  "empty": "No channels yet. Run a crawl and accepted channels will appear here.",
+  "range": "Showing {start}–{end} of {total}",
+  "page": "Page {current} of {total}",
+  "prevPage": "Previous",
+  "nextPage": "Next",
+  "openChannel": "Open channel",
+  "verifiedEmailPlaceholder": "Enter verified email",
+  "saveFailed": "Failed to save verified email",
+  "filters": {
+    "search": "Search",
+    "searchPlaceholder": "Title, email, keyword, channel ID",
+    "keyword": "Keyword",
+    "keywordPlaceholder": "Exact match",
+    "country": "Country",
+    "countryPlaceholder": "e.g. US",
+    "hasEmail": "Email",
+    "hasEmailYes": "Has email",
+    "hasEmailNo": "No email",
+    "emailStatus": "Email status",
+    "all": "All"
+  },
+  "columns": {
+    "title": "Channel",
+    "channel": "Channel",
+    "handle": "Handle",
+    "subscribers": "Subscribers",
+    "country": "Country",
+    "email": "Crawled email",
+    "verifiedEmail": "Verified email",
+    "emailStatus": "Email status",
+    "keyword": "Keyword"
+  },
+  "emailStatus": {
+    "found_api": "Found (API)",
+    "pending_enrich": "Pending enrich",
+    "enriching": "Enriching",
+    "found_playwright": "Found (Playwright)",
+    "not_found": "Not found",
+    "enrich_failed": "Enrich failed",
+    "verified_manual": "Verified manually"
+  }
+}

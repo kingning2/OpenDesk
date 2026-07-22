@@ -11,6 +11,7 @@ import { Home } from "@desk/ui/icons";
 import { agentFeature } from "@feature/agent";
 import { chatFeature } from "@feature/chat";
 import { crawlerFeature } from "@feature/crawler";
+import { crawlerResultsFeature } from "@feature/crawler-results";
 import { customerFeature } from "@feature/customer";
 import { knowledgeFeature } from "@feature/knowledge";
 import { mailFeature } from "@feature/mail";
@@ -41,6 +42,7 @@ export const navItems: NavItem[] = [
   { id: "home", path: "/", labelKey: "nav.home", end: true, icon: Home },
   agentFeature.navItem,
   crawlerFeature.navItem,
+  crawlerResultsFeature.navItem,
   customerFeature.navItem,
   chatFeature.navItem,
   mailFeature.navItem,

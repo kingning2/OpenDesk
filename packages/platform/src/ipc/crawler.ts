@@ -1,5 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
+  CrawlerIpcChannelListRequest,
+  CrawlerIpcChannelListResponse,
+  CrawlerIpcChannelUpdateRequest,
+  CrawlerIpcChannelUpdateResponse,
   CrawlerIpcJobCancelRequest,
   CrawlerIpcJobCancelResponse,
   CrawlerIpcJobLogsRequest,
@@ -70,6 +74,60 @@ export async function crawlerJobResults(
   input: CrawlerIpcJobResultsRequest,
 ): Promise<CrawlerIpcJobResultsResponse> {
   return invoke<CrawlerIpcJobResultsResponse>("crawler_job_results", { request: input });
+}
+
+/**
+ * List persisted crawler channels with optional filters and pagination.
+ *
+ * @author Xiaoman
+ * @created 2026-07-22
+ */
+export async function crawlerChannelList(
+  input: CrawlerIpcChannelListRequest = {},
+): Promise<{ items: CrawlerChannelListRow[]; total: number }> {
+  const response = await invoke<CrawlerIpcChannelListResponse>("crawler_channel_list", {
+    request: input,
+  });
+  try {
+    const parsed = JSON.parse(response.channels_json ?? "[]") as CrawlerChannelListRow[];
+    return {
+      items: Array.isArray(parsed) ? parsed : [],
+      total: response.total ?? 0,
+    };
+  } catch {
+    return { items: [], total: 0 };
+  }
+}
+
+export interface CrawlerChannelListRow {
+  id: number;
+  job_id: string;
+  keyword: string;
+  platform: string;
+  channel_id: string;
+  title: string;
+  country?: string;
+  subscriber_count?: number;
+  email?: string;
+  verified_email?: string;
+  description?: string;
+  custom_url?: string;
+  email_status?: string;
+  enrich_attempts?: number;
+  enrich_error?: string;
+  enriched_at?: string;
+}
+
+/**
+ * Save human-verified email for one crawler channel row.
+ *
+ * @author Xiaoman
+ * @created 2026-07-22
+ */
+export async function crawlerChannelUpdate(
+  input: CrawlerIpcChannelUpdateRequest,
+): Promise<CrawlerIpcChannelUpdateResponse> {
+  return invoke<CrawlerIpcChannelUpdateResponse>("crawler_channel_update", { request: input });
 }
 
 export interface KeywordBatchRow {
