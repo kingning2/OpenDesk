@@ -53,6 +53,12 @@ diesel_migrations = "2.2"
 libsqlite3-sys = { version = "0.30", features = ["bundled"] }
 uuid = { version = "1", features = ["v4"] }
 dirs = "5"
+keyring = { version = "3", default-features = false, features = [
+  "apple-native",
+  "windows-native",
+  "linux-native-sync-persistent",
+  "crypto-rust",
+] }
 rand = "0.8"
 enigo = "0.3"
 screenshots = "0.8"

@@ -9,3 +9,4 @@ diesel = { workspace = true }
 diesel_migrations = { workspace = true }
 libsqlite3-sys = { workspace = true }
 uuid = { workspace = true }
+keyring = { workspace = true }
