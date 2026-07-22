@@ -39,4 +39,18 @@ export {
   DialogTitle,
   DialogDescription,
 } from "./dialog";
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableCaption,
+} from "./table";
+export type { TableProps } from "./table";
+export { DataTable, DataTableView } from "./data-table";
+export type { DataTableColumnMeta, DataTableProps } from "./data-table";
+export type { ColumnDef } from "@tanstack/react-table";
 export * from "./layout";

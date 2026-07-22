@@ -1,0 +1,48 @@
+{
+  "title": "采集结果",
+  "subtitle": "从 crawler.db 加载已收录的 YouTube 频道",
+  "refresh": "刷新",
+  "resetFilters": "重置筛选",
+  "total": "共 {count} 条",
+  "empty": "暂无收录频道。完成一次采集后，结果会持久化显示在这里。",
+  "range": "显示 {start}–{end} / 共 {total}",
+  "page": "第 {current} / {total} 页",
+  "prevPage": "上一页",
+  "nextPage": "下一页",
+  "openChannel": "打开频道",
+  "verifiedEmailPlaceholder": "输入验证邮箱",
+  "saveFailed": "保存验证邮箱失败",
+  "filters": {
+    "search": "搜索",
+    "searchPlaceholder": "标题、邮箱、关键词、频道 ID",
+    "keyword": "关键词",
+    "keywordPlaceholder": "精确匹配",
+    "country": "国家/地区",
+    "countryPlaceholder": "如 US",
+    "hasEmail": "邮箱",
+    "hasEmailYes": "有邮箱",
+    "hasEmailNo": "无邮箱",
+    "emailStatus": "邮箱状态",
+    "all": "全部"
+  },
+  "columns": {
+    "title": "频道名称",
+    "channel": "频道",
+    "handle": "Handle",
+    "subscribers": "订阅数",
+    "country": "国家",
+    "email": "采集邮箱",
+    "verifiedEmail": "验证邮箱",
+    "emailStatus": "邮箱状态",
+    "keyword": "来源关键词"
+  },
+  "emailStatus": {
+    "found_api": "API 已找到",
+    "pending_enrich": "待补全",
+    "enriching": "补全中",
+    "found_playwright": "Playwright 已找到",
+    "not_found": "未找到",
+    "enrich_failed": "补全失败",
+    "verified_manual": "人工已验证"
+  }
+}

@@ -23,6 +23,7 @@ pub const EMAIL_STATUS_ENRICHING: &str = "enriching";
 pub const EMAIL_STATUS_FOUND_PLAYWRIGHT: &str = "found_playwright";
 pub const EMAIL_STATUS_NOT_FOUND: &str = "not_found";
 pub const EMAIL_STATUS_ENRICH_FAILED: &str = "enrich_failed";
+pub const EMAIL_STATUS_VERIFIED_MANUAL: &str = "verified_manual";
 
 /// One `background_job` row exposed to Worker handlers.
 #[derive(Debug, Clone, PartialEq)]

@@ -11,6 +11,7 @@
  */
 
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { openUrl } from "@tauri-apps/plugin-opener";
 
 /** 桌面 OS 平台标签（与 Rust `desktop_platform_label` 对齐）。 */
 export type DesktopPlatform = "macos" | "windows" | "linux";
@@ -128,4 +129,23 @@ export async function closeWindow(): Promise<void> {
  */
 export async function startWindowDrag(): Promise<void> {
   await getCurrentWindow().startDragging();
+}
+
+/**
+ * Open an http(s) URL in the system default browser.
+ *
+ * @author Xiaoman
+ * @created 2026-07-22
+ *
+ * @param url - Absolute URL to open
+ * @returns 完成后无返回值
+ */
+export async function openExternalUrl(url: string): Promise<void> {
+  try {
+    await openUrl(url);
+  } catch {
+    if (typeof window !== "undefined") {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  }
 }

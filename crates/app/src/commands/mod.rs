@@ -19,9 +19,9 @@ pub mod workflow;
 
 pub use agent::agent_ping;
 pub use crawler::{
-    crawler_job_cancel, crawler_job_logs, crawler_job_results, crawler_job_start,
-    crawler_job_status, crawler_keywords_batches, crawler_keywords_import,
-    crawler_youtube_api_key_get, crawler_youtube_api_key_set,
+    crawler_channel_list, crawler_channel_update, crawler_job_cancel, crawler_job_logs,
+    crawler_job_results, crawler_job_start, crawler_job_status, crawler_keywords_batches,
+    crawler_keywords_import, crawler_youtube_api_key_get, crawler_youtube_api_key_set,
 };
 pub use customer::{customer_create, customer_get, customer_list, customer_update};
 pub use license::{license_activate, license_machine_code, license_status};

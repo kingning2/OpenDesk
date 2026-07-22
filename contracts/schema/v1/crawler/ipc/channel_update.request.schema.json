@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://crawler/ipc/channel_update.request/v1",
+  "title": "crawler/channel_update.request",
+  "description": "Tauri IPC: manually set verified email for a persisted crawler channel row.",
+  "type": "object",
+  "required": ["id", "verified_email"],
+  "properties": {
+    "trace_id": { "type": "string" },
+    "id": {
+      "type": "integer",
+      "description": "SQLite primary key from channel_list."
+    },
+    "verified_email": {
+      "type": "string",
+      "description": "Human-verified contact email; empty string clears the value."
+    }
+  },
+  "additionalProperties": false
+}

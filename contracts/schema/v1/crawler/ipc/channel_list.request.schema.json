@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://crawler/ipc/channel_list.request/v1",
+  "title": "crawler/channel_list.request",
+  "description": "Tauri IPC: list persisted crawler channels with optional filters and pagination.",
+  "type": "object",
+  "properties": {
+    "trace_id": { "type": "string" },
+    "search": {
+      "type": "string",
+      "description": "Fuzzy match on title, email, keyword, or channel_id."
+    },
+    "keyword": {
+      "type": "string",
+      "description": "Exact keyword filter."
+    },
+    "country": {
+      "type": "string",
+      "description": "Exact country code filter."
+    },
+    "has_email": {
+      "type": "boolean",
+      "description": "When true, only rows with non-empty email; when false, only without email."
+    },
+    "email_status": {
+      "type": "string",
+      "description": "Filter by email_status value."
+    },
+    "limit": { "type": "integer" },
+    "offset": { "type": "integer" }
+  },
+  "additionalProperties": false
+}

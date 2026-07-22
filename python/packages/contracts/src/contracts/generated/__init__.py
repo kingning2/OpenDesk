@@ -13,6 +13,10 @@ from .crawler_event_job_failed import CrawlerEventJobFailed
 from .crawler_event_job_log import CrawlerEventJobLog
 from .crawler_event_job_progress import CrawlerEventJobProgress
 from .crawler_event_job_started import CrawlerEventJobStarted
+from .crawler_ipc_channel_list_request import CrawlerIpcChannelListRequest
+from .crawler_ipc_channel_list_response import CrawlerIpcChannelListResponse
+from .crawler_ipc_channel_update_request import CrawlerIpcChannelUpdateRequest
+from .crawler_ipc_channel_update_response import CrawlerIpcChannelUpdateResponse
 from .crawler_ipc_job_cancel_request import CrawlerIpcJobCancelRequest
 from .crawler_ipc_job_cancel_response import CrawlerIpcJobCancelResponse
 from .crawler_ipc_job_logs_request import CrawlerIpcJobLogsRequest
@@ -91,6 +95,10 @@ __all__ = [
     "CrawlerEventJobLog",
     "CrawlerEventJobProgress",
     "CrawlerEventJobStarted",
+    "CrawlerIpcChannelListRequest",
+    "CrawlerIpcChannelListResponse",
+    "CrawlerIpcChannelUpdateRequest",
+    "CrawlerIpcChannelUpdateResponse",
     "CrawlerIpcJobCancelRequest",
     "CrawlerIpcJobCancelResponse",
     "CrawlerIpcJobLogsRequest",

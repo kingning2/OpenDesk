@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.16
+
+- 新增 crawler IPC：`channel_update`（人工填写/更新 `verified_email`）
+- `channel_list` 响应行新增 `verified_email` 字段
+
+## 0.1.15
+
+- 新增 crawler IPC：`channel_list`（分页列出 `crawler_channel` 持久化结果，支持 search/keyword/country/has_email/email_status 筛选）
+
 ## 0.1.14
 
 - 新增 mail IPC：`message_list`（按 `inbound`/`outbound` 列出本地邮件，可选 account/customer/query）

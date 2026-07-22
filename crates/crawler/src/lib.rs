@@ -1240,6 +1240,7 @@ fn youtube_channel_record(
             .map(str::to_string),
         subscriber_count,
         email,
+        verified_email: None,
         description: Some(description),
         custom_url: snippet
             .and_then(|value| value.get("customUrl"))

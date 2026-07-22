@@ -31,6 +31,10 @@ const pageMetaByPath: Record<string, PageMeta> = {
     titleKey: "meta.crawler",
     descriptionKey: "meta.crawlerDescription",
   },
+  "/features/crawler-results": {
+    titleKey: "meta.crawlerResults",
+    descriptionKey: "meta.crawlerResultsDescription",
+  },
   "/features/chat": {
     titleKey: "meta.chat",
     descriptionKey: "meta.chatDescription",

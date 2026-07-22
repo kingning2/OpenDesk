@@ -7,6 +7,7 @@ export {
   FolderOpen,
   Home,
   Languages,
+  List,
   Loader2,
   Mail,
   MessageSquare,

@@ -19,6 +19,7 @@
     "workflow": "话术库",
     "knowledge": "Knowledge",
     "crawler": "采集",
+    "crawlerResults": "采集结果",
     "customer": "客户",
     "settings": "设置"
   },
@@ -29,6 +30,8 @@
     "agentDescription": "Sidecar 连通性垂直切片",
     "crawler": "采集",
     "crawlerDescription": "YouTube 频道采集与过程日志",
+    "crawlerResults": "采集结果",
+    "crawlerResultsDescription": "已收录频道列表与筛选",
     "chat": "Chat",
     "chatDescription": "客户会话工作区",
     "mail": "Mail",
