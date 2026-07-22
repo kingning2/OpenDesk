@@ -57,8 +57,17 @@ from .mail_ipc_send_response import MailIpcSendResponse
 from .mail_ipc_template_apply_request import MailIpcTemplateApplyRequest
 from .mail_ipc_template_apply_response import MailIpcTemplateApplyResponse
 from .mail_ipc_template_list_response import MailIpcTemplateListResponse
+from .runtime_dto_llm_provider import RuntimeDtoLlmProvider
+from .runtime_dto_llm_settings import RuntimeDtoLlmSettings
 from .runtime_event_sidecar_restarted import RuntimeEventSidecarRestarted
+from .runtime_ipc_llm_settings_get_response import RuntimeIpcLlmSettingsGetResponse
+from .runtime_ipc_llm_settings_save_request import RuntimeIpcLlmSettingsSaveRequest
+from .runtime_ipc_llm_settings_save_response import RuntimeIpcLlmSettingsSaveResponse
+from .runtime_ipc_llm_test_connection_request import RuntimeIpcLlmTestConnectionRequest
+from .runtime_ipc_llm_test_connection_response import RuntimeIpcLlmTestConnectionResponse
 from .runtime_log_entry import RuntimeLogEntry
+from .runtime_sidecar_llm_test_connection_request import RuntimeSidecarLlmTestConnectionRequest
+from .runtime_sidecar_llm_test_connection_response import RuntimeSidecarLlmTestConnectionResponse
 from .workflow_dto_script_snippet import WorkflowDtoScriptSnippet
 from .workflow_ipc_snippet_delete_request import WorkflowIpcSnippetDeleteRequest
 from .workflow_ipc_snippet_list_request import WorkflowIpcSnippetListRequest
@@ -123,8 +132,17 @@ __all__ = [
     "MailIpcTemplateApplyRequest",
     "MailIpcTemplateApplyResponse",
     "MailIpcTemplateListResponse",
+    "RuntimeDtoLlmProvider",
+    "RuntimeDtoLlmSettings",
     "RuntimeEventSidecarRestarted",
+    "RuntimeIpcLlmSettingsGetResponse",
+    "RuntimeIpcLlmSettingsSaveRequest",
+    "RuntimeIpcLlmSettingsSaveResponse",
+    "RuntimeIpcLlmTestConnectionRequest",
+    "RuntimeIpcLlmTestConnectionResponse",
     "RuntimeLogEntry",
+    "RuntimeSidecarLlmTestConnectionRequest",
+    "RuntimeSidecarLlmTestConnectionResponse",
     "WorkflowDtoScriptSnippet",
     "WorkflowIpcSnippetDeleteRequest",
     "WorkflowIpcSnippetListRequest",

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://runtime/dto/llm_provider/v1",
+  "title": "runtime/llm_provider",
+  "description": "LLM provider kind. DeepSeek/Ollama/Custom use openai_compatible with base_url.",
+  "type": "object",
+  "required": ["kind"],
+  "properties": {
+    "kind": {
+      "type": "string",
+      "description": "openai | anthropic | openai_compatible",
+      "enum": ["openai", "anthropic", "openai_compatible"]
+    }
+  },
+  "additionalProperties": false
+}

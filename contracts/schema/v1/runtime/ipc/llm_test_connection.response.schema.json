@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://runtime/ipc/llm_test_connection.response/v1",
+  "title": "runtime/ipc/llm_test_connection.response",
+  "description": "Connectivity probe result. Never includes api_key.",
+  "type": "object",
+  "required": ["ok", "message"],
+  "properties": {
+    "ok": { "type": "boolean" },
+    "error_code": {
+      "type": "string",
+      "description": "LLM_NOT_CONFIGURED | LLM_TEST_FAILED when ok is false."
+    },
+    "message": { "type": "string" }
+  },
+  "additionalProperties": false
+}

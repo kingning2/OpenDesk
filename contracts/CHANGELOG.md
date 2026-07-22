@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.12
+
+- 新增 `runtime` LLM 契约：`llm_provider` / `llm_settings` DTO
+- 新增 runtime IPC：`llm_settings_get` / `llm_settings_save` / `llm_test_connection`
+- 新增 runtime sidecar：`llm_test_connection`（Rust → Python 连通性探测）
+- 约束：IPC get/save 响应**永不**回传 `api_key`（含脱敏）；密钥仅经 save request 写入 OS keyring
+
 ## 0.1.11
 
 - 新增 `mail` 契约：`mail_template` / `mail_account` / `mail_message` / `inbound_record` DTO
