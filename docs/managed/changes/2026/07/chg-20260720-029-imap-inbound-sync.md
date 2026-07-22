@@ -2,7 +2,7 @@
 id: CHG-20260720-029-imap-inbound-sync
 title: IMAP 自动收信与客户匹配
 type: change
-status: proposed
+status: in_progress
 priority: P0
 owner: developer
 domain: mail
@@ -16,7 +16,7 @@ blocks:
   - CHG-20260720-018-ai-mail-draft
 milestone: M2
 created: 2026-07-20
-updated: 2026-07-20
+updated: 2026-07-21
 contracts: mail imap IPC + sync events
 related:
   - ADR-0002-heavy-work-worker-process

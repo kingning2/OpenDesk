@@ -2,7 +2,7 @@
 id: CHG-20260720-015-smtp-mail-send
 title: SMTP 发信、邮件模板与客户时间线
 type: change
-status: proposed
+status: in_progress
 priority: P0
 owner: developer
 domain: mail
@@ -13,7 +13,7 @@ blocks:
   - CHG-20260720-018-ai-mail-draft
 milestone: M2
 created: 2026-07-20
-updated: 2026-07-20
+updated: 2026-07-21
 contracts: mail IPC + DTO
 related: []
 ---

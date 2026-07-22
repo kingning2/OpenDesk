@@ -2,7 +2,7 @@
 id: CHG-20260720-026-mail-inbound-reply-record
 title: 客户邮件回复记录（手动录入兜底）
 type: change
-status: proposed
+status: in_progress
 priority: P1
 owner: developer
 domain: mail
@@ -14,7 +14,7 @@ blocks:
   - CHG-20260720-029-imap-inbound-sync
 milestone: M2
 created: 2026-07-20
-updated: 2026-07-20
+updated: 2026-07-21
 contracts: mail inbound IPC + DTO
 related:
   - CHG-20260720-019-customer-timeline-quote-history
