@@ -43,8 +43,27 @@ from .customer_ipc_list_request import CustomerIpcListRequest
 from .customer_ipc_list_response import CustomerIpcListResponse
 from .customer_ipc_update_request import CustomerIpcUpdateRequest
 from .customer_ipc_update_response import CustomerIpcUpdateResponse
+from .mail_dto_inbound_record import MailDtoInboundRecord
+from .mail_dto_mail_account import MailDtoMailAccount
+from .mail_dto_mail_message import MailDtoMailMessage
+from .mail_dto_mail_template import MailDtoMailTemplate
+from .mail_dto_template_intent import MailDtoTemplateIntent
+from .mail_ipc_account_list_response import MailIpcAccountListResponse
+from .mail_ipc_account_save_request import MailIpcAccountSaveRequest
+from .mail_ipc_record_inbound_request import MailIpcRecordInboundRequest
+from .mail_ipc_record_inbound_response import MailIpcRecordInboundResponse
+from .mail_ipc_send_request import MailIpcSendRequest
+from .mail_ipc_send_response import MailIpcSendResponse
+from .mail_ipc_template_apply_request import MailIpcTemplateApplyRequest
+from .mail_ipc_template_apply_response import MailIpcTemplateApplyResponse
+from .mail_ipc_template_list_response import MailIpcTemplateListResponse
 from .runtime_event_sidecar_restarted import RuntimeEventSidecarRestarted
 from .runtime_log_entry import RuntimeLogEntry
+from .workflow_dto_script_snippet import WorkflowDtoScriptSnippet
+from .workflow_ipc_snippet_delete_request import WorkflowIpcSnippetDeleteRequest
+from .workflow_ipc_snippet_list_request import WorkflowIpcSnippetListRequest
+from .workflow_ipc_snippet_list_response import WorkflowIpcSnippetListResponse
+from .workflow_ipc_snippet_save_request import WorkflowIpcSnippetSaveRequest
 
 __all__ = [
     "AgentIpcPingRequest",
@@ -90,6 +109,25 @@ __all__ = [
     "CustomerIpcListResponse",
     "CustomerIpcUpdateRequest",
     "CustomerIpcUpdateResponse",
+    "MailDtoInboundRecord",
+    "MailDtoMailAccount",
+    "MailDtoMailMessage",
+    "MailDtoMailTemplate",
+    "MailDtoTemplateIntent",
+    "MailIpcAccountListResponse",
+    "MailIpcAccountSaveRequest",
+    "MailIpcRecordInboundRequest",
+    "MailIpcRecordInboundResponse",
+    "MailIpcSendRequest",
+    "MailIpcSendResponse",
+    "MailIpcTemplateApplyRequest",
+    "MailIpcTemplateApplyResponse",
+    "MailIpcTemplateListResponse",
     "RuntimeEventSidecarRestarted",
     "RuntimeLogEntry",
+    "WorkflowDtoScriptSnippet",
+    "WorkflowIpcSnippetDeleteRequest",
+    "WorkflowIpcSnippetListRequest",
+    "WorkflowIpcSnippetListResponse",
+    "WorkflowIpcSnippetSaveRequest",
 ]

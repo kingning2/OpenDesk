@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.11
+
+- 新增 `mail` 契约：`mail_template` / `mail_account` / `mail_message` / `inbound_record` DTO
+- 新增 mail IPC：`template_list` / `template_apply` / `account_save` / `account_list` / `send` / `record_inbound`
+
 ## 0.1.10
 
 - crawler IPC：`job.results` — 查询任务已收录频道（`results_json` 数组）

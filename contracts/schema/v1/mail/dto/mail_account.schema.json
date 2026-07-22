@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/dto/mail_account/v1",
+  "title": "mail/mail_account",
+  "description": "Saved mail account DTO without plaintext password.",
+  "type": "object",
+  "required": [
+    "id",
+    "label",
+    "from_address",
+    "smtp_host",
+    "smtp_port",
+    "use_tls",
+    "username",
+    "password_ref",
+    "imap_sync_enabled",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "label": { "type": "string" },
+    "from_address": { "type": "string" },
+    "from_name": { "type": "string" },
+    "smtp_host": { "type": "string" },
+    "smtp_port": { "type": "integer" },
+    "use_tls": { "type": "boolean" },
+    "username": { "type": "string" },
+    "password_ref": { "type": "string" },
+    "imap_host": { "type": "string" },
+    "imap_port": { "type": "integer" },
+    "imap_use_tls": { "type": "boolean" },
+    "imap_sync_enabled": { "type": "boolean" },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" }
+  },
+  "additionalProperties": false
+}

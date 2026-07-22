@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/ipc/template_list/response/v1",
+  "title": "mail/ipc/template_list.response",
+  "description": "List response with serialized mail templates JSON.",
+  "type": "object",
+  "required": ["templates_json", "total"],
+  "properties": {
+    "templates_json": { "type": "string" },
+    "total": { "type": "integer" }
+  },
+  "additionalProperties": false
+}

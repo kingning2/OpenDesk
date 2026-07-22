@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://workflow/ipc/snippet_list/response/v1",
+  "title": "workflow/ipc/snippet_list.response",
+  "description": "Response with serialized script snippets JSON and category index.",
+  "type": "object",
+  "required": ["snippets_json", "total"],
+  "properties": {
+    "snippets_json": { "type": "string", "description": "JSON array of script_snippet DTOs." },
+    "total": { "type": "integer" }
+  },
+  "additionalProperties": false
+}

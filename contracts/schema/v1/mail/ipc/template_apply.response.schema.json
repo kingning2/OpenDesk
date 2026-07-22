@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/ipc/template_apply/response/v1",
+  "title": "mail/ipc/template_apply.response",
+  "description": "Rendered subject and body preview after applying a template.",
+  "type": "object",
+  "required": ["subject", "body_text"],
+  "properties": {
+    "subject": { "type": "string" },
+    "body_text": { "type": "string" },
+    "body_html": { "type": "string" }
+  },
+  "additionalProperties": false
+}

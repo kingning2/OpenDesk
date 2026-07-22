@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/ipc/record_inbound/request/v1",
+  "title": "mail/ipc/record_inbound.request",
+  "description": "Manually record an inbound message for one customer.",
+  "type": "object",
+  "required": [
+    "customer_id",
+    "from_address",
+    "subject",
+    "body_text",
+    "received_at"
+  ],
+  "properties": {
+    "customer_id": { "type": "string" },
+    "from_address": { "type": "string" },
+    "from_name": { "type": "string" },
+    "subject": { "type": "string" },
+    "body_text": { "type": "string" },
+    "body_html": { "type": "string" },
+    "received_at": { "type": "string" },
+    "rfc_message_id": { "type": "string" },
+    "in_reply_to": { "type": "string" }
+  },
+  "additionalProperties": false
+}

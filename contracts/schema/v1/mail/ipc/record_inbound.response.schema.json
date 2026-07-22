@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/ipc/record_inbound/response/v1",
+  "title": "mail/ipc/record_inbound.response",
+  "description": "Response after manually recording an inbound message.",
+  "type": "object",
+  "required": ["message_id"],
+  "properties": {
+    "message_id": { "type": "string" }
+  },
+  "additionalProperties": false
+}

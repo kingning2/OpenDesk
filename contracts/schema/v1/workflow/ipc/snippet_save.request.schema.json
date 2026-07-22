@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://workflow/ipc/snippet_save/request/v1",
+  "title": "workflow/ipc/snippet_save.request",
+  "description": "Create or update a script snippet.",
+  "type": "object",
+  "required": ["title", "tags_json", "body_text", "needs_boss_input", "sort_order"],
+  "properties": {
+    "id": { "type": "string", "description": "Omit to create; provide to update." },
+    "title": { "type": "string" },
+    "stage": { "type": "string" },
+    "trigger_text": { "type": "string" },
+    "description": { "type": "string" },
+    "from_stage": { "type": "string" },
+    "to_stage": { "type": "string" },
+    "tags_json": { "type": "string" },
+    "body_text": { "type": "string" },
+    "category_l1": { "type": "string" },
+    "category_l2": { "type": "string" },
+    "needs_boss_input": { "type": "boolean" },
+    "boss_input_hint": { "type": "string" },
+    "sort_order": { "type": "integer" }
+  },
+  "additionalProperties": false
+}

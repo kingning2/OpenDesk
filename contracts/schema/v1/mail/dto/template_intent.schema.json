@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/dto/template_intent/v1",
+  "title": "mail/template_intent",
+  "description": "Mail template intent enum string.",
+  "type": "object",
+  "required": ["value"],
+  "properties": {
+    "value": { "type": "string" }
+  },
+  "additionalProperties": false
+}

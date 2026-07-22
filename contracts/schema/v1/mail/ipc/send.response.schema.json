@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/ipc/send/response/v1",
+  "title": "mail/ipc/send.response",
+  "description": "Send response containing stored mail message id and final status.",
+  "type": "object",
+  "required": ["message_id", "status"],
+  "properties": {
+    "message_id": { "type": "string" },
+    "status": { "type": "string" }
+  },
+  "additionalProperties": false
+}

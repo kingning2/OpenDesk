@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/ipc/account_list/response/v1",
+  "title": "mail/ipc/account_list.response",
+  "description": "List response with serialized mail accounts JSON.",
+  "type": "object",
+  "required": ["accounts_json", "total"],
+  "properties": {
+    "accounts_json": { "type": "string" },
+    "total": { "type": "integer" }
+  },
+  "additionalProperties": false
+}

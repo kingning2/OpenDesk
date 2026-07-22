@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://workflow/ipc/snippet_delete/request/v1",
+  "title": "workflow/ipc/snippet_delete.request",
+  "description": "Delete a script snippet by id.",
+  "type": "object",
+  "required": ["id"],
+  "properties": {
+    "id": { "type": "string" }
+  },
+  "additionalProperties": false
+}

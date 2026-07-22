@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/ipc/account_save/request/v1",
+  "title": "mail/ipc/account_save.request",
+  "description": "Create or update a mail account including credential input.",
+  "type": "object",
+  "required": [
+    "label",
+    "from_address",
+    "smtp_host",
+    "smtp_port",
+    "use_tls",
+    "username",
+    "password",
+    "imap_sync_enabled"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "label": { "type": "string" },
+    "from_address": { "type": "string" },
+    "from_name": { "type": "string" },
+    "smtp_host": { "type": "string" },
+    "smtp_port": { "type": "integer" },
+    "use_tls": { "type": "boolean" },
+    "username": { "type": "string" },
+    "password": { "type": "string" },
+    "imap_host": { "type": "string" },
+    "imap_port": { "type": "integer" },
+    "imap_use_tls": { "type": "boolean" },
+    "imap_sync_enabled": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}

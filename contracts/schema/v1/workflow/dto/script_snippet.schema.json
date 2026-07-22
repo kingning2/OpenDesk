@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://workflow/dto/script_snippet/v1",
+  "title": "workflow/script_snippet",
+  "description": "Script snippet DTO for the workflow script library.",
+  "type": "object",
+  "required": [
+    "id",
+    "source_id",
+    "title",
+    "tags_json",
+    "body_text",
+    "needs_boss_input",
+    "sort_order",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "source_id": { "type": "string" },
+    "title": { "type": "string" },
+    "stage": { "type": "string" },
+    "trigger_text": { "type": "string" },
+    "description": { "type": "string" },
+    "from_stage": { "type": "string" },
+    "to_stage": { "type": "string" },
+    "tags_json": { "type": "string" },
+    "body_text": { "type": "string" },
+    "category_l1": { "type": "string" },
+    "category_l2": { "type": "string" },
+    "needs_boss_input": { "type": "boolean" },
+    "boss_input_hint": { "type": "string" },
+    "sort_order": { "type": "integer" },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" }
+  },
+  "additionalProperties": false
+}

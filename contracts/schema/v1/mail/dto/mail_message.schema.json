@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/dto/mail_message/v1",
+  "title": "mail/mail_message",
+  "description": "Rendered outbound or inbound mail message DTO.",
+  "type": "object",
+  "required": [
+    "id",
+    "status",
+    "direction",
+    "subject",
+    "body_text",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "customer_id": { "type": "string" },
+    "template_id": { "type": "string" },
+    "account_id": { "type": "string" },
+    "status": { "type": "string" },
+    "direction": { "type": "string" },
+    "subject": { "type": "string" },
+    "body_text": { "type": "string" },
+    "body_html": { "type": "string" },
+    "error_message": { "type": "string" },
+    "sent_at": { "type": "string" },
+    "received_at": { "type": "string" },
+    "imap_uid": { "type": "integer" },
+    "imap_folder": { "type": "string" },
+    "rfc_message_id": { "type": "string" },
+    "in_reply_to": { "type": "string" },
+    "references": { "type": "string" },
+    "is_favorite": { "type": "boolean" },
+    "open_tracking_id": { "type": "string" },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" }
+  },
+  "additionalProperties": false
+}

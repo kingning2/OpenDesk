@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/dto/mail_template/v1",
+  "title": "mail/mail_template",
+  "description": "Mail template DTO used by desktop mail compose flows.",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "template_intent",
+    "subject_template",
+    "body_text_template",
+    "is_system",
+    "is_active",
+    "sort_order",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "template_intent": { "type": "string" },
+    "subject_template": { "type": "string" },
+    "body_text_template": { "type": "string" },
+    "body_html_template": { "type": "string" },
+    "locale": { "type": "string" },
+    "is_system": { "type": "boolean" },
+    "is_active": { "type": "boolean" },
+    "sort_order": { "type": "integer" },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" }
+  },
+  "additionalProperties": false
+}
