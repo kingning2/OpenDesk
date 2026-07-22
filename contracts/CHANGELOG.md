@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.14
+
+- 新增 mail IPC：`message_list`（按 `inbound`/`outbound` 列出本地邮件，可选 account/customer/query）
+- mail `send` IPC：新增必填 `to_address`；`customer_id` / `template_id` 改为可选（可发给任意邮箱）
+- mail `mail_message` DTO：新增可选 `to_address`
+
+## 0.1.13
+
+- 新增 mail IPC：`template_save`（自定义模板新建/编辑；系统模板不可覆盖）
+- 约束：`account_save.password` 空串表示更新时保留已有密钥（新建仍必填）
+
 ## 0.1.12
 
 - 新增 `runtime` LLM 契约：`llm_provider` / `llm_settings` DTO

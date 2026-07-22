@@ -23,6 +23,8 @@
     "subject": { "type": "string" },
     "body_text": { "type": "string" },
     "body_html": { "type": "string" },
+    "to_address": { "type": "string" },
+    "from_address": { "type": "string" },
     "error_message": { "type": "string" },
     "sent_at": { "type": "string" },
     "received_at": { "type": "string" },

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/ipc/message_list/request/v1",
+  "title": "mail/ipc/message_list.request",
+  "description": "List local mail messages by mailbox direction with optional filters.",
+  "type": "object",
+  "required": ["direction"],
+  "properties": {
+    "direction": {
+      "type": "string",
+      "description": "Mailbox mode: inbound (inbox) or outbound (sent)."
+    },
+    "account_id": { "type": "string" },
+    "customer_id": { "type": "string" },
+    "query": { "type": "string" },
+    "limit": { "type": "integer" },
+    "offset": { "type": "integer" }
+  },
+  "additionalProperties": false
+}
