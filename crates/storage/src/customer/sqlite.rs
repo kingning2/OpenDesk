@@ -116,6 +116,8 @@ impl CustomerStore for SqliteCustomerStore {
             notes: input.notes,
             created_at: now.clone(),
             updated_at: now,
+            extra_json: None,
+            source_ref: None,
         };
 
         self.db.with_conn(|conn| {

@@ -22,6 +22,7 @@
     "@tauri-apps/plugin-opener": "^2",
     "@xyflow/react": "^12.11.2",
     "class-variance-authority": "^0.7.1",
+    "dompurify": "^3.4.12",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router": "^7.6.3"
@@ -29,6 +30,7 @@
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.7",
     "@tauri-apps/cli": "^2",
+    "@types/dompurify": "^3.2.0",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",

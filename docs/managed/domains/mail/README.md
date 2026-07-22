@@ -42,17 +42,18 @@ React（收件箱 / 模板 / 写信 / 发送 UI）
 
 - 只有 Rust `mail-net` 接触 SMTP/IMAP 服务器
 - **变量填充在 Rust 完成**，不交给 Python 拼字符串
-- 发送必须带 `customer_id`；须记录 `template_id`
+- 发送可带可选 `customer_id`（关联客户）；**必须**有 `to_address`；模板 `template_id` 可选
+- 须能在发件记录中回看收件地址（`to_address`）
 - AI 产出为润色草稿；**发送按钮仅人工触发**
 
 ## 入口
 
 | 类型 | 路径 |
 |------|------|
-| Rust crate | `crates/mail/`（骨架）, `crates/mail-net/`（骨架） |
-| Contract | `contracts/schema/v1/mail/`（待建） |
-| React Feature | `apps/desktop/src/features/mail/`（当前为占位页） |
-| Epic 子任务 | [CHG-015](../../changes/2026/07/chg-20260720-015-smtp-mail-send.md)、[CHG-026](../../changes/2026/07/chg-20260720-026-mail-inbound-reply-record.md)、[CHG-029](../../changes/2026/07/chg-20260720-029-imap-inbound-sync.md)；扩展见 [EPIC-20260721-001](../../changes/2026/07/epic-20260721-001-email-agent-port.md) |
+| Rust crate | `crates/mail/`、`crates/mail-net/`（SMTP） |
+| Contract | `contracts/schema/v1/mail/` |
+| React Feature | `apps/desktop/src/features/mail/` |
+| Epic 子任务 | [CHG-015](../../changes/2026/07/chg-20260720-015-smtp-mail-send.md)（已完成）、[CHG-026](../../changes/2026/07/chg-20260720-026-mail-inbound-reply-record.md)、[CHG-029](../../changes/2026/07/chg-20260720-029-imap-inbound-sync.md)；扩展见 [EPIC-20260721-001](../../changes/2026/07/epic-20260721-001-email-agent-port.md) |
 
 ## 数据模型（MVP 目标）
 
@@ -143,9 +144,13 @@ MVP 启动时 Rust migration **种子内置模板**（至少覆盖各 `template_
 
 ## 当前状态
 
-- `crates/mail`、`crates/mail-net` 仅有 scaffold 注释
-- `apps/desktop/src/features/mail/mail-page.tsx` 为占位页
-- 无 mail 相关 Contract、无模板表
+- Contract：`contracts/schema/v1/mail/`（模板 / 账号 / 发信 / 入站 / `template_save`）
+- Rust：`crates/mail` UseCase + `crates/mail-net` SMTP（lettre）；密码走 OS keyring
+- Storage：`mail_template` / `mail_account` / `mail_message` + 内置模板种子
+- UI：`apps/desktop/src/features/mail/mail-page.tsx`（选模板 → 渲染 → 编辑 → SMTP 发送；自定义模板；账号绑定）
+- 客户详情「写邮件」入口：`/features/mail?customerId=`
+- **email-agent 真实数据迁移**（[CHG-040](../../changes/2026/07/chg-20260722-040-email-agent-data-migration.md)）：`skills/opendesk/scripts/migrate_email_agent.py` 导入账号、客户、`email_cache`→`mail_message`、`mail_imap_sync_state`、话术、待发、工作流/价目 JSON；**不迁** contact_logs / 审计 / 开信事件
+- IMAP 自动收信仍见 [CHG-029](../../changes/2026/07/chg-20260720-029-imap-inbound-sync.md)
 
 ## 当前约束
 

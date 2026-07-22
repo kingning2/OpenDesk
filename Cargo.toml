@@ -59,6 +59,13 @@ keyring = { version = "3", default-features = false, features = [
   "linux-native-sync-persistent",
   "crypto-rust",
 ] }
+lettre = { version = "0.11", default-features = false, features = [
+  "builder",
+  "hostname",
+  "smtp-transport",
+  "pool",
+  "native-tls",
+] }
 rand = "0.8"
 enigo = "0.3"
 screenshots = "0.8"

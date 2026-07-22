@@ -13,7 +13,8 @@ export function ScrollArea({
       <ScrollAreaPrimitive.Viewport className="size-full rounded-[inherit]">
         {children}
       </ScrollAreaPrimitive.Viewport>
-      <ScrollBar />
+      <ScrollBar orientation="vertical" />
+      <ScrollBar orientation="horizontal" />
       <ScrollAreaPrimitive.Corner />
     </ScrollAreaPrimitive.Root>
   );
@@ -35,7 +36,13 @@ export function ScrollBar({
       )}
       {...props}
     >
-      <ScrollAreaPrimitive.ScrollAreaThumb className="relative flex-1 rounded-full bg-border" />
+      <ScrollAreaPrimitive.ScrollAreaThumb
+        className={cn(
+          "relative flex-1 rounded-full",
+          "bg-[var(--scrollbar-thumb)] transition-colors duration-150 ease-[var(--ease-out)]",
+          "hover:bg-[var(--scrollbar-thumb-hover)]",
+        )}
+      />
     </ScrollAreaPrimitive.ScrollAreaScrollbar>
   );
 }

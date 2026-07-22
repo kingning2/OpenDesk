@@ -178,7 +178,7 @@ export function TabBar({
           "flex min-w-0 flex-1",
           embedded
             ? "items-center gap-0.5 overflow-hidden"
-            : "items-stretch overflow-x-auto overflow-y-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+            : "items-stretch overflow-x-auto overflow-y-hidden scrollbar-none",
         )}
       >
         {items.map((item) => (

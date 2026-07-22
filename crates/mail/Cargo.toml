@@ -6,6 +6,7 @@ edition.workspace = true
 [dependencies]
 common = { path = "../common" }
 customer = { path = "../customer" }
+mail-net = { path = "../mail-net" }
 ports = { path = "../ports" }
 serde_json = { workspace = true }
 uuid = { workspace = true }

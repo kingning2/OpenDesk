@@ -50,6 +50,8 @@ from .mail_dto_mail_template import MailDtoMailTemplate
 from .mail_dto_template_intent import MailDtoTemplateIntent
 from .mail_ipc_account_list_response import MailIpcAccountListResponse
 from .mail_ipc_account_save_request import MailIpcAccountSaveRequest
+from .mail_ipc_message_list_request import MailIpcMessageListRequest
+from .mail_ipc_message_list_response import MailIpcMessageListResponse
 from .mail_ipc_record_inbound_request import MailIpcRecordInboundRequest
 from .mail_ipc_record_inbound_response import MailIpcRecordInboundResponse
 from .mail_ipc_send_request import MailIpcSendRequest
@@ -57,6 +59,7 @@ from .mail_ipc_send_response import MailIpcSendResponse
 from .mail_ipc_template_apply_request import MailIpcTemplateApplyRequest
 from .mail_ipc_template_apply_response import MailIpcTemplateApplyResponse
 from .mail_ipc_template_list_response import MailIpcTemplateListResponse
+from .mail_ipc_template_save_request import MailIpcTemplateSaveRequest
 from .runtime_dto_llm_provider import RuntimeDtoLlmProvider
 from .runtime_dto_llm_settings import RuntimeDtoLlmSettings
 from .runtime_event_sidecar_restarted import RuntimeEventSidecarRestarted
@@ -125,6 +128,8 @@ __all__ = [
     "MailDtoTemplateIntent",
     "MailIpcAccountListResponse",
     "MailIpcAccountSaveRequest",
+    "MailIpcMessageListRequest",
+    "MailIpcMessageListResponse",
     "MailIpcRecordInboundRequest",
     "MailIpcRecordInboundResponse",
     "MailIpcSendRequest",
@@ -132,6 +137,7 @@ __all__ = [
     "MailIpcTemplateApplyRequest",
     "MailIpcTemplateApplyResponse",
     "MailIpcTemplateListResponse",
+    "MailIpcTemplateSaveRequest",
     "RuntimeDtoLlmProvider",
     "RuntimeDtoLlmSettings",
     "RuntimeEventSidecarRestarted",

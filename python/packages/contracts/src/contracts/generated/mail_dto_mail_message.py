@@ -13,6 +13,8 @@ class MailDtoMailMessage(TypedDict, total=False):
     subject: str
     body_text: str
     body_html: str
+    to_address: str
+    from_address: str
     error_message: str
     sent_at: str
     received_at: str

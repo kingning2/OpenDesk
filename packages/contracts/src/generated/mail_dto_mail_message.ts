@@ -8,6 +8,8 @@ export interface MailDtoMailMessage {
   subject: string;
   body_text: string;
   body_html?: string;
+  to_address?: string;
+  from_address?: string;
   error_message?: string;
   sent_at?: string;
   received_at?: string;

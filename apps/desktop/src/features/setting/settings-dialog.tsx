@@ -245,7 +245,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         </IconButton>
 
         <div className="relative flex h-full min-h-0">
-          <aside className="flex w-56 shrink-0 flex-col border-r border-border/70 bg-muted/25 py-5">
+          <aside className="flex w-56 shrink-0 flex-col border-r border-border/70 bg-muted py-5">
             <div className="px-4 pb-4">
               <p className="text-[length:var(--text-sm)] font-semibold tracking-tight text-foreground">
                 {t("settings.title")}
@@ -421,7 +421,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 aria-modal="true"
                 aria-labelledby="settings-unsaved-title"
                 aria-describedby="settings-unsaved-desc"
-                className="w-full max-w-sm rounded-[var(--radius-xl)] border border-border bg-card p-6 shadow-[var(--glass-shadow)]"
+                className="w-full max-w-sm rounded-[var(--radius-xl)] border border-border bg-dialog p-6 text-dialog-foreground shadow-lg"
               >
                 <h3
                   id="settings-unsaved-title"

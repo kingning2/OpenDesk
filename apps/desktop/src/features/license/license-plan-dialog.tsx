@@ -102,12 +102,13 @@ export function LicensePlanDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/50 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4"
       role="presentation"
       onClick={onClose}
     >
       <Card
-        variant="glass"
+        variant="dialog"
+        padding="md"
         className="relative w-full max-w-md"
         role="dialog"
         aria-modal="true"

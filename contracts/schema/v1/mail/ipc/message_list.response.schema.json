@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/ipc/message_list/response/v1",
+  "title": "mail/ipc/message_list.response",
+  "description": "Paged local mail message list as JSON array string.",
+  "type": "object",
+  "required": ["messages_json", "total"],
+  "properties": {
+    "messages_json": {
+      "type": "string",
+      "description": "JSON array of mail_message DTO objects."
+    },
+    "total": { "type": "integer" }
+  },
+  "additionalProperties": false
+}

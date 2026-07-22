@@ -6,6 +6,7 @@
  */
 
 import type { ReactNode } from "react";
+import { useNavigate } from "react-router";
 import {
   Button,
   Input,
@@ -42,6 +43,7 @@ import { useCustomers } from "./use-customers";
  */
 export function CustomerPage() {
   const t = useT();
+  const navigate = useNavigate();
   const {
     items,
     total,
@@ -132,9 +134,20 @@ export function CustomerPage() {
               </WorkspaceSplitTitle>
               <div className="flex gap-2">
                 {mode === "view" && selectedProfile ? (
-                  <Button variant="outline" size="sm" onClick={startEdit}>
-                    {t("customer.edit")}
-                  </Button>
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        navigate(`/features/mail?customerId=${encodeURIComponent(selectedProfile.id)}`)
+                      }
+                    >
+                      {t("customer.composeMail")}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={startEdit}>
+                      {t("customer.edit")}
+                    </Button>
+                  </>
                 ) : null}
                 {isEditing ? (
                   <>

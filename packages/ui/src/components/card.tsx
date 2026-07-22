@@ -16,6 +16,7 @@ const cardVariants = cva("border text-card-foreground transition-[background,box
         "backdrop-blur-[var(--blur-glass)]",
       ].join(" "),
       solid: "bg-card border-border rounded-[var(--radius-md)]",
+      dialog: "bg-dialog text-dialog-foreground border-border shadow-lg rounded-[var(--radius-xl)]",
     },
     padding: {
       none: "p-0",

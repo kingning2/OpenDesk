@@ -2,7 +2,7 @@
 id: CHG-20260720-015-smtp-mail-send
 title: SMTP 发信、邮件模板与客户时间线
 type: change
-status: in_progress
+status: completed
 priority: P0
 owner: developer
 domain: mail
@@ -13,7 +13,7 @@ blocks:
   - CHG-20260720-018-ai-mail-draft
 milestone: M2
 created: 2026-07-20
-updated: 2026-07-21
+updated: 2026-07-22
 contracts: mail IPC + DTO
 related: []
 ---
@@ -80,6 +80,7 @@ related: []
 | Frontend | `apps/desktop/src/features/customer/` | 详情页「写邮件」入口 |
 | Frontend | `packages/platform/src/ipc/mail/` | IPC 封装 |
 | Frontend | `apps/desktop/src/i18n/locales/mail/` | 文案 |
+| Contract | `contracts/CHANGELOG.md` | 登记 |
 | Docs | `docs/managed/domains/mail/README.md` | 更新状态 |
 
 ### 不修改范围
@@ -127,18 +128,23 @@ related: []
 
 ## 验收
 
-- [ ] 内置模板可列出并按 customer 渲染变量
-- [ ] 可新建/编辑自定义模板（custom）
-- [ ] 配置 SMTP 后可基于模板发出测试邮件
-- [ ] mail_message 保存 template_id
-- [ ] 发送成功/失败状态正确
-- [ ] 客户时间线可见发信条目（含所用模板名）
-- [ ] 日志无明文密码
-- [ ] 架构与 lint 通过
+- [x] 内置模板可列出并按 customer 渲染变量
+- [x] 可新建/编辑自定义模板（custom）
+- [x] 配置 SMTP 后可基于模板发出测试邮件（SMTP 经 `mail-net` / lettre；需真实账号人工验证）
+- [x] mail_message 保存 template_id
+- [x] 发送成功/失败状态正确（`sent` / `failed` + `error_message`）
+- [x] 客户时间线可见发信条目（含所用模板名）
+- [x] 日志无明文密码（密码进 OS keyring；SMTP 错误脱敏）
+- [x] 架构与 lint 通过（`cargo check` MSVC；`tsc` desktop；frontend lint 针对本次改动）
 
 ## 实际结果
 
-（完成前留空。）
+- `mail-net::send_smtp` + `SendMail` 真发信；失败仍落库并写时间线
+- `mail_template_save` Contract/IPC/UI；系统模板只读
+- 账号密码写入 keyring（`password_ref=keyring:OpenDesk/mail_account/{id}`），DB 不再存明文
+- 时间线 summary：`Email sent|failed [模板名]: 主题`
+- 客户详情「写邮件」→ `/features/mail?customerId=`，并按 lifecycle 推荐模板 intent
+- `{{today.date}}` 渲染为 UTC `YYYY-MM-DD`
 
 ## 后续项
 

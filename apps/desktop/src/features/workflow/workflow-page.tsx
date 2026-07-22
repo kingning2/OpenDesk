@@ -10,6 +10,12 @@ import { memo, useEffect, useMemo, useState } from "react";
 import { ChevronRight, FileText, Folder, FolderOpen } from "@desk/ui/icons";
 import {
   Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
   Input,
   PageScaffold,
   WorkspaceSplit,
@@ -433,6 +439,7 @@ const SnippetEditModal = memo(function SnippetEditModal({
   const t = useT();
   const [form, setForm] = useState(initial);
   const [saving, setSaving] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -469,7 +476,12 @@ const SnippetEditModal = memo(function SnippetEditModal({
 
   async function handleDelete() {
     if (!form.id) return;
-    if (!window.confirm(t("workflow.deleteConfirm").replace("{{title}}", form.title))) return;
+    setDeleteConfirmOpen(true);
+  }
+
+  async function confirmDelete() {
+    if (!form.id) return;
+    setDeleteConfirmOpen(false);
     try {
       await workflowSnippetDelete({ id: form.id });
       toast.success(t("workflow.delete"));
@@ -480,8 +492,34 @@ const SnippetEditModal = memo(function SnippetEditModal({
   }
 
   return (
+    <>
+      <Dialog
+        open={deleteConfirmOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteConfirmOpen(false);
+          }
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t("workflow.delete")}</DialogTitle>
+            <DialogDescription>
+              {t("workflow.deleteConfirm").replace("{{title}}", form.title)}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>
+              {t("workflow.cancel")}
+            </Button>
+            <Button onClick={() => void confirmDelete()}>
+              {t("workflow.delete")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="flex max-h-[85vh] w-[720px] flex-col overflow-hidden rounded-xl border bg-card shadow-xl">
+      <div className="flex max-h-[85vh] w-[720px] flex-col overflow-hidden rounded-xl border border-border bg-dialog text-dialog-foreground shadow-lg">
         <div className="flex items-center justify-between border-b px-5 py-3">
           <h4 className="text-sm font-semibold">
             {form.id ? t("workflow.form.editTitle") : t("workflow.form.createTitle")}
@@ -601,5 +639,6 @@ const SnippetEditModal = memo(function SnippetEditModal({
         </div>
       </div>
     </div>
+    </>
   );
 });

@@ -66,6 +66,8 @@ pub struct NewCustomerRow {
     pub notes: Option<String>,
     pub created_at: String,
     pub updated_at: String,
+    pub extra_json: Option<String>,
+    pub source_ref: Option<String>,
 }
 
 /// Queryable `customer` row.
@@ -93,6 +95,8 @@ pub struct CustomerRow {
     pub notes: Option<String>,
     pub created_at: String,
     pub updated_at: String,
+    pub extra_json: Option<String>,
+    pub source_ref: Option<String>,
 }
 
 /// Insertable row for `mail_template`.
@@ -202,6 +206,9 @@ pub struct NewMailMessageRow {
     pub open_tracking_id: Option<String>,
     pub created_at: String,
     pub updated_at: String,
+    pub to_address: Option<String>,
+    pub from_address: Option<String>,
+    pub source_ref: Option<String>,
 }
 
 /// Insertable row for `script_snippet`.
@@ -283,4 +290,7 @@ pub struct MailMessageRow {
     pub open_tracking_id: Option<String>,
     pub created_at: String,
     pub updated_at: String,
+    pub to_address: Option<String>,
+    pub from_address: Option<String>,
+    pub source_ref: Option<String>,
 }

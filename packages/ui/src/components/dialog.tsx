@@ -140,9 +140,9 @@ function DialogContent({
             >
               <motion.div
                 className={cn(
-                  "relative z-10 grid w-full max-w-md gap-4 overflow-hidden",
-                  "origin-center rounded-[var(--radius-xl)] border border-[color:var(--glass-border)]",
-                  "bg-card text-card-foreground shadow-[var(--glass-shadow)]",
+                  "relative z-10 grid w-full max-w-md gap-4 overflow-hidden p-6",
+                  "origin-center rounded-[var(--radius-xl)] border border-border",
+                  "bg-dialog text-dialog-foreground shadow-lg",
                   "outline-none",
                   className,
                 )}

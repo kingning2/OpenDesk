@@ -11,6 +11,8 @@ pub struct MailDtoMailMessage {
     pub subject: String,
     pub body_text: String,
     pub body_html: Option<String>,
+    pub to_address: Option<String>,
+    pub from_address: Option<String>,
     pub error_message: Option<String>,
     pub sent_at: Option<String>,
     pub received_at: Option<String>,

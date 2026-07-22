@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/ipc/template_save/request/v1",
+  "title": "mail/ipc/template_save.request",
+  "description": "Create or update a custom mail template. System templates cannot be overwritten.",
+  "type": "object",
+  "required": [
+    "name",
+    "template_intent",
+    "subject_template",
+    "body_text_template"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "template_intent": { "type": "string" },
+    "subject_template": { "type": "string" },
+    "body_text_template": { "type": "string" },
+    "body_html_template": { "type": "string" },
+    "locale": { "type": "string" },
+    "is_active": { "type": "boolean" },
+    "sort_order": { "type": "integer" }
+  },
+  "additionalProperties": false
+}

@@ -23,6 +23,10 @@
   --color-card: oklch(1 0 0 / 0.88);
   --color-card-foreground: oklch(0.2 0.02 250);
 
+  /* Dialogs / modals — always opaque (no glass) */
+  --color-dialog: oklch(1 0 0);
+  --color-dialog-foreground: oklch(0.2 0.02 250);
+
   /* Accent */
   --color-primary: oklch(0.55 0.2 280);
   --color-primary-foreground: oklch(0.99 0 0);
@@ -61,6 +65,12 @@
 
   /* Strong ease-out (Emil) */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+  /* Scrollbars — thin overlay-style, never OS chrome */
+  --scrollbar-size: 10px;
+  --scrollbar-thumb: oklch(0.55 0.02 250 / 0.38);
+  --scrollbar-thumb-hover: oklch(0.45 0.02 250 / 0.58);
+  --scrollbar-track: transparent;
 }
 
 .dark {
@@ -73,6 +83,8 @@
   --color-foreground: oklch(0.93 0.01 280);
   --color-card: oklch(0.22 0.02 280 / 0.82);
   --color-card-foreground: oklch(0.93 0.01 280);
+  --color-dialog: oklch(0.24 0.02 280);
+  --color-dialog-foreground: oklch(0.93 0.01 280);
   --color-primary: oklch(0.62 0.19 285);
   --color-muted: oklch(0.24 0.02 280);
   --color-muted-foreground: oklch(0.62 0.02 280);
@@ -82,4 +94,50 @@
   --glass-border: oklch(1 0 0 / 0.1);
   --glass-shadow: 0 8px 32px oklch(0 0 0 / 0.35);
   --backdrop-dim: oklch(0 0 0 / 0.55);
+
+  --scrollbar-thumb: oklch(0.72 0.02 280 / 0.34);
+  --scrollbar-thumb-hover: oklch(0.82 0.02 280 / 0.52);
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+
+  *::-webkit-scrollbar {
+    width: var(--scrollbar-size);
+    height: var(--scrollbar-size);
+  }
+
+  *::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border: 2px solid transparent;
+    border-radius: 9999px;
+    background-clip: padding-box;
+    transition: background-color var(--motion-fast) var(--ease-out);
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-thumb-hover);
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
 }

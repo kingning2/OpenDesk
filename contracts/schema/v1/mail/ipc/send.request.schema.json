@@ -2,22 +2,23 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "opendesk://mail/ipc/send/request/v1",
   "title": "mail/ipc/send.request",
-  "description": "Send a rendered outbound mail message.",
+  "description": "Send a rendered outbound mail message to any address. customer_id is optional linkage.",
   "type": "object",
   "required": [
-    "customer_id",
     "account_id",
-    "template_id",
+    "to_address",
     "subject",
     "body_text"
   ],
   "properties": {
     "customer_id": { "type": "string" },
+    "to_address": { "type": "string" },
     "account_id": { "type": "string" },
     "template_id": { "type": "string" },
     "subject": { "type": "string" },
     "body_text": { "type": "string" },
-    "body_html": { "type": "string" }
+    "body_html": { "type": "string" },
+    "open_tracking_enabled": { "type": "boolean" }
   },
   "additionalProperties": false
 }
