@@ -90,6 +90,8 @@ React（客户详情/编辑 UI）
 
 **已实现（CHG-013）。** `opendesk.db` 含 customer / quote_history / customer_timeline / cooperation_audit 表；桌面端提供客户列表、详情、新建与编辑 UI；邮箱全局唯一。
 
+**email-agent 客户导入**（[CHG-040](../../changes/2026/07/chg-20260722-040-email-agent-data-migration.md)）：`contacts` → `customer`（含 `extra_json`、`source_ref`）；运行 `python skills/opendesk/scripts/migrate_email_agent.py`。
+
 后续：爬虫导入见 [CHG-014](../../changes/2026/07/chg-20260720-014-crawler-lead-import.md)。
 
 ## 当前约束
