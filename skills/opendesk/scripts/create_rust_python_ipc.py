@@ -259,7 +259,7 @@ def main() -> int:
         dry_run=args.dry_run,
     )
 
-    routes_file = PYTHON_SIDECAR / "routes.py"
+    routes_file = PYTHON_SIDECAR / "sidecar" / "api" / "routes.py"
     route_line = f'ROUTES["{route}"] = ("{method}", "handle_{feature}_{action}")'
     if routes_file.exists():
         content = routes_file.read_text(encoding="utf-8")
@@ -272,10 +272,68 @@ def main() -> int:
     else:
         write_text(
             routes_file,
-            '"""Sidecar route table — consumed by Rust-managed HTTP server."""\n\n'
+            '"""Sidecar 路由表（路径 → HTTP 方法 + Handler 名）。"""\n\n'
             "from __future__ import annotations\n\n"
             "ROUTES: dict[str, tuple[str, str]] = {}\n\n"
             f"{route_line}\n",
+            dry_run=args.dry_run,
+        )
+
+    registry_file = PYTHON_SIDECAR / "sidecar" / "api" / "registry.py"
+    handler_symbol = f"handle_{feature}_{action}"
+    if registry_file.exists():
+        registry_content = registry_file.read_text(encoding="utf-8")
+        if f'"{handler_symbol}"' not in registry_content:
+            # Extend existing `from gateway.handlers import a, b` line when present.
+            import_prefix = "from gateway.handlers import "
+            if import_prefix in registry_content and handler_symbol not in registry_content:
+                for line in registry_content.splitlines():
+                    if line.startswith(import_prefix):
+                        names = [
+                            part.strip()
+                            for part in line[len(import_prefix) :].split(",")
+                            if part.strip()
+                        ]
+                        if handler_symbol not in names:
+                            names.append(handler_symbol)
+                            names.sort()
+                            new_import = import_prefix + ", ".join(names)
+                            registry_content = registry_content.replace(line, new_import, 1)
+                        break
+            elif handler_symbol not in registry_content:
+                registry_content = (
+                    f"{import_prefix}{handler_symbol}\n" + registry_content
+                    if not registry_content.startswith(import_prefix)
+                    else registry_content
+                )
+                if import_prefix not in registry_content:
+                    # Fallback: append import near top after future import.
+                    registry_content = registry_content.replace(
+                        "from __future__ import annotations\n",
+                        f"from __future__ import annotations\n\n{import_prefix}{handler_symbol}\n",
+                        1,
+                    )
+
+            if "HANDLERS: dict[str, HandlerFn] = {" in registry_content:
+                registry_content = registry_content.replace(
+                    "HANDLERS: dict[str, HandlerFn] = {\n",
+                    "HANDLERS: dict[str, HandlerFn] = {\n"
+                    f'    "{handler_symbol}": {handler_symbol},\n',
+                    1,
+                )
+            write_text(registry_file, registry_content, dry_run=args.dry_run)
+    else:
+        write_text(
+            registry_file,
+            '"""Sidecar 业务 Handler 注册表。"""\n\n'
+            "from __future__ import annotations\n\n"
+            "from collections.abc import Callable\n"
+            "from typing import Any\n\n"
+            f"from gateway.handlers import {handler_symbol}\n\n"
+            "HandlerFn = Callable[..., dict[str, Any]]\n\n"
+            "HANDLERS: dict[str, HandlerFn] = {\n"
+            f'    "{handler_symbol}": {handler_symbol},\n'
+            "}\n",
             dry_run=args.dry_run,
         )
 

@@ -5,8 +5,8 @@ from __future__ import annotations
 import argparse
 import logging
 
+from sidecar.api import serve
 from sidecar.logging_config import configure_logging
-from sidecar.server import serve
 
 logger = logging.getLogger("opendesk.sidecar")
 

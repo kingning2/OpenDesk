@@ -3,6 +3,7 @@ name = "sidecar"
 version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
+  "agent",
   "gateway",
   "shared",
 ]
@@ -20,5 +21,6 @@ build-backend = "hatchling.build"
 packages = ["sidecar"]
 
 [tool.uv.sources]
+agent = { workspace = true }
 gateway = { workspace = true }
 shared = { workspace = true }
