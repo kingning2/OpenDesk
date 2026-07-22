@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://crawler/ipc/channel_update.response/v1",
+  "title": "crawler/channel_update.response",
+  "description": "Tauri IPC: channel verified email update result.",
+  "type": "object",
+  "required": ["ok", "id"],
+  "properties": {
+    "ok": { "type": "boolean" },
+    "id": { "type": "integer" },
+    "verified_email": { "type": "string" },
+    "email_status": { "type": "string" },
+    "trace_id": { "type": "string" }
+  },
+  "additionalProperties": false
+}
