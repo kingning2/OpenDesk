@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://runtime/ipc/llm_settings_save.request/v1",
+  "title": "runtime/ipc/llm_settings_save.request",
+  "description": "Save LLM settings. api_key empty string means keep existing keyring secret unchanged.",
+  "type": "object",
+  "required": ["provider", "model_id", "api_key"],
+  "properties": {
+    "provider": { "type": "string" },
+    "base_url": { "type": "string" },
+    "model_id": { "type": "string" },
+    "api_key": {
+      "type": "string",
+      "description": "New API key to store in keyring. Empty = do not change existing secret."
+    }
+  },
+  "additionalProperties": false
+}

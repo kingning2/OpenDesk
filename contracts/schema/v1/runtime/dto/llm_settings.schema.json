@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://runtime/dto/llm_settings/v1",
+  "title": "runtime/llm_settings",
+  "description": "Persisted LLM settings metadata. Never includes api_key plaintext.",
+  "type": "object",
+  "required": ["provider", "model_id", "configured", "has_api_key"],
+  "properties": {
+    "provider": {
+      "type": "string",
+      "description": "openai | anthropic | openai_compatible"
+    },
+    "base_url": {
+      "type": "string",
+      "description": "Optional API base URL (required for openai_compatible presets)."
+    },
+    "model_id": {
+      "type": "string",
+      "description": "Default model identifier."
+    },
+    "configured": {
+      "type": "boolean",
+      "description": "True when provider + model_id are set and an API key exists in keyring (Ollama may use empty key)."
+    },
+    "has_api_key": {
+      "type": "boolean",
+      "description": "True when a secret is stored in OS keyring. Never returns the key itself."
+    }
+  },
+  "additionalProperties": false
+}

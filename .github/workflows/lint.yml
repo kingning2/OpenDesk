@@ -2,7 +2,7 @@ name: Lint
 
 on:
   push:
-    branches: [main, role/frontend, role/rust, role/python]
+    branches: [main, test]
   pull_request:
 
 jobs:

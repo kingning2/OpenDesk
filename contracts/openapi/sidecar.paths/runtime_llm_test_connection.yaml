@@ -1,0 +1,27 @@
+# Path fragment for /v1/runtime/llm_test_connection
+# Rust runtime client only — React must not call this URL.
+
+/v1/runtime/llm_test_connection:
+  post:
+    operationId: runtime_llm_test_connection
+    summary: "runtime llm_test_connection (Rust → Python)"
+    tags: [runtime]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../../schema/v1/runtime/sidecar/llm_test_connection.request.schema.json'
+    responses:
+      "200":
+        description: Success
+        content:
+          application/json:
+            schema:
+              $ref: '../../schema/v1/runtime/sidecar/llm_test_connection.response.schema.json'
+      "500":
+        description: Sidecar error
+        content:
+          application/json:
+            schema:
+              $ref: '../sidecar.v1.yaml#/components/schemas/SidecarError'

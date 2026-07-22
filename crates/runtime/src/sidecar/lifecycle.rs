@@ -1,5 +1,6 @@
 //! Sidecar process lifecycle — start / health / stop / restart.
 
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
@@ -78,6 +79,8 @@ pub struct SidecarLifecycle {
     event_bus: Arc<dyn EventBus>,
     ever_started: Mutex<bool>,
     restart_attempts: Mutex<u32>,
+    /// 注入给 Python 子进程的环境变量（含 LLM 配置；密钥仅内存，不落盘）。
+    process_env: Mutex<HashMap<String, String>>,
 }
 
 impl SidecarLifecycle {
@@ -90,11 +93,34 @@ impl SidecarLifecycle {
             event_bus,
             ever_started: Mutex::new(false),
             restart_attempts: Mutex::new(0),
+            process_env: Mutex::new(HashMap::new()),
         }
     }
 
     pub fn client(&self) -> &SidecarClient {
         &self.client
+    }
+
+    /// 更新 Sidecar 子进程环境变量（下次 spawn / restart 生效）。
+    ///
+    /// # 参数
+    /// - `env` — 完整替换的环境表（可含 `OPENDESK_LLM_*`）
+    ///
+    /// 作者：Xiaoman
+    /// 创建时间：2026-07-22
+    pub async fn set_process_env(&self, env: HashMap<String, String>) {
+        *self.process_env.lock().await = env;
+    }
+
+    /// 读取当前将注入的环境副本。
+    ///
+    /// 作者：Xiaoman
+    /// 创建时间：2026-07-22
+    ///
+    /// # 返回值
+    /// 环境变量快照。
+    pub async fn process_env_snapshot(&self) -> HashMap<String, String> {
+        self.process_env.lock().await.clone()
     }
 
     pub async fn ensure_running(&self) -> Result<(), SidecarLifecycleError> {
@@ -167,6 +193,12 @@ impl SidecarLifecycle {
         }
 
         let mut command = build_spawn_command(&self.config)?;
+        {
+            let env = self.process_env.lock().await;
+            for (key, value) in env.iter() {
+                command.env(key, value);
+            }
+        }
         let mut child = command
             .spawn()
             .map_err(|error| SidecarLifecycleError::SpawnFailed(error.to_string()))?;

@@ -165,6 +165,18 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    llm_setting (id) {
+        id -> Text,
+        provider -> Text,
+        base_url -> Nullable<Text>,
+        model_id -> Text,
+        api_key_ref -> Text,
+        has_api_key -> Bool,
+        updated_at -> Text,
+    }
+}
+
 diesel::joinable!(quote_history -> customer (customer_id));
 diesel::joinable!(customer_timeline -> customer (customer_id));
 diesel::joinable!(cooperation_audit -> customer (customer_id));
@@ -182,4 +194,5 @@ diesel::allow_tables_to_appear_in_same_query!(
     customer_timeline,
     cooperation_audit,
     script_snippet,
+    llm_setting,
 );

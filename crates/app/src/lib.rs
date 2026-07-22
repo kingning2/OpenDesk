@@ -18,8 +18,9 @@ use commands::{
     crawler_job_status, crawler_keywords_batches, crawler_keywords_import,
     crawler_youtube_api_key_get, crawler_youtube_api_key_set, customer_create, customer_get,
     customer_list, customer_update, license_activate, license_machine_code, license_status,
-    mail_account_list, mail_account_save, mail_record_inbound, mail_send, mail_template_apply,
-    mail_template_list, workflow_snippet_delete, workflow_snippet_list, workflow_snippet_save,
+    llm_settings_get, llm_settings_save, llm_test_connection, mail_account_list, mail_account_save,
+    mail_record_inbound, mail_send, mail_template_apply, mail_template_list,
+    workflow_snippet_delete, workflow_snippet_list, workflow_snippet_save,
 };
 use crawler::{CrawlerService, CrawlerUiEmitter};
 use crawler_emit::TauriCrawlerEmitter;
@@ -40,6 +41,7 @@ use storage::crawler_db::CrawlerDb;
 use storage::crawler_keywords::SqliteCrawlerKeywordStore;
 use storage::crawler_settings::SqliteCrawlerSettingsStore;
 use storage::customer::SqliteCustomerStore;
+use storage::llm_settings::SqliteLlmSettingsStore;
 use storage::mail::SqliteMailStore;
 use storage::opendesk_db::OpendeskDb;
 use storage::workflow::SqliteScriptSnippetStore;
@@ -74,6 +76,8 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
         as Arc<dyn CrawlerChannelStore>;
     let settings_store = Arc::new(SqliteCrawlerSettingsStore::new(crawler_db.clone()))
         as Arc<dyn CrawlerSettingsStore>;
+    let llm_settings_store = Arc::new(SqliteLlmSettingsStore::new(opendesk_db.clone()))
+        as Arc<dyn ports::llm_settings::LlmSettingsStore>;
     let crawler = Arc::new(CrawlerService::new(channels_store.clone()));
     crawler.attach_job_store(job_store);
     let keywords_store =
@@ -92,6 +96,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
         keywords_store,
         channels_store,
         settings_store,
+        llm_settings_store,
         customer_store,
         mail_store,
         snippet_store,
@@ -107,8 +112,27 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
                 as Arc<dyn CrawlerUiEmitter>;
             crawler.attach_emitter(emitter);
 
-            let lifecycle = app.state::<AppState>().lifecycle.clone();
+            let state = app.state::<AppState>();
+            let lifecycle = state.lifecycle.clone();
+            let llm_store = state.llm_settings_store.clone();
             tauri::async_runtime::spawn(async move {
+                if let Ok(env) = (|| {
+                    let mut env = std::collections::HashMap::new();
+                    let Some(record) = llm_store.get().map_err(|e| e.to_string())? else {
+                        return Ok(env);
+                    };
+                    env.insert("OPENDESK_LLM_PROVIDER".into(), record.provider);
+                    if let Some(base_url) = record.base_url {
+                        env.insert("OPENDESK_LLM_BASE_URL".into(), base_url);
+                    }
+                    env.insert("OPENDESK_LLM_MODEL_ID".into(), record.model_id);
+                    if let Some(api_key) = llm_store.resolve_api_key().map_err(|e| e.to_string())? {
+                        env.insert("OPENDESK_LLM_API_KEY".into(), api_key);
+                    }
+                    Ok::<_, String>(env)
+                })() {
+                    lifecycle.set_process_env(env).await;
+                }
                 if let Err(error) = lifecycle.ensure_running().await {
                     tracing::error!(%error, "sidecar startup failed");
                 }
@@ -129,6 +153,9 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             crawler_keywords_batches,
             crawler_youtube_api_key_get,
             crawler_youtube_api_key_set,
+            llm_settings_get,
+            llm_settings_save,
+            llm_test_connection,
             customer_list,
             customer_get,
             customer_create,

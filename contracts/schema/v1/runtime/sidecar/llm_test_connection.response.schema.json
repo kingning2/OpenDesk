@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://runtime/sidecar/llm_test_connection.response/v1",
+  "title": "runtime/sidecar/llm_test_connection.response",
+  "description": "Sidecar LLM probe result.",
+  "type": "object",
+  "required": ["ok", "message"],
+  "properties": {
+    "ok": { "type": "boolean" },
+    "error_code": { "type": "string" },
+    "message": { "type": "string" },
+    "trace_id": { "type": "string" }
+  },
+  "additionalProperties": false
+}

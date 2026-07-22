@@ -6,6 +6,7 @@ pub mod crawler_keywords;
 pub mod crawler_settings;
 pub mod customer;
 pub mod license;
+pub mod llm_settings;
 pub mod mail;
 pub mod repository;
 pub mod sidecar;

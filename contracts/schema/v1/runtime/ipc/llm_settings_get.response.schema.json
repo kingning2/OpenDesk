@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://runtime/ipc/llm_settings_get.response/v1",
+  "title": "runtime/ipc/llm_settings_get.response",
+  "description": "LLM settings for UI. API key is never returned (not even masked).",
+  "type": "object",
+  "required": ["provider", "model_id", "configured", "has_api_key"],
+  "properties": {
+    "provider": { "type": "string" },
+    "base_url": { "type": "string" },
+    "model_id": { "type": "string" },
+    "configured": { "type": "boolean" },
+    "has_api_key": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}

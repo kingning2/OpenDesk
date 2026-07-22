@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://runtime/sidecar/llm_test_connection.request/v1",
+  "title": "runtime/sidecar/llm_test_connection.request",
+  "description": "Rust → Python one-shot LLM probe. api_key is memory-only; never logged.",
+  "type": "object",
+  "required": ["provider", "model_id", "api_key"],
+  "properties": {
+    "provider": { "type": "string" },
+    "base_url": { "type": "string" },
+    "model_id": { "type": "string" },
+    "api_key": { "type": "string" },
+    "trace_id": { "type": "string" }
+  },
+  "additionalProperties": false
+}

@@ -15,6 +15,7 @@ use ports::crawler_keywords::CrawlerKeywordStore;
 use ports::crawler_settings::CrawlerSettingsStore;
 use ports::customer::CustomerStore;
 use ports::license::LicenseGate;
+use ports::llm_settings::LlmSettingsStore;
 use ports::mail::MailStore;
 use ports::workflow::ScriptSnippetStore;
 use runtime::sidecar::lifecycle::SidecarLifecycle;
@@ -45,6 +46,8 @@ pub struct AppState {
     pub channels_store: Arc<dyn CrawlerChannelStore>,
     /// Crawler key-value settings (`crawler_setting` SQLite table).
     pub settings_store: Arc<dyn CrawlerSettingsStore>,
+    /// LLM provider metadata + keyring secrets.
+    pub llm_settings_store: Arc<dyn LlmSettingsStore>,
     /// Business customer profiles (`customer` SQLite table in opendesk.db).
     pub customer_store: Arc<dyn CustomerStore>,
     /// Mail templates, accounts, and message history (`mail_*` tables in opendesk.db).
