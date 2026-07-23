@@ -9,9 +9,9 @@
   "statusTemplateApplied": "模板已套用。",
   "statusAccountSaved": "邮件账号已保存。",
   "statusTemplateSaved": "模板已保存。",
-  "statusSent": "邮件已发送：{{id}}",
-  "statusSendFailed": "发送失败（已留痕）：{{id}}",
-  "statusInboundRecorded": "入站邮件已记录：{{id}}",
+  "statusSent": "邮件已发送：{id}",
+  "statusSendFailed": "发送失败（已留痕）：{id}",
+  "statusInboundRecorded": "入站邮件已记录：{id}",
   "statusInboundValidation": "记录入站邮件需要选择客户、填写发件人地址和主题。",
   "statusSendValidation": "请填写收件邮箱、主题和正文，并选择发件账号。",
   "statusToAddressInvalid": "请输入有效的收件邮箱。",
@@ -29,7 +29,7 @@
   "list": {
     "title": "邮件列表",
     "searchPlaceholder": "搜索主题或正文…",
-    "total": "共 {{count}} 封",
+    "total": "共 {count} 封",
     "empty": "暂无邮件",
     "emptyHint": "点「写邮件」新建；已发送邮件在「发件箱」"
   },
@@ -42,7 +42,9 @@
     "openTracking": "开信追踪",
     "metaInbound": "收件",
     "metaOutbound": "已发",
-    "followUp": "继续跟进"
+    "followUp": "继续跟进",
+    "replyToKnown": "对应已发：{subject}",
+    "replyToUnknown": "未识别对应已发邮件"
   },
   "modal": {
     "cancel": "取消"
@@ -114,5 +116,19 @@
     "body": "回复正文",
     "record": "手动录入回复",
     "recording": "录入中…"
+  },
+  "sync": {
+    "now": "同步收件",
+    "syncing": "同步中…",
+    "lastSync": "上次同步：{time}",
+    "lastError": "同步失败：{error}",
+    "unmatched": "待关联",
+    "matched": "已匹配",
+    "unmatchedEmpty": "暂无待关联入站邮件",
+    "loadingUnmatched": "加载待关联邮件…",
+    "linkCustomer": "选择客户",
+    "linkAction": "关联",
+    "linking": "关联中…",
+    "enqueued": "已加入同步队列"
   }
 }

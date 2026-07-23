@@ -12,7 +12,7 @@
   "cancel": "取消",
   "search": "搜索",
   "searchPlaceholder": "按邮箱或名称搜索",
-  "total": "共 {{count}} 位客户",
+  "total": "共 {count} 位客户",
   "emptyList": "暂无客户，点击「新建」添加",
   "selectHint": "从左侧选择客户，或新建一位客户",
   "emailDuplicate": "该邮箱已存在，请使用其他邮箱",

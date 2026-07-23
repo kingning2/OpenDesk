@@ -334,7 +334,7 @@ export function WorkflowPage() {
             <div className="flex items-center justify-between border-b px-4 py-2">
               <span className="text-xs text-muted-foreground">
                 📁 {folderLabel} —{" "}
-                {t("workflow.total").replace("{{count}}", String(filtered.length))}
+                {t("workflow.total", { count: filtered.length })}
               </span>
             </div>
 
@@ -505,7 +505,7 @@ const SnippetEditModal = memo(function SnippetEditModal({
           <DialogHeader>
             <DialogTitle>{t("workflow.delete")}</DialogTitle>
             <DialogDescription>
-              {t("workflow.deleteConfirm").replace("{{title}}", form.title)}
+              {t("workflow.deleteConfirm", { title: form.title })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

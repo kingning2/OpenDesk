@@ -1,16 +1,25 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
+  MailDtoImapSyncState,
   MailDtoMailAccount,
   MailDtoMailMessage,
   MailDtoMailTemplate,
   MailIpcAccountListResponse,
   MailIpcAccountSaveRequest,
+  MailIpcInboxUnmatchedListRequest,
+  MailIpcInboxUnmatchedListResponse,
+  MailIpcLinkInboundCustomerRequest,
+  MailIpcLinkInboundCustomerResponse,
   MailIpcMessageListRequest,
   MailIpcMessageListResponse,
   MailIpcRecordInboundRequest,
   MailIpcRecordInboundResponse,
   MailIpcSendRequest,
   MailIpcSendResponse,
+  MailIpcSyncNowRequest,
+  MailIpcSyncNowResponse,
+  MailIpcSyncStatusRequest,
+  MailIpcSyncStatusResponse,
   MailIpcTemplateApplyRequest,
   MailIpcTemplateApplyResponse,
   MailIpcTemplateListResponse,
@@ -20,6 +29,7 @@ import type {
 export type MailTemplate = MailDtoMailTemplate;
 export type MailAccount = MailDtoMailAccount;
 export type MailMessage = MailDtoMailMessage;
+export type MailImapSyncState = MailDtoImapSyncState;
 
 /**
  * Load all mail templates.
@@ -151,4 +161,82 @@ export async function mailMessageList(
   } catch {
     return { items: [], total: 0 };
   }
+}
+
+/**
+ * Enqueue IMAP sync background jobs.
+ *
+ * @author Xiaoman
+ * @created 2026-07-22
+ */
+export async function mailSyncNow(
+  input?: MailIpcSyncNowRequest,
+): Promise<{ jobIds: string[]; enqueued: number }> {
+  const response = await invoke<MailIpcSyncNowResponse>("mail_sync_now", {
+    request: input ?? {},
+  });
+  try {
+    const parsed = JSON.parse(response.job_ids_json ?? "[]") as string[];
+    return {
+      jobIds: Array.isArray(parsed) ? parsed : [],
+      enqueued: response.enqueued ?? 0,
+    };
+  } catch {
+    return { jobIds: [], enqueued: 0 };
+  }
+}
+
+/**
+ * Read IMAP sync status for one or all accounts.
+ *
+ * @author Xiaoman
+ * @created 2026-07-22
+ */
+export async function mailSyncStatus(
+  input?: MailIpcSyncStatusRequest,
+): Promise<{ items: MailImapSyncState[]; total: number }> {
+  const response = await invoke<MailIpcSyncStatusResponse>("mail_sync_status", {
+    request: input ?? {},
+  });
+  try {
+    const parsed = JSON.parse(response.items_json ?? "[]") as MailImapSyncState[];
+    return { items: Array.isArray(parsed) ? parsed : [], total: response.total ?? 0 };
+  } catch {
+    return { items: [], total: 0 };
+  }
+}
+
+/**
+ * List inbound messages without a linked customer.
+ *
+ * @author Xiaoman
+ * @created 2026-07-22
+ */
+export async function mailInboxUnmatchedList(
+  input?: MailIpcInboxUnmatchedListRequest,
+): Promise<{ items: MailMessage[]; total: number }> {
+  const response = await invoke<MailIpcInboxUnmatchedListResponse>("mail_inbox_unmatched_list", {
+    request: input ?? {},
+  });
+  try {
+    const parsed = JSON.parse(response.messages_json ?? "[]") as MailMessage[];
+    return { items: Array.isArray(parsed) ? parsed : [], total: response.total ?? 0 };
+  } catch {
+    return { items: [], total: 0 };
+  }
+}
+
+/**
+ * Link one unmatched inbound message to a customer.
+ *
+ * @author Xiaoman
+ * @created 2026-07-22
+ */
+export async function mailLinkInboundCustomer(
+  input: MailIpcLinkInboundCustomerRequest,
+): Promise<{ messageId: string }> {
+  const response = await invoke<MailIpcLinkInboundCustomerResponse>("mail_link_inbound_customer", {
+    request: input,
+  });
+  return { messageId: response.message_id };
 }

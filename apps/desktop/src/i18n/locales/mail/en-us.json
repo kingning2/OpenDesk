@@ -9,9 +9,9 @@
   "statusTemplateApplied": "Template applied.",
   "statusAccountSaved": "Mail account saved.",
   "statusTemplateSaved": "Template saved.",
-  "statusSent": "Mail sent: {{id}}",
-  "statusSendFailed": "Send failed (recorded): {{id}}",
-  "statusInboundRecorded": "Inbound message recorded: {{id}}",
+  "statusSent": "Mail sent: {id}",
+  "statusSendFailed": "Send failed (recorded): {id}",
+  "statusInboundRecorded": "Inbound message recorded: {id}",
   "statusInboundValidation": "Inbound record needs customer, from address, and subject.",
   "statusSendValidation": "Recipient email, subject, body, and sending account are required.",
   "statusToAddressInvalid": "Enter a valid recipient email.",
@@ -29,7 +29,7 @@
   "list": {
     "title": "Messages",
     "searchPlaceholder": "Search subject or body…",
-    "total": "{{count}} messages",
+    "total": "{count} messages",
     "empty": "No messages yet",
     "emptyHint": "Use Compose to send; sent mail appears under Sent"
   },
@@ -42,7 +42,9 @@
     "openTracking": "Open tracking",
     "metaInbound": "Inbox",
     "metaOutbound": "Sent",
-    "followUp": "Follow up"
+    "followUp": "Follow up",
+    "replyToKnown": "Replies to sent: {subject}",
+    "replyToUnknown": "No linked sent message detected"
   },
   "modal": {
     "cancel": "Cancel"
@@ -114,5 +116,19 @@
     "body": "Reply body",
     "record": "Record inbound reply",
     "recording": "Recording…"
+  },
+  "sync": {
+    "now": "Sync inbox",
+    "syncing": "Syncing…",
+    "lastSync": "Last sync: {time}",
+    "lastError": "Sync failed: {error}",
+    "unmatched": "Unmatched",
+    "matched": "Matched",
+    "unmatchedEmpty": "No unmatched inbound messages",
+    "loadingUnmatched": "Loading unmatched messages…",
+    "linkCustomer": "Select customer",
+    "linkAction": "Link",
+    "linking": "Linking…",
+    "enqueued": "Sync queued"
   }
 }
