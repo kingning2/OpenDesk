@@ -9,6 +9,8 @@ use crate::repository::StoreError;
 
 /// Job type: Playwright/Chromium email enrichment for crawler channels.
 pub const JOB_TYPE_CRAWLER_EMAIL_ENRICH: &str = "crawler_email_enrich";
+/// Job type: IMAP inbox sync for one mail account.
+pub const JOB_TYPE_IMAP_SYNC: &str = "imap_sync";
 
 pub const JOB_STATUS_QUEUED: &str = "queued";
 pub const JOB_STATUS_RUNNING: &str = "running";
@@ -51,6 +53,13 @@ pub struct CrawlerEmailEnrichPayload {
     pub attempt: i32,
 }
 
+/// Payload for `imap_sync` jobs.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ImapSyncPayload {
+    pub account_id: String,
+    pub folder: String,
+}
+
 /// Queue operations for `opendesk.db.background_job`.
 pub trait BackgroundJobStore: Send + Sync {
     /// Insert a queued job and return its id.
@@ -65,4 +74,7 @@ pub trait BackgroundJobStore: Send + Sync {
 
     /// Mark a job failed with an error message.
     fn mark_failed(&self, job_id: &str, error_message: &str) -> Result<(), StoreError>;
+
+    /// Whether an account already has a queued or running IMAP sync job.
+    fn has_active_imap_sync(&self, account_id: &str) -> Result<bool, StoreError>;
 }

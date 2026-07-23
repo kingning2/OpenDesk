@@ -7,7 +7,7 @@
  */
 
 import type { ReactNode } from "react";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { Mail, Plus, RefreshCw } from "@desk/ui/icons";
 import { useT } from "../../i18n";
@@ -38,7 +38,9 @@ import {
 } from "@desk/ui";
 import { MailHtmlEditor } from "./mail-html-editor";
 import { MailHtmlPreview } from "./mail-html-preview";
+import { MailUnmatchedPanel } from "./mail-unmatched-panel";
 import { stripMailHtml } from "./mail-html";
+import { useMailSync } from "./use-mail-sync";
 import {
   customerList,
   mailAccountList,
@@ -144,6 +146,13 @@ export function MailPage() {
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeCustomerId, setComposeCustomerId] = useState("");
   const [composeToAddress, setComposeToAddress] = useState("");
+  const [inboundView, setInboundView] = useState<"matched" | "unmatched">("matched");
+  const [outboundReplyIndex, setOutboundReplyIndex] = useState<Map<string, MailMessage>>(
+    () => new Map(),
+  );
+  const lastSeenSyncAtRef = useRef<string>("");
+
+  const mailSync = useMailSync(accountFilterId);
 
   const selectedMessage = useMemo(
     () => messages.find((item) => item.id === selectedMessageId) ?? null,
@@ -189,6 +198,16 @@ export function MailPage() {
     return response;
   }
 
+  async function refreshOutboundReplyIndex(accountId?: string | null) {
+    const response = await mailMessageList({
+      direction: "outbound",
+      account_id: accountId || undefined,
+      limit: 200,
+      offset: 0,
+    });
+    setOutboundReplyIndex(buildOutboundReplyIndex(response.items));
+  }
+
   async function refreshMessages(options?: {
     mailbox?: MailboxMode;
     accountId?: string | null;
@@ -196,6 +215,8 @@ export function MailPage() {
     keepSelection?: boolean;
     selectMessageId?: string;
   }) {
+    const direction = options?.mailbox ?? mailbox;
+    const accountId = options?.accountId === undefined ? accountFilterId : options.accountId;
     setListLoading(true);
     try {
       const response = await fetchMessages(options);
@@ -211,6 +232,9 @@ export function MailPage() {
         setSelectedMessageId(response.items[0]?.id ?? "");
       } else if (!response.items.some((item) => item.id === selectedMessageId)) {
         setSelectedMessageId(response.items[0]?.id ?? "");
+      }
+      if (direction === "inbound") {
+        void refreshOutboundReplyIndex(accountId);
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : String(error));
@@ -260,6 +284,7 @@ export function MailPage() {
         setMessages(messageResponse.items);
         setMessageTotal(messageResponse.total);
         setSelectedMessageId(messageResponse.items[0]?.id ?? "");
+        setOutboundReplyIndex(buildOutboundReplyIndex(outboundResponse.items));
         toast.success(t("mail.statusReady"), { id: MAIL_BOOTSTRAP_TOAST_ID });
       })
       .catch((error: unknown) => {
@@ -303,6 +328,22 @@ export function MailPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messageQuery]);
+
+  useEffect(() => {
+    if (loading || mailbox !== "inbound" || !mailSync.lastSyncAt) {
+      return;
+    }
+    if (!lastSeenSyncAtRef.current) {
+      lastSeenSyncAtRef.current = mailSync.lastSyncAt;
+      return;
+    }
+    if (lastSeenSyncAtRef.current === mailSync.lastSyncAt) {
+      return;
+    }
+    lastSeenSyncAtRef.current = mailSync.lastSyncAt;
+    void refreshMessages({ keepSelection: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, mailbox, mailSync.lastSyncAt]);
 
   function openCompose(options?: { customerId?: string; toAddress?: string }) {
     const preferredCustomer =
@@ -395,12 +436,52 @@ export function MailPage() {
               <Button size="sm" onClick={() => openCompose()}>
                 {t("mail.compose.open")}
               </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={mailSync.isSyncing || loading}
+                onClick={() => {
+                  void mailSync.syncNow().then(() => {
+                    toast.success(t("mail.sync.enqueued"));
+                    void refreshMessages({ keepSelection: true });
+                  });
+                }}
+              >
+                {mailSync.isSyncing ? t("mail.sync.syncing") : t("mail.sync.now")}
+              </Button>
               <Button size="sm" variant="outline" onClick={() => setInboundModalOpen(true)}>
                 {t("mail.inbound.record")}
               </Button>
               <Button size="sm" variant="ghost" onClick={() => setTemplateModalOpen(true)}>
                 {t("mail.compose.manageTemplates")}
               </Button>
+              {mailbox === "inbound" ? (
+                <>
+                  <Button
+                    size="sm"
+                    variant={inboundView === "matched" ? "default" : "outline"}
+                    onClick={() => setInboundView("matched")}
+                  >
+                    {t("mail.sync.matched")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={inboundView === "unmatched" ? "default" : "outline"}
+                    onClick={() => setInboundView("unmatched")}
+                  >
+                    {t("mail.sync.unmatched")}
+                  </Button>
+                </>
+              ) : null}
+              {mailSync.lastError ? (
+                <span className="text-[10px] text-destructive">
+                  {t("mail.sync.lastError", { error: mailSync.lastError })}
+                </span>
+              ) : mailSync.lastSyncAt ? (
+                <span className="text-[10px] text-muted-foreground">
+                  {t("mail.sync.lastSync", { time: mailSync.lastSyncAt })}
+                </span>
+              ) : null}
               <span className="ml-auto text-[10px] text-muted-foreground">
                 {t("mail.list.total", { count: messageTotal })}
               </span>
@@ -422,7 +503,12 @@ export function MailPage() {
               maxStartWidth={520}
             >
               <WorkspaceSplitPane side="start">
-                {loading || listLoading ? (
+                {mailbox === "inbound" && inboundView === "unmatched" ? (
+                  <MailUnmatchedPanel
+                    accountId={accountFilterId}
+                    onLinked={() => void refreshMessages({ keepSelection: true })}
+                  />
+                ) : loading || listLoading ? (
                   <LoadingState label={t("mail.statusLoading")} />
                 ) : messages.length === 0 ? (
                   <div className="space-y-2 px-4 py-10 text-center">
@@ -509,6 +595,7 @@ export function MailPage() {
                   <PreviewReplyPane
                     key={selectedMessage.id}
                     message={selectedMessage}
+                    repliedOutbound={resolveRepliedOutbound(selectedMessage, outboundReplyIndex)}
                     templates={templates}
                     accounts={accounts}
                     customers={customers}
@@ -637,6 +724,75 @@ function extractEmailAddress(value: string | undefined): string {
 }
 
 /**
+ * Normalize RFC Message-ID for matching reply chains.
+ *
+ * @author Xiaoman
+ * @created 2026-07-22
+ */
+function normalizeMessageId(value: string): string {
+  return value.trim().replace(/^<|>$/g, "");
+}
+
+/**
+ * Build quick lookup from outbound RFC Message-ID to message row.
+ *
+ * @author Xiaoman
+ * @created 2026-07-22
+ */
+function buildOutboundReplyIndex(items: MailMessage[]): Map<string, MailMessage> {
+  const map = new Map<string, MailMessage>();
+  for (const item of items) {
+    const raw = item.rfc_message_id?.trim();
+    if (!raw) {
+      continue;
+    }
+    map.set(raw, item);
+    const normalized = normalizeMessageId(raw);
+    if (normalized && normalized !== raw) {
+      map.set(normalized, item);
+    }
+  }
+  return map;
+}
+
+/**
+ * Resolve which outbound message an inbound reply references.
+ *
+ * @author Xiaoman
+ * @created 2026-07-22
+ */
+function resolveRepliedOutbound(
+  message: MailMessage | null,
+  index: Map<string, MailMessage>,
+): MailMessage | null {
+  if (!message || message.direction !== "inbound") {
+    return null;
+  }
+  const candidates: string[] = [];
+  if (message.in_reply_to) {
+    candidates.push(message.in_reply_to.trim());
+    candidates.push(normalizeMessageId(message.in_reply_to));
+  }
+  if (message.references) {
+    for (const token of message.references.split(/\s+/)) {
+      const trimmed = token.trim();
+      if (!trimmed) {
+        continue;
+      }
+      candidates.push(trimmed);
+      candidates.push(normalizeMessageId(trimmed));
+    }
+  }
+  for (const candidate of candidates) {
+    const found = index.get(candidate);
+    if (found) {
+      return found;
+    }
+  }
+  return null;
+}
+
+/**
  * Resolve list/preview counterparty label (inbound from / outbound to).
  *
  * @author Xiaoman
@@ -714,6 +870,7 @@ function resolveReplyToAddress(
  */
 const PreviewReplyPane = memo(function PreviewReplyPane({
   message,
+  repliedOutbound,
   templates,
   accounts,
   customers,
@@ -721,6 +878,7 @@ const PreviewReplyPane = memo(function PreviewReplyPane({
   onSent,
 }: {
   message: MailMessage;
+  repliedOutbound: MailMessage | null;
   templates: MailTemplate[];
   accounts: MailAccount[];
   customers: CustomerProfile[];
@@ -849,6 +1007,15 @@ const PreviewReplyPane = memo(function PreviewReplyPane({
               {message.open_tracking_id ? (
                 <span className="ml-1 text-sky-600">· {t("mail.preview.openTracking")}</span>
               ) : null}
+            </p>
+          ) : null}
+          {isInbound ? (
+            <p className="mb-2 text-xs text-muted-foreground">
+              {repliedOutbound
+                ? t("mail.preview.replyToKnown", {
+                    subject: repliedOutbound.subject || repliedOutbound.id,
+                  })
+                : t("mail.preview.replyToUnknown")}
             </p>
           ) : null}
           <h3 className="mb-3 text-sm font-semibold leading-snug">{message.subject || t("mail.preview.emptyTitle")}</h3>

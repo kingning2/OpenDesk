@@ -7,17 +7,21 @@ use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use ports::background_job::{
-    BackgroundJobStore, JOB_STATUS_COMPLETED, JOB_TYPE_CRAWLER_EMAIL_ENRICH,
+    BackgroundJobStore, JOB_STATUS_COMPLETED, JOB_TYPE_CRAWLER_EMAIL_ENRICH, JOB_TYPE_IMAP_SYNC,
 };
 use ports::crawler_channels::CrawlerChannelStore;
+use ports::customer::CustomerStore;
+use ports::mail::MailStore;
 use thiserror::Error;
 
-use crate::handlers::crawler_email_enrich;
+use crate::handlers::{crawler_email_enrich, imap_sync};
 
 /// Poll loop orchestrator for Worker jobs.
 pub struct JobRunner {
     job_store: Arc<dyn BackgroundJobStore>,
     channel_store: Arc<dyn CrawlerChannelStore>,
+    mail_store: Arc<dyn MailStore>,
+    customer_store: Arc<dyn CustomerStore>,
 }
 
 #[derive(Debug, Error)]
@@ -34,10 +38,14 @@ impl JobRunner {
     pub fn new(
         job_store: Arc<dyn BackgroundJobStore>,
         channel_store: Arc<dyn CrawlerChannelStore>,
+        mail_store: Arc<dyn MailStore>,
+        customer_store: Arc<dyn CustomerStore>,
     ) -> Self {
         Self {
             job_store,
             channel_store,
+            mail_store,
+            customer_store,
         }
     }
 
@@ -50,7 +58,11 @@ impl JobRunner {
     /// 作者：coisini
     /// 创建时间：2026-07-20
     pub async fn poll_once(&self) -> Result<bool, RunnerError> {
-        let Some(job) = self.job_store.claim_next(None)? else {
+        let job = self
+            .job_store
+            .claim_next(Some(JOB_TYPE_IMAP_SYNC))?
+            .or(self.job_store.claim_next(None)?);
+        let Some(job) = job else {
             return Ok(false);
         };
 
@@ -59,6 +71,11 @@ impl JobRunner {
         let result: Result<(), String> = match job.job_type.as_str() {
             JOB_TYPE_CRAWLER_EMAIL_ENRICH => {
                 crawler_email_enrich::handle(&job, self.channel_store.clone())
+                    .await
+                    .map_err(|error| error.to_string())
+            }
+            JOB_TYPE_IMAP_SYNC => {
+                imap_sync::handle(&job, self.mail_store.clone(), self.customer_store.clone())
                     .await
                     .map_err(|error| error.to_string())
             }

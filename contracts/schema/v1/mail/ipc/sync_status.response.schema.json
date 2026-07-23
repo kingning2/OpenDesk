@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/ipc/sync_status/response/v1",
+  "title": "mail/ipc/sync_status.response",
+  "description": "IMAP sync state rows as JSON array string.",
+  "type": "object",
+  "required": ["items_json", "total"],
+  "properties": {
+    "items_json": {
+      "type": "string",
+      "description": "JSON array of mail_imap_sync_state DTO objects."
+    },
+    "total": { "type": "integer" }
+  },
+  "additionalProperties": false
+}

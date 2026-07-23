@@ -7,19 +7,21 @@ use diesel::prelude::*;
 use keyring::Entry;
 use ports::mail::{
     mail_keyring_user, mail_password_ref, MailAccountRecord, MailAccountWriteInput,
-    MailInboundWriteInput, MailMessageListFilter, MailMessageRecord, MailSendInput, MailStore,
-    MailTemplateRecord, MailTemplateWriteInput, MAIL_KEYRING_SERVICE,
+    MailImapInboundWriteInput, MailImapSyncStateRecord, MailInboundWriteInput,
+    MailMessageListFilter, MailMessageRecord, MailSendInput, MailStore, MailTemplateRecord,
+    MailTemplateWriteInput, MailUnmatchedListFilter, MAIL_KEYRING_SERVICE,
 };
 use ports::repository::StoreError;
 use uuid::Uuid;
 
 use crate::opendesk_db::schema::customer_timeline::dsl as timeline;
 use crate::opendesk_db::schema::mail_account::dsl as account;
+use crate::opendesk_db::schema::mail_imap_sync_state::dsl as imap_state;
 use crate::opendesk_db::schema::mail_message::dsl as message;
 use crate::opendesk_db::schema::mail_template::dsl as template;
 use crate::opendesk_db::{
-    MailAccountRow, MailMessageRow, MailTemplateRow, NewMailAccountRow, NewMailMessageRow,
-    NewMailTemplateRow, OpendeskDb,
+    MailAccountRow, MailImapSyncStateRow, MailMessageRow, MailTemplateRow, NewMailAccountRow,
+    NewMailMessageRow, NewMailTemplateRow, OpendeskDb,
 };
 
 /// SQLite implementation of [`MailStore`].
@@ -485,6 +487,302 @@ impl MailStore for SqliteMailStore {
             ))
         })
     }
+
+    fn list_imap_sync_accounts(&self) -> Result<Vec<MailAccountRecord>, StoreError> {
+        self.db.with_conn(|conn| {
+            account::mail_account
+                .filter(account::imap_sync_enabled.eq(true))
+                .filter(account::imap_host.is_not_null())
+                .order(account::created_at.asc())
+                .select(MailAccountRow::as_select())
+                .load::<MailAccountRow>(conn)
+                .map(|rows| rows.into_iter().map(MailAccountRecord::from).collect())
+                .map_err(map_diesel_error)
+        })
+    }
+
+    fn get_imap_sync_state(
+        &self,
+        account_id: &str,
+        folder: &str,
+    ) -> Result<MailImapSyncStateRecord, StoreError> {
+        self.db.with_conn(|conn| {
+            imap_state::mail_imap_sync_state
+                .filter(imap_state::account_id.eq(account_id))
+                .filter(imap_state::folder.eq(folder))
+                .select(MailImapSyncStateRow::as_select())
+                .first::<MailImapSyncStateRow>(conn)
+                .optional()
+                .map(|row| {
+                    row.map(MailImapSyncStateRecord::from).unwrap_or_else(|| {
+                        MailImapSyncStateRecord {
+                            account_id: account_id.to_string(),
+                            folder: folder.to_string(),
+                            uidvalidity: 0,
+                            highest_modseq: "0".to_string(),
+                            last_uid: 0,
+                            last_sync_at: None,
+                            last_error: None,
+                            full_synced: false,
+                        }
+                    })
+                })
+                .map_err(map_diesel_error)
+        })
+    }
+
+    fn list_imap_sync_states(
+        &self,
+        account_id: Option<&str>,
+    ) -> Result<Vec<MailImapSyncStateRecord>, StoreError> {
+        let accounts = if let Some(account_id) = account_id {
+            vec![self.get_account(account_id)?]
+        } else {
+            self.list_imap_sync_accounts()?
+        };
+
+        accounts
+            .into_iter()
+            .map(|record| self.get_imap_sync_state(&record.id, "INBOX"))
+            .collect()
+    }
+
+    fn upsert_imap_sync_state(&self, state: MailImapSyncStateRecord) -> Result<(), StoreError> {
+        self.db.with_conn(|conn| {
+            diesel::sql_query(
+                "INSERT INTO mail_imap_sync_state (
+                    account_id, folder, uidvalidity, highest_modseq, last_uid,
+                    last_sync_at, full_synced, last_error
+                ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+                ON CONFLICT(account_id, folder) DO UPDATE SET
+                    uidvalidity = excluded.uidvalidity,
+                    highest_modseq = excluded.highest_modseq,
+                    last_uid = excluded.last_uid,
+                    last_sync_at = excluded.last_sync_at,
+                    full_synced = excluded.full_synced,
+                    last_error = excluded.last_error",
+            )
+            .bind::<diesel::sql_types::Text, _>(&state.account_id)
+            .bind::<diesel::sql_types::Text, _>(&state.folder)
+            .bind::<diesel::sql_types::BigInt, _>(state.uidvalidity)
+            .bind::<diesel::sql_types::Text, _>(&state.highest_modseq)
+            .bind::<diesel::sql_types::BigInt, _>(state.last_uid)
+            .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(&state.last_sync_at)
+            .bind::<diesel::sql_types::Bool, _>(state.full_synced)
+            .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(&state.last_error)
+            .execute(conn)
+            .map(|_| ())
+            .map_err(map_diesel_error)
+        })
+    }
+
+    fn insert_imap_inbound_if_new(
+        &self,
+        input: MailImapInboundWriteInput,
+    ) -> Result<Option<MailMessageRecord>, StoreError> {
+        if let Some(rfc_id) = input
+            .rfc_message_id
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+        {
+            let exists = self.db.with_conn(|conn| {
+                message::mail_message
+                    .filter(message::rfc_message_id.eq(rfc_id))
+                    .count()
+                    .get_result::<i64>(conn)
+                    .map_err(map_diesel_error)
+            })?;
+            if exists > 0 {
+                return Ok(None);
+            }
+        }
+
+        let now = now_string();
+        let row = NewMailMessageRow {
+            id: Uuid::new_v4().to_string(),
+            customer_id: input.customer_id.clone(),
+            template_id: None,
+            account_id: Some(input.account_id.clone()),
+            status: "received".to_string(),
+            direction: "inbound".to_string(),
+            subject: input.subject.clone(),
+            body_text: input.body_text.clone(),
+            body_html: input.body_html.clone(),
+            error_message: None,
+            sent_at: None,
+            received_at: Some(input.received_at.clone()),
+            imap_uid: Some(input.imap_uid),
+            imap_folder: Some(input.imap_folder.clone()),
+            rfc_message_id: input.rfc_message_id.clone(),
+            in_reply_to: input.in_reply_to.clone(),
+            references_header: input.references.clone(),
+            is_favorite: false,
+            open_tracking_id: None,
+            created_at: now.clone(),
+            updated_at: now.clone(),
+            to_address: None,
+            from_address: Some(input.from_address.clone()),
+            source_ref: None,
+        };
+
+        self.db.with_conn(|conn| {
+            diesel::insert_into(message::mail_message)
+                .values(&row)
+                .execute(conn)
+                .map_err(map_diesel_error)?;
+
+            if let Some(customer_id) = input.customer_id.as_deref() {
+                insert_timeline_entry(
+                    conn,
+                    customer_id,
+                    "email_received",
+                    &row.id,
+                    &format!("Email received: {}", row.subject),
+                )?;
+            }
+
+            message::mail_message
+                .filter(message::id.eq(&row.id))
+                .select(MailMessageRow::as_select())
+                .first::<MailMessageRow>(conn)
+                .map(MailMessageRecord::from)
+                .map(Some)
+                .map_err(map_diesel_error)
+        })
+    }
+
+    fn list_unmatched_inbound(
+        &self,
+        filter: MailUnmatchedListFilter,
+    ) -> Result<(Vec<MailMessageRecord>, i64), StoreError> {
+        let limit = filter.limit.clamp(1, 500);
+        let offset = filter.offset.max(0);
+
+        self.db.with_conn(|conn| {
+            let mut count_query = message::mail_message
+                .filter(message::direction.eq("inbound"))
+                .filter(message::customer_id.is_null())
+                .into_boxed();
+            let mut rows_query = message::mail_message
+                .filter(message::direction.eq("inbound"))
+                .filter(message::customer_id.is_null())
+                .into_boxed();
+
+            if let Some(account_id) = filter.account_id.as_deref() {
+                count_query = count_query.filter(message::account_id.eq(account_id));
+                rows_query = rows_query.filter(message::account_id.eq(account_id));
+            }
+
+            let total = count_query
+                .count()
+                .get_result::<i64>(conn)
+                .map_err(map_diesel_error)?;
+
+            let rows = rows_query
+                .order(message::received_at.desc())
+                .limit(limit)
+                .offset(offset)
+                .select(MailMessageRow::as_select())
+                .load::<MailMessageRow>(conn)
+                .map_err(map_diesel_error)?;
+
+            Ok((
+                rows.into_iter().map(MailMessageRecord::from).collect(),
+                total,
+            ))
+        })
+    }
+
+    fn link_inbound_customer(
+        &self,
+        message_id: &str,
+        customer_id: &str,
+    ) -> Result<MailMessageRecord, StoreError> {
+        self.db.with_conn(|conn| {
+            let existing = message::mail_message
+                .filter(message::id.eq(message_id))
+                .select(MailMessageRow::as_select())
+                .first::<MailMessageRow>(conn)
+                .map_err(map_diesel_error)?;
+
+            if existing.direction != "inbound" {
+                return Err(StoreError::Unavailable(
+                    "mail.message.not_inbound".to_string(),
+                ));
+            }
+            if existing.customer_id.is_some() {
+                return Err(StoreError::Conflict(
+                    "mail.message.already_linked".to_string(),
+                ));
+            }
+
+            diesel::update(message::mail_message.filter(message::id.eq(message_id)))
+                .set((
+                    message::customer_id.eq(Some(customer_id.to_string())),
+                    message::updated_at.eq(now_string()),
+                ))
+                .execute(conn)
+                .map_err(map_diesel_error)?;
+
+            insert_timeline_entry(
+                conn,
+                customer_id,
+                "email_received",
+                message_id,
+                &format!("Email received: {}", existing.subject),
+            )?;
+
+            message::mail_message
+                .filter(message::id.eq(message_id))
+                .select(MailMessageRow::as_select())
+                .first::<MailMessageRow>(conn)
+                .map(MailMessageRecord::from)
+                .map_err(map_diesel_error)
+        })
+    }
+
+    fn has_outbound_to_address(
+        &self,
+        account_id: &str,
+        to_address: &str,
+    ) -> Result<bool, StoreError> {
+        let target = normalize_email(to_address);
+        if target.is_empty() {
+            return Ok(false);
+        }
+        self.db.with_conn(|conn| {
+            let count = message::mail_message
+                .filter(message::direction.eq("outbound"))
+                .filter(message::account_id.eq(account_id))
+                .filter(message::to_address.eq(target))
+                .count()
+                .get_result::<i64>(conn)
+                .map_err(map_diesel_error)?;
+            Ok(count > 0)
+        })
+    }
+
+    fn is_outbound_message_id(
+        &self,
+        account_id: &str,
+        rfc_message_id: &str,
+    ) -> Result<bool, StoreError> {
+        let target = rfc_message_id.trim();
+        if target.is_empty() {
+            return Ok(false);
+        }
+        self.db.with_conn(|conn| {
+            let count = message::mail_message
+                .filter(message::direction.eq("outbound"))
+                .filter(message::account_id.eq(account_id))
+                .filter(message::rfc_message_id.eq(target))
+                .count()
+                .get_result::<i64>(conn)
+                .map_err(map_diesel_error)?;
+            Ok(count > 0)
+        })
+    }
 }
 
 fn insert_timeline_entry(
@@ -577,6 +875,21 @@ impl From<MailMessageRow> for MailMessageRecord {
             open_tracking_id: row.open_tracking_id,
             created_at: row.created_at,
             updated_at: row.updated_at,
+        }
+    }
+}
+
+impl From<MailImapSyncStateRow> for MailImapSyncStateRecord {
+    fn from(row: MailImapSyncStateRow) -> Self {
+        Self {
+            account_id: row.account_id,
+            folder: row.folder,
+            uidvalidity: row.uidvalidity,
+            highest_modseq: row.highest_modseq,
+            last_uid: row.last_uid,
+            last_sync_at: row.last_sync_at,
+            last_error: row.last_error,
+            full_synced: row.full_synced,
         }
     }
 }

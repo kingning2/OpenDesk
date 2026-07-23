@@ -130,3 +130,34 @@ pub fn messages_to_json(records: &[MailMessageRecord]) -> Result<String, String>
     )
     .map_err(|error| error.to_string())
 }
+
+/// Serialize IMAP sync state rows to JSON for IPC responses.
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-07-22
+pub fn imap_sync_states_to_json<F>(
+    records: &[ports::mail::MailImapSyncStateRecord],
+    is_syncing: F,
+) -> Result<String, String>
+where
+    F: Fn(&str) -> bool,
+{
+    serde_json::to_string(
+        &records
+            .iter()
+            .map(|record| {
+                json!({
+                    "account_id": record.account_id,
+                    "folder": record.folder,
+                    "uidvalidity": record.uidvalidity,
+                    "last_uid": record.last_uid,
+                    "last_sync_at": record.last_sync_at,
+                    "last_error": record.last_error,
+                    "full_synced": record.full_synced,
+                    "is_syncing": is_syncing(&record.account_id),
+                })
+            })
+            .collect::<Vec<_>>(),
+    )
+    .map_err(|error| error.to_string())
+}

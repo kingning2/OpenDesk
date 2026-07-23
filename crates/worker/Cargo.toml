@@ -11,6 +11,7 @@ path = "src/main.rs"
 [dependencies]
 crawler-enrich = { path = "../crawler-enrich" }
 dirs = { workspace = true }
+mail-net = { path = "../mail-net" }
 ports = { path = "../ports" }
 serde = { workspace = true }
 serde_json = { workspace = true }

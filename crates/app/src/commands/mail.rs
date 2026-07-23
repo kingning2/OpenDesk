@@ -4,14 +4,18 @@
 //! 创建时间：2026-07-21
 
 use common::contracts::{
-    MailIpcAccountListResponse, MailIpcAccountSaveRequest, MailIpcMessageListRequest,
-    MailIpcMessageListResponse, MailIpcRecordInboundRequest, MailIpcRecordInboundResponse,
-    MailIpcSendRequest, MailIpcSendResponse, MailIpcTemplateApplyRequest,
-    MailIpcTemplateApplyResponse, MailIpcTemplateListResponse, MailIpcTemplateSaveRequest,
+    MailIpcAccountListResponse, MailIpcAccountSaveRequest, MailIpcInboxUnmatchedListRequest,
+    MailIpcInboxUnmatchedListResponse, MailIpcLinkInboundCustomerRequest,
+    MailIpcLinkInboundCustomerResponse, MailIpcMessageListRequest, MailIpcMessageListResponse,
+    MailIpcRecordInboundRequest, MailIpcRecordInboundResponse, MailIpcSendRequest,
+    MailIpcSendResponse, MailIpcSyncNowRequest, MailIpcSyncNowResponse, MailIpcSyncStatusRequest,
+    MailIpcSyncStatusResponse, MailIpcTemplateApplyRequest, MailIpcTemplateApplyResponse,
+    MailIpcTemplateListResponse, MailIpcTemplateSaveRequest,
 };
 use mail::app::{
-    ApplyMailTemplate, ListMailAccounts, ListMailMessages, ListMailTemplates, RecordInboundMail,
-    SaveMailAccount, SaveMailTemplate, SendMail,
+    ApplyMailTemplate, GetMailSyncStatus, LinkInboundCustomer, ListMailAccounts, ListMailMessages,
+    ListMailTemplates, ListUnmatchedInbound, RecordInboundMail, SaveMailAccount, SaveMailTemplate,
+    SendMail, SyncMailNow,
 };
 
 use crate::state::AppState;
@@ -138,6 +142,77 @@ pub async fn mail_record_inbound(
     let customer_store = state.customer_store.clone();
     tauri::async_runtime::spawn_blocking(move || {
         RecordInboundMail::execute(mail_store.as_ref(), customer_store.as_ref(), request)
+    })
+    .await
+    .map_err(|error| error.to_string())?
+}
+
+/// Enqueue IMAP sync background jobs.
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-07-22
+#[tauri::command]
+pub async fn mail_sync_now(
+    state: tauri::State<'_, AppState>,
+    request: MailIpcSyncNowRequest,
+) -> Result<MailIpcSyncNowResponse, String> {
+    let job_store = state.job_store.clone();
+    let mail_store = state.mail_store.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        SyncMailNow::execute(job_store.as_ref(), mail_store.as_ref(), request)
+    })
+    .await
+    .map_err(|error| error.to_string())?
+}
+
+/// Read IMAP sync status for mail settings UI.
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-07-22
+#[tauri::command]
+pub async fn mail_sync_status(
+    state: tauri::State<'_, AppState>,
+    request: MailIpcSyncStatusRequest,
+) -> Result<MailIpcSyncStatusResponse, String> {
+    let job_store = state.job_store.clone();
+    let mail_store = state.mail_store.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        GetMailSyncStatus::execute(job_store.as_ref(), mail_store.as_ref(), request)
+    })
+    .await
+    .map_err(|error| error.to_string())?
+}
+
+/// List inbound messages without a linked customer.
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-07-22
+#[tauri::command]
+pub async fn mail_inbox_unmatched_list(
+    state: tauri::State<'_, AppState>,
+    request: MailIpcInboxUnmatchedListRequest,
+) -> Result<MailIpcInboxUnmatchedListResponse, String> {
+    let mail_store = state.mail_store.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        ListUnmatchedInbound::execute(mail_store.as_ref(), request)
+    })
+    .await
+    .map_err(|error| error.to_string())?
+}
+
+/// Link one unmatched inbound message to a customer.
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-07-22
+#[tauri::command]
+pub async fn mail_link_inbound_customer(
+    state: tauri::State<'_, AppState>,
+    request: MailIpcLinkInboundCustomerRequest,
+) -> Result<MailIpcLinkInboundCustomerResponse, String> {
+    let mail_store = state.mail_store.clone();
+    let customer_store = state.customer_store.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        LinkInboundCustomer::execute(mail_store.as_ref(), customer_store.as_ref(), request)
     })
     .await
     .map_err(|error| error.to_string())?

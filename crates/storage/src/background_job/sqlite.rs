@@ -138,6 +138,24 @@ impl BackgroundJobStore for SqliteBackgroundJobStore {
             Ok(())
         })
     }
+
+    fn has_active_imap_sync(&self, account_id: &str) -> Result<bool, StoreError> {
+        let needle = format!("\"account_id\":\"{account_id}\"");
+        self.db.with_conn(|conn| {
+            let count = background_job::table
+                .filter(background_job::job_type.eq(ports::background_job::JOB_TYPE_IMAP_SYNC))
+                .filter(
+                    background_job::status
+                        .eq(ports::background_job::JOB_STATUS_QUEUED)
+                        .or(background_job::status.eq(ports::background_job::JOB_STATUS_RUNNING)),
+                )
+                .filter(background_job::payload_json.like(format!("%{needle}%")))
+                .count()
+                .get_result::<i64>(conn)
+                .map_err(|error| StoreError::Unavailable(error.to_string()))?;
+            Ok(count > 0)
+        })
+    }
 }
 
 fn now_string() -> String {

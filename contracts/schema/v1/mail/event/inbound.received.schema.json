@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/event/inbound.received/v1",
+  "title": "mail/inbound.received",
+  "description": "New inbound message persisted from IMAP sync.",
+  "type": "object",
+  "required": ["event_id", "occurred_at", "message_id", "account_id", "direction"],
+  "properties": {
+    "event_id": { "type": "string" },
+    "occurred_at": { "type": "string" },
+    "message_id": { "type": "string" },
+    "account_id": { "type": "string" },
+    "customer_id": { "type": "string" },
+    "direction": { "type": "string" },
+    "subject": { "type": "string" },
+    "from_address": { "type": "string" }
+  },
+  "additionalProperties": false
+}

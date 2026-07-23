@@ -3,6 +3,10 @@
 //! 作者：Xiaoman
 //! 创建时间：2026-07-22
 
+mod imap;
+
+pub use imap::{fetch_messages_since, watch_inbox_idle, ImapEndpoint, ImapFetchedMessage};
+
 use std::time::Duration;
 
 use lettre::message::{Mailbox, MultiPart, SinglePart};

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/ipc/inbox_unmatched_list.request/v1",
+  "title": "mail/ipc/inbox_unmatched_list.request",
+  "description": "List inbound messages without a linked customer.",
+  "type": "object",
+  "properties": {
+    "account_id": { "type": "string" },
+    "limit": { "type": "integer" },
+    "offset": { "type": "integer" }
+  },
+  "additionalProperties": false
+}

@@ -73,4 +73,7 @@ pub trait CustomerStore: Send + Sync {
     fn create(&self, input: CustomerWriteInput) -> Result<CustomerRecord, StoreError>;
 
     fn update(&self, id: &str, input: CustomerWriteInput) -> Result<CustomerRecord, StoreError>;
+
+    /// Find one customer by exact email (case-insensitive).
+    fn find_by_email(&self, email: &str) -> Result<Option<CustomerRecord>, StoreError>;
 }

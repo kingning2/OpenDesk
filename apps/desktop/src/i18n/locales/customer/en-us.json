@@ -12,7 +12,7 @@
   "cancel": "Cancel",
   "search": "Search",
   "searchPlaceholder": "Search by email or name",
-  "total": "{{count}} customers",
+  "total": "{count} customers",
   "emptyList": "No customers yet. Click New to add one.",
   "selectHint": "Select a customer on the left, or create a new one",
   "emailDuplicate": "This email already exists. Use a different email.",

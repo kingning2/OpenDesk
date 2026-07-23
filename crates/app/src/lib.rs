@@ -19,7 +19,8 @@ use commands::{
     crawler_keywords_import, crawler_youtube_api_key_get, crawler_youtube_api_key_set,
     customer_create, customer_get, customer_list, customer_update, license_activate,
     license_machine_code, license_status, llm_settings_get, llm_settings_save, llm_test_connection,
-    mail_account_list, mail_account_save, mail_message_list, mail_record_inbound, mail_send,
+    mail_account_list, mail_account_save, mail_inbox_unmatched_list, mail_link_inbound_customer,
+    mail_message_list, mail_record_inbound, mail_send, mail_sync_now, mail_sync_status,
     mail_template_apply, mail_template_list, mail_template_save, workflow_snippet_delete,
     workflow_snippet_list, workflow_snippet_save,
 };
@@ -27,6 +28,7 @@ use crawler::{CrawlerService, CrawlerUiEmitter};
 use crawler_emit::TauriCrawlerEmitter;
 use kernel::event::{EventBus, InMemoryEventBus};
 use logging::init_tracing;
+use mail::app::ScheduleImapSync;
 use paths::{crawler_db_path, opendesk_db_path};
 use ports::background_job::BackgroundJobStore;
 use ports::crawler_channels::CrawlerChannelStore;
@@ -80,7 +82,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
     let llm_settings_store = Arc::new(SqliteLlmSettingsStore::new(opendesk_db.clone()))
         as Arc<dyn ports::llm_settings::LlmSettingsStore>;
     let crawler = Arc::new(CrawlerService::new(channels_store.clone()));
-    crawler.attach_job_store(job_store);
+    crawler.attach_job_store(job_store.clone());
     let keywords_store =
         Arc::new(SqliteCrawlerKeywordStore::new(crawler_db)) as Arc<dyn CrawlerKeywordStore>;
     let customer_store =
@@ -100,6 +102,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
         llm_settings_store,
         customer_store,
         mail_store,
+        job_store: job_store.clone(),
         snippet_store,
         event_bus,
     };
@@ -116,6 +119,8 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             let state = app.state::<AppState>();
             let lifecycle = state.lifecycle.clone();
             let llm_store = state.llm_settings_store.clone();
+            let imap_job_store = state.job_store.clone();
+            let imap_mail_store = state.mail_store.clone();
             tauri::async_runtime::spawn(async move {
                 if let Ok(env) = (|| {
                     let mut env = std::collections::HashMap::new();
@@ -136,6 +141,27 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
                 }
                 if let Err(error) = lifecycle.ensure_running().await {
                     tracing::error!(%error, "sidecar startup failed");
+                }
+            });
+
+            tauri::async_runtime::spawn(async move {
+                let interval_secs = std::env::var("OPENDESK_IMAP_SYNC_INTERVAL_SECS")
+                    .ok()
+                    .and_then(|value| value.parse().ok())
+                    .unwrap_or(180);
+                let mut ticker =
+                    tokio::time::interval(std::time::Duration::from_secs(interval_secs));
+                loop {
+                    ticker.tick().await;
+                    let job_store = imap_job_store.clone();
+                    let mail_store = imap_mail_store.clone();
+                    let result = tauri::async_runtime::spawn_blocking(move || {
+                        ScheduleImapSync::execute(job_store.as_ref(), mail_store.as_ref())
+                    })
+                    .await;
+                    if let Err(error) = result {
+                        tracing::warn!(%error, "imap periodic scheduler join failed");
+                    }
                 }
             });
             Ok(())
@@ -171,6 +197,10 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             mail_message_list,
             mail_send,
             mail_record_inbound,
+            mail_sync_now,
+            mail_sync_status,
+            mail_inbox_unmatched_list,
+            mail_link_inbound_customer,
             workflow_snippet_list,
             workflow_snippet_save,
             workflow_snippet_delete

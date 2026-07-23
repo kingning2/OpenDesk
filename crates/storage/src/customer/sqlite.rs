@@ -173,6 +173,22 @@ impl CustomerStore for SqliteCustomerStore {
                 .map_err(map_diesel_error)
         })
     }
+
+    fn find_by_email(&self, email: &str) -> Result<Option<CustomerRecord>, StoreError> {
+        let normalized = normalize_email(email);
+        if normalized.is_empty() {
+            return Ok(None);
+        }
+        self.db.with_conn(|conn| {
+            customer::customer
+                .filter(customer::email.eq(normalized))
+                .select(CustomerRow::as_select())
+                .first::<CustomerRow>(conn)
+                .optional()
+                .map(|row| row.map(CustomerRecord::from))
+                .map_err(map_diesel_error)
+        })
+    }
 }
 
 impl From<CustomerRow> for CustomerRecord {

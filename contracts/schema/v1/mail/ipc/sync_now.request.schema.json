@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/ipc/sync_now.request/v1",
+  "title": "mail/ipc/sync_now.request",
+  "description": "Enqueue IMAP sync background jobs for one or all enabled mail accounts.",
+  "type": "object",
+  "properties": {
+    "account_id": {
+      "type": "string",
+      "description": "When omitted, enqueue sync for every account with IMAP enabled."
+    }
+  },
+  "additionalProperties": false
+}

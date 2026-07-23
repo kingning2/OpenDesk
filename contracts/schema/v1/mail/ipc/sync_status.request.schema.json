@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/ipc/sync_status.request/v1",
+  "title": "mail/ipc/sync_status.request",
+  "description": "Read IMAP sync state for one or all mail accounts.",
+  "type": "object",
+  "properties": {
+    "account_id": {
+      "type": "string",
+      "description": "When omitted, return sync state for every IMAP-enabled account."
+    }
+  },
+  "additionalProperties": false
+}
