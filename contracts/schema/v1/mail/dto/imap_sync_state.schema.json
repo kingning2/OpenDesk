@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/dto/imap_sync_state/v1",
+  "title": "mail/imap_sync_state",
+  "description": "Per-account IMAP folder sync cursor and last error.",
+  "type": "object",
+  "required": ["account_id", "folder", "last_uid", "full_synced"],
+  "properties": {
+    "account_id": { "type": "string" },
+    "folder": { "type": "string" },
+    "uidvalidity": { "type": "integer" },
+    "last_uid": { "type": "integer" },
+    "last_sync_at": { "type": "string" },
+    "last_error": { "type": "string" },
+    "full_synced": { "type": "boolean" },
+    "is_syncing": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}

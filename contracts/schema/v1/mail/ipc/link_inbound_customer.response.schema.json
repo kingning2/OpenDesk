@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/ipc/link_inbound_customer/response/v1",
+  "title": "mail/ipc/link_inbound_customer.response",
+  "description": "Linked inbound message id.",
+  "type": "object",
+  "required": ["message_id"],
+  "properties": {
+    "message_id": { "type": "string" }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/ipc/link_inbound_customer.request/v1",
+  "title": "mail/ipc/link_inbound_customer.request",
+  "description": "Manually link one unmatched inbound message to a customer.",
+  "type": "object",
+  "required": ["message_id", "customer_id"],
+  "properties": {
+    "message_id": { "type": "string" },
+    "customer_id": { "type": "string" }
+  },
+  "additionalProperties": false
+}

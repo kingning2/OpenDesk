@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.17
+
+- 新增 mail IPC：`sync_now` / `sync_status`（IMAP 后台同步入队与状态查询）
+- 新增 mail IPC：`inbox_unmatched_list` / `link_inbound_customer`（待关联入站邮件）
+- 新增 mail DTO：`imap_sync_state`
+- 新增 mail event：`inbound.received`（IMAP 新入站推送）
+
 ## 0.1.16
 
 - 新增 crawler IPC：`channel_update`（人工填写/更新 `verified_email`）
