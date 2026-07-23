@@ -4,6 +4,5 @@
 
 | Change ID | 状态 | 优先级 | 主领域 | 负责人 | 父任务 | 阻塞 |
 |---|---|---|---|---|---|---|
-| CHG-20260722-039-mail-workbench-ux | in_progress | P0 | mail | developer | EPIC-20260720-001-mvp-sales-workbench | — |
 | CHG-20260720-026-mail-inbound-reply-record | in_progress | P1 | mail | developer | EPIC-20260720-001-mvp-sales-workbench | CHG-20260720-029-imap-inbound-sync |
 | CHG-20260720-029-imap-inbound-sync | in_progress | P0 | mail | developer | EPIC-20260720-001-mvp-sales-workbench | CHG-20260720-018-ai-mail-draft |
