@@ -191,6 +191,7 @@ diesel::table! {
         last_uid -> BigInt,
         last_sync_at -> Nullable<Text>,
         full_synced -> Bool,
+        last_error -> Nullable<Text>,
     }
 }
 

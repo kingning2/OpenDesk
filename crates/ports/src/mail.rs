@@ -198,6 +198,54 @@ pub struct MailInboundWriteInput {
     pub in_reply_to: Option<String>,
 }
 
+/// IMAP-fetched inbound message write input.
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-07-22
+#[derive(Debug, Clone)]
+pub struct MailImapInboundWriteInput {
+    pub account_id: String,
+    pub customer_id: Option<String>,
+    pub from_address: String,
+    pub from_name: Option<String>,
+    pub subject: String,
+    pub body_text: String,
+    pub body_html: Option<String>,
+    pub received_at: String,
+    pub imap_uid: i64,
+    pub imap_folder: String,
+    pub rfc_message_id: Option<String>,
+    pub in_reply_to: Option<String>,
+    pub references: Option<String>,
+}
+
+/// IMAP sync cursor for one account folder.
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-07-22
+#[derive(Debug, Clone)]
+pub struct MailImapSyncStateRecord {
+    pub account_id: String,
+    pub folder: String,
+    pub uidvalidity: i64,
+    pub highest_modseq: String,
+    pub last_uid: i64,
+    pub last_sync_at: Option<String>,
+    pub last_error: Option<String>,
+    pub full_synced: bool,
+}
+
+/// Unmatched inbound list filter.
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-07-22
+#[derive(Debug, Clone)]
+pub struct MailUnmatchedListFilter {
+    pub account_id: Option<String>,
+    pub limit: i64,
+    pub offset: i64,
+}
+
 /// Local mailbox list filter.
 ///
 /// 作者：Xiaoman
@@ -255,4 +303,56 @@ pub trait MailStore: Send + Sync {
         &self,
         filter: MailMessageListFilter,
     ) -> Result<(Vec<MailMessageRecord>, i64), StoreError>;
+
+    /// List mail accounts with IMAP sync enabled and host configured.
+    fn list_imap_sync_accounts(&self) -> Result<Vec<MailAccountRecord>, StoreError>;
+
+    /// Read IMAP sync state for one account folder (defaults when missing).
+    fn get_imap_sync_state(
+        &self,
+        account_id: &str,
+        folder: &str,
+    ) -> Result<MailImapSyncStateRecord, StoreError>;
+
+    /// List IMAP sync state rows for enabled accounts.
+    fn list_imap_sync_states(
+        &self,
+        account_id: Option<&str>,
+    ) -> Result<Vec<MailImapSyncStateRecord>, StoreError>;
+
+    /// Upsert sync cursor and optional error after one IMAP run.
+    fn upsert_imap_sync_state(&self, state: MailImapSyncStateRecord) -> Result<(), StoreError>;
+
+    /// Insert one IMAP inbound message; skip when `rfc_message_id` already exists.
+    fn insert_imap_inbound_if_new(
+        &self,
+        input: MailImapInboundWriteInput,
+    ) -> Result<Option<MailMessageRecord>, StoreError>;
+
+    /// List inbound messages without a linked customer.
+    fn list_unmatched_inbound(
+        &self,
+        filter: MailUnmatchedListFilter,
+    ) -> Result<(Vec<MailMessageRecord>, i64), StoreError>;
+
+    /// Link one unmatched inbound message to a customer and append timeline.
+    fn link_inbound_customer(
+        &self,
+        message_id: &str,
+        customer_id: &str,
+    ) -> Result<MailMessageRecord, StoreError>;
+
+    /// Whether we have previously sent outbound mail to this recipient.
+    fn has_outbound_to_address(
+        &self,
+        account_id: &str,
+        to_address: &str,
+    ) -> Result<bool, StoreError>;
+
+    /// Whether this RFC Message-ID belongs to an outbound message we sent.
+    fn is_outbound_message_id(
+        &self,
+        account_id: &str,
+        rfc_message_id: &str,
+    ) -> Result<bool, StoreError>;
 }

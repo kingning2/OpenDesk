@@ -27,7 +27,8 @@ pub use customer::{customer_create, customer_get, customer_list, customer_update
 pub use license::{license_activate, license_machine_code, license_status};
 pub use llm::{llm_settings_get, llm_settings_save, llm_test_connection};
 pub use mail::{
-    mail_account_list, mail_account_save, mail_message_list, mail_record_inbound, mail_send,
+    mail_account_list, mail_account_save, mail_inbox_unmatched_list, mail_link_inbound_customer,
+    mail_message_list, mail_record_inbound, mail_send, mail_sync_now, mail_sync_status,
     mail_template_apply, mail_template_list, mail_template_save,
 };
 pub use workflow::{workflow_snippet_delete, workflow_snippet_list, workflow_snippet_save};

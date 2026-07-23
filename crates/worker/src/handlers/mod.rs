@@ -4,3 +4,4 @@
 //! 创建时间：2026-07-20
 
 pub mod crawler_email_enrich;
+pub mod imap_sync;

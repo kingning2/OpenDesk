@@ -15,9 +15,9 @@ use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use ports::repository::StoreError;
 
 pub use models::{
-    BackgroundJobRow, CustomerRow, MailAccountRow, MailMessageRow, MailTemplateRow,
-    NewBackgroundJob, NewCustomerRow, NewMailAccountRow, NewMailMessageRow, NewMailTemplateRow,
-    NewScriptSnippetRow, ScriptSnippetRow,
+    BackgroundJobRow, CustomerRow, MailAccountRow, MailImapSyncStateRow, MailMessageRow,
+    MailTemplateRow, NewBackgroundJob, NewCustomerRow, NewMailAccountRow, NewMailMessageRow,
+    NewMailTemplateRow, NewScriptSnippetRow, ScriptSnippetRow,
 };
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations-opendesk");

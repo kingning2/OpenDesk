@@ -5,3 +5,6 @@ edition.workspace = true
 
 [dependencies]
 lettre = { workspace = true }
+imap = { workspace = true }
+native-tls = { workspace = true }
+mailparse = { workspace = true }

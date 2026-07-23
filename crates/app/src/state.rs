@@ -10,6 +10,7 @@ use adapter::license::UnlockedLicenseGate;
 use adapter::license::{FailClosedLicenseGate, VerifierProcessLicense};
 use crawler::CrawlerService;
 use kernel::event::InMemoryEventBus;
+use ports::background_job::BackgroundJobStore;
 use ports::crawler_channels::CrawlerChannelStore;
 use ports::crawler_keywords::CrawlerKeywordStore;
 use ports::crawler_settings::CrawlerSettingsStore;
@@ -52,6 +53,8 @@ pub struct AppState {
     pub customer_store: Arc<dyn CustomerStore>,
     /// Mail templates, accounts, and message history (`mail_*` tables in opendesk.db).
     pub mail_store: Arc<dyn MailStore>,
+    /// Background job queue shared with `opendesk-worker`.
+    pub job_store: Arc<dyn BackgroundJobStore>,
     /// Script snippet library (`script_snippet` table in opendesk.db).
     pub snippet_store: Arc<dyn ScriptSnippetStore>,
     #[allow(dead_code)]

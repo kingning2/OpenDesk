@@ -5,6 +5,7 @@ use diesel::prelude::*;
 use super::schema::background_job;
 use super::schema::customer;
 use super::schema::mail_account;
+use super::schema::mail_imap_sync_state;
 use super::schema::mail_message;
 use super::schema::mail_template;
 use super::schema::script_snippet;
@@ -293,4 +294,19 @@ pub struct MailMessageRow {
     pub to_address: Option<String>,
     pub from_address: Option<String>,
     pub source_ref: Option<String>,
+}
+
+/// Queryable `mail_imap_sync_state` row.
+#[derive(Debug, Queryable, Selectable, Clone)]
+#[diesel(table_name = mail_imap_sync_state)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct MailImapSyncStateRow {
+    pub account_id: String,
+    pub folder: String,
+    pub uidvalidity: i64,
+    pub highest_modseq: String,
+    pub last_uid: i64,
+    pub last_sync_at: Option<String>,
+    pub full_synced: bool,
+    pub last_error: Option<String>,
 }

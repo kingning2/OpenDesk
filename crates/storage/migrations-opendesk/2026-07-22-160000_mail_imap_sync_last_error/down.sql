@@ -1,0 +1,2 @@
+-- SQLite cannot drop columns easily; recreate table without last_error if rolled back.
+-- MVP: no-op rollback (column left in place).
