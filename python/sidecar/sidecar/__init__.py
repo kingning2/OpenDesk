@@ -1,1 +1,0 @@
-"""OpenDesk Python sidecar package."""

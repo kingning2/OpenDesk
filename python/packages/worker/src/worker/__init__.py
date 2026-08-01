@@ -1,1 +1,0 @@
-"""worker package scaffold."""
