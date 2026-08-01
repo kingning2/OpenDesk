@@ -7,6 +7,9 @@
 
 import { createContext, useContext } from "react";
 
+/** 设置侧栏分区 id。 */
+export type SettingsSectionId = "language" | "youtube" | "llm" | "mailIntegration";
+
 /**
  * 设置弹窗上下文值。
  *
@@ -16,8 +19,8 @@ import { createContext, useContext } from "react";
 export interface SettingsDialogContextValue {
   /** 是否打开。 */
   open: boolean;
-  /** 打开设置弹窗。 */
-  openSettings: () => void;
+  /** 打开设置弹窗；可选跳转到指定分区。 */
+  openSettings: (section?: SettingsSectionId) => void;
   /** 关闭设置弹窗。 */
   closeSettings: () => void;
   /** 设置打开状态。 */

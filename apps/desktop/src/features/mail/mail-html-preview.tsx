@@ -46,15 +46,21 @@ export const MailHtmlPreview = memo(function MailHtmlPreview({
     const resize = () => {
       try {
         const doc = iframe.contentDocument;
-        const height = doc?.documentElement?.scrollHeight ?? minHeight;
+        if (!doc?.documentElement) {
+          return;
+        }
+        const height = doc.documentElement.scrollHeight;
         iframe.style.height = `${Math.max(minHeight, height)}px`;
       } catch {
         iframe.style.height = `${minHeight}px`;
       }
     };
-    iframe.addEventListener("load", resize);
-    resize();
-    return () => iframe.removeEventListener("load", resize);
+    const onLoad = () => {
+      window.requestAnimationFrame(resize);
+    };
+    iframe.addEventListener("load", onLoad);
+    onLoad();
+    return () => iframe.removeEventListener("load", onLoad);
   }, [srcDoc, minHeight]);
 
   if (!srcDoc) {
@@ -69,7 +75,8 @@ export const MailHtmlPreview = memo(function MailHtmlPreview({
       title="mail-html-preview"
       className={cn("w-full rounded-[var(--radius-md)] border border-border/60 bg-white", className)}
       style={{ minHeight }}
-      sandbox=""
+      // Same-origin for height auto-fit; scripts stay blocked (no allow-scripts).
+      sandbox="allow-same-origin"
       srcDoc={srcDoc}
     />
   );

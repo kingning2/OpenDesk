@@ -9,6 +9,7 @@
  */
 
 export type { Messages, TranslationTree, TranslateParams } from "./types";
+export { interpolateTranslation } from "./types";
 export { createI18n, resolveNamespaceKey } from "./create-i18n";
 export type {
   CreateI18nOptions,

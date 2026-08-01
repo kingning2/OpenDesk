@@ -1,10 +1,37 @@
 import path from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
+
+/**
+ * 仅在 `vite` 开发服注入 react-scan CDN，生产 build 不带入。
+ *
+ * @author Xiaoman
+ * @created 2026-07-23
+ *
+ * @returns Vite 插件
+ */
+function reactScanDevOnly(): Plugin {
+  return {
+    name: "opendesk-react-scan-dev-only",
+    apply: "serve",
+    transformIndexHtml() {
+      return [
+        {
+          tag: "script",
+          attrs: {
+            crossorigin: "anonymous",
+            src: "https://unpkg.com/react-scan/dist/auto.global.js",
+          },
+          injectTo: "head-prepend",
+        },
+      ];
+    },
+  };
+}
 
 /**
  * 拆分大体积依赖；其余交给 Rollup 默认策略，避免 vendor ↔ react 循环 chunk。
@@ -53,6 +80,7 @@ function manualChunks(id: string): string | undefined {
 
 export default defineConfig(async () => ({
   plugins: [
+    reactScanDevOnly(),
     react({
       babel: {
         plugins: [["babel-plugin-react-compiler", {}]],

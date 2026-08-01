@@ -13,7 +13,10 @@ export { SettingsDialog } from "./settings-dialog";
 export type { SettingsDialogProps } from "./settings-dialog";
 export { SettingsDialogProvider } from "./settings-dialog-provider";
 export { useSettingsDialog } from "./settings-dialog-store";
-export type { SettingsDialogContextValue } from "./settings-dialog-store";
+export type {
+  SettingsDialogContextValue,
+  SettingsSectionId,
+} from "./settings-dialog-store";
 export { useYoutubeApiKeySettings } from "./use-youtube-api-key-settings";
 export { useLlmSettings } from "./use-llm-settings";
 export { LlmSettingsPanel } from "./llm-settings-panel";

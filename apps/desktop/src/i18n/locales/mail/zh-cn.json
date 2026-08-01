@@ -3,8 +3,9 @@
   "description": "收发商务邮件。",
   "workspace": "邮件工作台",
   "refresh": "刷新",
+  "refreshRead": "刷新已读",
+  "refreshReadHint": "从邮件阅读服务拉取收件人打开状态",
   "statusLoading": "正在加载邮件数据…",
-  "statusReady": "邮件工作台已就绪。",
   "statusSelectFirst": "请先选择客户与模板（套用模板需要客户）。",
   "statusTemplateApplied": "模板已套用。",
   "statusAccountSaved": "邮件账号已保存。",
@@ -31,7 +32,14 @@
     "searchPlaceholder": "搜索主题或正文…",
     "total": "共 {count} 封",
     "empty": "暂无邮件",
-    "emptyHint": "点「写邮件」新建；已发送邮件在「发件箱」"
+    "emptyHint": "点「写邮件」新建；已发送邮件在「发件箱」",
+    "dateToday": "今天",
+    "dateYesterday": "昨天",
+    "read": "已读",
+    "unread": "未读",
+    "recipientRead": "对方已读",
+    "recipientUnread": "对方未读",
+    "trackingOff": "未开启追踪"
   },
   "preview": {
     "emptyTitle": "未选择邮件",
@@ -78,7 +86,14 @@
     "confirmSendTitle": "确认发送",
     "confirmSendAction": "发送",
     "openTracking": "开信追踪",
-    "openTrackingHint": "在邮件 HTML 中插入 1×1 像素，用于统计是否被打开"
+    "openTrackingHint": "在邮件 HTML 中插入 1×1 像素，用于统计是否被打开",
+    "openTrackingConfigure": "在设置中配置追踪服务",
+    "resend": "再次发送",
+    "aiGenerate": "AI 生成邮件",
+    "aiGenerating": "生成中…",
+    "aiEmptyBody": "请先在正文中填写纯文本内容",
+    "aiGenerated": "已生成 HTML 并回填到正文",
+    "aiGeneratedWithNotes": "已生成 HTML。{notes}"
   },
   "templates": {
     "modalTitle": "新建自定义模板",

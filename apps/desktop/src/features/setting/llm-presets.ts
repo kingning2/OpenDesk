@@ -86,7 +86,7 @@ export const LLM_VENDOR_PRESETS: readonly LlmVendorPreset[] = [
   {
     id: "ollama",
     provider: "openai_compatible",
-    // Split host so architecture check does not flag this preset string as React→Python HTTP.
+    // Ollama 默认使用本机 OpenAI-compatible 端点。
     baseUrl: ["http://", "127.0.0.1", ":11434/v1"].join(""),
     modelId: "llama3.2",
     labelKey: "settings.llmPresetOllama",

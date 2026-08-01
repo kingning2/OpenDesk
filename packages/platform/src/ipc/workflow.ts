@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invokeIpc } from "./invoke";
 import type {
   WorkflowDtoScriptSnippet,
   WorkflowIpcSnippetDeleteRequest,
@@ -21,7 +21,7 @@ export type ScriptSnippet = WorkflowDtoScriptSnippet;
 export async function workflowSnippetList(
   input?: WorkflowIpcSnippetListRequest,
 ): Promise<{ items: ScriptSnippet[]; total: number }> {
-  const response = await invoke<WorkflowIpcSnippetListResponse>("workflow_snippet_list", {
+  const response = await invokeIpc<WorkflowIpcSnippetListResponse>("workflow_snippet_list", {
     request: input ?? {},
   });
   try {
@@ -44,7 +44,7 @@ export async function workflowSnippetList(
 export async function workflowSnippetSave(
   input: WorkflowIpcSnippetSaveRequest,
 ): Promise<{ items: ScriptSnippet[]; total: number }> {
-  const response = await invoke<WorkflowIpcSnippetListResponse>("workflow_snippet_save", {
+  const response = await invokeIpc<WorkflowIpcSnippetListResponse>("workflow_snippet_save", {
     request: input,
   });
   try {
@@ -67,7 +67,7 @@ export async function workflowSnippetSave(
 export async function workflowSnippetDelete(
   input: WorkflowIpcSnippetDeleteRequest,
 ): Promise<{ items: ScriptSnippet[]; total: number }> {
-  const response = await invoke<WorkflowIpcSnippetListResponse>("workflow_snippet_delete", {
+  const response = await invokeIpc<WorkflowIpcSnippetListResponse>("workflow_snippet_delete", {
     request: input,
   });
   try {

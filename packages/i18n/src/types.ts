@@ -30,3 +30,48 @@ export type Messages = TranslationTree;
  * @created 2026-07-20
  */
 export type TranslateParams = Record<string, string | number | boolean | null | undefined>;
+
+/**
+ * Replace `{key}` and `{{key}}` placeholders when the key exists in `params`.
+ *
+ * Unknown placeholders are left literal (e.g. docs showing `{{email}}`).
+ *
+ * @author Xiaoman
+ * @created 2026-08-01
+ *
+ * @param text - Template string
+ * @param params - Interpolation values
+ * @returns Interpolated string
+ */
+export function interpolateTranslation(
+  text: string,
+  params?: TranslateParams,
+): string {
+  if (!params) {
+    return text;
+  }
+
+  const replace = (key: string): string => {
+    if (!(key in params)) {
+      return "";
+    }
+    const value = params[key];
+    return value === undefined || value === null ? "" : String(value);
+  };
+
+  let result = text.replace(/\{\{([\w]+)\}\}/g, (match, key: string) => {
+    if (!(key in params)) {
+      return match;
+    }
+    return replace(key);
+  });
+
+  result = result.replace(/(?<!\{)\{([\w]+)\}(?!\})/g, (match, key: string) => {
+    if (!(key in params)) {
+      return match;
+    }
+    return replace(key);
+  });
+
+  return result;
+}

@@ -27,7 +27,7 @@
     "home": "首页",
     "homeDescription": "OpenDesk 架构脚手架",
     "agent": "Agent",
-    "agentDescription": "Sidecar 连通性垂直切片",
+    "agentDescription": "大模型连通性检查",
     "crawler": "采集",
     "crawlerDescription": "YouTube 频道采集与过程日志",
     "crawlerResults": "采集结果",

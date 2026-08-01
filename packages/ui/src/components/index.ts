@@ -1,3 +1,5 @@
+export { ErrorBoundary } from "./error-boundary";
+export type { ErrorBoundaryProps } from "./error-boundary";
 export { Button, buttonVariants } from "./button";
 export type { ButtonProps } from "./button";
 export { Input } from "./input";
@@ -54,3 +56,4 @@ export { DataTable, DataTableView } from "./data-table";
 export type { DataTableColumnMeta, DataTableProps } from "./data-table";
 export type { ColumnDef } from "@tanstack/react-table";
 export * from "./layout";
+export * from "./workflow";

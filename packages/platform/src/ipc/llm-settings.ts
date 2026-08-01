@@ -7,7 +7,7 @@
  * @created 2026-07-22
  */
 
-import { invoke } from "@tauri-apps/api/core";
+import { invokeIpc } from "./invoke";
 
 /** 未配置 LLM 时的标准错误码（后续 AI 入口复用）。 */
 export const LLM_NOT_CONFIGURED = "LLM_NOT_CONFIGURED" as const;
@@ -81,7 +81,7 @@ export interface LlmTestConnectionResponse {
  * @returns 当前配置快照
  */
 export async function llmSettingsGet(): Promise<LlmSettingsResponse> {
-  return invoke<LlmSettingsResponse>("llm_settings_get");
+  return invokeIpc<LlmSettingsResponse>("llm_settings_get");
 }
 
 /**
@@ -96,7 +96,7 @@ export async function llmSettingsGet(): Promise<LlmSettingsResponse> {
 export async function llmSettingsSave(
   request: LlmSettingsSaveRequest,
 ): Promise<LlmSettingsResponse> {
-  return invoke<LlmSettingsResponse>("llm_settings_save", { request });
+  return invokeIpc<LlmSettingsResponse>("llm_settings_save", { request });
 }
 
 /**
@@ -111,7 +111,7 @@ export async function llmSettingsSave(
 export async function llmTestConnection(
   request: LlmTestConnectionRequest,
 ): Promise<LlmTestConnectionResponse> {
-  return invoke<LlmTestConnectionResponse>("llm_test_connection", { request });
+  return invokeIpc<LlmTestConnectionResponse>("llm_test_connection", { request });
 }
 
 /**

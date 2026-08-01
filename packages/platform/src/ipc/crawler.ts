@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invokeIpc } from "./invoke";
 import type {
   CrawlerIpcChannelListRequest,
   CrawlerIpcChannelListResponse,
@@ -15,6 +15,8 @@ import type {
   CrawlerIpcJobStatusRequest,
   CrawlerIpcJobStatusResponse,
   CrawlerIpcKeywordsBatchesResponse,
+  CrawlerIpcKeywordsGenerateRequest,
+  CrawlerIpcKeywordsGenerateResponse,
   CrawlerIpcKeywordsImportRequest,
   CrawlerIpcKeywordsImportResponse,
 } from "@desk/contracts";
@@ -28,7 +30,7 @@ import type {
 export async function crawlerJobStart(
   input: CrawlerIpcJobStartRequest,
 ): Promise<CrawlerIpcJobStartResponse> {
-  return invoke<CrawlerIpcJobStartResponse>("crawler_job_start", { request: input });
+  return invokeIpc<CrawlerIpcJobStartResponse>("crawler_job_start", { request: input });
 }
 
 /**
@@ -40,7 +42,7 @@ export async function crawlerJobStart(
 export async function crawlerJobCancel(
   input: CrawlerIpcJobCancelRequest,
 ): Promise<CrawlerIpcJobCancelResponse> {
-  return invoke<CrawlerIpcJobCancelResponse>("crawler_job_cancel", { request: input });
+  return invokeIpc<CrawlerIpcJobCancelResponse>("crawler_job_cancel", { request: input });
 }
 
 /**
@@ -52,7 +54,7 @@ export async function crawlerJobCancel(
 export async function crawlerJobStatus(
   input: CrawlerIpcJobStatusRequest,
 ): Promise<CrawlerIpcJobStatusResponse> {
-  return invoke<CrawlerIpcJobStatusResponse>("crawler_job_status", { request: input });
+  return invokeIpc<CrawlerIpcJobStatusResponse>("crawler_job_status", { request: input });
 }
 
 /**
@@ -64,7 +66,7 @@ export async function crawlerJobStatus(
 export async function crawlerJobLogs(
   input: CrawlerIpcJobLogsRequest,
 ): Promise<CrawlerIpcJobLogsResponse> {
-  return invoke<CrawlerIpcJobLogsResponse>("crawler_job_logs", { request: input });
+  return invokeIpc<CrawlerIpcJobLogsResponse>("crawler_job_logs", { request: input });
 }
 
 /**
@@ -73,7 +75,7 @@ export async function crawlerJobLogs(
 export async function crawlerJobResults(
   input: CrawlerIpcJobResultsRequest,
 ): Promise<CrawlerIpcJobResultsResponse> {
-  return invoke<CrawlerIpcJobResultsResponse>("crawler_job_results", { request: input });
+  return invokeIpc<CrawlerIpcJobResultsResponse>("crawler_job_results", { request: input });
 }
 
 /**
@@ -85,7 +87,7 @@ export async function crawlerJobResults(
 export async function crawlerChannelList(
   input: CrawlerIpcChannelListRequest = {},
 ): Promise<{ items: CrawlerChannelListRow[]; total: number }> {
-  const response = await invoke<CrawlerIpcChannelListResponse>("crawler_channel_list", {
+  const response = await invokeIpc<CrawlerIpcChannelListResponse>("crawler_channel_list", {
     request: input,
   });
   try {
@@ -127,7 +129,7 @@ export interface CrawlerChannelListRow {
 export async function crawlerChannelUpdate(
   input: CrawlerIpcChannelUpdateRequest,
 ): Promise<CrawlerIpcChannelUpdateResponse> {
-  return invoke<CrawlerIpcChannelUpdateResponse>("crawler_channel_update", { request: input });
+  return invokeIpc<CrawlerIpcChannelUpdateResponse>("crawler_channel_update", { request: input });
 }
 
 export interface KeywordBatchRow {
@@ -141,14 +143,31 @@ export interface KeywordBatchRow {
 export async function crawlerKeywordsImport(
   input: CrawlerIpcKeywordsImportRequest,
 ): Promise<CrawlerIpcKeywordsImportResponse> {
-  return invoke<CrawlerIpcKeywordsImportResponse>("crawler_keywords_import", { request: input });
+  return invokeIpc<CrawlerIpcKeywordsImportResponse>("crawler_keywords_import", { request: input });
+}
+
+/**
+ * 用已配置 LLM 按方向 / 语言 / 数量生成关键词并写入新 batch。
+ *
+ * @author Xiaoman
+ * @created 2026-07-23
+ *
+ * @param input - 方向（英文逗号分隔）、语言、每语言数量
+ * @returns 新 batch 与生成统计
+ */
+export async function crawlerKeywordsGenerate(
+  input: CrawlerIpcKeywordsGenerateRequest,
+): Promise<CrawlerIpcKeywordsGenerateResponse> {
+  return invokeIpc<CrawlerIpcKeywordsGenerateResponse>("crawler_keywords_generate", {
+    request: input,
+  });
 }
 
 /**
  * List keyword import batches.
  */
 export async function crawlerKeywordsBatches(): Promise<KeywordBatchRow[]> {
-  const response = await invoke<CrawlerIpcKeywordsBatchesResponse>("crawler_keywords_batches");
+  const response = await invokeIpc<CrawlerIpcKeywordsBatchesResponse>("crawler_keywords_batches");
   try {
     const parsed = JSON.parse(response.batches_json ?? "[]") as KeywordBatchRow[];
     return Array.isArray(parsed) ? parsed : [];

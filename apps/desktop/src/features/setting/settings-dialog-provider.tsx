@@ -11,6 +11,7 @@ import { SettingsDialog } from "./settings-dialog";
 import {
   SettingsDialogContext,
   type SettingsDialogContextValue,
+  type SettingsSectionId,
 } from "./settings-dialog-store";
 
 /**
@@ -24,19 +25,36 @@ import {
  */
 export function SettingsDialogProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [initialSection, setInitialSection] = useState<SettingsSectionId | null>(null);
 
-  const openSettings = useCallback(() => setOpen(true), []);
+  const openSettings = useCallback((section?: SettingsSectionId) => {
+    if (section) {
+      setInitialSection(section);
+    }
+    setOpen(true);
+  }, []);
   const closeSettings = useCallback(() => setOpen(false), []);
 
+  const handleOpenChange = useCallback((next: boolean) => {
+    setOpen(next);
+    if (!next) {
+      setInitialSection(null);
+    }
+  }, []);
+
   const value = useMemo<SettingsDialogContextValue>(
-    () => ({ open, openSettings, closeSettings, setOpen }),
-    [open, openSettings, closeSettings],
+    () => ({ open, openSettings, closeSettings, setOpen: handleOpenChange }),
+    [open, openSettings, closeSettings, handleOpenChange],
   );
 
   return (
     <SettingsDialogContext.Provider value={value}>
       {children}
-      <SettingsDialog open={open} onOpenChange={setOpen} />
+      <SettingsDialog
+        open={open}
+        onOpenChange={handleOpenChange}
+        initialSection={initialSection}
+      />
     </SettingsDialogContext.Provider>
   );
 }

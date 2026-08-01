@@ -5,7 +5,7 @@
  * @created 2026-07-22
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   customerList,
   mailInboxUnmatchedList,
@@ -13,8 +13,15 @@ import {
   type CustomerProfile,
   type MailMessage,
 } from "@desk/platform";
-import { Button, LoadingState, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@desk/ui";
-import { useT } from "../../i18n";
+import { Button, LoadingState, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, cn } from "@desk/ui";
+import { useT, useI18n } from "../../i18n";
+import { MailDateGroupList } from "./mail-date-group-list";
+import { isInboundUnread } from "./mail-read";
+import {
+  formatMailListTime,
+  groupMessagesByDate,
+  messageDisplayTime,
+} from "./mail-time";
 
 /**
  * List and link unmatched inbound messages.
@@ -30,6 +37,7 @@ export function MailUnmatchedPanel({
   onLinked?: () => void;
 }) {
   const t = useT();
+  const { locale } = useI18n();
   const [messages, setMessages] = useState<MailMessage[]>([]);
   const [customers, setCustomers] = useState<CustomerProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,6 +92,15 @@ export function MailUnmatchedPanel({
     };
   }, [accountId]);
 
+  const messageGroups = useMemo(
+    () =>
+      groupMessagesByDate(messages, {
+        today: t("mail.list.dateToday"),
+        yesterday: t("mail.list.dateYesterday"),
+      }, locale),
+    [messages, t, locale],
+  );
+
   async function linkMessage(messageId: string) {
     const customerId = selectedCustomerByMessage[messageId];
     if (!customerId) {
@@ -112,10 +129,38 @@ export function MailUnmatchedPanel({
   }
 
   return (
-    <div className="divide-y divide-border/50">
-      {messages.map((message) => (
-        <div key={message.id} className="space-y-2 px-3 py-3">
-          <div className="text-xs font-medium">{message.subject}</div>
+    <MailDateGroupList
+      groups={messageGroups}
+      renderItem={(message) => (
+        <div key={message.id} className="space-y-2 border-b border-border/50 px-3 py-3">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2">
+              {isInboundUnread(message) ? (
+                <span className="size-2 shrink-0 rounded-full bg-sky-500" aria-hidden />
+              ) : null}
+              <div
+                className={cn(
+                  "min-w-0 truncate text-xs",
+                  isInboundUnread(message) ? "font-semibold" : "font-medium",
+                )}
+              >
+                {message.subject}
+              </div>
+            </div>
+            <div className="flex shrink-0 flex-col items-end gap-0.5">
+              <span className="text-[10px] text-muted-foreground">
+                {formatMailListTime(messageDisplayTime(message), locale)}
+              </span>
+              <span
+                className={cn(
+                  "text-[9px]",
+                  isInboundUnread(message) ? "font-medium text-sky-600" : "text-muted-foreground",
+                )}
+              >
+                {isInboundUnread(message) ? t("mail.list.unread") : t("mail.list.read")}
+              </span>
+            </div>
+          </div>
           <div className="text-[10px] text-muted-foreground">
             {message.from_address ?? t("mail.preview.from")}
           </div>
@@ -147,7 +192,7 @@ export function MailUnmatchedPanel({
             </Button>
           </div>
         </div>
-      ))}
-    </div>
+      )}
+    />
   );
 }

@@ -9,7 +9,7 @@
  * @created 2026-07-16
  */
 
-import { invoke } from "@tauri-apps/api/core";
+import { invokeIpc } from "./invoke";
 
 /**
  * 授权状态（与 Rust `LicenseStatus` camelCase 对齐）。
@@ -54,7 +54,7 @@ export interface LicenseActivateRequest {
  * @returns 授权状态 DTO
  */
 export function licenseStatus(): Promise<LicenseStatus> {
-  return invoke<LicenseStatus>("license_status");
+  return invokeIpc<LicenseStatus>("license_status");
 }
 
 /**
@@ -66,7 +66,7 @@ export function licenseStatus(): Promise<LicenseStatus> {
  * @returns 设备码字符串
  */
 export function licenseMachineCode(): Promise<string> {
-  return invoke<string>("license_machine_code");
+  return invokeIpc<string>("license_machine_code");
 }
 
 /**
@@ -81,5 +81,5 @@ export function licenseMachineCode(): Promise<string> {
 export function licenseActivate(
   request: LicenseActivateRequest,
 ): Promise<LicenseStatus> {
-  return invoke<LicenseStatus>("license_activate", { request });
+  return invokeIpc<LicenseStatus>("license_activate", { request });
 }

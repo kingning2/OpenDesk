@@ -3,8 +3,9 @@
   "description": "Inbound and outbound mail.",
   "workspace": "Mail Workspace",
   "refresh": "Refresh",
+  "refreshRead": "Refresh read status",
+  "refreshReadHint": "Pull recipient open status from the email-read service",
   "statusLoading": "Loading mail data…",
-  "statusReady": "Mail workspace ready.",
   "statusSelectFirst": "Choose a customer and template first (templates need a customer).",
   "statusTemplateApplied": "Template applied.",
   "statusAccountSaved": "Mail account saved.",
@@ -31,7 +32,14 @@
     "searchPlaceholder": "Search subject or body…",
     "total": "{count} messages",
     "empty": "No messages yet",
-    "emptyHint": "Use Compose to send; sent mail appears under Sent"
+    "emptyHint": "Use Compose to send; sent mail appears under Sent",
+    "dateToday": "Today",
+    "dateYesterday": "Yesterday",
+    "read": "Read",
+    "unread": "Unread",
+    "recipientRead": "Opened by recipient",
+    "recipientUnread": "Not opened yet",
+    "trackingOff": "Tracking off"
   },
   "preview": {
     "emptyTitle": "No message selected",
@@ -78,7 +86,14 @@
     "confirmSendTitle": "Confirm send",
     "confirmSendAction": "Send",
     "openTracking": "Open tracking",
-    "openTrackingHint": "Inserts a 1×1 pixel in the HTML to detect when the email is opened"
+    "openTrackingHint": "Inserts a 1×1 pixel in the HTML to detect when the email is opened",
+    "openTrackingConfigure": "Configure tracking service in Settings",
+    "resend": "Send again",
+    "aiGenerate": "AI generate email",
+    "aiGenerating": "Generating…",
+    "aiEmptyBody": "Enter plain-text body content first",
+    "aiGenerated": "HTML generated and applied to the body",
+    "aiGeneratedWithNotes": "HTML generated. {notes}"
   },
   "templates": {
     "modalTitle": "New custom template",

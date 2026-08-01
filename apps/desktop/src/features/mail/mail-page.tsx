@@ -10,7 +10,7 @@ import type { ReactNode } from "react";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { Mail, Plus, RefreshCw } from "@desk/ui/icons";
-import { useT } from "../../i18n";
+import { useT, useI18n } from "../../i18n";
 import {
   Button,
   Dialog,
@@ -36,16 +36,33 @@ import {
   cn,
   toast,
 } from "@desk/ui";
-import { MailHtmlEditor } from "./mail-html-editor";
+import { MailDateGroupList } from "./mail-date-group-list";
+import { useSettingsDialog } from "@feature/setting";
+import {
+  isOutboundAwaitingRead,
+  outboundRecipientReadLabelKey,
+  outboundRecipientReadState,
+} from "./mail-outbound-read";
+import { isInboundUnread } from "./mail-read";
+import { MailHtmlEditor, type MailBodyEditorMode } from "./mail-html-editor";
+import { MailComposePreview } from "./mail-compose-preview";
 import { MailHtmlPreview } from "./mail-html-preview";
 import { MailUnmatchedPanel } from "./mail-unmatched-panel";
 import { stripMailHtml } from "./mail-html";
+import {
+  formatMailListTime,
+  formatMailTime,
+  groupMessagesByDate,
+  messageDisplayTime,
+} from "./mail-time";
 import { useMailSync } from "./use-mail-sync";
 import {
   customerList,
   mailAccountList,
   mailAccountSave,
+  mailGenerateHtml,
   mailMessageList,
+  mailMessageMarkRead,
   mailRecordInbound,
   mailSend,
   mailTemplateApply,
@@ -57,10 +74,51 @@ import {
   type MailTemplate,
 } from "@desk/platform";
 
-/** Stable toast id so StrictMode remounts update one toast instead of stacking two. */
+/** Stable toast id for bootstrap errors (StrictMode remount updates one toast). */
 const MAIL_BOOTSTRAP_TOAST_ID = "mail-bootstrap";
 
 type MailboxMode = "inbound" | "outbound";
+
+/**
+ * Prefill payload for the compose modal.
+ *
+ * @author Xiaoman
+ * @created 2026-08-01
+ */
+type ComposeDraft = {
+  customerId: string;
+  toAddress: string;
+  accountId: string;
+  subject: string;
+  bodyText: string;
+  bodyHtml: string;
+};
+
+const EMPTY_COMPOSE_DRAFT: ComposeDraft = {
+  customerId: "",
+  toAddress: "",
+  accountId: "",
+  subject: "",
+  bodyText: "",
+  bodyHtml: "",
+};
+
+/**
+ * Build compose draft from an existing outbound message (resend / edit).
+ *
+ * @author Xiaoman
+ * @created 2026-08-01
+ */
+function messageToComposeDraft(message: MailMessage): ComposeDraft {
+  return {
+    customerId: message.customer_id || "",
+    toAddress: message.to_address || "",
+    accountId: message.account_id || "",
+    subject: message.subject || "",
+    bodyText: message.body_text || stripMailHtml(message.body_html ?? ""),
+    bodyHtml: message.body_html ?? "",
+  };
+}
 
 /**
  * Pick initial mailbox tab from DB counts (no browser storage).
@@ -128,6 +186,8 @@ const EMPTY_INBOUND_FORM = {
  */
 export function MailPage() {
   const t = useT();
+  const { locale } = useI18n();
+  const { openSettings } = useSettingsDialog();
   const [searchParams] = useSearchParams();
   const [customers, setCustomers] = useState<CustomerProfile[]>([]);
   const [templates, setTemplates] = useState<MailTemplate[]>([]);
@@ -144,8 +204,8 @@ export function MailPage() {
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
   const [inboundModalOpen, setInboundModalOpen] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
-  const [composeCustomerId, setComposeCustomerId] = useState("");
-  const [composeToAddress, setComposeToAddress] = useState("");
+  const [composeDraft, setComposeDraft] = useState<ComposeDraft>(EMPTY_COMPOSE_DRAFT);
+  const [composeSessionKey, setComposeSessionKey] = useState(0);
   const [inboundView, setInboundView] = useState<"matched" | "unmatched">("matched");
   const [outboundReplyIndex, setOutboundReplyIndex] = useState<Map<string, MailMessage>>(
     () => new Map(),
@@ -167,6 +227,15 @@ export function MailPage() {
     return map;
   }, [customers]);
 
+  const messageGroups = useMemo(
+    () =>
+      groupMessagesByDate(messages, {
+        today: t("mail.list.dateToday"),
+        yesterday: t("mail.list.dateYesterday"),
+      }, locale),
+    [messages, t, locale],
+  );
+
   async function fetchBootstrap() {
     const [customerResponse, templateResponse, accountResponse] = await Promise.all([
       customerList(),
@@ -184,16 +253,23 @@ export function MailPage() {
     mailbox?: MailboxMode;
     accountId?: string | null;
     query?: string;
+    syncOpenStatus?: boolean;
   }) {
     const direction = options?.mailbox ?? mailbox;
     const accountId = options?.accountId === undefined ? accountFilterId : options.accountId;
     const query = options?.query === undefined ? messageQuery : options.query;
+    const syncOpenStatus =
+      options?.syncOpenStatus !== undefined
+        ? options.syncOpenStatus
+        : direction === "outbound";
     const response = await mailMessageList({
       direction,
       account_id: accountId || undefined,
       query: query.trim() || undefined,
       limit: 100,
       offset: 0,
+      sync_open_status:
+        syncOpenStatus && direction === "outbound" ? true : undefined,
     });
     return response;
   }
@@ -214,6 +290,7 @@ export function MailPage() {
     query?: string;
     keepSelection?: boolean;
     selectMessageId?: string;
+    syncOpenStatus?: boolean;
   }) {
     const direction = options?.mailbox ?? mailbox;
     const accountId = options?.accountId === undefined ? accountFilterId : options.accountId;
@@ -250,7 +327,6 @@ export function MailPage() {
 
   useEffect(() => {
     const signal = { cancelled: false };
-    toast.loading(t("mail.statusLoading"), { id: MAIL_BOOTSTRAP_TOAST_ID });
     void fetchBootstrap()
       .then(async (snapshot) => {
         if (signal.cancelled) {
@@ -263,13 +339,20 @@ export function MailPage() {
         const queryCustomerId = searchParams.get("customerId")?.trim() || "";
         if (queryCustomerId && snapshot.customers.some((item) => item.id === queryCustomerId)) {
           const matched = snapshot.customers.find((item) => item.id === queryCustomerId);
-          setComposeCustomerId(queryCustomerId);
-          setComposeToAddress(matched?.email || "");
+          setComposeDraft({
+            customerId: queryCustomerId,
+            toAddress: matched?.email || "",
+            accountId: snapshot.accounts[0]?.id || "",
+            subject: "",
+            bodyText: "",
+            bodyHtml: "",
+          });
+          setComposeSessionKey((key) => key + 1);
           setComposeOpen(true);
         }
 
         const [inboundResponse, outboundResponse] = await Promise.all([
-          fetchMessages({ mailbox: "inbound", accountId: null, query: "" }),
+          fetchMessages({ mailbox: "inbound", accountId: null, query: "", syncOpenStatus: false }),
           fetchMessages({ mailbox: "outbound", accountId: null, query: "" }),
         ]);
         const initialMailbox = resolveInitialMailbox(
@@ -285,7 +368,6 @@ export function MailPage() {
         setMessageTotal(messageResponse.total);
         setSelectedMessageId(messageResponse.items[0]?.id ?? "");
         setOutboundReplyIndex(buildOutboundReplyIndex(outboundResponse.items));
-        toast.success(t("mail.statusReady"), { id: MAIL_BOOTSTRAP_TOAST_ID });
       })
       .catch((error: unknown) => {
         if (signal.cancelled) {
@@ -321,7 +403,7 @@ export function MailPage() {
       return;
     }
     const timer = window.setTimeout(() => {
-      void refreshMessages({ query: messageQuery, keepSelection: true });
+      void refreshMessages({ query: messageQuery, keepSelection: true, syncOpenStatus: false });
     }, 400);
     return () => {
       window.clearTimeout(timer);
@@ -345,19 +427,60 @@ export function MailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, mailbox, mailSync.lastSyncAt]);
 
-  function openCompose(options?: { customerId?: string; toAddress?: string }) {
+  useEffect(() => {
+    if (loading || mailbox !== "inbound" || !selectedMessageId) {
+      return;
+    }
+    void mailMessageMarkRead({ message_id: selectedMessageId }).then(() => {
+      setMessages((current) => {
+        const target = current.find((item) => item.id === selectedMessageId);
+        if (!target || target.is_read || target.direction !== "inbound") {
+          return current;
+        }
+        return current.map((item) =>
+          item.id === selectedMessageId ? { ...item, is_read: true } : item,
+        );
+      });
+    });
+  }, [loading, mailbox, selectedMessageId]);
+
+  function openCompose(options?: Partial<ComposeDraft>) {
     const preferredCustomer =
       options?.customerId ||
       selectedMessage?.customer_id ||
       "";
-    setComposeCustomerId(preferredCustomer);
-    setComposeToAddress(
-      options?.toAddress ||
+    const preferredAccount =
+      options?.accountId ||
+      accountFilterId ||
+      selectedMessage?.account_id ||
+      accounts[0]?.id ||
+      "";
+    setComposeDraft({
+      customerId: preferredCustomer,
+      toAddress:
+        options?.toAddress ||
         selectedMessage?.to_address ||
         customers.find((item) => item.id === preferredCustomer)?.email ||
         "",
-    );
+      accountId: preferredAccount,
+      subject: options?.subject ?? "",
+      bodyText: options?.bodyText ?? "",
+      bodyHtml: options?.bodyHtml ?? "",
+    });
+    setComposeSessionKey((key) => key + 1);
     setComposeOpen(true);
+  }
+
+  function openResend(message: MailMessage) {
+    openCompose(messageToComposeDraft(message));
+  }
+
+  if (loading) {
+    return (
+      <PageScaffold fill containerPadding="none">
+        <LoadingState label={t("mail.statusLoading")} className="min-h-0 flex-1" />
+      </PageScaffold>
+    );
   }
 
   return (
@@ -372,10 +495,11 @@ export function MailPage() {
                 size="sm"
                 variant="ghost"
                 className="size-7 p-0"
-                disabled={loading || listLoading}
+                disabled={listLoading}
+                title={mailbox === "outbound" ? t("mail.refreshReadHint") : t("mail.refresh")}
                 onClick={() => void refreshMessages({ keepSelection: true })}
               >
-                <RefreshCw className={cn("size-3.5", (loading || listLoading) && "animate-spin")} />
+                <RefreshCw className={cn("size-3.5", listLoading && "animate-spin")} />
               </Button>
             </WorkspaceSplitToolbar>
           }
@@ -439,11 +563,24 @@ export function MailPage() {
               <Button
                 size="sm"
                 variant="outline"
-                disabled={mailSync.isSyncing || loading}
+                disabled={listLoading}
+                title={mailbox === "outbound" ? t("mail.refreshReadHint") : t("mail.refresh")}
+                onClick={() => void refreshMessages({ keepSelection: true })}
+              >
+                <RefreshCw className={cn("mr-1 size-3.5", listLoading && "animate-spin")} />
+                {mailbox === "outbound" ? t("mail.refreshRead") : t("mail.refresh")}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={mailSync.isSyncing}
                 onClick={() => {
                   void mailSync.syncNow().then(() => {
                     toast.success(t("mail.sync.enqueued"));
-                    void refreshMessages({ keepSelection: true });
+                    void refreshMessages({
+                      keepSelection: true,
+                      syncOpenStatus: mailbox === "outbound",
+                    });
                   });
                 }}
               >
@@ -508,7 +645,7 @@ export function MailPage() {
                     accountId={accountFilterId}
                     onLinked={() => void refreshMessages({ keepSelection: true })}
                   />
-                ) : loading || listLoading ? (
+                ) : listLoading ? (
                   <LoadingState label={t("mail.statusLoading")} />
                 ) : messages.length === 0 ? (
                   <div className="space-y-2 px-4 py-10 text-center">
@@ -516,40 +653,88 @@ export function MailPage() {
                     <p className="text-[10px] text-muted-foreground">{t("mail.list.emptyHint")}</p>
                   </div>
                 ) : (
-                  messages.map((item) => {
-                    const customer = item.customer_id
-                      ? customerById.get(item.customer_id)
-                      : undefined;
-                    return (
-                      <WorkspaceSplitRow
-                        key={item.id}
-                        active={selectedMessageId === item.id}
-                        className="px-3 py-2.5"
-                        onClick={() => setSelectedMessageId(item.id)}
-                      >
-                        <div className="truncate text-sm font-medium">
-                          {messageCounterpartyLabel(item, customer)}
-                        </div>
-                        <div className="mt-0.5 truncate text-xs text-muted-foreground">
-                          {messageAddressSubline(item)}
-                        </div>
-                        <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
-                          <span
-                            className={cn(
-                              item.status === "failed" && "text-destructive",
-                              item.status === "sent" && "text-emerald-600",
+                  <MailDateGroupList
+                    groups={messageGroups}
+                    activeItemId={selectedMessageId}
+                    renderItem={(item) => {
+                      const customer = item.customer_id
+                        ? customerById.get(item.customer_id)
+                        : undefined;
+                      const displayTime = messageDisplayTime(item);
+                      return (
+                        <WorkspaceSplitRow
+                          key={item.id}
+                          active={selectedMessageId === item.id}
+                          className="px-3 py-2.5"
+                          onClick={() => setSelectedMessageId(item.id)}
+                        >
+                          <div className="flex items-center gap-2 truncate text-sm">
+                            {isInboundUnread(item) ? (
+                              <span
+                                className="size-2 shrink-0 rounded-full bg-sky-500"
+                                aria-hidden
+                              />
+                            ) : null}
+                            {isOutboundAwaitingRead(item) ? (
+                              <span
+                                className="size-2 shrink-0 rounded-full bg-amber-500"
+                                aria-hidden
+                              />
+                            ) : null}
+                            <span
+                              className={cn(
+                                "truncate",
+                                (isInboundUnread(item) || isOutboundAwaitingRead(item)) &&
+                                  "font-semibold text-foreground",
+                              )}
+                            >
+                              {messageCounterpartyLabel(item, customer)}
+                            </span>
+                          </div>
+                          <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                            {messageAddressSubline(item)}
+                          </div>
+                          <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
+                            <span
+                              className={cn(
+                                item.status === "failed" && "text-destructive",
+                                item.status === "sent" && "text-emerald-600",
+                              )}
+                            >
+                              {item.status}
+                            </span>
+                            {item.direction === "inbound" ? (
+                              <span
+                                className={cn(
+                                  isInboundUnread(item)
+                                    ? "font-medium text-sky-600"
+                                    : "text-muted-foreground",
+                                )}
+                              >
+                                {isInboundUnread(item)
+                                  ? t("mail.list.unread")
+                                  : t("mail.list.read")}
+                              </span>
+                            ) : (
+                              <span
+                                className={cn(
+                                  outboundRecipientReadState(item) === "read" &&
+                                    "font-medium text-emerald-600",
+                                  outboundRecipientReadState(item) === "unread" &&
+                                    "font-medium text-amber-600",
+                                  outboundRecipientReadState(item) === "tracking_off" &&
+                                    "text-muted-foreground",
+                                )}
+                              >
+                                {t(outboundRecipientReadLabelKey(item))}
+                              </span>
                             )}
-                          >
-                            {item.status}
-                          </span>
-                          {item.open_tracking_id ? (
-                            <span className="text-sky-600">{t("mail.preview.openTracking")}</span>
-                          ) : null}
-                          <span>{formatMailTime(item.sent_at || item.received_at || item.created_at)}</span>
-                        </div>
-                      </WorkspaceSplitRow>
-                    );
-                  })
+                            <span>{formatMailListTime(displayTime, locale)}</span>
+                          </div>
+                        </WorkspaceSplitRow>
+                      );
+                    }}
+                  />
                 )}
               </WorkspaceSplitPane>
 
@@ -573,14 +758,16 @@ export function MailPage() {
                         size="sm"
                         variant="outline"
                         onClick={() =>
-                          openCompose({
-                            customerId: selectedMessage.customer_id,
-                            toAddress: selectedMessage.to_address,
-                          })
+                          selectedMessage.direction === "outbound"
+                            ? openResend(selectedMessage)
+                            : openCompose({
+                                customerId: selectedMessage.customer_id,
+                                toAddress: selectedMessage.to_address,
+                              })
                         }
                       >
                         {selectedMessage.direction === "outbound"
-                          ? t("mail.preview.followUp")
+                          ? t("mail.compose.resend")
                           : t("mail.compose.open")}
                       </Button>
                     ) : null}
@@ -600,11 +787,14 @@ export function MailPage() {
                     accounts={accounts}
                     customers={customers}
                     onComposeFollowUp={() =>
-                      openCompose({
-                        customerId: selectedMessage.customer_id,
-                        toAddress: selectedMessage.to_address,
-                      })
+                      selectedMessage.direction === "outbound"
+                        ? openResend(selectedMessage)
+                        : openCompose({
+                            customerId: selectedMessage.customer_id,
+                            toAddress: selectedMessage.to_address,
+                          })
                     }
+                    onOpenTrackingSettings={() => openSettings("mailIntegration")}
                     onSent={(messageId) => void afterOutboundSent(messageId)}
                   />
                 )}
@@ -616,11 +806,18 @@ export function MailPage() {
 
       {composeOpen ? (
         <ComposeModal
+          key={composeSessionKey}
           customers={customers}
           templates={templates}
           accounts={accounts}
-          initialCustomerId={composeCustomerId}
-          initialToAddress={composeToAddress}
+          initialCustomerId={composeDraft.customerId}
+          initialToAddress={composeDraft.toAddress}
+          initialAccountId={composeDraft.accountId}
+          initialSubject={composeDraft.subject}
+          initialBodyText={composeDraft.bodyText}
+          initialBodyHtml={composeDraft.bodyHtml}
+          syncAccountFilterId={accountFilterId}
+          onOpenTrackingSettings={() => openSettings("mailIntegration")}
           onClose={() => setComposeOpen(false)}
           onSent={async (messageId) => {
             setComposeOpen(false);
@@ -663,24 +860,6 @@ export function MailPage() {
       ) : null}
     </PageScaffold>
   );
-}
-
-/**
- * Format mail timestamp millis / ISO-ish strings for list rows.
- *
- * @author Xiaoman
- * @created 2026-07-22
- */
-function formatMailTime(raw: string): string {
-  const asNumber = Number(raw);
-  if (Number.isFinite(asNumber) && asNumber > 0) {
-    return new Date(asNumber).toLocaleString();
-  }
-  const parsed = Date.parse(raw);
-  if (Number.isFinite(parsed)) {
-    return new Date(parsed).toLocaleString();
-  }
-  return raw;
 }
 
 const CUSTOMER_NONE = "__none__";
@@ -875,6 +1054,7 @@ const PreviewReplyPane = memo(function PreviewReplyPane({
   accounts,
   customers,
   onComposeFollowUp,
+  onOpenTrackingSettings,
   onSent,
 }: {
   message: MailMessage;
@@ -883,6 +1063,7 @@ const PreviewReplyPane = memo(function PreviewReplyPane({
   accounts: MailAccount[];
   customers: CustomerProfile[];
   onComposeFollowUp: () => void;
+  onOpenTrackingSettings: () => void;
   onSent: (messageId?: string) => void;
 }) {
   const t = useT();
@@ -989,6 +1170,18 @@ const PreviewReplyPane = memo(function PreviewReplyPane({
           <p className="mb-1 text-xs text-muted-foreground">
             {isInbound ? t("mail.preview.metaInbound") : t("mail.preview.metaOutbound")} ·{" "}
             {message.status}
+            {isInbound ? (
+              <>
+                {" · "}
+                {isInboundUnread(message) ? t("mail.list.unread") : t("mail.list.read")}
+              </>
+            ) : (
+              <>
+                {" · "}
+                {t(outboundRecipientReadLabelKey(message))}
+                {message.opened_at ? ` · ${formatMailTime(message.opened_at)}` : ""}
+              </>
+            )}
             {message.error_message ? ` · ${message.error_message}` : ""}
           </p>
           {message.from_address || message.to_address ? (
@@ -1003,9 +1196,6 @@ const PreviewReplyPane = memo(function PreviewReplyPane({
                 <span>
                   {t("mail.preview.to")}: {message.to_address}
                 </span>
-              ) : null}
-              {message.open_tracking_id ? (
-                <span className="ml-1 text-sky-600">· {t("mail.preview.openTracking")}</span>
               ) : null}
             </p>
           ) : null}
@@ -1113,6 +1303,7 @@ const PreviewReplyPane = memo(function PreviewReplyPane({
           <OpenTrackingSwitch
             enabled={openTrackingEnabled}
             onEnabledChange={setOpenTrackingEnabled}
+            onConfigure={onOpenTrackingSettings}
             disabled={sending}
           />
           <Button size="sm" onClick={() => void requestSendReply()} disabled={sending}>
@@ -1142,10 +1333,12 @@ const PreviewReplyPane = memo(function PreviewReplyPane({
 function OpenTrackingSwitch({
   enabled,
   onEnabledChange,
+  onConfigure,
   disabled = false,
 }: {
   enabled: boolean;
   onEnabledChange: (value: boolean) => void;
+  onConfigure: () => void;
   disabled?: boolean;
 }) {
   const t = useT();
@@ -1154,7 +1347,14 @@ function OpenTrackingSwitch({
       <div className="min-w-0">
         <p className="text-xs font-medium text-foreground">{t("mail.compose.openTracking")}</p>
         <p className="text-[10px] leading-snug text-muted-foreground">
-          {t("mail.compose.openTrackingHint")}
+          {t("mail.compose.openTrackingHint")}{" "}
+          <button
+            type="button"
+            className="cursor-pointer font-medium text-primary underline-offset-4 transition-colors duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] [@media(hover:hover)_and_(pointer:fine)]:hover:underline"
+            onClick={onConfigure}
+          >
+            {t("mail.compose.openTrackingConfigure")}
+          </button>
         </p>
       </div>
       <Switch
@@ -1231,6 +1431,12 @@ const ComposeModal = memo(function ComposeModal({
   accounts,
   initialCustomerId,
   initialToAddress,
+  initialAccountId,
+  initialSubject,
+  initialBodyText,
+  initialBodyHtml,
+  syncAccountFilterId,
+  onOpenTrackingSettings,
   onClose,
   onSent,
 }: {
@@ -1239,6 +1445,12 @@ const ComposeModal = memo(function ComposeModal({
   accounts: MailAccount[];
   initialCustomerId: string;
   initialToAddress?: string;
+  initialAccountId?: string;
+  initialSubject?: string;
+  initialBodyText?: string;
+  initialBodyHtml?: string;
+  syncAccountFilterId: string | null;
+  onOpenTrackingSettings: () => void;
   onClose: () => void;
   onSent: (messageId?: string) => void | Promise<void>;
 }) {
@@ -1257,13 +1469,25 @@ const ComposeModal = memo(function ComposeModal({
   const [templateId, setTemplateId] = useState(
     () => templates.find((item) => item.template_intent === preferredIntent)?.id || templates[0]?.id || "",
   );
-  const [accountId, setAccountId] = useState(accounts[0]?.id || "");
-  const [subject, setSubject] = useState("");
-  const [bodyText, setBodyText] = useState("");
-  const [bodyHtml, setBodyHtml] = useState("");
+  const [accountId, setAccountId] = useState(
+    initialAccountId || accounts[0]?.id || "",
+  );
+  const displayAccountId =
+    syncAccountFilterId && accounts.some((item) => item.id === syncAccountFilterId)
+      ? syncAccountFilterId
+      : accountId;
+  const [subject, setSubject] = useState(initialSubject || "");
+  const [bodyText, setBodyText] = useState(initialBodyText || "");
+  const [bodyHtml, setBodyHtml] = useState(initialBodyHtml || "");
+  const [editorMode, setEditorMode] = useState<MailBodyEditorMode>(
+    initialBodyHtml?.trim() ? "html" : "text",
+  );
   const [sending, setSending] = useState(false);
+  const [generatingHtml, setGeneratingHtml] = useState(false);
   const [sendConfirmOpen, setSendConfirmOpen] = useState(false);
   const [openTrackingEnabled, setOpenTrackingEnabled] = useState(true);
+
+  const selectedAccount = accounts.find((item) => item.id === displayAccountId);
 
   async function applyTemplate() {
     if (!selectedCustomer || !templateId) {
@@ -1274,11 +1498,14 @@ const ComposeModal = memo(function ComposeModal({
       const response = await mailTemplateApply({
         customer_id: selectedCustomer.id,
         template_id: templateId,
-        account_id: accountId || undefined,
+        account_id: displayAccountId || undefined,
       });
       setSubject(response.subject);
       setBodyText(response.body_text);
       setBodyHtml(response.body_html ?? "");
+      if (response.body_html?.trim()) {
+        setEditorMode("html");
+      }
       if (!toAddress.trim()) {
         setToAddress(selectedCustomer.email);
       }
@@ -1288,13 +1515,37 @@ const ComposeModal = memo(function ComposeModal({
     }
   }
 
+  async function handleAiGenerateHtml() {
+    const sourceText = bodyText.trim() || stripMailHtml(bodyHtml);
+    if (!sourceText) {
+      toast.error(t("mail.compose.aiEmptyBody"));
+      return;
+    }
+    setGeneratingHtml(true);
+    try {
+      const result = await mailGenerateHtml({ text: sourceText });
+      setBodyHtml(result.html);
+      setBodyText(stripMailHtml(result.html));
+      setEditorMode("html");
+      if (result.notes) {
+        toast.success(t("mail.compose.aiGeneratedWithNotes", { notes: result.notes }));
+      } else {
+        toast.success(t("mail.compose.aiGenerated"));
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setGeneratingHtml(false);
+    }
+  }
+
   function requestSendOutbound() {
     const recipient = toAddress.trim();
     if (!isValidEmail(recipient)) {
       toast.error(t("mail.statusToAddressInvalid"));
       return;
     }
-    if (!accountId || !subject.trim() || !resolveOutboundBody(bodyText, bodyHtml)) {
+    if (!displayAccountId || !subject.trim() || !resolveOutboundBody(bodyText, bodyHtml)) {
       toast.error(t("mail.statusSendValidation"));
       return;
     }
@@ -1314,7 +1565,7 @@ const ComposeModal = memo(function ComposeModal({
       const response = await mailSend({
         to_address: recipient,
         customer_id: selectedCustomer?.id,
-        account_id: accountId,
+        account_id: displayAccountId,
         template_id: templateId || undefined,
         subject,
         body_text: body.body_text,
@@ -1347,6 +1598,7 @@ const ComposeModal = memo(function ComposeModal({
         onClose={() => setSendConfirmOpen(false)}
       />
     <Modal
+      wide
       title={t("mail.compose.title")}
       onClose={onClose}
       footer={
@@ -1357,104 +1609,139 @@ const ComposeModal = memo(function ComposeModal({
           <Button size="sm" variant="outline" onClick={() => void applyTemplate()}>
             {t("mail.compose.applyTemplate")}
           </Button>
-          <Button size="sm" onClick={() => void requestSendOutbound()} disabled={sending}>
+          <Button size="sm" onClick={() => void requestSendOutbound()} disabled={sending || generatingHtml}>
             {sending ? t("mail.compose.sending") : t("mail.compose.send")}
           </Button>
         </>
       }
     >
-      <div className="grid gap-3 md:grid-cols-2">
-        <Field label={t("mail.compose.toAddress")} className="md:col-span-2">
-          <Input
-            value={toAddress}
-            onChange={(event) => setToAddress(event.target.value)}
-            placeholder={t("mail.compose.toAddressPlaceholder")}
-          />
-        </Field>
-        <Field label={t("mail.compose.customer")}>
-          <Select
-            value={customerId || CUSTOMER_NONE}
-            onValueChange={(value) => {
-              setCustomerId(value);
-              if (value === CUSTOMER_NONE) {
-                return;
-              }
-              const next = customers.find((item) => item.id === value);
-              if (next) {
-                setToAddress(next.email);
-                const intent = LIFECYCLE_TEMPLATE_INTENT[next.lifecycle_status] ?? "first_contact";
-                const preferred = templates.find((item) => item.template_intent === intent);
-                if (preferred) {
-                  setTemplateId(preferred.id);
+      <div className="grid min-h-[420px] gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,360px)]">
+        <div className="grid gap-3 md:grid-cols-2">
+          <Field label={t("mail.compose.toAddress")} className="md:col-span-2">
+            <Input
+              value={toAddress}
+              onChange={(event) => setToAddress(event.target.value)}
+              placeholder={t("mail.compose.toAddressPlaceholder")}
+            />
+          </Field>
+          <Field label={t("mail.compose.customer")}>
+            <Select
+              value={customerId || CUSTOMER_NONE}
+              onValueChange={(value) => {
+                setCustomerId(value);
+                if (value === CUSTOMER_NONE) {
+                  return;
                 }
+                const next = customers.find((item) => item.id === value);
+                if (next) {
+                  setToAddress(next.email);
+                  const intent = LIFECYCLE_TEMPLATE_INTENT[next.lifecycle_status] ?? "first_contact";
+                  const preferred = templates.find((item) => item.template_intent === intent);
+                  if (preferred) {
+                    setTemplateId(preferred.id);
+                  }
+                }
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t("mail.compose.customerPlaceholder")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={CUSTOMER_NONE}>{t("mail.compose.customerNone")}</SelectItem>
+                {customers.map((item) => (
+                  <SelectItem key={item.id} value={item.id}>
+                    {item.display_name || item.email}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label={t("mail.compose.account")}>
+            <Select
+              value={displayAccountId}
+              onValueChange={setAccountId}
+              disabled={Boolean(syncAccountFilterId)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t("mail.compose.accountPlaceholder")} />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((item) => (
+                  <SelectItem key={item.id} value={item.id}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label={t("mail.compose.template")} className="md:col-span-2">
+            <Select value={templateId} onValueChange={setTemplateId}>
+              <SelectTrigger>
+                <SelectValue placeholder={t("mail.compose.templatePlaceholder")} />
+              </SelectTrigger>
+              <SelectContent>
+                {templates.map((item) => (
+                  <SelectItem key={item.id} value={item.id}>
+                    {item.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label={t("mail.compose.subject")} className="md:col-span-2">
+            <Input value={subject} onChange={(event) => setSubject(event.target.value)} />
+          </Field>
+          <Field label={t("mail.compose.body")} className="md:col-span-2">
+            <MailHtmlEditor
+              bodyText={bodyText}
+              bodyHtml={bodyHtml}
+              onBodyTextChange={setBodyText}
+              onBodyHtmlChange={setBodyHtml}
+              mode={editorMode}
+              onModeChange={setEditorMode}
+              previewMode="none"
+              textLabel={t("mail.compose.bodyModeText")}
+              htmlLabel={t("mail.compose.bodyModeHtml")}
+              previewLabel={t("mail.compose.htmlPreview")}
+              textPlaceholder={t("mail.compose.replyPlaceholder")}
+              htmlPlaceholder={t("mail.compose.htmlPlaceholder")}
+              emptyPreviewLabel={t("mail.preview.emptyBody")}
+              toolbarExtra={
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={generatingHtml || sending}
+                  onClick={() => void handleAiGenerateHtml()}
+                >
+                  {generatingHtml ? t("mail.compose.aiGenerating") : t("mail.compose.aiGenerate")}
+                </Button>
               }
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={t("mail.compose.customerPlaceholder")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={CUSTOMER_NONE}>{t("mail.compose.customerNone")}</SelectItem>
-              {customers.map((item) => (
-                <SelectItem key={item.id} value={item.id}>
-                  {item.display_name || item.email}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-        <Field label={t("mail.compose.account")}>
-          <Select value={accountId} onValueChange={setAccountId}>
-            <SelectTrigger>
-              <SelectValue placeholder={t("mail.compose.accountPlaceholder")} />
-            </SelectTrigger>
-            <SelectContent>
-              {accounts.map((item) => (
-                <SelectItem key={item.id} value={item.id}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-        <Field label={t("mail.compose.template")} className="md:col-span-2">
-          <Select value={templateId} onValueChange={setTemplateId}>
-            <SelectTrigger>
-              <SelectValue placeholder={t("mail.compose.templatePlaceholder")} />
-            </SelectTrigger>
-            <SelectContent>
-              {templates.map((item) => (
-                <SelectItem key={item.id} value={item.id}>
-                  {item.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-        <Field label={t("mail.compose.subject")} className="md:col-span-2">
-          <Input value={subject} onChange={(event) => setSubject(event.target.value)} />
-        </Field>
-        <Field label={t("mail.compose.body")} className="md:col-span-2">
-          <MailHtmlEditor
-            bodyText={bodyText}
-            bodyHtml={bodyHtml}
-            onBodyTextChange={setBodyText}
-            onBodyHtmlChange={setBodyHtml}
-            textLabel={t("mail.compose.bodyModeText")}
-            htmlLabel={t("mail.compose.bodyModeHtml")}
-            previewLabel={t("mail.compose.htmlPreview")}
-            textPlaceholder={t("mail.compose.replyPlaceholder")}
-            htmlPlaceholder={t("mail.compose.htmlPlaceholder")}
-            emptyPreviewLabel={t("mail.preview.emptyBody")}
-          />
-        </Field>
-        <div className="md:col-span-2">
-          <OpenTrackingSwitch
-            enabled={openTrackingEnabled}
-            onEnabledChange={setOpenTrackingEnabled}
-            disabled={sending}
-          />
+            />
+          </Field>
+          <div className="md:col-span-2">
+            <OpenTrackingSwitch
+              enabled={openTrackingEnabled}
+              onEnabledChange={setOpenTrackingEnabled}
+              onConfigure={onOpenTrackingSettings}
+              disabled={sending}
+            />
+          </div>
         </div>
+
+        <MailComposePreview
+          className="sticky top-0 hidden max-h-[min(60vh,520px)] lg:flex"
+          fromLabel={selectedAccount?.from_address}
+          toAddress={toAddress}
+          subject={subject}
+          bodyText={bodyText}
+          bodyHtml={bodyHtml}
+          previewTitle={t("mail.compose.htmlPreview")}
+          fromLabelText={t("mail.preview.from")}
+          toLabelText={t("mail.preview.to")}
+          subjectLabelText={t("mail.compose.subject")}
+          emptyLabel={t("mail.preview.emptyBody")}
+        />
       </div>
     </Modal>
     </>
@@ -1495,15 +1782,22 @@ const Modal = memo(function Modal({
   children,
   footer,
   onClose,
+  wide = false,
 }: {
   title: string;
   children: ReactNode;
   footer: ReactNode;
   onClose: () => void;
+  wide?: boolean;
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-border bg-dialog text-dialog-foreground shadow-lg">
+      <div
+        className={cn(
+          "flex max-h-[85vh] w-full flex-col overflow-hidden rounded-xl border border-border bg-dialog text-dialog-foreground shadow-lg",
+          wide ? "max-w-6xl" : "max-w-2xl",
+        )}
+      >
         <div className="flex items-center justify-between border-b px-5 py-3">
           <h4 className="text-sm font-semibold">{title}</h4>
           <button

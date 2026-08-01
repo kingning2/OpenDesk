@@ -5,10 +5,16 @@
  * @created 2026-07-20
  */
 
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { RouterProvider } from "react-router";
-import { Toaster } from "@desk/ui";
+import { Toaster, toast } from "@desk/ui";
+import {
+  installIpcErrorReporter,
+  reportFrontendError,
+  reportFrontendErrorValue,
+} from "@desk/platform";
 import { appRouter } from "../route";
+import { AppErrorBoundary } from "./app-error-boundary";
 import { I18nProvider, useT } from "../i18n";
 import {
   LicenseGateProvider,
@@ -75,6 +81,36 @@ function AppChrome() {
 }
 
 /**
+ * 安装错误上报：IPC toast、window.onerror、未处理的 Promise 拒绝。
+ *
+ * @author Xiaoman
+ * @created 2026-08-01
+ */
+function installErrorReporters(): void {
+  // IPC 失败弹 toast，相同错误只弹一次
+  installIpcErrorReporter((_command, message) => {
+    toast.error(message);
+  });
+
+  // 全局 JS 错误
+  window.addEventListener("error", (event) => {
+    reportFrontendError({
+      kind: "uncaught",
+      message: event.message || "Uncaught error",
+      source: event.filename || undefined,
+      line: event.lineno || undefined,
+      column: event.colno || undefined,
+      stack: event.error instanceof Error ? event.error.stack : undefined,
+    });
+  });
+
+  // 未捕获的 Promise 拒绝
+  window.addEventListener("unhandledrejection", (event) => {
+    reportFrontendErrorValue("unhandledrejection", event.reason);
+  });
+}
+
+/**
  * 应用根组件。
  *
  * @author coisini
@@ -83,9 +119,15 @@ function AppChrome() {
  * @returns 根节点
  */
 export function App() {
+  useEffect(() => {
+    installErrorReporters();
+  }, []);
+
   return (
     <I18nProvider>
-      <AppChrome />
+      <AppErrorBoundary>
+        <AppChrome />
+      </AppErrorBoundary>
     </I18nProvider>
   );
 }

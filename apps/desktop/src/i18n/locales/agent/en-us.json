@@ -1,6 +1,6 @@
 {
   "title": "Agent",
-  "subtitle": "Sidecar connectivity vertical slice",
-  "ping": "Ping sidecar",
+  "subtitle": "LLM connectivity",
+  "ping": "Test LLM",
   "pinging": "Pinging..."
 }

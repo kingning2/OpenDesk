@@ -27,7 +27,7 @@
     "home": "Home",
     "homeDescription": "OpenDesk architecture scaffold",
     "agent": "Agent",
-    "agentDescription": "Sidecar connectivity vertical slice",
+    "agentDescription": "LLM connectivity check",
     "crawler": "Crawler",
     "crawlerDescription": "YouTube channel crawl with process logs",
     "crawlerResults": "Crawl results",

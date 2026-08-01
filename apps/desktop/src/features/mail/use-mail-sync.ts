@@ -7,12 +7,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  listenMailImapSyncUpdated,
   mailSyncNow,
   mailSyncStatus,
   type MailImapSyncState,
 } from "@desk/platform";
 
-const POLL_MS = 30_000;
+const POLL_MS = 15_000;
 
 /**
  * Track IMAP sync state for the mail workbench.
@@ -90,6 +91,21 @@ export function useMailSync(accountId?: string | null) {
       window.clearInterval(timer);
     };
   }, [accountId]);
+
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    void listenMailImapSyncUpdated((updatedAccountId) => {
+      if (accountId && updatedAccountId !== accountId) {
+        return;
+      }
+      void refresh();
+    }).then((fn) => {
+      unlisten = fn;
+    });
+    return () => {
+      unlisten?.();
+    };
+  }, [accountId, refresh]);
 
   const isSyncing = items.some((item) => item.is_syncing) || syncing;
   const lastError = items.find((item) => item.last_error)?.last_error;

@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invokeIpc } from "./invoke";
 import type {
   MailDtoImapSyncState,
   MailDtoMailAccount,
@@ -6,12 +6,16 @@ import type {
   MailDtoMailTemplate,
   MailIpcAccountListResponse,
   MailIpcAccountSaveRequest,
+  MailIpcGenerateHtmlRequest,
+  MailIpcGenerateHtmlResponse,
   MailIpcInboxUnmatchedListRequest,
   MailIpcInboxUnmatchedListResponse,
   MailIpcLinkInboundCustomerRequest,
   MailIpcLinkInboundCustomerResponse,
   MailIpcMessageListRequest,
   MailIpcMessageListResponse,
+  MailIpcMessageMarkReadRequest,
+  MailIpcMessageMarkReadResponse,
   MailIpcRecordInboundRequest,
   MailIpcRecordInboundResponse,
   MailIpcSendRequest,
@@ -38,7 +42,7 @@ export type MailImapSyncState = MailDtoImapSyncState;
  * @created 2026-07-21
  */
 export async function mailTemplateList(): Promise<{ items: MailTemplate[]; total: number }> {
-  const response = await invoke<MailIpcTemplateListResponse>("mail_template_list");
+  const response = await invokeIpc<MailIpcTemplateListResponse>("mail_template_list");
   try {
     const parsed = JSON.parse(response.templates_json ?? "[]") as MailTemplate[];
     return { items: Array.isArray(parsed) ? parsed : [], total: response.total ?? 0 };
@@ -59,7 +63,7 @@ export async function mailTemplateList(): Promise<{ items: MailTemplate[]; total
 export async function mailTemplateSave(
   input: MailIpcTemplateSaveRequest,
 ): Promise<{ items: MailTemplate[]; total: number }> {
-  const response = await invoke<MailIpcTemplateListResponse>("mail_template_save", {
+  const response = await invokeIpc<MailIpcTemplateListResponse>("mail_template_save", {
     request: input,
   });
   try {
@@ -79,7 +83,7 @@ export async function mailTemplateSave(
 export async function mailTemplateApply(
   input: MailIpcTemplateApplyRequest,
 ): Promise<MailIpcTemplateApplyResponse> {
-  return invoke<MailIpcTemplateApplyResponse>("mail_template_apply", { request: input });
+  return invokeIpc<MailIpcTemplateApplyResponse>("mail_template_apply", { request: input });
 }
 
 /**
@@ -89,7 +93,7 @@ export async function mailTemplateApply(
  * @created 2026-07-21
  */
 export async function mailAccountList(): Promise<{ items: MailAccount[]; total: number }> {
-  const response = await invoke<MailIpcAccountListResponse>("mail_account_list");
+  const response = await invokeIpc<MailIpcAccountListResponse>("mail_account_list");
   try {
     const parsed = JSON.parse(response.accounts_json ?? "[]") as MailAccount[];
     return { items: Array.isArray(parsed) ? parsed : [], total: response.total ?? 0 };
@@ -107,7 +111,7 @@ export async function mailAccountList(): Promise<{ items: MailAccount[]; total: 
 export async function mailAccountSave(
   input: MailIpcAccountSaveRequest,
 ): Promise<{ items: MailAccount[]; total: number }> {
-  const response = await invoke<MailIpcAccountListResponse>("mail_account_save", {
+  const response = await invokeIpc<MailIpcAccountListResponse>("mail_account_save", {
     request: input,
   });
   try {
@@ -125,7 +129,7 @@ export async function mailAccountSave(
  * @created 2026-07-21
  */
 export async function mailSend(input: MailIpcSendRequest): Promise<MailIpcSendResponse> {
-  return invoke<MailIpcSendResponse>("mail_send", { request: input });
+  return invokeIpc<MailIpcSendResponse>("mail_send", { request: input });
 }
 
 /**
@@ -137,7 +141,7 @@ export async function mailSend(input: MailIpcSendRequest): Promise<MailIpcSendRe
 export async function mailRecordInbound(
   input: MailIpcRecordInboundRequest,
 ): Promise<MailIpcRecordInboundResponse> {
-  return invoke<MailIpcRecordInboundResponse>("mail_record_inbound", { request: input });
+  return invokeIpc<MailIpcRecordInboundResponse>("mail_record_inbound", { request: input });
 }
 
 /**
@@ -152,7 +156,7 @@ export async function mailRecordInbound(
 export async function mailMessageList(
   input: MailIpcMessageListRequest,
 ): Promise<{ items: MailMessage[]; total: number }> {
-  const response = await invoke<MailIpcMessageListResponse>("mail_message_list", {
+  const response = await invokeIpc<MailIpcMessageListResponse>("mail_message_list", {
     request: input,
   });
   try {
@@ -172,7 +176,7 @@ export async function mailMessageList(
 export async function mailSyncNow(
   input?: MailIpcSyncNowRequest,
 ): Promise<{ jobIds: string[]; enqueued: number }> {
-  const response = await invoke<MailIpcSyncNowResponse>("mail_sync_now", {
+  const response = await invokeIpc<MailIpcSyncNowResponse>("mail_sync_now", {
     request: input ?? {},
   });
   try {
@@ -195,7 +199,7 @@ export async function mailSyncNow(
 export async function mailSyncStatus(
   input?: MailIpcSyncStatusRequest,
 ): Promise<{ items: MailImapSyncState[]; total: number }> {
-  const response = await invoke<MailIpcSyncStatusResponse>("mail_sync_status", {
+  const response = await invokeIpc<MailIpcSyncStatusResponse>("mail_sync_status", {
     request: input ?? {},
   });
   try {
@@ -215,7 +219,7 @@ export async function mailSyncStatus(
 export async function mailInboxUnmatchedList(
   input?: MailIpcInboxUnmatchedListRequest,
 ): Promise<{ items: MailMessage[]; total: number }> {
-  const response = await invoke<MailIpcInboxUnmatchedListResponse>("mail_inbox_unmatched_list", {
+  const response = await invokeIpc<MailIpcInboxUnmatchedListResponse>("mail_inbox_unmatched_list", {
     request: input ?? {},
   });
   try {
@@ -227,6 +231,21 @@ export async function mailInboxUnmatchedList(
 }
 
 /**
+ * Mark one local message as read.
+ *
+ * @author Xiaoman
+ * @created 2026-08-01
+ */
+export async function mailMessageMarkRead(
+  input: MailIpcMessageMarkReadRequest,
+): Promise<{ messageId: string; isRead: boolean }> {
+  const response = await invokeIpc<MailIpcMessageMarkReadResponse>("mail_message_mark_read", {
+    request: input,
+  });
+  return { messageId: response.message_id, isRead: response.is_read };
+}
+
+/**
  * Link one unmatched inbound message to a customer.
  *
  * @author Xiaoman
@@ -235,8 +254,23 @@ export async function mailInboxUnmatchedList(
 export async function mailLinkInboundCustomer(
   input: MailIpcLinkInboundCustomerRequest,
 ): Promise<{ messageId: string }> {
-  const response = await invoke<MailIpcLinkInboundCustomerResponse>("mail_link_inbound_customer", {
+  const response = await invokeIpc<MailIpcLinkInboundCustomerResponse>("mail_link_inbound_customer", {
     request: input,
   });
   return { messageId: response.message_id };
+}
+
+/**
+ * Generate styled HTML email from plain text via configured LLM.
+ *
+ * @author Xiaoman
+ * @created 2026-08-01
+ */
+export async function mailGenerateHtml(
+  input: MailIpcGenerateHtmlRequest,
+): Promise<{ html: string; notes?: string | null }> {
+  const response = await invokeIpc<MailIpcGenerateHtmlResponse>("mail_generate_html", {
+    request: input,
+  });
+  return { html: response.html, notes: response.notes ?? null };
 }

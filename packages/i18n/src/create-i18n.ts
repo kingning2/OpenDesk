@@ -17,6 +17,7 @@ import {
 import { createElement, useMemo, type ReactNode } from "react";
 
 import type { Messages, TranslateParams } from "./types";
+import { interpolateTranslation } from "./types";
 
 /**
  * 某一语言下各 namespace 的文案表。
@@ -203,8 +204,9 @@ export function createI18n<Locale extends string>(
     ns: namespaces,
     interpolation: {
       escapeValue: false,
-      prefix: "{",
-      suffix: "}",
+      // Built-in i18next interpolation is disabled; `interpolateTranslation` handles `{key}` and `{{key}}`.
+      prefix: "__I18N_SKIP__",
+      suffix: "__",
     },
     returnNull: false,
   });
@@ -226,12 +228,12 @@ export function createI18n<Locale extends string>(
     params?: TranslateParams,
   ): string {
     const resolved = resolveNamespaceKey(key, namespaces, defaultNS);
-    return String(
+    const raw = String(
       i18nT(resolved.key, {
         ns: resolved.ns,
-        ...(params as Record<string, unknown>),
       }),
     );
+    return interpolateTranslation(raw, params);
   }
 
   function I18nProvider({ children }: { children: ReactNode }) {

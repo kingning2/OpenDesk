@@ -1,8 +1,5 @@
 /**
- * Crawl job hook — CSV keyword batches + Tauri Event 推送（无轮询）.
- *
- * 进度 / 日志 / 频道行由 Rust `crawler:*` Event 推送；status/logs/results IPC
- * 仍保留供调试，UI 主路径不再 setInterval。
+ * Crawl job hook — CSV / AI keywords + Event 推送 + 任务结束后自动生成下一批。
  *
  * @author coisini
  * @created 2026-07-20
@@ -13,6 +10,7 @@ import {
   crawlerJobCancel,
   crawlerJobStart,
   crawlerKeywordsBatches,
+  crawlerKeywordsGenerate,
   crawlerKeywordsImport,
   type KeywordBatchRow,
 } from "@desk/platform/ipc/crawler";
@@ -28,12 +26,24 @@ import type {
 
 import { useI18n, useT } from "../../i18n";
 
+/**
+ * 单个关键词进度行。
+ *
+ * @author Xiaoman
+ * @created 2026-07-23
+ */
 export interface KeywordStatRow {
   keyword: string;
   scanned: number;
   accepted: number;
 }
 
+/**
+ * 采集过程日志行。
+ *
+ * @author Xiaoman
+ * @created 2026-07-23
+ */
 export interface CrawlerLogRow {
   event_id: string;
   occurred_at: string;
@@ -47,7 +57,12 @@ export interface CrawlerLogRow {
   detail?: string;
 }
 
-/** One accepted channel row from `crawler_channel` SQLite / Event. */
+/**
+ * 已收录频道行（来自 Event / SQLite）。
+ *
+ * @author Xiaoman
+ * @created 2026-07-23
+ */
 export interface ChannelResultRow {
   keyword: string;
   platform: string;
@@ -64,6 +79,12 @@ export interface ChannelResultRow {
   enriched_at?: string;
 }
 
+/**
+ * UI 任务状态。
+ *
+ * @author Xiaoman
+ * @created 2026-07-23
+ */
 export type CrawlUiStatus =
   | "idle"
   | "queued"
@@ -71,6 +92,14 @@ export type CrawlUiStatus =
   | "completed"
   | "failed"
   | "cancelled";
+
+/**
+ * AI 生成阶段状态（工作流节点）。
+ *
+ * @author Xiaoman
+ * @created 2026-07-23
+ */
+export type GeneratePhase = "idle" | "running" | "done" | "error";
 
 function statusLabel(
   status: CrawlUiStatus,
@@ -174,6 +203,14 @@ function channelFromAccepted(payload: CrawlerEventChannelAccepted): ChannelResul
   };
 }
 
+/**
+ * 采集任务 hook：手动 CSV / AI 生成 + 结束后自动连跑。
+ *
+ * @author Xiaoman
+ * @created 2026-07-23
+ *
+ * @returns 采集状态、AI 参数与启停动作
+ */
 export function useCrawlerJob() {
   const t = useT();
   const { locale } = useI18n();
@@ -183,10 +220,16 @@ export function useCrawlerJob() {
   const [batches, setBatches] = useState<KeywordBatchRow[]>([]);
   const [importMessage, setImportMessage] = useState("");
   const [importing, setImporting] = useState(false);
+  const [directions, setDirections] = useState("");
+  const [languages, setLanguages] = useState("en,zh");
+  const [countPerLanguage, setCountPerLanguage] = useState(20);
+  const [autoLoop, setAutoLoop] = useState(true);
+  const [generatePhase, setGeneratePhase] = useState<GeneratePhase>("idle");
+  const [generateMessage, setGenerateMessage] = useState("");
+  const [lastGeneratedKeywords, setLastGeneratedKeywords] = useState<string[]>([]);
   const [jobId, setJobId] = useState<string | null>(null);
   const [status, setStatus] = useState<CrawlUiStatus>("idle");
   const [stopReason, setStopReason] = useState("");
-  /** 后端已按 locale 翻译的 job message。 */
   const [message, setMessage] = useState("");
   const [currentKeyword, setCurrentKeyword] = useState("");
   const [acceptedCount, setAcceptedCount] = useState(0);
@@ -199,10 +242,20 @@ export function useCrawlerJob() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const jobIdRef = useRef<string | null>(null);
+  const autoLoopRef = useRef(true);
+  const aiLoopEnabledRef = useRef(false);
+  const stopRequestedRef = useRef(false);
+  const loopInFlightRef = useRef(false);
+  const startCrawlRef = useRef<(nextBatchId?: string) => Promise<void>>(async () => undefined);
+  const generateAndStartRef = useRef<() => Promise<boolean>>(async () => false);
 
   useEffect(() => {
     jobIdRef.current = jobId;
   }, [jobId]);
+
+  useEffect(() => {
+    autoLoopRef.current = autoLoop;
+  }, [autoLoop]);
 
   const refreshApiKey = useCallback(async () => {
     setApiKeyLoading(true);
@@ -246,6 +299,144 @@ export function useCrawlerJob() {
     };
   }, [refreshBatches]);
 
+  const aiReady = useMemo(() => {
+    return (
+      directions.trim().length > 0 &&
+      languages.trim().length > 0 &&
+      countPerLanguage > 0
+    );
+  }, [countPerLanguage, directions, languages]);
+
+  const generateBatch = useCallback(async (): Promise<string | null> => {
+    setGeneratePhase("running");
+    setGenerateMessage(t("crawler.generatingKeywords"));
+    setError("");
+    try {
+      const result = await crawlerKeywordsGenerate({
+        directions: directions.trim(),
+        languages: languages.trim(),
+        count_per_language: countPerLanguage,
+        trace_id: crypto.randomUUID(),
+      });
+      if (!result.ok || !result.batch_id) {
+        setGeneratePhase("error");
+        setGenerateMessage(t("crawler.generateFailed"));
+        setError(t("crawler.generateFailed"));
+        return null;
+      }
+      let keywords: string[] = [];
+      try {
+        const parsed = JSON.parse(result.keywords_json ?? "[]") as string[];
+        keywords = Array.isArray(parsed) ? parsed : [];
+      } catch {
+        keywords = [];
+      }
+      setLastGeneratedKeywords(keywords);
+      setBatchId(result.batch_id);
+      setGeneratePhase("done");
+      setGenerateMessage(
+        t("crawler.generateResult", {
+          inserted: result.inserted,
+          requested: result.requested,
+        }),
+      );
+      setImportMessage(
+        t("crawler.generateResult", {
+          inserted: result.inserted,
+          requested: result.requested,
+        }),
+      );
+      await refreshBatches();
+      return result.batch_id;
+    } catch (err) {
+      setGeneratePhase("error");
+      const text = toDisplayError(err);
+      setGenerateMessage(text);
+      setError(text);
+      return null;
+    }
+  }, [countPerLanguage, directions, languages, refreshBatches, t]);
+
+  const startCrawl = useCallback(
+    async (nextBatchId?: string) => {
+      setError("");
+      if (!apiKey.trim()) {
+        setError(t("crawler.needApiKey"));
+        return;
+      }
+      const activeBatchId = (nextBatchId ?? batchId).trim();
+      if (!activeBatchId) {
+        setError(t("crawler.needBatchOrAi"));
+        return;
+      }
+      setBusy(true);
+      setMessage(t("crawler.starting"));
+      setStopReason("");
+      setCurrentKeyword("");
+      setKeywordStats([]);
+      setLogs([]);
+      setChannelResults([]);
+      setAcceptedCount(0);
+      setScannedCount(0);
+      setKeywordsTotal(0);
+      setKeywordsDone(0);
+      jobIdRef.current = null;
+      setJobId(null);
+      try {
+        const result = await crawlerJobStart({
+          platform: "youtube",
+          batch_id: activeBatchId,
+          api_key: apiKey,
+          rate_limit_ms: 400,
+          locale,
+          trace_id: crypto.randomUUID(),
+        });
+        if (!result.ok || !result.job_id) {
+          setBusy(false);
+          setStatus("failed");
+          setError(t("crawler.startFailed"));
+          return;
+        }
+        jobIdRef.current = result.job_id;
+        setJobId(result.job_id);
+        setStatus("queued");
+      } catch (err) {
+        setBusy(false);
+        setStatus("failed");
+        setError(toDisplayError(err));
+      }
+    },
+    [apiKey, batchId, locale, t],
+  );
+
+  const generateAndStart = useCallback(async (): Promise<boolean> => {
+    if (!aiReady) {
+      setError(t("crawler.needAiFields"));
+      return false;
+    }
+    setBusy(true);
+    const nextBatchId = await generateBatch();
+    if (!nextBatchId) {
+      setBusy(false);
+      return false;
+    }
+    if (stopRequestedRef.current) {
+      setBusy(false);
+      setGenerateMessage(t("crawler.status.cancelled"));
+      return false;
+    }
+    await startCrawl(nextBatchId);
+    return true;
+  }, [aiReady, generateBatch, startCrawl, t]);
+
+  useEffect(() => {
+    startCrawlRef.current = startCrawl;
+  }, [startCrawl]);
+
+  useEffect(() => {
+    generateAndStartRef.current = generateAndStart;
+  }, [generateAndStart]);
+
   // Subscribe once on mount so events are not lost between start() and setJobId.
   useEffect(() => {
     let cancelled = false;
@@ -253,8 +444,16 @@ export function useCrawlerJob() {
 
     void listenCrawlerEvents({
       onProgress: (payload: CrawlerEventJobProgress) => {
-        const activeJobId = jobIdRef.current;
-        if (cancelled || !activeJobId || payload.job_id !== activeJobId) {
+        if (cancelled) {
+          return;
+        }
+        let activeJobId = jobIdRef.current;
+        if (!activeJobId) {
+          jobIdRef.current = payload.job_id;
+          setJobId(payload.job_id);
+          activeJobId = payload.job_id;
+        }
+        if (payload.job_id !== activeJobId) {
           return;
         }
         applyProgress(payload, {
@@ -272,8 +471,16 @@ export function useCrawlerJob() {
         });
       },
       onLog: (payload: CrawlerEventJobLog) => {
-        const activeJobId = jobIdRef.current;
-        if (cancelled || !activeJobId || payload.job_id !== activeJobId) {
+        if (cancelled) {
+          return;
+        }
+        let activeJobId = jobIdRef.current;
+        if (!activeJobId) {
+          jobIdRef.current = payload.job_id;
+          setJobId(payload.job_id);
+          activeJobId = payload.job_id;
+        }
+        if (payload.job_id !== activeJobId) {
           return;
         }
         setLogs((prev) => {
@@ -298,8 +505,16 @@ export function useCrawlerJob() {
         });
       },
       onChannelAccepted: (payload: CrawlerEventChannelAccepted) => {
-        const activeJobId = jobIdRef.current;
-        if (cancelled || !activeJobId || payload.job_id !== activeJobId) {
+        if (cancelled) {
+          return;
+        }
+        let activeJobId = jobIdRef.current;
+        if (!activeJobId) {
+          jobIdRef.current = payload.job_id;
+          setJobId(payload.job_id);
+          activeJobId = payload.job_id;
+        }
+        if (payload.job_id !== activeJobId) {
           return;
         }
         const row = channelFromAccepted(payload);
@@ -314,8 +529,16 @@ export function useCrawlerJob() {
         });
       },
       onCompleted: (payload: CrawlerEventJobCompleted) => {
-        const activeJobId = jobIdRef.current;
-        if (cancelled || !activeJobId || payload.job_id !== activeJobId) {
+        if (cancelled) {
+          return;
+        }
+        let activeJobId = jobIdRef.current;
+        if (!activeJobId) {
+          jobIdRef.current = payload.job_id;
+          setJobId(payload.job_id);
+          activeJobId = payload.job_id;
+        }
+        if (payload.job_id !== activeJobId) {
           return;
         }
         const nextStatus =
@@ -324,16 +547,46 @@ export function useCrawlerJob() {
         setStopReason(payload.stop_reason);
         setAcceptedCount(payload.accepted_count);
         setScannedCount(payload.scanned_count);
-        setBusy(false);
+
+        if (payload.stop_reason === "cancelled") {
+          setBusy(false);
+          autoLoopRef.current = false;
+          setAutoLoop(false);
+          return;
+        }
+        if (!autoLoopRef.current || !aiLoopEnabledRef.current || loopInFlightRef.current) {
+          setBusy(false);
+          return;
+        }
+        // Keep busy across generate→start so Stop stays available and UI shows the loop.
+        setBusy(true);
+        loopInFlightRef.current = true;
+        void (async () => {
+          try {
+            await generateAndStartRef.current();
+          } finally {
+            loopInFlightRef.current = false;
+          }
+        })();
       },
       onFailed: (payload: CrawlerEventJobFailed) => {
-        const activeJobId = jobIdRef.current;
-        if (cancelled || !activeJobId || payload.job_id !== activeJobId) {
+        if (cancelled) {
+          return;
+        }
+        let activeJobId = jobIdRef.current;
+        if (!activeJobId) {
+          jobIdRef.current = payload.job_id;
+          setJobId(payload.job_id);
+          activeJobId = payload.job_id;
+        }
+        if (payload.job_id !== activeJobId) {
           return;
         }
         setStatus("failed");
         setError(payload.message);
         setBusy(false);
+        autoLoopRef.current = false;
+        setAutoLoop(false);
       },
     })
       .then((dispose) => {
@@ -385,12 +638,49 @@ export function useCrawlerJob() {
     }
   }
 
+  /**
+   * 启动采集：优先走 AI 生成批次，否则用已选 batch。
+   *
+   * @author Xiaoman
+   * @created 2026-07-23
+   */
   async function start() {
-    setError("");
-    if (!apiKey.trim()) {
-      setError(t("crawler.needApiKey"));
+    stopRequestedRef.current = false;
+    autoLoopRef.current = autoLoop;
+    aiLoopEnabledRef.current = aiReady;
+    if (aiReady) {
+      await generateAndStart();
       return;
     }
+    await startCrawl();
+  }
+
+  async function cancel() {
+    stopRequestedRef.current = true;
+    autoLoopRef.current = false;
+    aiLoopEnabledRef.current = false;
+    setAutoLoop(false);
+    loopInFlightRef.current = false;
+    if (!jobId) {
+      setBusy(false);
+      setGeneratePhase((prev) => (prev === "running" ? "idle" : prev));
+      return;
+    }
+    try {
+      await crawlerJobCancel({ job_id: jobId });
+    } catch (err) {
+      setError(toDisplayError(err));
+    }
+  }
+
+  /**
+   * 由 Workflow Runtime 拉起 crawl 前，武装 UI 监听（不直接 start job）。
+   *
+   * @author Xiaoman
+   * @created 2026-07-23
+   */
+  function armForRuntimeCrawl() {
+    setError("");
     setBusy(true);
     setMessage(t("crawler.starting"));
     setStopReason("");
@@ -404,41 +694,9 @@ export function useCrawlerJob() {
     setKeywordsDone(0);
     jobIdRef.current = null;
     setJobId(null);
-    try {
-      const result = await crawlerJobStart({
-        platform: "youtube",
-        batch_id: batchId,
-        api_key: apiKey,
-        rate_limit_ms: 400,
-        locale,
-        trace_id: crypto.randomUUID(),
-      });
-      if (!result.ok || !result.job_id) {
-        setBusy(false);
-        setStatus("failed");
-        setError(t("crawler.startFailed"));
-        return;
-      }
-      // Set ref before state so any in-flight Event matches immediately.
-      jobIdRef.current = result.job_id;
-      setJobId(result.job_id);
-      setStatus("queued");
-    } catch (err) {
-      setBusy(false);
-      setStatus("failed");
-      setError(toDisplayError(err));
-    }
-  }
-
-  async function cancel() {
-    if (!jobId) {
-      return;
-    }
-    try {
-      await crawlerJobCancel({ job_id: jobId });
-    } catch (err) {
-      setError(toDisplayError(err));
-    }
+    // Runtime 负责编排；关闭前端 autoLoop 连跑，避免双通道。
+    aiLoopEnabledRef.current = false;
+    stopRequestedRef.current = false;
   }
 
   const selectedBatch = batches.find((row) => row.batch_id === batchId);
@@ -460,6 +718,18 @@ export function useCrawlerJob() {
     importing,
     importCsvFile,
     refreshBatches,
+    directions,
+    setDirections,
+    languages,
+    setLanguages,
+    countPerLanguage,
+    setCountPerLanguage,
+    autoLoop,
+    setAutoLoop,
+    aiReady,
+    generatePhase,
+    generateMessage,
+    lastGeneratedKeywords,
     jobId,
     status,
     statusText,
@@ -477,5 +747,6 @@ export function useCrawlerJob() {
     error,
     start,
     cancel,
+    armForRuntimeCrawl,
   };
 }

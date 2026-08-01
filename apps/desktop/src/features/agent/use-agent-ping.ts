@@ -9,9 +9,9 @@ export function useAgentPing() {
     setLoading(true);
     try {
       const result = await agentPing({ trace_id: crypto.randomUUID() });
-      setStatus(result.ok ? `Sidecar ok (${result.trace_id ?? "no trace"})` : "Sidecar ping failed");
+      setStatus(result.ok ? `LLM ok (${result.trace_id ?? "no trace"})` : "LLM connection failed");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Sidecar unreachable";
+      const message = error instanceof Error ? error.message : "LLM unavailable";
       setStatus(message);
     } finally {
       setLoading(false);

@@ -72,6 +72,7 @@ export function sanitizeMailHtml(html: string): string {
       "cellspacing",
     ],
     ALLOW_DATA_ATTR: false,
+    FORBID_TAGS: ["script", "iframe", "object", "embed", "form", "input", "button"],
   });
 }
 
@@ -85,7 +86,7 @@ export function sanitizeMailHtml(html: string): string {
  * @returns Full HTML document string
  */
 export function wrapMailHtmlDocument(html: string): string {
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><base target="_blank" rel="noopener noreferrer"><style>
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src * data: https: http:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"><base target="_blank" rel="noopener noreferrer"><style>
 body{margin:0;padding:12px 14px;font-family:system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.65;color:#1f2937;word-break:break-word;overflow-wrap:anywhere;background:#fff}
 img{max-width:100%;height:auto}
 a{color:#2563eb}

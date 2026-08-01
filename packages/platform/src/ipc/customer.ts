@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invokeIpc } from "./invoke";
 import type {
   CustomerDtoProfile,
   CustomerIpcCreateRequest,
@@ -22,7 +22,7 @@ export type CustomerProfile = CustomerDtoProfile;
 export async function customerList(
   input: CustomerIpcListRequest = {},
 ): Promise<{ items: CustomerProfile[]; total: number }> {
-  const response = await invoke<CustomerIpcListResponse>("customer_list", { request: input });
+  const response = await invokeIpc<CustomerIpcListResponse>("customer_list", { request: input });
   try {
     const parsed = JSON.parse(response.customers_json ?? "[]") as CustomerProfile[];
     return {
@@ -42,7 +42,7 @@ export async function customerList(
  */
 export async function customerGet(id: string): Promise<CustomerProfile> {
   const request: CustomerIpcGetRequest = { id };
-  const response = await invoke<CustomerIpcGetResponse>("customer_get", { request });
+  const response = await invokeIpc<CustomerIpcGetResponse>("customer_get", { request });
   return JSON.parse(response.profile_json) as CustomerProfile;
 }
 
@@ -55,7 +55,7 @@ export async function customerGet(id: string): Promise<CustomerProfile> {
 export async function customerCreate(
   input: CustomerIpcCreateRequest,
 ): Promise<CustomerProfile> {
-  const response = await invoke<CustomerIpcCreateResponse>("customer_create", { request: input });
+  const response = await invokeIpc<CustomerIpcCreateResponse>("customer_create", { request: input });
   return JSON.parse(response.profile_json) as CustomerProfile;
 }
 
@@ -68,6 +68,6 @@ export async function customerCreate(
 export async function customerUpdate(
   input: CustomerIpcUpdateRequest,
 ): Promise<CustomerProfile> {
-  const response = await invoke<CustomerIpcUpdateResponse>("customer_update", { request: input });
+  const response = await invokeIpc<CustomerIpcUpdateResponse>("customer_update", { request: input });
   return JSON.parse(response.profile_json) as CustomerProfile;
 }

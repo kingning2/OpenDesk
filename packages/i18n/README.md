@@ -7,7 +7,7 @@ OpenDesk **通用** 多语言底座，基于 [i18next](https://www.i18next.com/)
 | 放在 `@desk/i18n` | 不放在 `@desk/i18n` |
 |-------------------|---------------------|
 | `createI18n` / Provider / hooks | 产品文案 JSON（放 app） |
-| 插值 `{name}`；namespace 解析 | 后端用户提示（Rust 按 locale 自译） |
+| 插值 `{name}` 与 `{{name}}`；namespace 解析 | 后端用户提示（Rust 按 locale 自译） |
 
 ## App 文案目录约定
 

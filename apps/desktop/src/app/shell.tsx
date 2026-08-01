@@ -80,7 +80,7 @@ function AppShellInner() {
             <IconButton
               label={t("shell.settings")}
               title={t("shell.settings")}
-              onClick={openSettings}
+              onClick={() => openSettings()}
             >
               <Settings className="size-3.5" />
             </IconButton>

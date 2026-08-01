@@ -22,27 +22,24 @@ import {
   SelectValue,
   cn,
 } from "@desk/ui";
-import { Languages, Bot, X, Youtube, type LucideIcon } from "@desk/ui/icons";
+import { Languages, Bot, Mail, X, Youtube, type LucideIcon } from "@desk/ui/icons";
 import { useI18n } from "../../i18n";
 import type { AppLocale } from "../../i18n";
 import { LlmSettingsPanel } from "./llm-settings-panel";
+import { MailIntegrationSettingsPanel } from "./mail-integration-settings-panel";
 import { useLlmSettings } from "./use-llm-settings";
+import { useMailIntegrationSettings } from "./use-mail-integration-settings";
 import { useYoutubeApiKeySettings } from "./use-youtube-api-key-settings";
+import type { SettingsSectionId } from "./settings-dialog-store";
 
-/** 设置侧栏分区 id。 */
-type SettingsSectionId = "language" | "youtube" | "llm";
-
-/**
- * `SettingsDialog` 属性。
- *
- * @author coisini
- * @created 2026-07-21
- */
+/** `SettingsDialog` 属性。 */
 export interface SettingsDialogProps {
   /** 是否打开。 */
   open: boolean;
   /** 打开状态变更。 */
   onOpenChange: (open: boolean) => void;
+  /** 打开时跳转的分区（一次性）。 */
+  initialSection?: SettingsSectionId | null;
 }
 
 /**
@@ -78,6 +75,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: "llm", labelKey: "settings.navLlm", icon: Bot },
       { id: "youtube", labelKey: "settings.navYoutube", icon: Youtube },
+      { id: "mailIntegration", labelKey: "settings.navMailIntegration", icon: Mail },
     ],
   },
 ];
@@ -91,7 +89,11 @@ const NAV_GROUPS: NavGroup[] = [
  * @param props - 见 {@link SettingsDialogProps}
  * @returns 设置 Dialog 节点
  */
-export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
+export function SettingsDialog({
+  open,
+  onOpenChange,
+  initialSection = null,
+}: SettingsDialogProps) {
   const navigate = useNavigate();
   const { t, locale, setLocale, locales, localeLabels } = useI18n();
   const {
@@ -107,6 +109,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     configured,
   } = useYoutubeApiKeySettings();
   const llm = useLlmSettings();
+  const mailIntegration = useMailIntegrationSettings();
   const [section, setSection] = useState<SettingsSectionId>("language");
   const [draftLocale, setDraftLocale] = useState<AppLocale>(locale);
   const [localeSavedMessage, setLocaleSavedMessage] = useState("");
@@ -121,11 +124,14 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       setDraftLocale(locale);
       setLocaleSavedMessage("");
       setExitPendingAction(null);
+      if (initialSection) {
+        setSection(initialSection);
+      }
     }
   }
 
   const localeDirty = draftLocale !== locale;
-  const isDirty = localeDirty || youtubeDirty || llm.dirty;
+  const isDirty = localeDirty || youtubeDirty || llm.dirty || (mailIntegration.loaded && mailIntegration.dirty);
   const confirmExit = exitPendingAction != null;
   /**
    * 保存当前脏字段（语言草稿 + YouTube 密钥 + LLM）。
@@ -147,6 +153,9 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       if (llm.dirty) {
         await llm.save();
       }
+      if (mailIntegration.loaded && mailIntegration.dirty) {
+        await mailIntegration.save();
+      }
       return true;
     } catch {
       return false;
@@ -164,6 +173,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     setLocaleSavedMessage("");
     discard();
     llm.discard();
+    mailIntegration.discard();
   }
 
   /**
@@ -219,7 +229,9 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       ? t("settings.language")
       : section === "llm"
         ? t("settings.llmTitle")
-        : t("settings.youtubeTitle");
+        : section === "mailIntegration"
+          ? t("settings.mailIntegrationTitle")
+          : t("settings.youtubeTitle");
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -344,6 +356,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 </section>
               ) : section === "llm" ? (
                 <LlmSettingsPanel llm={llm} />
+              ) : section === "mailIntegration" ? (
+                <MailIntegrationSettingsPanel integration={mailIntegration} />
               ) : (
                 <section className="flex max-w-lg flex-col gap-8">
                   <p className="text-[length:var(--text-sm)] leading-relaxed text-muted-foreground">
@@ -457,7 +471,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   </Button>
                   <Button
                     type="button"
-                    disabled={saving || llm.saving}
+                    disabled={saving || llm.saving || mailIntegration.saving}
                     onClick={() => {
                       void (async () => {
                         const ok = await saveAll();

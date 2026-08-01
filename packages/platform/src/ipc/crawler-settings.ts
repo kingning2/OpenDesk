@@ -2,7 +2,7 @@
  * YouTube API key settings IPC (React → Rust SQLite).
  */
 
-import { invoke } from "@tauri-apps/api/core";
+import { invokeIpc } from "./invoke";
 
 export interface CrawlerYoutubeApiKeyResponse {
   api_key: string;
@@ -10,14 +10,14 @@ export interface CrawlerYoutubeApiKeyResponse {
 
 /** Read persisted YouTube Data API key. */
 export async function crawlerYoutubeApiKeyGet(): Promise<CrawlerYoutubeApiKeyResponse> {
-  return invoke<CrawlerYoutubeApiKeyResponse>("crawler_youtube_api_key_get");
+  return invokeIpc<CrawlerYoutubeApiKeyResponse>("crawler_youtube_api_key_get");
 }
 
 /** Persist YouTube Data API key. */
 export async function crawlerYoutubeApiKeySet(
   apiKey: string,
 ): Promise<CrawlerYoutubeApiKeyResponse> {
-  return invoke<CrawlerYoutubeApiKeyResponse>("crawler_youtube_api_key_set", {
+  return invokeIpc<CrawlerYoutubeApiKeyResponse>("crawler_youtube_api_key_set", {
     request: { api_key: apiKey },
   });
 }

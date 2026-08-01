@@ -1,6 +1,6 @@
 {
   "title": "Agent",
-  "subtitle": "Sidecar 连通性垂直切片",
-  "ping": "Ping sidecar",
+  "subtitle": "大模型连通性",
+  "ping": "测试大模型",
   "pinging": "请求中…"
 }
