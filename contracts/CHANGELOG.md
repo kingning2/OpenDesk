@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.20
+
+- **Breaking:** 删除 Python Sidecar OpenAPI、路由 schema、`runtime.sidecar.restarted` 事件及对应生成物。
+- 迁移：Agent、LLM、mail、crawler 调用方改用现有 Tauri IPC 契约；不再启动、探测或监听 Sidecar。
+
+## 0.1.19
+
+- 新增 mail IPC：`generate_html`（Rust 直连已配置 LLM 生成邮件 HTML）
+
+## 0.1.18
+
+- 新增 crawler IPC：`keywords_generate`（按方向/语言/每语言数量调用已配置 LLM 生成关键词并入库新 batch）
+
 ## 0.1.17
 
 - 新增 mail IPC：`sync_now` / `sync_status`（IMAP 后台同步入队与状态查询）

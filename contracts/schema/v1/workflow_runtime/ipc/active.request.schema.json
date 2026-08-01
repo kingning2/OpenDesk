@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://workflow_runtime/ipc/active.request/v1",
+  "title": "workflow_runtime/ipc/active.request",
+  "description": "List recoverable workflow instances.",
+  "type": "object",
+  "properties": {
+    "limit": {
+      "type": ["integer", "null"],
+      "description": "Optional max number of instances to return."
+    }
+  },
+  "additionalProperties": false
+}

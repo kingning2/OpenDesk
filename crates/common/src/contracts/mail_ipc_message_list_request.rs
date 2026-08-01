@@ -8,4 +8,5 @@ pub struct MailIpcMessageListRequest {
     pub query: Option<String>,
     pub limit: Option<i64>,
     pub offset: Option<i64>,
+    pub sync_open_status: Option<bool>,
 }

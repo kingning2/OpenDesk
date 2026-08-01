@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://workflow_runtime/ipc/cancel.response/v1",
+  "title": "workflow_runtime/ipc/cancel.response",
+  "description": "Result of cancelling a workflow instance.",
+  "type": "object",
+  "required": ["instance_id", "ok"],
+  "properties": {
+    "instance_id": { "type": "string" },
+    "ok": { "type": "boolean" },
+    "error": { "type": "string" }
+  },
+  "additionalProperties": false
+}

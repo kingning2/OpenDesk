@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/ipc/message_mark_read.response/v1",
+  "title": "mail/ipc/message_mark_read.response",
+  "description": "Updated read state for one message.",
+  "type": "object",
+  "required": ["message_id", "is_read"],
+  "properties": {
+    "message_id": { "type": "string" },
+    "is_read": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}

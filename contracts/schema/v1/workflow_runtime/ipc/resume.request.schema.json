@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://workflow_runtime/ipc/resume.request/v1",
+  "title": "workflow_runtime/ipc/resume.request",
+  "description": "Resume a recoverable workflow instance.",
+  "type": "object",
+  "required": ["instance_id"],
+  "properties": {
+    "instance_id": { "type": "string" }
+  },
+  "additionalProperties": false
+}

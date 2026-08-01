@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://workflow_runtime/ipc/active.response/v1",
+  "title": "workflow_runtime/ipc/active.response",
+  "description": "Recoverable workflow instances (JSON array payload).",
+  "type": "object",
+  "required": ["instances_json"],
+  "properties": {
+    "instances_json": {
+      "type": "string",
+      "description": "JSON array of {instance_id, state, updated_at}."
+    }
+  },
+  "additionalProperties": false
+}

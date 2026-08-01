@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/ipc/generate_html.response/v1",
+  "title": "mail/ipc/generate_html.response",
+  "description": "Rust LLM mail HTML generation result.",
+  "type": "object",
+  "required": ["ok", "html", "message"],
+  "properties": {
+    "ok": { "type": "boolean" },
+    "html": { "type": "string" },
+    "notes": { "type": "string" },
+    "message": { "type": "string" },
+    "trace_id": { "type": "string" }
+  },
+  "additionalProperties": false
+}

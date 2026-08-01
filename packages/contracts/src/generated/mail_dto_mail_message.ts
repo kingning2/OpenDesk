@@ -19,7 +19,10 @@ export interface MailDtoMailMessage {
   in_reply_to?: string;
   references?: string;
   is_favorite?: boolean;
+  is_read?: boolean;
   open_tracking_id?: string;
+  opened_at?: string;
+  open_count?: number;
   created_at: string;
   updated_at: string;
 }

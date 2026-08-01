@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://workflow_runtime/event/phase/v1",
+  "title": "workflow_runtime/event/phase",
+  "description": "Workflow runtime phase/event payload for UI subscription.",
+  "type": "object",
+  "required": ["kind", "instance_id"],
+  "properties": {
+    "kind": { "type": "string" },
+    "instance_id": { "type": "string" },
+    "node_id": { "type": "string" },
+    "state": { "type": "string" },
+    "message": { "type": "string" },
+    "context_version": { "type": "integer" }
+  },
+  "additionalProperties": false
+}

@@ -14,7 +14,11 @@
     "customer_id": { "type": "string" },
     "query": { "type": "string" },
     "limit": { "type": "integer" },
-    "offset": { "type": "integer" }
+    "offset": { "type": "integer" },
+    "sync_open_status": {
+      "type": "boolean",
+      "description": "When true and direction is outbound, query remote open-tracking API for unsynced sent messages. Defaults to false for fast list loads."
+    }
   },
   "additionalProperties": false
 }

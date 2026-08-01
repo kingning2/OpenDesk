@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://mail/ipc/generate_html.request/v1",
+  "title": "mail/ipc/generate_html.request",
+  "description": "Generate styled HTML from a plain-text email using the configured Rust LLM client.",
+  "type": "object",
+  "required": ["text"],
+  "properties": {
+    "text": { "type": "string" },
+    "trace_id": { "type": "string" }
+  },
+  "additionalProperties": false
+}

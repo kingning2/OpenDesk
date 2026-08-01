@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://workflow_runtime/ipc/start.request/v1",
+  "title": "workflow_runtime/ipc/start.request",
+  "description": "Start a workflow runtime instance from a definition JSON.",
+  "type": "object",
+  "required": ["definition_json"],
+  "properties": {
+    "definition_json": {
+      "type": "string",
+      "description": "Serialized WorkflowDefinition JSON."
+    },
+    "context_json": {
+      "type": "string",
+      "description": "Optional initial context JSON object."
+    }
+  },
+  "additionalProperties": false
+}

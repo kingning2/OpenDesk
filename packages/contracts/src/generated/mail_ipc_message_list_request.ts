@@ -5,4 +5,5 @@ export interface MailIpcMessageListRequest {
   query?: string;
   limit?: number;
   offset?: number;
+  sync_open_status?: boolean;
 }

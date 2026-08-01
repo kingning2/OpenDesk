@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://crawler/ipc/keywords_generate.request/v1",
+  "title": "crawler/keywords_generate.request",
+  "description": "Ask configured LLM to generate multilingual YouTube search keywords and persist as a new batch.",
+  "type": "object",
+  "required": ["directions", "languages", "count_per_language"],
+  "properties": {
+    "trace_id": { "type": "string" },
+    "directions": {
+      "type": "string",
+      "description": "Keyword directions / themes, English-comma separated."
+    },
+    "languages": {
+      "type": "string",
+      "description": "Target languages, English-comma separated (e.g. en,zh,ja)."
+    },
+    "count_per_language": {
+      "type": "integer",
+      "description": "How many keywords to generate for each language."
+    },
+    "batch_id": {
+      "type": "string",
+      "description": "Optional; server generates UUID when empty."
+    }
+  },
+  "additionalProperties": false
+}

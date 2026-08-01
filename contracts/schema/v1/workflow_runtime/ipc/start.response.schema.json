@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://workflow_runtime/ipc/start.response/v1",
+  "title": "workflow_runtime/ipc/start.response",
+  "description": "Result of starting a workflow instance.",
+  "type": "object",
+  "required": ["instance_id", "state"],
+  "properties": {
+    "instance_id": { "type": "string" },
+    "state": { "type": "string" },
+    "error": { "type": "string" }
+  },
+  "additionalProperties": false
+}

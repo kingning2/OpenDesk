@@ -22,7 +22,10 @@ pub struct MailDtoMailMessage {
     pub in_reply_to: Option<String>,
     pub references: Option<String>,
     pub is_favorite: Option<bool>,
+    pub is_read: Option<bool>,
     pub open_tracking_id: Option<String>,
+    pub opened_at: Option<String>,
+    pub open_count: Option<i64>,
     pub created_at: String,
     pub updated_at: String,
 }

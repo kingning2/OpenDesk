@@ -34,7 +34,10 @@
     "in_reply_to": { "type": "string" },
     "references": { "type": "string" },
     "is_favorite": { "type": "boolean" },
+    "is_read": { "type": "boolean" },
     "open_tracking_id": { "type": "string" },
+    "opened_at": { "type": "string" },
+    "open_count": { "type": "integer" },
     "created_at": { "type": "string" },
     "updated_at": { "type": "string" }
   },
