@@ -1,32 +1,25 @@
-# Developer B（Rust）规则
+# Rust / Tauri 规则
 
-适用范围：`crates/**`、`apps/desktop/src-tauri/**`
+适用范围：`crates/**`、`apps/desktop/src-tauri/**`。
 
-## 职责边界
+## 职责
 
-- Rust 是桌面端 **Application Core / 协调中枢**
-- React 只能通过 Tauri IPC 调 Rust；Python 只能通过 Rust `runtime` 访问
-- SQLite / 存储层由 Rust 独占（Python 不直连 DB）
+- Rust 是唯一业务协调与运行时层。
+- Tauri command 只做参数边界、调用应用层和错误映射。
+- AI 基建集中在 `crates/agent`（`llm/`、`prompt/`、`skills/`）；工作流编排使用 `crates/workflow_runtime`；重任务使用 Worker 或明确的异步边界。
+- SQLite、SMTP/IMAP、文件、网络与系统凭据都由 Rust 负责。
 
-## 分层与依赖（必须）
+## 分层
 
-- Feature crate（如 `crates/chat`）内部按 `domain/` 与 `app/` 分层
-- `domain/` 禁止 IO（无 SQL/HTTP/文件/tauri）
-- `app/` 只依赖 `ports` trait，不允许依赖 `storage/vector/file/runtime` 的具体实现
-- `kernel` 只提供横切能力（event/task/config/logger/plugin），禁止写具体业务规则
+- Domain 保持纯净；Application 编排 Port；Infrastructure 实现 IO；`crates/app` 负责装配。
+- Feature 间不得依赖内部实现；跨域写传播用 Event，只读查询用 Query Port。
+- Contract 类型来自 `crates/common/src/contracts/` 生成物。
 
-## 通信模式
+## 质量
 
-- 跨 feature：优先 `kernel::event` Pub/Sub，禁止直接 `use other_feature::*`
-- 后台任务：必须通过 `kernel::task` 注册/调度，禁止私开长循环线程
+- 业务路径返回 `Result`，禁止 `unwrap`、`expect`、`panic!`。
+- 异步或 CPU 密集任务不得阻塞 Tauri 主线程。
+- 使用 `tracing` 并脱敏密钥、凭据和正文。
+- 公开 API 写简洁中文 rustdoc；仅复杂多步骤函数用 `// 1.` 中文分段解释边界或原因。
 
-## 命名规范
-
-- crate 名必须为短名名词：`chat`、`mail`、`kernel`、`storage`
-- 禁止：`chat-service`、`workflow-manager`、`*_engine`
-
-## 契约变更
-
-- 所有跨端 DTO/事件/错误码：必须来源 `contracts/`
-- Breaking Change：新 `schema/v2` 或新文件 + 迁移说明
-
+验证：`pnpm lint:rust && pnpm check:architecture && pnpm contracts:check`。

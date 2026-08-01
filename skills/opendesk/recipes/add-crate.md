@@ -1,26 +1,11 @@
 # Recipe: Add Crate
 
-新增 Rust crate（Feature 或 Infrastructure）。
+只在现有 crate 无法清晰承载职责时新增：
 
-## 修改顺序
+1. 选择短名词并确认它是 Feature、Port 或 Infrastructure。
+2. 从 [`../templates/crate/`](../templates/crate/) 复制最小 `Cargo.toml` 与 `lib.rs`。
+3. 加入根 workspace；依赖优先复用 `[workspace.dependencies]`。
+4. 不创建单实现 trait、空分层或“未来可能用”的模块。
+5. 公开 API 写简洁中文 rustdoc。
 
-1. `python skills/opendesk/scripts/create_crate.py --name <name> --kind feature|infra`
-2. 确认根 `Cargo.toml` `[workspace.members]` 已包含
-3. 在 `crates/app` 或 `src-tauri` 注册（若需暴露）
-4. `pnpm lint:rust`
-
-## 禁止
-
-- Feature crate 依赖另一 Feature crate
-- Infrastructure crate 依赖 Feature crate
-- 在 crate 根写业务逻辑
-
-## Checklist
-
-- [ ] `lib.rs` 导出 `app` / `domain`（feature）或单一职责（infra）
-- [ ] 无 `unwrap` 于公共 API
-- [ ] 命名符合 [naming.md](../guides/naming.md)
-
-## 模板
-
-[../templates/crate/](../templates/crate/)
+验证：`cargo check -p <name> && pnpm lint:rust && pnpm check:architecture`。

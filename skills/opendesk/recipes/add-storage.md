@@ -1,22 +1,9 @@
 # Recipe: Add Storage
 
-## 修改顺序
+1. 由拥有数据的 Feature 定义 Repository/Port。
+2. 在 `crates/storage` 添加 migration 与实现。
+3. 使用事务、唯一约束和索引表达数据不变量。
+4. Application 只依赖 Port，数据库模型不穿过 IPC。
+5. 为 migration、回滚边界和关键查询写测试。
 
-1. 在 `crates/ports` 定义 `XxxRepo` trait
-2. 在 `crates/storage/src/` 实现（SQLite 骨架）
-3. UseCase 仅依赖 trait
-4. 迁移脚本目录 `crates/storage/migrations/`（占位）
-
-## 禁止
-
-- UseCase / domain 写 SQL
-- Python 访问 SQLite
-
-## Checklist
-
-- [ ] trait 在 ports
-- [ ] 实现可替换（无硬编码连接串于 UseCase）
-
-## 模板
-
-[../templates/repository/](../templates/repository/)
+凭据不存普通业务表；错误映射为领域语义。

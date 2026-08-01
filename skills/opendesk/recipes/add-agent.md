@@ -1,18 +1,12 @@
-# Recipe: Add Agent
+# Recipe: Add Agent Capability
 
-## 修改顺序
+Agent 能力在 Rust 内实现：
 
-1. Contract: agent IPC + event schema
-2. `crates/agent/` UseCase 骨架
-3. `python/packages/agent/` 包骨架
-4. `runtime` 注册 sidecar 路由（骨架）
-5. 流式：Rust Event 转发占位
+1. 定义输入、输出、事件与错误 Contract。
+2. 在调用 Feature 中组装业务上下文与只读 Query Port。
+3. 使用 `agent::llm::LlmClient` 调模型；模型协议与 Skill 基建留在 `crates/agent`，业务 Prompt/用例留在 Feature。
+4. 多步骤任务接入 `crates/workflow_runtime`，为外部副作用定义 Executor。
+5. 通过 Tauri IPC 返回结果或 run id，通过 Event 推送进度。
+6. 发送邮件、改客户状态等高权限动作仍需明确的人机确认边界。
 
-## 禁止
-
-- Python Agent 直连 React
-- Agent 状态写 SQLite（由 Rust 持久化）
-
-## 模板
-
-[../examples/python/agent_handler.py](../examples/python/agent_handler.py)
+密钥只从安全存储读取，不写入 Contract 或日志。

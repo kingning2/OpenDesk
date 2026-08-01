@@ -53,7 +53,7 @@ YouTube 爬邮箱获客 → 用自己的 SMTP/IMAP 邮件谈价 → WhatsApp **�
 | S2d | **IMAP 自动收信**匹配客户邮箱 | Worker 同步；Message-ID 去重；未匹配可人工关联 |
 | S3 | 客户档案含正式合作字段（套餐、月费、起止、报价史） | 详情页字段完整；变更写入历史 |
 | S4 | AI 起草邮件前必须注入该客户档案 + 价目表 | 缺客户 id 或关键字段时拒绝生成并提示 |
-| S5 | AI 仅通过 Rust 白名单只读工具查库 | Python 无 SQLite 连接；无 write/update/delete 工具 |
+| S5 | AI 仅通过 Rust 白名单只读 Query Port 获取业务上下文 | 无绕过 UseCase 的 write/update/delete 工具 |
 | S6 | WhatsApp 桌面收发 + 翻译/建议，不自动回复 | 发送必须人工触发 |
 | S6b | WhatsApp **Baileys QR 登录** + 会话同步可联调 | Worker 连接成功；测试号入站消息可在 UI 显示 |
 | S7 | OCR 提交后 UI 不卡顿 | 主进程无 OCR CPU 负载；任务在 Worker |
@@ -78,7 +78,7 @@ YouTube 爬邮箱获客 → 用自己的 SMTP/IMAP 邮件谈价 → WhatsApp **�
 |------|------|------|--------|
 | **本路线图** | `roadmaps/mvp-sales-workbench.md` | 里程碑顺序、成功标准、文档索引 | 规划任何 MVP 工作前 |
 | **Epic** | `changes/2026/07/epic-20260720-001-mvp-sales-workbench.md` | 总目标、子任务关系、总体验收 | 拆任务、看依赖 |
-| **ADR：AI 只读查库** | `decisions/customer/adr-0001-ai-readonly-query-port.md` | AI 不得直连 DB；只读 Query Port 长期约束 | 做 Agent 工具、Python 查询前 |
+| **ADR：AI 只读查库** | `decisions/customer/adr-0001-ai-readonly-query-port.md` | AI 只经只读 Query Port 获取业务数据 | 做 Agent 工具前 |
 | **ADR：AI 纠错记忆** | `decisions/agent/adr-0005-ai-correction-memory.md` | 人工规则注入，防重复犯错 | 做 CHG-030 / M3 AI 前 |
 | **ADR：WA Baileys Worker** | `decisions/channel/adr-0006-whatsapp-baileys-worker.md` | Baileys 协议桥在 Worker；替代 ADR-0004 | 做 CHG-020 / M5 前 |
 | **ADR：WA Webhook（已废弃）** | `decisions/channel/adr-0004-whatsapp-webhook-deployment.md` | 历史：Business API webhook | 仅追溯 |
@@ -136,15 +136,15 @@ M1（客户档案 + 爬虫导入 + **Playwright 邮箱补全 CHG-031**，依赖 
 |------|----|----|----|----|-----|
 | `contracts/` | customer DTO | mail send IPC | pricing + agent query tools + mail draft | quote history events | channel message IPC |
 | `crates/` | storage/customer, user? | mail, mail-net | agent query port, pricing | customer audit | channel |
-| `python/` | — | — | agent readonly tools handler | — | translate/suggest |
+| `crates/agent` | — | — | Rust AI 基建 + readonly tools | — | translate/suggest |
 | `apps/desktop/` | customer feature | mail feature | pricing UI, AI draft panel | customer edit forms | channel feature |
 | `docs/managed/` | domains + changes | change | ADR + changes | change | change |
 
 ## 7. 架构不变量（全 MVP 遵守）
 
-1. **React → Rust → Python**，Rust 是唯一协调者
-2. **Contract First**：跨端变更顺序 Contract → Codegen → Rust → Python → React
-3. **Python 不直连 SQLite**；AI 查客户/价目表走 Rust 只读 Query Port（见 ADR-0001）
+1. **React → Tauri IPC → Rust**，Rust 是唯一协调者与运行时
+2. **Contract First**：跨端变更顺序 Contract → Codegen → Rust → React
+3. **AI 位于 Rust**；模型调用经 `crates/agent`，客户/价目表上下文走只读 Query Port（见 ADR-0001）
 4. **发送动作（邮件/WA）仅由人在 UI 触发**，AI 只产出草稿/建议
 5. **客户写操作仅 UI/Rust UseCase**，带审计
 6. **OCR 与重 CPU/IO 任务仅在 `opendesk-worker` 进程**；Tesseract + 本地 tessdata（ADR-0002、ADR-0003）

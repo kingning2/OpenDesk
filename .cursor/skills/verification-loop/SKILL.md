@@ -1,26 +1,16 @@
 ---
 name: verification-loop
-description: OpenDesk 项目最小验证闭环：lint + architecture checks + staged guardrail。
+description: OpenDesk 最小验证闭环：lint、React/Rust 架构检查与 Contract 生成物检查。
 ---
 
-# Verification Loop (OpenDesk)
+# Verification Loop
 
-在以下时机执行：
-- 完成一个可提交改动后
-- 提交 PR 前
-- 触及跨层/跨 feature 代码后
+完成可提交改动、跨层修改或 PR 前运行：
 
-最小闭环：
-1. `pnpm lint`
-2. `python skills/opendesk/scripts/check_architecture.py`
-3. `python skills/opendesk/scripts/check_boundary.py`
-4. `python skills/opendesk/scripts/check_contracts.py`
+```bash
+pnpm lint
+pnpm check:architecture
+pnpm contracts:check
+```
 
-如果任一步失败：
-- 停止提交
-- 优先修复边界/契约问题，再修复风格问题
-
-通过标准：
-- lint 全绿
-- architecture / boundary / contracts 校验全绿
-- 无绕过规则的临时改动（尤其是 lint/config 文件）
+任一步失败则停止提交，先修复架构或 Contract 不一致，再处理风格问题。不得通过修改 lint/check 配置绕过失败。

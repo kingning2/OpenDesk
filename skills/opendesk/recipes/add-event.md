@@ -1,24 +1,9 @@
 # Recipe: Add Event
 
-## 修改顺序
+1. 确认是已发生事实或异步状态传播；同步查询改用 Query Port。
+2. 在 Contract 定义 payload。
+3. 运行 `pnpm contracts:sync`。
+4. Publisher 只发布 topic + payload。
+5. Subscriber 幂等处理；Tauri Event 单独适配 React。
 
-1. Contract: `contracts/schema/v1/<f>/event/<name>.schema.json`
-2. `sync_contracts.py`
-3. Publisher: UseCase 骨架中预留 `publish` 调用点（注释 TODO）
-4. Subscriber: 目标 Feature 注册 handler 骨架
-5. `check_architecture.py`
-
-## 禁止
-
-- 未定义 payload 就 publish
-- Subscriber 中写另一 Feature 的持久化逻辑（Skeleton 阶段）
-
-## Checklist
-
-- [ ] topic 命名 `<feature>.<entity>.<verb>`
-- [ ] payload 与 schema 一致
-- [ ] 幂等设计已文档化
-
-## 模板
-
-[../templates/event/](../templates/event/)
+验证 Contract 同步、重复投递和失败路径。模板见 [`../templates/event/`](../templates/event/)。

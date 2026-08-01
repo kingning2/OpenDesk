@@ -15,7 +15,7 @@
 - 客户个体报价的最终裁定（Customer 领域 `quoted_price` + `quote_history`）
 - 订单计费、发票、支付
 - AI 自动改价或自动发送报价
-- Python 直连价目表存储
+- 模型或 React 绕过 Rust UseCase 直连价目表存储
 
 ## 稳定边界
 
@@ -91,4 +91,4 @@ MVP 可支持 **手动 CSV/JSON 导入** 作为快捷方式，但须有 Rust 校
 
 - AI 仅只读访问（ADR-0001）
 - 价目表变更不影响已有 `quote_history` 历史记录
-- 匹配逻辑须在 Rust 实现，Python 不得自行「猜价」
+- 匹配逻辑须在 Rust 实现，模型不得自行「猜价」

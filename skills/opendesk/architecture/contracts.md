@@ -1,78 +1,25 @@
 # Contracts
 
-`contracts/` 是 OpenDesk 三端共享的**唯一真相源**。
+`contracts/schema/v1/` 是 Rust 与 React 共享 DTO、IPC、Event 和 Error 的唯一真相源。
 
-## 目录结构
+## 流程
 
-```
-contracts/
-├── README.md
-├── CHANGELOG.md
-├── schema/v1/              # JSON Schema（DTO / Event / Error）
-│   └── <feature>/
-│       ├── dto/
-│       ├── ipc/
-│       ├── event/
-│       └── error/
-├── openapi/                # HTTP / sidecar API
-│   └── sidecar.v1.yaml
-├── codegen/                # 生成脚本与配置
-└── compatibility/
-    ├── FIELD_RULES.md
-    └── MIGRATION.md
+```text
+修改 Schema
+  → pnpm contracts:sync
+  → crates/common/src/contracts/
+  → packages/contracts/src/generated/
+  → Rust 实现
+  → React 使用
 ```
 
-## 变更流程
+`pnpm contracts:check` 检查生成物是否同步；生成文件禁止手改。
 
-```
-┌─────────────┐
-│ 1. Contract │  修改 schema 或 openapi
-└──────┬──────┘
-       ▼
-┌─────────────┐
-│ 2. Codegen  │  sync_contracts.py / codegen 脚本
-└──────┬──────┘
-       ▼
-┌─────────────┐
-│ 3. Rust     │  crates + src-tauri
-└──────┬──────┘
-       ▼
-┌─────────────┐
-│ 4. Python   │  python/packages/contracts
-└──────┬──────┘
-       ▼
-┌─────────────┐
-│ 5. React    │  packages/contracts
-└─────────────┘
-```
+## 兼容
 
-**禁止**跳过步骤 1 直接改实现。
+- 新增可选字段可保留当前版本。
+- 删除、重命名或新增必填字段需评估新版本并更新迁移说明。
+- 更新 `contracts/CHANGELOG.md` 时只追加，不改写历史条目。
+- JSON Schema 必须有稳定 `$id`、明确 required 和 `additionalProperties` 策略。
 
-## Schema 版本策略
-
-| 变更类型 | 做法 |
-|----------|------|
-| 新增可选字段 | 同版本，更新 CHANGELOG |
-| 新增必填字段 | 评估兼容性；可能需 v2 |
-| 删除/重命名字段 | 新 `schema/v2` + MIGRATION.md |
-| IPC 命令签名变更 | Breaking — 须评审 |
-
-## Codegen 输出
-
-| 目标 | 路径 |
-|------|------|
-| TypeScript | `packages/contracts/src/` |
-| Rust | `crates/common/src/contracts/`（规划） |
-| Python | `python/packages/contracts/src/contracts/` |
-
-## PR 要求
-
-- Contract PR 至少 **2 人 Approve**
-- 更新 `contracts/CHANGELOG.md`
-- Breaking Change 附 `compatibility/MIGRATION.md`
-
-## 相关文档
-
-- [../guides/contracts.md](../guides/contracts.md)
-- [../recipes/add-contract.md](../recipes/add-contract.md)
-- [../scripts/sync_contracts.py](../scripts/sync_contracts.py)
+详见 [`../guides/contracts.md`](../guides/contracts.md) 与 [`../../../contracts/README.md`](../../../contracts/README.md)。

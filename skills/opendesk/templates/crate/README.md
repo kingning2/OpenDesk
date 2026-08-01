@@ -1,23 +1,5 @@
 # Crate Template
 
-Rust crate 骨架（Feature 或 Infrastructure）。
+使用 [`Cargo.toml.tpl`](Cargo.toml.tpl) 与 [`lib.rs.tpl`](lib.rs.tpl) 创建最小 Rust crate，并加入根 workspace。
 
-## Feature Crate
-
-见 [feature/Cargo.toml.tpl](Cargo.toml.tpl) 与 [feature/lib.rs.tpl](lib.rs.tpl)
-
-## Infrastructure Crate
-
-仅导出单一职责模块，无 `app/` / `domain/` 分层。
-
-## TODO
-
-- [ ] 加入根 `Cargo.toml` workspace
-- [ ] 在 `crates/app` 组装（若需）
-- [ ] `pnpm lint:rust`
-
-## 生成
-
-```bash
-python skills/opendesk/scripts/create_crate.py --name <name> --kind feature
-```
+只为明确职责新增 crate；不创建空分层或单实现抽象。步骤见 [`../../recipes/add-crate.md`](../../recipes/add-crate.md)。

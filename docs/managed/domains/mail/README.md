@@ -21,7 +21,7 @@
 - 客户档案主数据（Customer 领域）
 - AI 生成/润色逻辑（Agent 领域；本领域提供模板渲染结果）
 - 第三方模板市场、群发营销
-- Python 直连 SMTP
+- 绕过 Rust Mail UseCase 直连 SMTP/IMAP
 
 ## 稳定边界
 
@@ -41,7 +41,7 @@ React（收件箱 / 模板 / 写信 / 发送 UI）
 **硬规则：**
 
 - 只有 Rust `mail-net` 接触 SMTP/IMAP 服务器
-- **变量填充在 Rust 完成**，不交给 Python 拼字符串
+- **变量填充在 Rust 完成**，不交给 React 或模型拼字符串
 - 发送可带可选 `customer_id`（关联客户）；**必须**有 `to_address`；模板 `template_id` 可选
 - 须能在发件记录中回看收件地址（`to_address`）
 - AI 产出为润色草稿；**发送按钮仅人工触发**
@@ -149,8 +149,8 @@ MVP 启动时 Rust migration **种子内置模板**（至少覆盖各 `template_
 - Storage：`mail_template` / `mail_account` / `mail_message` + 内置模板种子
 - UI：`apps/desktop/src/features/mail/mail-page.tsx`（选模板 → 渲染 → 编辑 → SMTP 发送；自定义模板；账号绑定）
 - 客户详情「写邮件」入口：`/features/mail?customerId=`
-- **email-agent 真实数据迁移**（[CHG-040](../../changes/2026/07/chg-20260722-040-email-agent-data-migration.md)）：`skills/opendesk/scripts/migrate_email_agent.py` 导入账号、客户、`email_cache`→`mail_message`、`mail_imap_sync_state`、话术、待发、工作流/价目 JSON；**不迁** contact_logs / 审计 / 开信事件
-- IMAP 自动收信仍见 [CHG-029](../../changes/2026/07/chg-20260720-029-imap-inbound-sync.md)
+- **email-agent 真实数据迁移**结果见 [CHG-040](../../changes/2026/07/chg-20260722-040-email-agent-data-migration.md)；历史迁移脚本不再作为当前工具保留
+- IMAP 已实现手动/周期增量同步、IDLE watcher、cursor 持久化与未匹配消息人工关联；Worker 也注册 `imap_sync` handler
 
 ## 当前约束
 

@@ -24,7 +24,7 @@
 
 - 不把 CRM 与爬虫混在同一库（已运行的 `crawler.db` 保持不变）。
 - 所有 **CPU/IO 密集** 写路径（OCR 识别、大文件处理）在 **Worker 进程** 执行，经 `background_job` 协调；主进程只做入队、查状态、读结果。
-- Python Sidecar **不连接** 任一 SQLite（架构硬约束）。
+- React 与模型调用 **不连接** 任一 SQLite；数据库只经 Rust Storage 访问。
 
 ## 3. 总 ER 关系（opendesk.db）
 

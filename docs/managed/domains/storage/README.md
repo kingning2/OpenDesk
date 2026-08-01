@@ -13,7 +13,7 @@ OpenDesk 本地持久化的 **唯一 Rust 所有权**：
 ## 非职责
 
 - 业务 UseCase 规则（各 Feature crate）
-- Python / React 直连 SQLite
+- React 或模型调用绕过 Rust Storage 直连 SQLite
 - OCR 引擎实现（Worker + OCR 领域）
 - 密钥明文存储（mail `password_ref` 指向 OS secure store）
 

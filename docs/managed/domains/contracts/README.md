@@ -1,22 +1,22 @@
 # Contracts Domain
 
-## 职责
-
-`contracts/` 是 React、Rust、Python 三端 DTO、HTTP、IPC、Event 和 Error 的唯一真相源。
-
-## 变更顺序
+`contracts/` 是 Rust 与 React 共享 DTO、IPC、Event 和 Error 的唯一真相源。
 
 ```text
-Contract → Codegen → Rust → Python → React
+Contract → pnpm contracts:sync → Rust → React
 ```
 
-## 管理规则
+生成物：
 
-- Breaking Change 使用新版本并提供迁移说明；
-- Change Record 只描述修改意图，字段定义仍以正式 Schema/OpenAPI 为准；
-- Contract 变更需要遵守仓库既有共同评审要求；
-- 三端不能长期维护手写的重复 DTO。
+- `crates/common/src/contracts/`
+- `packages/contracts/src/generated/`
 
-## 当前状态
+## 当前事实
 
-已有 Sidecar 管理面和少量 Agent Ping 契约，代码生成能力尚未完整落地。
+`skills/opendesk/scripts/sync-contracts.mjs` 已生成两端类型；`pnpm contracts:check` 检查过期或多余生成物，`pnpm check:architecture` 会聚合该检查。
+
+## 规则
+
+- 生成文件禁止手改。
+- Breaking Change 更新版本/迁移说明。
+- `contracts/CHANGELOG.md` 只追加，不改历史条目。

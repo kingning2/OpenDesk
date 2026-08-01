@@ -1,17 +1,13 @@
 # Recipe: Add Plugin
 
-## 修改顺序
+先确认动态插件确有需求；单一实现优先普通 Rust crate。
 
-1. Contract: `contracts/schema/v1/plugin/`
-2. Crate: `crates/plugin/` 扩展（或子模块）
-3. Feature 注册点骨架
-4. 前端 `features/plugin/` 市场页占位
+需要插件时：
 
-## 禁止
+1. 定义最小 manifest Contract 与权限。
+2. 在 Rust 适配层加载，业务只依赖 Port。
+3. 默认拒绝未声明的文件、网络和进程权限。
+4. 记录加载失败但不泄露路径或凭据。
+5. 为版本不兼容和权限拒绝写测试。
 
-- 插件绕过 IPC 直连 Rust 内部
-- 插件内嵌 Python
-
-## 模板
-
-[../templates/plugin/](../templates/plugin/)
+模板见 [`../templates/plugin/`](../templates/plugin/)。

@@ -28,7 +28,7 @@
   "roles": {
     "frontend": {
       "label": "Desktop — React · UI · Tauri · Rust",
-      "description": "桌面端一体开发：前端展示 + Tauri IPC + Rust crates。UI 改动常伴随 src-tauri 配置。",
+      "description": "桌面端一体开发：React 展示经 Tauri IPC 调用 Rust；Rust 是唯一协调与运行时层。",
       "branch_prefix": "frontend",
       "allowed_globs": [
         "apps/desktop/**",
@@ -38,33 +38,21 @@
         "crates/**"
       ],
       "optional_globs": ["contracts/**"],
-      "forbidden_globs": ["python/**"],
+      "forbidden_globs": [],
       "rule_files": ["frontend.md", "rust.md"]
     },
-    "python": {
-      "label": "Python AI Runtime",
-      "description": "Sidecar 与 python/packages；禁止改 React/Rust 业务层。",
-      "branch_prefix": "python",
-      "allowed_globs": ["python/**"],
-      "optional_globs": ["contracts/**"],
-      "forbidden_globs": [
-        "apps/desktop/**",
-        "packages/ui/**",
-        "packages/platform/**",
-        "crates/**"
-      ],
-      "rule_files": ["python.md"]
-    },
     "contract": {
-      "label": "Contracts — 跨端契约",
-      "description": "仅改 contracts/ 与 codegen 脚本；变更后需同步三端生成物。",
+      "label": "Contracts — Rust · TypeScript",
+      "description": "维护 contracts/ 与 codegen；同步并审查 Rust、TypeScript 两端生成物。",
       "branch_prefix": "contract",
       "allowed_globs": [
         "contracts/**",
-        "skills/opendesk/scripts/sync_contracts.py"
+        "skills/opendesk/scripts/sync-contracts.mjs",
+        "crates/common/src/contracts/**",
+        "packages/contracts/src/generated/**"
       ],
       "optional_globs": [],
-      "forbidden_globs": ["apps/**", "crates/**", "python/**", "packages/**"],
+      "forbidden_globs": [],
       "rule_files": []
     },
     "integration": {
@@ -74,11 +62,7 @@
       "allowed_globs": ["**/*"],
       "optional_globs": [],
       "forbidden_globs": [],
-      "rule_files": ["frontend.md", "rust.md", "python.md"]
+      "rule_files": ["frontend.md", "rust.md"]
     }
-  },
-  "legacy_branch_map": {
-    "role/frontend": "frontend",
-    "role/python": "python"
   }
 }

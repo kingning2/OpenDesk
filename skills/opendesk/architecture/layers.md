@@ -1,91 +1,33 @@
-# Layer Architecture
+# 分层
 
-## 三层模型
+## React
 
-```
-┌──────────────────────────────────────────────────────────┐
-│ Layer 1: React（Presentation）                            │
-│                                                          │
-│  apps/desktop/src/          Feature UI 与路由             │
-│  packages/ui/               纯展示组件                    │
-│  packages/platform/         IPC 封装（唯一 Tauri 入口）    │
-└────────────────────────────┬─────────────────────────────┘
-                             │ invoke / listen (platform only)
-┌────────────────────────────▼─────────────────────────────┐
-│ Layer 2: Rust（Application Core）                         │
-│                                                          │
-│  apps/desktop/src-tauri/    Tauri commands · 事件转发      │
-│  crates/app/                应用组装与启动                 │
-│  crates/kernel/             event bus · task scheduler    │
-│  crates/ports/              共享 Port trait               │
-│  crates/<feature>/          Feature 业务（app + domain）   │
-│  crates/storage/            SQLite 实现                   │
-│  crates/runtime/            Python sidecar 生命周期        │
-└────────────────────────────┬─────────────────────────────┘
-                             │ 本机 IPC（contracts/openapi）
-┌────────────────────────────▼─────────────────────────────┐
-│ Layer 3: Python（AI Runtime）                             │
-│                                                          │
-│  python/sidecar/            进程入口 · 管理面 API          │
-│  python/packages/gateway/   请求路由                      │
-│  python/packages/worker/    异步任务                      │
-│  python/packages/llm/       模型调用                      │
-│  python/packages/rag/       检索增强                      │
-└──────────────────────────────────────────────────────────┘
+- Feature 页面与 hooks 组合 `@desk/ui`、`@desk/platform` 和生成 Contract。
+- 只管理展示、交互与 UI 状态。
+- 禁止直接 `invoke()`、数据库、文件 IO、模型调用和业务持久化。
+
+## Tauri / Rust
+
+- `apps/desktop/src-tauri`：注册 command、状态和事件。
+- `crates/app`：应用组装与 IPC command 实现。
+- Feature crate：Domain 与 Application 用例。
+- `crates/ports`：跨域或基础设施 Port。
+- Infrastructure crate：SQLite、SMTP/IMAP、Worker、系统能力。
+- `crates/agent`：按 `llm/`、`prompt/` 等目录承载 AI 基础设施；不承载领域业务。
+- `crates/workflow_runtime`：DAG、状态机、检查点、恢复与 Executor Registry。
+
+Rust 内依赖方向：
+
+```text
+Tauri → Application → Domain
+                    → Ports ← Infrastructure
 ```
 
-## 各层职责
+Application 不直接写 SQL、HTTP 或文件；装配层注入实现。耗时 IO 使用 async，CPU/批量任务使用 Worker 或专用执行器。
 
-### React Layer
+## 通信
 
-| 负责 | 禁止 |
-|------|------|
-| UI 渲染、交互、主题、动画 | 业务规则、SQL、AI 逻辑 |
-| 本地 UI 状态（表单、展开/折叠） | 直接 `invoke()`（Feature UI） |
-| 通过 `@desk/platform/ipc` 调 Rust | `import @tauri-apps/api`（Feature UI） |
-
-### Rust Layer
-
-| 负责 | 禁止 |
-|------|------|
-| 业务编排、权限、缓存 | `unwrap()` / `panic!()` |
-| SQLite 读写（经 storage） | Feature 间直接 `use` |
-| Python sidecar 生命周期 | 阻塞 UI 线程 |
-| 结构化日志（tracing） | Python 直连前端事件 |
-| Tauri IPC 命令与事件转发 | |
-
-### Python Layer
-
-| 负责 | 禁止 |
-|------|------|
-| LLM / RAG / OCR / Embedding | GUI、Tauri、React |
-| Agent / MCP / Browser 自动化 | SQLite、业务状态持久化 |
-| Queue / Worker 异步执行 | 未评审的 HTTP Server |
-
-## Rust 内部分层（六边形）
-
-```
-┌─────────────────────────────────────┐
-│  app/（Application / UseCase）       │  ← 编排，无 IO
-├─────────────────────────────────────┤
-│  domain/（Entity / Value Object）    │  ← 纯领域，无框架依赖
-├─────────────────────────────────────┤
-│  ports/（trait 定义）                │  ← 接口
-├─────────────────────────────────────┤
-│  infra/（storage 实现，可选在 crate 内）│  ← SQL / HTTP / FS
-└─────────────────────────────────────┘
-```
-
-## 层间通信矩阵
-
-| From \ To | React | Rust | Python | SQLite |
-|-----------|-------|------|--------|--------|
-| React | ✅ | ✅ IPC | ❌ | ❌ |
-| Rust | ✅ Events | ✅ | ✅ IPC | ✅ |
-| Python | ❌ | ✅ | ✅ | ❌ |
-
-## 相关文档
-
-- [feature-boundary.md](feature-boundary.md)
-- [../guides/ipc.md](../guides/ipc.md)
-- [dependency.md](dependency.md)
+- React 请求：Tauri IPC。
+- Rust 到 React 状态通知：Tauri Event。
+- Rust Feature 写传播：`kernel::event`。
+- 跨域只读：Query Port。

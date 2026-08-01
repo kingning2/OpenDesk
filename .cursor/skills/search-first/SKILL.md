@@ -1,22 +1,16 @@
 ---
 name: search-first
-description: 在写实现前先检索仓库内已有能力与约束，避免重复造轮子和跨层改动。
+description: 在实现 OpenDesk 功能前搜索仓库现有能力、契约与边界，避免重复造轮子。
 ---
 
-# Search First (OpenDesk)
+# Search First
 
-适用场景：
-- 新增 feature / crate / contract 前
-- 想新增依赖、脚本、工具链前
-- 不确定能力应该落在哪一层（React / Rust / Python）时
+新增 Feature、crate、Contract、依赖或工具前：
 
-执行步骤：
-1. 先确认边界：React -> Rust -> Python，禁止 React 直连 Python。
-2. 先查仓库是否已有模板与脚手架：`skills/opendesk/templates/`、`skills/opendesk/scripts/`。
-3. 先查契约是否已存在：`contracts/`。
-4. 只有在“现有能力无法复用”时，才新增文件或模块。
+1. 确认调用链只能是 `React → Tauri IPC → Rust`。
+2. 搜索现有 `contracts/`、`crates/`、`apps/desktop/src/features/`、`packages/`。
+3. 查阅一个匹配的 `skills/opendesk/recipes/` 或 `templates/`。
+4. 复用已有 Port、Event、IPC 封装和 `crates/llm`，不要建立平行运行时。
+5. 跨端字段按 `Contract → pnpm contracts:sync → Rust → React` 修改。
 
-输出要求：
-- 说明复用了哪些现有结构
-- 说明为什么不能复用（如需新增）
-- 说明是否涉及跨端变更顺序：Contract -> Rust -> Python -> React
+交付时说明复用了什么、为何需要新增，以及执行了哪些验证。

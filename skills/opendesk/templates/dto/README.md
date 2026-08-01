@@ -1,6 +1,6 @@
 # DTO Template
 
-跨端数据传输对象，定义于 contracts，经 codegen 同步三端。
+跨端数据传输对象，定义于 contracts，经 codegen 同步 Rust 与 TypeScript。
 
 ## TODO
 

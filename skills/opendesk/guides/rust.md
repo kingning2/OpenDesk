@@ -1,81 +1,22 @@
 # Rust Guide
 
-适用范围：`crates/**`、`apps/desktop/src-tauri/**`
+Rust 是 OpenDesk 的唯一业务协调与运行时层。
 
-## 职责
+## 组织
 
-Rust 是**唯一业务核心**与**唯一协调者**。
+- `crates/app`：装配、命令与应用状态。
+- Feature crate：Domain 与 Application。
+- `crates/ports`：跨域/基础设施接口。
+- Infrastructure crate：SQLite、邮件、Worker、系统集成。
+- `crates/agent`：AI 基建（`llm/`、`prompt/`、`skills/`）；业务用例不放此 crate。
+- `crates/workflow_runtime`：DAG、状态机、执行器、检查点与恢复。
 
-| 负责 | 禁止 |
-|------|------|
-| Application · Storage · Sidecar 生命周期 | `unwrap()` · `expect()` · `panic!()` |
-| Event Bus · Task Scheduler | Feature 间直接 `use` |
-| Permission · Cache · Logging | 阻塞 UI 线程 |
-| Tauri IPC 与事件转发 | 无限循环线程 |
+## 约束
 
-## Crate 结构
+- Tauri command 保持薄，只做边界校验、调用和错误映射。
+- 业务路径使用 `Result`，禁止 `unwrap`、`expect`、`panic!`。
+- async IO 不阻塞线程；CPU/批量任务交给 Worker 或专用执行器。
+- 公开 API 写简洁中文 rustdoc；复杂多步骤函数才用中文编号注释。
+- 日志使用 `tracing` 并脱敏。
 
-```
-crates/<feature>/
-├── Cargo.toml
-└── src/
-    ├── lib.rs
-    ├── app/       # UseCase — 无 IO
-    └── domain/    # 纯领域类型
-```
-
-## 错误处理
-
-```rust
-use thiserror::Error;
-
-#[derive(Debug, Error)]
-pub enum ChatError {
-    #[error("thread not found: {0}")]
-    ThreadNotFound(String),
-    // ...
-}
-
-pub type ChatResult<T> = Result<T, ChatError>;
-```
-
-## 日志
-
-```rust
-use tracing::{info, instrument};
-
-#[instrument(skip(repo), fields(thread_id))]
-pub fn get_thread(repo: &dyn ThreadRepo, thread_id: &str) -> ChatResult<Thread> {
-    info!("fetching thread");
-    // ...
-}
-```
-
-## Tauri 命令（骨架）
-
-```rust
-#[tauri::command]
-pub async fn chat_threads_list(
-    state: State<'_, AppState>,
-) -> Result<Vec<ThreadDto>, String> {
-    // delegate to UseCase — skeleton returns empty
-    Ok(vec![])
-}
-```
-
-## Workspace 注册
-
-新 crate 必须加入根 `Cargo.toml` `[workspace.members]`。
-
-## Lint
-
-```bash
-pnpm lint:rust
-# 或 cargo lint
-```
-
-## 相关
-
-- [error.md](error.md)
-- [logging.md](logging.md)
-- [../architecture/layers.md](../architecture/layers.md)
+验证：`pnpm lint:rust && pnpm check:architecture`。

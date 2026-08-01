@@ -1,24 +1,8 @@
 # IPC Template
 
-Tauri IPC 契约与封装骨架。
+1. 在 Contract 定义 request/response/error。
+2. 运行 `pnpm contracts:sync`。
+3. Rust command 调用 Application 用例。
+4. `packages/platform` 封装 IPC，Feature hook 使用封装。
 
-## 结构
-
-```
-contracts/schema/v1/<feature>/ipc/<cmd>.request.schema.json
-contracts/schema/v1/<feature>/ipc/<cmd>.response.schema.json
-packages/platform/src/ipc/<feature>.ts
-apps/desktop/src-tauri/src/commands/<feature>.rs
-```
-
-## TODO
-
-- [ ] request/response schema 成对
-- [ ] platform typed wrapper
-- [ ] tauri command 空实现
-
-## 生成
-
-```bash
-python skills/opendesk/scripts/create_ipc.py --feature chat --command list_threads
-```
+Feature 禁止直接 `invoke()`。TypeScript 适配骨架见 [`platform.ts.tpl`](platform.ts.tpl)。

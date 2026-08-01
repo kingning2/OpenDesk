@@ -22,7 +22,7 @@ AI **记得每个客户**（来源、报价、合作状态），但 **只能只�
 |------|------|------------|
 | 1 | [MVP 总路线图](roadmaps/mvp-sales-workbench.md) | 成功标准、M1–M6 里程碑、文档地图 |
 | 1b | [email-agent 分支手册](roadmaps/email-agent-port-branches.md) | 各 Phase 的 `pnpm branch:create` 命令 |
-| 2 | [产品架构](../architecture/product-architecture.md) | 三端职责、端到端流程图、客户字段 B |
+| 2 | [产品架构](../architecture/product-architecture.md) | React/Rust 职责、端到端流程与产品边界 |
 | 2b | [数据库设计](../architecture/database-schema.md) | **全表 DDL**、双库、OCR / background_job |
 | 2c | [进程模型](../architecture/process-model.md) | **Worker 独立进程**；OCR 不得阻塞 UI |
 | 3 | [Epic MVP](changes/2026/07/epic-20260720-001-mvp-sales-workbench.md) | 子任务依赖与总体验收 |
@@ -84,7 +84,7 @@ AI **记得每个客户**（来源、报价、合作状态），但 **只能只�
 | 已有 | 尚无（规划内） |
 |------|----------------|
 | UI Shell、YouTube 爬虫、crawler.db | opendesk.db、客户 CRM |
-| Agent Ping、Sidecar | 邮件模板、SMTP、Worker、OCR |
+| Rust LLM、邮件/客户切片、Worker、IMAP | OCR 与其余未完成里程碑 |
 | email-agent 迁入 **文档**（CHG-033） | email-agent 业务能力代码 |
 
 ## 已废弃的叙事

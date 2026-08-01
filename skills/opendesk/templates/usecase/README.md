@@ -1,25 +1,5 @@
 # UseCase Template
 
-Application 层用例，无 IO。
+UseCase 放在 Rust Feature 的 Application 层，只依赖领域类型与 Port。禁止直接 SQL、HTTP、文件和 Tauri API。
 
-## 生成
-
-```bash
-python skills/opendesk/scripts/create_usecase.py --crate chat --name list_threads
-```
-
-## 骨架
-
-```rust
-pub struct ListThreads;
-
-impl ListThreads {
-    pub fn execute(&self) -> Result<(), DomainError> {
-        Ok(())
-    }
-}
-```
-
-## 禁止
-
-SQL · HTTP · FS · Tauri · Python
+公开 API 用简洁中文 rustdoc；相关步骤见 [`../../recipes/add-usecase.md`](../../recipes/add-usecase.md)。

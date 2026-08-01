@@ -27,7 +27,7 @@ AI 通过只读工具 `ocr.get_text` 获取已绑定客户的识别文本（CHG-
 - 在 **Tauri UI 主进程** 内运行 Tesseract（**禁止**，见 ADR-0002）
 - **安装时** 捆绑或静默下载 tessdata（见 ADR-0003）
 - 云端 OCR API
-- Python 直连 SQLite 或 Tesseract
+- React 或模型调用直连 SQLite/Tesseract
 - AI 对 OCR 结果的推理（Agent 领域；主进程传入文本片段）
 
 ## 稳定边界
@@ -98,7 +98,7 @@ flowchart TB
 
 ## 当前状态
 
-**未实现。** `crates/ocr`、`python/packages/ocr` 为骨架；引擎与下载均未做。
+**未实现。** 当前无 OCR crate/handler；引擎与语言包下载仍按对应 Change 推进。
 
 ## 当前约束
 

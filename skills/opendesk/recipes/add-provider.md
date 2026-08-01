@@ -1,16 +1,9 @@
-# Recipe: Add Provider
+# Recipe: Add LLM Provider
 
-## 修改顺序
+1. 先确认 Provider 是否兼容 OpenAI Chat Completions 或 Anthropic Messages。
+2. 兼容协议只在 `crates/agent/src/llm` 增加默认 base URL/策略映射，不新建平行客户端。
+3. 新协议才增加最小请求/响应类型与解析测试。
+4. 设置与密钥仍由 Rust 安全存储管理；IPC 只返回配置状态。
+5. 使用 mock HTTP 测试鉴权头、路径、错误状态和空响应。
 
-1. `python/packages/provider/src/provider/<name>.py` 骨架
-2. Contract: 配置 DTO（无密钥字段明文 schema）
-3. Rust 经 runtime 传递配置给 Python
-
-## 禁止
-
-- API Key 写入契约示例或日志
-- Provider 内持久化
-
-## 模板
-
-[../templates/provider/](../templates/provider/)
+验证：`cargo test -p llm && pnpm lint:rust`。

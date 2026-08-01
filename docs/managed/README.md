@@ -58,7 +58,7 @@
 - Change ID：`CHG-YYYYMMDD-NNN-short-name`
 - Epic ID：`EPIC-YYYYMMDD-NNN-short-name`
 - Decision ID：`ADR-NNNN-short-name`
-- 领域目录：短名小写，例如 `python-runtime`、`contracts`、`agent`
+- 领域目录：短名小写，例如 `runtime`、`contracts`、`agent`
 - 文件名只使用小写英文、数字和连字符
 
 ## 当前边界

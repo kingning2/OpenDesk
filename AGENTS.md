@@ -1,83 +1,53 @@
 # OpenDesk
 
-企业 AI 客服桌面平台 — Architecture Skeleton 阶段。
+本地优先的 AI 商务桌面。当前运行时只有两层：
 
-## 当前分支职责
+```text
+React（展示） → Tauri IPC → Rust（业务、存储、任务与 AI）
+```
 
-**由分支名自动决定。** 运行 `pnpm branch:sync` 生成 [`.cursor/rules/active-branch.mdc`](.cursor/rules/active-branch.mdc)（允许/禁止路径 + 细则规则）。
+- React 只通过 `@desk/platform/ipc` 调用 Rust。
+- Rust 是唯一协调者与运行时；AI 基建位于 `crates/agent`（`llm/`、`prompt/`、`skills/`），业务 Prompt 留在所属 Feature。
+- `contracts/` 是跨端唯一真相源，顺序固定为 **Contract → codegen → Rust → React**。
+- Feature 间禁止直接依赖；只使用 Contract、Event 或 Query Port。
+
+完整规则见 [`.cursor/rules/master.md`](.cursor/rules/master.md)，开发知识库见 [`skills/opendesk/`](skills/opendesk/)。
+
+## 分支范围
+
+分支名格式为 `<role>/<kind>/<slug>`：
+
+- `frontend/*/*`：桌面端 React、Tauri 与 Rust；
+- `contract/*/*`：契约与两端生成物；
+- `main`：集成；
+- 其他分支名按集成范围处理。
 
 ```bash
-pnpm branch:create frontend feature m5-ui-shell   # → frontend/feature/m5-ui-shell
-pnpm branch                                     # 交互式
-pnpm branch:sync                                # 切换分支后刷新规则
+pnpm branch:create frontend feature mail-sync
+pnpm branch:create contract chore mail-schema
+pnpm branch:sync
 ```
 
-| 分支模式 | 职责 |
-|----------|------|
-| `frontend/<kind>/<slug>` | React · UI · Tauri · `crates/**` |
-| `python/<kind>/<slug>` | Python sidecar · `python/**` |
-| `contract/<kind>/<slug>` | `contracts/` + codegen |
-| `main` | 集成分支 |
+配置源为 [`skills/opendesk/config/branch_roles.json`](skills/opendesk/config/branch_roles.json)；切换分支后必须运行 `pnpm branch:sync`。
 
-配置源：[`skills/opendesk/config/branch_roles.json`](skills/opendesk/config/branch_roles.json)
+## Managed Docs 门禁
 
-## 架构约束（硬约束）
+处理仓库改动时按需读取：
 
-```
-React（展示）  →  Tauri IPC  →  Rust（协调者）  →  Python（AI Runtime）
-```
-
-- React **不知道** Python；Python **不知道** React
-- `contracts/` 是跨端 **唯一真相源**，变更顺序：Contract → Codegen → Rust → Python → React
-- Feature 完全独立，跨 Feature 只允许 **Query Port**、**Event**、**Contract**
-
-完整约束：[`.cursor/rules/master.md`](.cursor/rules/master.md)
-
-AI 开发知识库：[`skills/opendesk/`](skills/opendesk/)（架构 · recipes · templates · scripts）
-
-## Managed Docs 变更门禁（所有 Agent 强制）
-
-文档管理入口：[`docs/managed/README.md`](docs/managed/README.md)。详细治理规则以该目录为准，禁止在本文件复制其完整内容。
-
-### 最小上下文读取
-
-处理任何仓库改动时按需渐进读取：
-
-1. `docs/managed/README.md`；
-2. `docs/managed/registry/ACTIVE.md`；
-3. 与修改路径匹配的一个 Domain 入口；
+1. [`docs/managed/README.md`](docs/managed/README.md)；
+2. [`docs/managed/registry/ACTIVE.md`](docs/managed/registry/ACTIVE.md)；
+3. 与改动路径匹配的 Domain；
 4. 当前 Change Record；
-5. 只有发生冲突或需要追溯设计原因时才读取相关 ADR / 历史 Change。
+5. 仅在冲突时读取相关 ADR 或历史 Change。
 
-**禁止**默认递归读取整个 `docs/managed/`。上下文预算遵循 [`docs/managed/CONTEXT_POLICY.md`](docs/managed/CONTEXT_POLICY.md)。
+代码、契约、配置或依赖修改前必须登记并批准 Change Record；完成后由负责人回填结果、移出 ACTIVE，并按需更新 Domain。不要修改历史 Change/ADR 正文。纯只读分析无需登记。
 
-### 先记录，后修改
+## 最小质量门
 
-修改代码、Contract、配置或依赖前，Agent 必须：
+```bash
+pnpm lint
+pnpm check:architecture
+pnpm contracts:check
+```
 
-1. 从 [`docs/managed/templates/CHANGE.md`](docs/managed/templates/CHANGE.md) 创建独立 Change Record；
-2. 将记录加入 [`docs/managed/registry/ACTIVE.md`](docs/managed/registry/ACTIVE.md)；
-3. 填写目标、非目标、影响边界和验收标准；
-4. 状态至少达到 `approved` 后，才允许开始实现，并切换为 `in_progress`。
-
-紧急修复使用 [`docs/managed/templates/QUICK_FIX.md`](docs/managed/templates/QUICK_FIX.md)，但不得跳过登记。纯只读分析、解释和扫描无需创建 Change Record。
-
-完成修改后必须在同一记录中回填实际结果与验证结论，将状态设为 `completed`，并从 `ACTIVE.md` 移除。若修改稳定领域事实则更新对应 Domain；若形成长期技术决策则创建 ADR。
-
-## 规范入口
-
-- [`.cursor/rules/master.md`](.cursor/rules/master.md) — 全仓库基线
-- [`.cursor/rules/branch-workflow.mdc`](.cursor/rules/branch-workflow.mdc) — 分支命令与工作流
-- [`.cursor/rules/active-branch.mdc`](.cursor/rules/active-branch.mdc) — **当前分支** scope（生成文件）
-- [`.cursor/rules/frontend.md`](.cursor/rules/frontend.md) · [`.cursor/rules/rust.md`](.cursor/rules/rust.md) · [`.cursor/rules/python.md`](.cursor/rules/python.md)
-- [`.cursor/skills/emil-design-eng/SKILL.md`](.cursor/skills/emil-design-eng/SKILL.md) — 前端 UI / 动效必须遵循（Emil Kowalski）
-- `/check-emil-design` — 对照上述 skill 审查当前 UI/动效（见 [`.cursor/commands/check-emil-design.md`](.cursor/commands/check-emil-design.md)）
-- [`contracts/`](contracts/) — 三端共享契约，Breaking Change 必须先改契约并提供迁移说明
-
-## Code Review 清单
-
-- [ ] 当前分支 scope 内改动？（见 `active-branch.mdc`）
-- [ ] 是否跨层？是否跨 Feature？
-- [ ] 是否先改了 Contract？
-- [ ] 是否违反六边形架构？
-- [ ] `pnpm lint` 是否可通过？
+Review 时检查：分支 scope、Contract-first、React/Rust 边界、Feature 边界、错误处理与验证结果。

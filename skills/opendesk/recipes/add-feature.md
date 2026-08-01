@@ -1,56 +1,13 @@
 # Recipe: Add Feature
 
-新增垂直 Feature（如 `chat`）的完整骨架流程。
+1. 登记并批准 Change Record，确认分支 scope。
+2. 搜索现有 Feature、Contract、Port 与 UI 组件。
+3. 先在 `contracts/schema/v1/<feature>/` 定义跨端边界。
+4. 运行 `pnpm contracts:sync`。
+5. 在 Rust Feature/Application 实现用例，由 `crates/app` 与 Tauri 注册。
+6. 在 `packages/platform` 封装 IPC，React Feature 组合 UI 与 hook。
+7. 跨 Feature 写传播用 Event，只读查询用 Query Port。
 
-## 修改顺序
+验证：相关测试、`pnpm lint`、`pnpm check:architecture`、`pnpm contracts:check`。
 
-| 步骤 | 操作 | 路径 |
-|------|------|------|
-| 1 | 定义 Contract 命名空间 | `contracts/schema/v1/<feature>/` |
-| 2 | 创建 Rust crate | `crates/<feature>/` |
-| 3 | 注册 workspace | 根 `Cargo.toml` |
-| 4 | 定义 Query Port（若需跨 Feature 只读） | `crates/ports/src/<feature>_query.rs` |
-| 5 | 定义 Event schema（若需跨 Feature 通知） | `contracts/.../event/` |
-| 6 | 定义 IPC schema | `contracts/.../ipc/` |
-| 7 | 注册 Tauri 命令（空实现） | `apps/desktop/src-tauri/` |
-| 8 | 创建前端 Feature 模块 | `apps/desktop/src/features/<feature>/` |
-| 9 | 聚合路由 / 侧栏（骨架） | `apps/desktop/src/route/` |
-| 10 | Codegen + Lint | scripts |
-
-## 自动化
-
-```bash
-python skills/opendesk/scripts/create_feature.py --name <feature>
-python skills/opendesk/scripts/sync_contracts.py
-python skills/opendesk/scripts/check_architecture.py
-pnpm lint
-```
-
-## 禁止修改
-
-- 其他 Feature 的内部模块
-- `packages/ui` 中添加 IPC
-- Python 中添加业务持久化
-- 跳过 contracts 直接写 IPC 类型
-
-## 验证
-
-```bash
-python skills/opendesk/scripts/check_boundary.py
-python skills/opendesk/scripts/check_imports.py
-pnpm lint:rust && pnpm lint:frontend
-```
-
-## Checklist
-
-- [ ] Contract 命名空间已创建
-- [ ] Crate 已加入 workspace
-- [ ] 无其他 feature crate 依赖
-- [ ] 前端经 platform/ipc，无 @tauri-apps/api
-- [ ] 无业务逻辑实现
-- [ ] CHANGELOG 已更新（若有 contract）
-
-## 模板
-
-- [../templates/feature/](../templates/feature/)
-- [../templates/crate/](../templates/crate/)
+模板见 [`../templates/feature/`](../templates/feature/) 与 [`../templates/ipc/`](../templates/ipc/)。

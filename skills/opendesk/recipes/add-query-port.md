@@ -1,24 +1,9 @@
 # Recipe: Add Query Port
 
-## 修改顺序
+1. 只有跨域只读查询才新增 Port；同 Feature 内直接调用。
+2. 在 `crates/ports` 或拥有方定义最小 trait。
+3. 返回稳定 DTO，避免暴露数据库模型。
+4. Infrastructure 实现查询；调用 Feature 只依赖 trait。
+5. 在装配层注入并测试权限、空结果和脱敏。
 
-1. `create_query_port.py --name <feature>_query`
-2. `crates/ports/src/<name>.rs` — trait 定义
-3. `crates/ports/src/lib.rs` — `pub mod`
-4. 实现 crate（如 `chat`）在 infra 层实现 trait（骨架 `todo!` 或空返回）
-5. `crates/app` 组装时注入
-
-## 禁止
-
-- Query Port 含写操作
-- Feature A 直接调用 Feature B 的 Repository
-
-## Checklist
-
-- [ ] trait 在 `ports`，实现在 feature/infra
-- [ ] 只读方法签名
-- [ ] 无 feature 间 crate 依赖
-
-## 模板
-
-[../templates/query-port/](../templates/query-port/)
+禁止通过 Query Port 写库。模板见 [`../templates/query-port/`](../templates/query-port/)。

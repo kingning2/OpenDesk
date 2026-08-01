@@ -1,16 +1,10 @@
 # Recipe: Add Workflow
 
-## 修改顺序
+1. 用 Contract 定义启动、状态、取消/恢复与事件 payload。
+2. 用 `WorkflowDefinition` 表达 DAG，不为单步调用创建工作流。
+3. 为真实副作用实现 `NodeExecutor`，并注册到 `ExecutorRegistry`。
+4. 设置重试、run policy 与幂等边界。
+5. 持久化检查点后再发布状态事件，确保可恢复。
+6. 由 `crates/app` 暴露 Tauri IPC，React 只消费状态。
 
-1. Contract: workflow dto + ipc
-2. `crates/workflow/` + `python/packages/workflow/`
-3. Event: `workflow.step.completed` 等
-4. 前端 `features/workflow/`
-
-## 禁止
-
-- workflow crate 直接 use agent crate
-
-## 相关
-
-[add-event.md](add-event.md) · [add-feature.md](add-feature.md)
+验证状态转换、失败重试、取消和恢复。参考 `crates/workflow_runtime`。

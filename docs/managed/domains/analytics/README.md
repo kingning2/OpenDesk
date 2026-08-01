@@ -4,7 +4,7 @@
 
 商务 **数据分析与报表**：漏斗、趋势、转化、开信追踪、WhatsApp 统计摘要。
 
-- 只读聚合查询（Rust SQL，不经 Python）
+- 只读聚合查询（Rust SQL）
 - 报表快照保存/删除
 - 开信事件统计（本地像素 `mail_open_event`）
 - 为 React 图表/表格提供 DTO
@@ -14,7 +14,7 @@
 - 原始邮件/WA 消息存储（Mail / Channel）
 - KOL 频道统计（KOL 领域，暂缓）
 - 实时 BI 平台、多租户报表
-- Python 直连 SQLite 聚合
+- React 或模型调用直连 SQLite 聚合
 
 ## 稳定边界
 

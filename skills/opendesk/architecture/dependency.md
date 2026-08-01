@@ -1,62 +1,25 @@
-# Dependency Rules
+# 依赖规则
 
-## 全局依赖方向
+## 主调用链
 
-```
-React  →  platform  →  (Tauri IPC)  →  Rust  →  ports  ←  infrastructure
-                                              ↓
-                                           Python
-```
-
-禁止任何反向或跨层捷径。
-
-## Rust Workspace 依赖矩阵
-
-| Crate 类型 | 可依赖 | 禁止依赖 |
-|------------|--------|----------|
-| `kernel` | `common` | feature crates, `storage` 实现 |
-| `ports` | `common` | feature crates, `storage`, `runtime` |
-| `<feature>` | `common`, `kernel`, `ports` | 其他 `<feature>` |
-| `storage` | `common`, `ports` | feature crates |
-| `runtime` | `common`, `ports` | feature crates（除 adapter） |
-| `app` | 所有注册 feature | — |
-
-## React 依赖矩阵
-
-| 包 | 可依赖 | 禁止依赖 |
-|----|--------|----------|
-| `packages/ui` | React, CSS | `@desk/platform`, contracts, features |
-| `packages/platform` | `@tauri-apps/api`, contracts | feature 业务逻辑 |
-| `features/*` | `ui`, `platform`, `contracts` | `@tauri-apps/api`, 其他 feature 内部 |
-| `apps/desktop` | 所有 packages, features | 直接 Tauri（应经 platform） |
-
-## Python 依赖矩阵
-
-| 包 | 可依赖 | 禁止依赖 |
-|----|--------|----------|
-| `contracts` | pydantic / typing | sqlalchemy, sqlite3 |
-| `gateway` | contracts, shared | tauri, react |
-| `worker` | queue, contracts | 业务持久化 |
-| `sidecar` | gateway, 各 AI 包 | GUI 框架 |
-
-## 循环依赖检测
-
-运行：
-
-```bash
-python skills/opendesk/scripts/check_imports.py
-python skills/opendesk/scripts/check_boundary.py
+```text
+React Feature → @desk/platform → Tauri → crates/app → Feature/Application
+                                                    → Ports ← Infrastructure
+                                                    → crates/agent
 ```
 
-## 新增依赖检查清单
+## Rust
 
-- [ ] 是否违反 Layer Boundary？
-- [ ] 是否引入 Feature 间耦合？
-- [ ] 是否应在 `ports` 而非直接依赖实现 crate？
-- [ ] 是否需要在 `Cargo.toml` workspace.dependencies 声明？
+- `kernel`、`common`、`ports` 不依赖 Feature crate。
+- Feature crate 不依赖其他 Feature 的内部实现。
+- Infrastructure 实现 Port；Application 不反向依赖具体 IO。
+- `crates/app` 和 Tauri 壳可以装配所有实现。
+- `crates/agent` 提供模型与 Prompt 基础设施，领域 Prompt 内容和业务规则留在调用 Feature。
 
-## 相关文档
+## React
 
-- [layers.md](layers.md)
-- [feature-boundary.md](feature-boundary.md)
-- [../guides/review.md](../guides/review.md)
+- `packages/ui` 不依赖 IPC 或业务。
+- `packages/platform` 不承载 Feature 规则。
+- Feature 可依赖 `ui`、`platform`、`contracts`，不可导入其他 Feature 内部文件。
+
+运行 `pnpm check:architecture` 检查关键边界。

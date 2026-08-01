@@ -1,56 +1,46 @@
 ---
 name: opendesk
-description: OpenDesk enterprise AI customer-service desktop platform development knowledge base. Enforces React→Rust→Python architecture, contracts-first, hexagonal design, feature boundaries, and skeleton-phase constraints. Use when working on OpenDesk, adding features/crates/contracts/IPC/events, architecture review, or any cross-layer change in this repository.
+description: OpenDesk 本地优先 AI 商务桌面开发知识库。用于仓库内功能、Contract、IPC、Rust crate、架构与 review；约束 React→Tauri IPC→Rust、Rust 内置 LLM、Contract-first 和 Feature 边界。
 ---
 
 # OpenDesk Development Skill
 
-## Quick Start
+## 开始
 
-1. Read [skills/opendesk/README.md](../../skills/opendesk/README.md) for architecture and AI rules.
-2. Identify task type → open matching **recipe** under `skills/opendesk/recipes/`.
-3. Copy from **templates/** — never invent structure from scratch.
-4. Run validation: `python skills/opendesk/scripts/check_architecture.py`
-5. Run lint: `python skills/opendesk/scripts/lint_all.py`
+1. 读取 [`skills/opendesk/README.md`](../../../skills/opendesk/README.md)。
+2. 按任务读取一个相关 Recipe 或 Guide。
+3. 先搜索现有 Contract、crate、Feature、模板和命令，再决定是否新增。
+4. 遵守 Managed Docs Change 门禁和当前分支 scope。
 
-## Hard Constraints (Skeleton Phase)
+## 不变量
 
-| Allow | Forbid |
-|-------|--------|
-| dirs, crates, traits, DTO, Contract, Interface, Mock | business logic, demos, architecture bypass |
-
-## Architecture
-
-```
-React → Rust Application Core → Python Runtime
+```text
+React → Tauri IPC → Rust
+Contract → codegen → Rust → React
 ```
 
-Rust is the **only coordinator**. React never knows Python. Python never knows React.
+- Rust 是唯一协调者与运行时；AI 基建在 `crates/agent`（`llm/`、`prompt/`、`skills/`），业务 Prompt 留在 Feature。
+- React 不直连数据库、文件系统或模型服务。
+- Feature 间只通过 Contract、Event 或 Query Port 协作。
+- 生成的 Rust/TypeScript Contract 不手改。
 
-Cross-end change order: **Contract → Codegen → Rust → Python → React**
+## 常用入口
 
-## When to Read What
+| 任务 | 文档 |
+|---|---|
+| 总体架构 | `architecture/overview.md` |
+| IPC / Contract | `guides/ipc.md`、`guides/contracts.md` |
+| Rust / React | `guides/rust.md`、`guides/frontend.md` |
+| Feature / crate / workflow | `recipes/add-feature.md`、`add-crate.md`、`add-workflow.md` |
+| Agent / Provider | `recipes/add-agent.md`、`add-provider.md` |
+| Review | `guides/review.md` |
 
-| Task | Document |
-|------|----------|
-| Architecture overview | `architecture/overview.md` |
-| Add feature | `recipes/add-feature.md` + `templates/feature/` |
-| Add crate | `recipes/add-crate.md` + `scripts/create_crate.py` |
-| Add Python package | `recipes/add-python-package.md` + `scripts/create_python_package.py` |
-| Add contract | `recipes/add-contract.md` + `scripts/create_contract.py` |
-| IPC / events | `guides/ipc.md`, `guides/events.md`, `guides/rust-python-ipc.md` |
-| Rust ↔ Python | `recipes/add-rust-python-ipc.md` + `scripts/create_rust_python_ipc.py` |
-| Role-specific rules | `guides/frontend.md`, `guides/rust.md`, `guides/python.md` |
-| Code review | `guides/review.md` |
-| Examples | `examples/` |
+## 验证
 
-## AI Coding Rules
+```bash
+pnpm lint
+pnpm check:architecture
+pnpm contracts:check
+```
 
-- Minimal diff only; one feature at a time
-- Analyze impact and role boundary before editing
-- Do not modify unrelated files, public APIs, or dependencies
-- Do not generate unrequested code or guess requirements
-
-## Full Knowledge Base
-
-All content lives at project root: **`skills/opendesk/`**
+契约变化先运行 `pnpm contracts:sync`。

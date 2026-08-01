@@ -2,23 +2,17 @@
 
 ## 职责
 
-管理 `docs/managed/` 的结构、模板、导航、上下文预算和变更门禁。
+管理 `docs/managed/` 的 Domain、Roadmap、Change、ADR、Registry、模板与上下文预算。
 
-## 非职责
+- Domain 记录稳定当前事实。
+- Roadmap 记录近期目标与顺序。
+- Change 记录一次独立改动的意图、范围与结果。
+- ADR 记录长期技术选择。
+- Registry 只做导航。
 
-- 不替代正式 Contract、代码或测试；
-- 不集中复制其他领域的设计正文；
-- 不保存完整运行日志和生成物。
+## 边界
 
-## 稳定边界
-
-- Domain 描述当前事实；
-- Roadmap 管近期里程碑；
-- Epic 管复杂目标和子任务关系；
-- Change 管一次独立修改；
-- ADR 管长期技术选择；
-- Registry 只提供短小导航。
-
-## 当前状态
-
-Managed Docs 已接入根级 `AGENTS.md`，当前为 Agent 指令级门禁，尚无 pre-commit/CI 机械校验。
+- 不替代 Contract、代码或测试。
+- 不保存完整日志、生成物或逐文件 diff。
+- 历史 Change/ADR 正文只读；当前事实变化写 Domain 或新的 Change。
+- Managed Docs 门禁由根 `AGENTS.md` 规定，当前仍是 Agent 指令级约束。

@@ -1,47 +1,31 @@
-# OpenDesk 编码规范（配套）
-
-与 [SKILL.md](SKILL.md) 配套；实现代码时与文档注释一起遵守。
+# OpenDesk 编码规范
 
 ## 结构
 
-1. 优先 OOP；有状态 / 职责 / 生命周期 → Class，禁止一堆散函数堆业务。
-2. 单一职责；禁止 God Object；复杂逻辑拆 private。
-3. 禁止复制粘贴；重复逻辑抽取。
+- 优先最小可理解实现；有真实状态或生命周期时才引入类型抽象。
+- 一个函数做一件事；重复规则提取到共享边界，避免 speculative abstraction。
+- Domain 保持纯净，IO 放 Infrastructure，Tauri command 只做边界适配。
 
-## 命名
+## 错误与日志
 
-见名知意。禁止 `a` / `tmp` / `aaa`。布尔用 `is` / `has` / `can` / `should` 前缀。
+- Rust 业务路径返回 `Result`，禁止 `unwrap`、`expect`、`panic!`。
+- TypeScript 使用 `unknown` 或明确类型，禁止逃逸为 `any`。
+- 错误说明操作、原因和可行动信息；禁止吞错。
+- 日志带必要标识与耗时，密钥、凭据和敏感正文必须脱敏。
 
-## 函数
+## 注释
 
-一件事；>80 行考虑拆；参数 >5 封装对象；优先提前 return。
+- 公开 API 使用简洁中文 rustdoc/JSDoc，写用途与非显然边界。
+- 不写作者、日期或固定长模板，不要求为每个 `pub`/`export` 重复类型信息。
+- 仅复杂多步骤函数使用 `// 1.`、`// 2.` 中文分段。
+- 行内注释解释为什么，禁止翻译代码。
 
-## 类
+## 验证
 
-文档注释 + 成员 + 构造 + 公共方法（前）+ 私有方法（后）。
+按改动范围运行最小测试，并执行：
 
-## 错误
-
-禁止空 catch、业务路径 `unwrap`/`expect`、吞错。错误须说明：哪里、为什么、如何解决。Rust 业务用 `Result<T, E>`。
-
-## 日志
-
-带上下文（id、路径、耗时）。禁止无上下文的 `console.log("error")`。
-
-## 语言
-
-### Rust
-
-- 业务路径禁用 `unwrap`/`expect`
-- 统一 `Result`
-- 每个 `pub struct` / `enum` / `trait` / `fn` 必须有 `///`
-
-### TypeScript
-
-- `strict`；禁止 `any`（用 `unknown` / 泛型）
-- 所有 export 必须有 JSDoc
-- 有状态业务优先 class；一文件一核心职责
-
-## 质量门
-
-未写完公开 API 文档注释 = 任务未完成。优先可维护、可测试、低耦合的生产级代码，而非最短 Demo。
+```bash
+pnpm lint
+pnpm check:architecture
+pnpm contracts:check
+```

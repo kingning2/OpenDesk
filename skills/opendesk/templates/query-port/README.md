@@ -1,15 +1,5 @@
 # Query Port Template
 
-只读跨 Feature 查询接口。
+仅用于跨域只读查询。trait 保持最小，返回稳定 DTO，由装配层注入实现。
 
-## 生成
-
-```bash
-python skills/opendesk/scripts/create_query_port.py --name chat_query
-```
-
-## 规则
-
-- trait 定义在 `crates/ports`
-- 实现在提供数据的 feature infra 层
-- 仅只读方法
+写操作改用拥有方 UseCase 或 Event；步骤见 [`../../recipes/add-query-port.md`](../../recipes/add-query-port.md)。
