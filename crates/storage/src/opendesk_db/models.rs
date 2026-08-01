@@ -6,6 +6,7 @@ use super::schema::background_job;
 use super::schema::customer;
 use super::schema::mail_account;
 use super::schema::mail_imap_sync_state;
+use super::schema::mail_integration_setting;
 use super::schema::mail_message;
 use super::schema::mail_template;
 use super::schema::script_snippet;
@@ -204,7 +205,10 @@ pub struct NewMailMessageRow {
     pub in_reply_to: Option<String>,
     pub references_header: Option<String>,
     pub is_favorite: bool,
+    pub is_read: bool,
     pub open_tracking_id: Option<String>,
+    pub opened_at: Option<String>,
+    pub open_count: i64,
     pub created_at: String,
     pub updated_at: String,
     pub to_address: Option<String>,
@@ -288,7 +292,10 @@ pub struct MailMessageRow {
     pub in_reply_to: Option<String>,
     pub references_header: Option<String>,
     pub is_favorite: bool,
+    pub is_read: bool,
     pub open_tracking_id: Option<String>,
+    pub opened_at: Option<String>,
+    pub open_count: i64,
     pub created_at: String,
     pub updated_at: String,
     pub to_address: Option<String>,
@@ -309,4 +316,18 @@ pub struct MailImapSyncStateRow {
     pub last_sync_at: Option<String>,
     pub full_synced: bool,
     pub last_error: Option<String>,
+}
+
+/// Queryable `mail_integration_setting` row.
+#[derive(Debug, Queryable, Selectable, Clone)]
+#[diesel(table_name = mail_integration_setting)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct MailIntegrationSettingRow {
+    pub id: String,
+    pub enabled: bool,
+    pub api_base: String,
+    pub pixel_path_template: String,
+    pub query_path_template: String,
+    pub parse_script: String,
+    pub updated_at: String,
 }

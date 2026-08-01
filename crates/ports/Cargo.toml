@@ -8,3 +8,4 @@ async-trait = { workspace = true }
 common = { path = "../common" }
 thiserror = "2"
 serde = { workspace = true }
+serde_json = { workspace = true }

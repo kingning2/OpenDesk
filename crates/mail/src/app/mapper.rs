@@ -121,7 +121,10 @@ pub fn messages_to_json(records: &[MailMessageRecord]) -> Result<String, String>
                     "in_reply_to": record.in_reply_to,
                     "references": record.references,
                     "is_favorite": record.is_favorite,
+                    "is_read": record.is_read,
                     "open_tracking_id": record.open_tracking_id,
+                    "opened_at": record.opened_at,
+                    "open_count": record.open_count,
                     "created_at": record.created_at,
                     "updated_at": record.updated_at,
                 })

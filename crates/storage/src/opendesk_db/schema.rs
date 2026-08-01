@@ -100,12 +100,27 @@ diesel::table! {
         in_reply_to -> Nullable<Text>,
         references_header -> Nullable<Text>,
         is_favorite -> Bool,
+        is_read -> Bool,
         open_tracking_id -> Nullable<Text>,
+        opened_at -> Nullable<Text>,
+        open_count -> BigInt,
         created_at -> Text,
         updated_at -> Text,
         to_address -> Nullable<Text>,
         from_address -> Nullable<Text>,
         source_ref -> Nullable<Text>,
+    }
+}
+
+diesel::table! {
+    mail_integration_setting (id) {
+        id -> Text,
+        enabled -> Bool,
+        api_base -> Text,
+        pixel_path_template -> Text,
+        query_path_template -> Text,
+        parse_script -> Text,
+        updated_at -> Text,
     }
 }
 
@@ -220,6 +235,54 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    wf_rt_instance (instance_id) {
+        instance_id -> Text,
+        definition_id -> Nullable<Text>,
+        definition_json -> Text,
+        state -> Text,
+        context_json -> Text,
+        context_version -> BigInt,
+        error_code -> Nullable<Text>,
+        error_message -> Nullable<Text>,
+        heartbeat_at -> Nullable<Text>,
+        created_at -> Text,
+        updated_at -> Text,
+        started_at -> Nullable<Text>,
+        finished_at -> Nullable<Text>,
+    }
+}
+
+diesel::table! {
+    wf_rt_node_instance (instance_id, node_id) {
+        instance_id -> Text,
+        node_id -> Text,
+        node_type -> Text,
+        state -> Text,
+        attempt -> BigInt,
+        max_retry -> BigInt,
+        retry_state_json -> Text,
+        input_json -> Nullable<Text>,
+        output_json -> Nullable<Text>,
+        error_message -> Nullable<Text>,
+        started_at -> Nullable<Text>,
+        finished_at -> Nullable<Text>,
+        duration_ms -> Nullable<BigInt>,
+    }
+}
+
+diesel::table! {
+    wf_rt_log (id) {
+        id -> Text,
+        instance_id -> Text,
+        node_id -> Nullable<Text>,
+        level -> Text,
+        event_kind -> Text,
+        payload_json -> Text,
+        created_at -> Text,
+    }
+}
+
 diesel::joinable!(quote_history -> customer (customer_id));
 diesel::joinable!(customer_timeline -> customer (customer_id));
 diesel::joinable!(cooperation_audit -> customer (customer_id));
@@ -228,6 +291,8 @@ diesel::joinable!(mail_message -> mail_account (account_id));
 diesel::joinable!(mail_message -> mail_template (template_id));
 diesel::joinable!(mail_imap_sync_state -> mail_account (account_id));
 diesel::joinable!(mail_pending_send -> mail_account (account_id));
+diesel::joinable!(wf_rt_node_instance -> wf_rt_instance (instance_id));
+diesel::joinable!(wf_rt_log -> wf_rt_instance (instance_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     background_job,
@@ -235,6 +300,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     mail_template,
     mail_account,
     mail_message,
+    mail_integration_setting,
     quote_history,
     customer_timeline,
     cooperation_audit,
@@ -243,4 +309,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     mail_imap_sync_state,
     mail_pending_send,
     legacy_json_doc,
+    wf_rt_instance,
+    wf_rt_node_instance,
+    wf_rt_log,
 );

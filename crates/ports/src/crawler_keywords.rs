@@ -17,7 +17,7 @@ pub struct KeywordBatchSummary {
     pub keyword_count: i64,
 }
 
-/// Keyword batches imported from CSV — Rust owns SQLite; Python never reads this.
+/// 从 CSV 导入并由 Rust 持久化的关键词批次。
 pub trait CrawlerKeywordStore: Send + Sync {
     fn import_csv(
         &self,

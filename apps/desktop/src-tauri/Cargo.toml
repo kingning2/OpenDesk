@@ -18,3 +18,4 @@ tauri-build = { workspace = true }
 app = { path = "../../../crates/app" }
 tauri = { workspace = true }
 tauri-plugin-opener = { workspace = true }
+mimalloc = "0.1"

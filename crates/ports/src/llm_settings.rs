@@ -87,7 +87,7 @@ pub trait LlmSettingsStore: Send + Sync {
         api_key: Option<&str>,
     ) -> Result<LlmSettingsRecord, StoreError>;
 
-    /// 从 keyring 解析明文 API Key（仅供 Sidecar 注入 / 测试连接）。
+    /// 从 keyring 解析明文 API Key，供 Rust LLM 客户端调用。
     ///
     /// # 返回值
     /// - `Ok(Some(key))` — 已存储

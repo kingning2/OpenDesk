@@ -26,7 +26,6 @@
     "active": true,
     "targets": "all",
     "externalBin": [
-      "binaries/sidecar",
       "binaries/license-verifier"
     ],
     "icon": [

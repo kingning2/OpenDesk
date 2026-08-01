@@ -137,7 +137,10 @@ pub struct MailMessageRecord {
     pub in_reply_to: Option<String>,
     pub references: Option<String>,
     pub is_favorite: bool,
+    pub is_read: bool,
     pub open_tracking_id: Option<String>,
+    pub opened_at: Option<String>,
+    pub open_count: i64,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -198,6 +201,19 @@ pub struct MailInboundWriteInput {
     pub in_reply_to: Option<String>,
 }
 
+/// UI-configurable email-read (open tracking) integration.
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-08-01
+#[derive(Debug, Clone)]
+pub struct MailEmailReadIntegrationConfig {
+    pub enabled: bool,
+    pub api_base: String,
+    pub pixel_path_template: String,
+    pub query_path_template: String,
+    pub parse_script: String,
+}
+
 /// IMAP-fetched inbound message write input.
 ///
 /// 作者：Xiaoman
@@ -217,6 +233,7 @@ pub struct MailImapInboundWriteInput {
     pub rfc_message_id: Option<String>,
     pub in_reply_to: Option<String>,
     pub references: Option<String>,
+    pub is_seen: bool,
 }
 
 /// IMAP sync cursor for one account folder.
@@ -342,6 +359,17 @@ pub trait MailStore: Send + Sync {
         customer_id: &str,
     ) -> Result<MailMessageRecord, StoreError>;
 
+    /// Mark one local message as read.
+    fn mark_message_read(&self, message_id: &str) -> Result<MailMessageRecord, StoreError>;
+
+    /// Update recipient open stats from email-read API sync.
+    fn update_message_open_status(
+        &self,
+        message_id: &str,
+        opened_at: Option<String>,
+        open_count: i64,
+    ) -> Result<(), StoreError>;
+
     /// Whether we have previously sent outbound mail to this recipient.
     fn has_outbound_to_address(
         &self,
@@ -355,4 +383,13 @@ pub trait MailStore: Send + Sync {
         account_id: &str,
         rfc_message_id: &str,
     ) -> Result<bool, StoreError>;
+
+    /// Read persisted email-read integration settings.
+    fn get_email_read_integration(&self) -> Result<MailEmailReadIntegrationConfig, StoreError>;
+
+    /// Save email-read integration settings from the settings UI.
+    fn save_email_read_integration(
+        &self,
+        config: MailEmailReadIntegrationConfig,
+    ) -> Result<MailEmailReadIntegrationConfig, StoreError>;
 }

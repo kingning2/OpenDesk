@@ -126,9 +126,9 @@ mod tests {
             counter: counter.clone(),
         });
 
-        bus.subscribe("runtime.sidecar.restarted", handler_a).ok();
-        bus.subscribe("runtime.sidecar.restarted", handler_b).ok();
-        bus.publish("runtime.sidecar.restarted", br#"{"event_id":"1"}"#)
+        bus.subscribe("runtime.test.event", handler_a).ok();
+        bus.subscribe("runtime.test.event", handler_b).ok();
+        bus.publish("runtime.test.event", br#"{"event_id":"1"}"#)
             .ok();
 
         assert_eq!(counter.load(AtomicOrdering::SeqCst), 2);

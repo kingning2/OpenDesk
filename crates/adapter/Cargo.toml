@@ -9,7 +9,6 @@ base64 = "0.22"
 common = { path = "../common" }
 hmac = "0.12"
 ports = { path = "../ports" }
-runtime = { path = "../runtime" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = "0.10"

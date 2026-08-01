@@ -5,7 +5,10 @@
 
 mod imap;
 
-pub use imap::{fetch_messages_since, watch_inbox_idle, ImapEndpoint, ImapFetchedMessage};
+pub use imap::{
+    fetch_messages_since, watch_inbox_idle, ImapEndpoint, ImapFetchResult, ImapFetchedMessage,
+    DEFAULT_IMAP_MAX_FETCH,
+};
 
 use std::time::Duration;
 

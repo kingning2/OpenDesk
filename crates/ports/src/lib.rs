@@ -9,5 +9,5 @@ pub mod license;
 pub mod llm_settings;
 pub mod mail;
 pub mod repository;
-pub mod sidecar;
 pub mod workflow;
+pub mod workflow_runtime;

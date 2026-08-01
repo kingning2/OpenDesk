@@ -1,4 +1,0 @@
-﻿[package]
-name = "file"
-version.workspace = true
-edition.workspace = true

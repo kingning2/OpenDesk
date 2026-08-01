@@ -27,7 +27,6 @@ dependencies = [
  "common",
  "hmac",
  "ports",
- "runtime",
  "serde",
  "serde_json",
  "sha2",
@@ -56,8 +55,11 @@ dependencies = [
 name = "agent"
 version = "0.1.0"
 dependencies = [
- "common",
- "ports",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tokio",
 ]
 
 [[package]]
@@ -128,10 +130,9 @@ dependencies = [
  "crawler",
  "customer",
  "dirs 5.0.1",
- "kernel",
  "mail",
  "ports",
- "runtime",
+ "reqwest 0.12.28",
  "serde",
  "serde_json",
  "storage",
@@ -141,6 +142,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "uuid",
+ "workflow_runtime",
 ]
 
 [[package]]
@@ -533,10 +535,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "browser"
-version = "0.1.0"
-
-[[package]]
 name = "bs58"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -729,10 +727,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "channel"
-version = "0.1.0"
-
-[[package]]
 name = "charset"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -741,10 +735,6 @@ dependencies = [
  "base64 0.22.1",
  "encoding_rs",
 ]
-
-[[package]]
-name = "chat"
-version = "0.1.0"
 
 [[package]]
 name = "chrono"
@@ -934,6 +924,7 @@ dependencies = [
 name = "crawler"
 version = "0.1.0"
 dependencies = [
+ "agent",
  "common",
  "ports",
  "reqwest 0.12.28",
@@ -1670,10 +1661,6 @@ dependencies = [
  "memoffset 0.9.1",
  "rustc_version",
 ]
-
-[[package]]
-name = "file"
-version = "0.1.0"
 
 [[package]]
 name = "find-msvc-tools"
@@ -2849,9 +2836,15 @@ dependencies = [
 name = "kernel"
 version = "0.1.0"
 dependencies = [
+ "chrono",
+ "dirs 5.0.1",
+ "flate2",
+ "serde_json",
  "thiserror 2.0.18",
  "tokio",
  "tracing",
+ "tracing-appender",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -2881,10 +2874,6 @@ dependencies = [
  "windows-sys 0.60.2",
  "zeroize",
 ]
-
-[[package]]
-name = "knowledge"
-version = "0.1.0"
 
 [[package]]
 name = "lazy_static"
@@ -3002,6 +2991,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
 
 [[package]]
+name = "libmimalloc-sys"
+version = "0.1.49"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a45a52f43e1c16f667ccfe4dd8c85b7f7c204fd5e3bf46c5b0db9a5c3c0b8e9"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "libredox"
 version = "0.1.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3093,11 +3091,16 @@ checksum = "112b39cec0b298b6c1999fee3e31427f74f676e4cb9879ed1a121b43661a4154"
 name = "mail"
 version = "0.1.0"
 dependencies = [
+ "agent",
  "common",
  "customer",
  "mail-net",
  "ports",
+ "reqwest 0.12.28",
+ "serde",
  "serde_json",
+ "tokio",
+ "tracing",
  "uuid",
 ]
 
@@ -3109,6 +3112,7 @@ dependencies = [
  "lettre",
  "mailparse",
  "native-tls",
+ "tracing",
 ]
 
 [[package]]
@@ -3161,10 +3165,6 @@ dependencies = [
  "cfg-if",
  "rayon",
 ]
-
-[[package]]
-name = "mcp"
-version = "0.1.0"
 
 [[package]]
 name = "memchr"
@@ -3227,6 +3227,15 @@ dependencies = [
  "migrations_internals",
  "proc-macro2",
  "quote",
+]
+
+[[package]]
+name = "mimalloc"
+version = "0.1.52"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d4139bb28d14ad1facf21d5eb8825051b326e172d216b39f6d31df53cc97862"
+dependencies = [
+ "libmimalloc-sys",
 ]
 
 [[package]]
@@ -3821,10 +3830,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ocr"
-version = "0.1.0"
-
-[[package]]
 name = "once_cell"
 version = "1.21.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3846,6 +3851,7 @@ name = "opendesk"
 version = "0.1.0"
 dependencies = [
  "app",
+ "mimalloc",
  "tauri",
  "tauri-build",
  "tauri-plugin-opener",
@@ -3857,6 +3863,8 @@ version = "0.1.0"
 dependencies = [
  "crawler-enrich",
  "dirs 5.0.1",
+ "kernel",
+ "mail",
  "mail-net",
  "ports",
  "serde",
@@ -3865,7 +3873,6 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]
@@ -4104,10 +4111,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "plugin"
-version = "0.1.0"
-
-[[package]]
 name = "png"
 version = "0.17.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4154,6 +4157,7 @@ dependencies = [
  "async-trait",
  "common",
  "serde",
+ "serde_json",
  "thiserror 2.0.18",
 ]
 
@@ -4796,20 +4800,6 @@ checksum = "c51c9ae4df8a7fba42103df5c621fa3c37eccf3a3c650879e90fc48b11cc192c"
 dependencies = [
  "hashbrown 0.16.1",
  "thiserror 2.0.18",
-]
-
-[[package]]
-name = "runtime"
-version = "0.1.0"
-dependencies = [
- "common",
- "kernel",
- "reqwest 0.12.28",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "tokio",
- "tracing",
 ]
 
 [[package]]
@@ -5485,6 +5475,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "symlink"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a7973cce6668464ea31f176d85b13c7ab3bba2cb3b77a2ed26abd7801688010a"
+
+[[package]]
 name = "syn"
 version = "1.0.109"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5860,10 +5856,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tenant"
-version = "0.1.0"
-
-[[package]]
 name = "tendril"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6228,6 +6220,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "tracing-appender"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "050686193eb999b4bb3bc2acfa891a13da00f79734704c4b8b4ef1a10b368a3c"
+dependencies = [
+ "crossbeam-channel",
+ "symlink",
+ "thiserror 2.0.18",
+ "time",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "tracing-attributes"
 version = "0.1.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6419,10 +6424,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "user"
-version = "0.1.0"
-
-[[package]]
 name = "utf8_iter"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6462,10 +6463,6 @@ name = "vcpkg"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
-
-[[package]]
-name = "vector"
-version = "0.1.0"
 
 [[package]]
 name = "version-compare"
@@ -7461,8 +7458,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ebf944e87a7c253233ad6766e082e3cd714b5d03812acc24c318f549614536e"
 
 [[package]]
-name = "workflow"
+name = "workflow_runtime"
 version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "ports",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "uuid",
+]
 
 [[package]]
 name = "writeable"

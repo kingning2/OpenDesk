@@ -74,6 +74,10 @@ impl SendMail {
             .resolve_account_password(&request.account_id)
             .map_err(|error| error.to_string())?;
 
+        let integration = mail_store
+            .get_email_read_integration()
+            .map_err(|error| error.to_string())?;
+
         let tracking_enabled = request.open_tracking_enabled.unwrap_or(true);
         let tracking_id = if tracking_enabled {
             Some(crate::app::tracking::make_tracking_id())
@@ -82,6 +86,7 @@ impl SendMail {
         };
         let body_html = if let Some(ref tracking_id) = tracking_id {
             crate::app::tracking::prepare_tracked_html(
+                &integration,
                 &request.body_text,
                 request.body_html.as_deref(),
                 tracking_id,

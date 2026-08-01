@@ -1,4 +1,4 @@
-//! License / activation DTOs（手写；Contract codegen 暂缓，避免 Python 生成物 churn）。
+//! License / activation DTOs（手写；暂不纳入通用 Contract codegen）。
 //!
 //! 作者：coisini
 //! 创建时间：2026-07-16

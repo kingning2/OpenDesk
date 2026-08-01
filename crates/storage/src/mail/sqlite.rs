@@ -7,9 +7,9 @@ use diesel::prelude::*;
 use keyring::Entry;
 use ports::mail::{
     mail_keyring_user, mail_password_ref, MailAccountRecord, MailAccountWriteInput,
-    MailImapInboundWriteInput, MailImapSyncStateRecord, MailInboundWriteInput,
-    MailMessageListFilter, MailMessageRecord, MailSendInput, MailStore, MailTemplateRecord,
-    MailTemplateWriteInput, MailUnmatchedListFilter, MAIL_KEYRING_SERVICE,
+    MailEmailReadIntegrationConfig, MailImapInboundWriteInput, MailImapSyncStateRecord,
+    MailInboundWriteInput, MailMessageListFilter, MailMessageRecord, MailSendInput, MailStore,
+    MailTemplateRecord, MailTemplateWriteInput, MailUnmatchedListFilter, MAIL_KEYRING_SERVICE,
 };
 use ports::repository::StoreError;
 use uuid::Uuid;
@@ -17,12 +17,15 @@ use uuid::Uuid;
 use crate::opendesk_db::schema::customer_timeline::dsl as timeline;
 use crate::opendesk_db::schema::mail_account::dsl as account;
 use crate::opendesk_db::schema::mail_imap_sync_state::dsl as imap_state;
+use crate::opendesk_db::schema::mail_integration_setting::dsl as integration_setting;
 use crate::opendesk_db::schema::mail_message::dsl as message;
 use crate::opendesk_db::schema::mail_template::dsl as template;
 use crate::opendesk_db::{
-    MailAccountRow, MailImapSyncStateRow, MailMessageRow, MailTemplateRow, NewMailAccountRow,
-    NewMailMessageRow, NewMailTemplateRow, OpendeskDb,
+    MailAccountRow, MailImapSyncStateRow, MailIntegrationSettingRow, MailMessageRow,
+    MailTemplateRow, NewMailAccountRow, NewMailMessageRow, NewMailTemplateRow, OpendeskDb,
 };
+
+const EMAIL_READ_INTEGRATION_ID: &str = "email_read";
 
 /// SQLite implementation of [`MailStore`].
 ///
@@ -326,11 +329,14 @@ impl MailStore for SqliteMailStore {
             in_reply_to: None,
             references_header: None,
             is_favorite: false,
+            is_read: true,
             open_tracking_id: input.open_tracking_id,
+            opened_at: None,
+            open_count: 0,
             created_at: now.clone(),
             updated_at: now.clone(),
-            to_address: Some(input.to_address.clone()),
-            from_address: Some(input.from_address.clone()),
+            to_address: Some(normalize_email(&input.to_address)),
+            from_address: Some(normalize_email(&input.from_address)),
             source_ref: None,
         };
 
@@ -389,7 +395,10 @@ impl MailStore for SqliteMailStore {
             in_reply_to: input.in_reply_to,
             references_header: Some(input.from_address.clone()),
             is_favorite: false,
+            is_read: false,
             open_tracking_id: None,
+            opened_at: None,
+            open_count: 0,
             created_at: now.clone(),
             updated_at: now.clone(),
             to_address: Some(input.from_address.clone()),
@@ -618,11 +627,14 @@ impl MailStore for SqliteMailStore {
             in_reply_to: input.in_reply_to.clone(),
             references_header: input.references.clone(),
             is_favorite: false,
+            is_read: input.is_seen,
             open_tracking_id: None,
+            opened_at: None,
+            open_count: 0,
             created_at: now.clone(),
             updated_at: now.clone(),
             to_address: None,
-            from_address: Some(input.from_address.clone()),
+            from_address: Some(normalize_email(&input.from_address)),
             source_ref: None,
         };
 
@@ -742,6 +754,44 @@ impl MailStore for SqliteMailStore {
         })
     }
 
+    fn mark_message_read(&self, message_id: &str) -> Result<MailMessageRecord, StoreError> {
+        self.db.with_conn(|conn| {
+            diesel::update(message::mail_message.filter(message::id.eq(message_id)))
+                .set((
+                    message::is_read.eq(true),
+                    message::updated_at.eq(now_string()),
+                ))
+                .execute(conn)
+                .map_err(map_diesel_error)?;
+
+            message::mail_message
+                .filter(message::id.eq(message_id))
+                .select(MailMessageRow::as_select())
+                .first::<MailMessageRow>(conn)
+                .map(MailMessageRecord::from)
+                .map_err(map_diesel_error)
+        })
+    }
+
+    fn update_message_open_status(
+        &self,
+        message_id: &str,
+        opened_at: Option<String>,
+        open_count: i64,
+    ) -> Result<(), StoreError> {
+        self.db.with_conn(|conn| {
+            diesel::update(message::mail_message.filter(message::id.eq(message_id)))
+                .set((
+                    message::opened_at.eq(opened_at),
+                    message::open_count.eq(open_count),
+                    message::updated_at.eq(now_string()),
+                ))
+                .execute(conn)
+                .map_err(map_diesel_error)?;
+            Ok(())
+        })
+    }
+
     fn has_outbound_to_address(
         &self,
         account_id: &str,
@@ -783,6 +833,55 @@ impl MailStore for SqliteMailStore {
             Ok(count > 0)
         })
     }
+
+    fn get_email_read_integration(&self) -> Result<MailEmailReadIntegrationConfig, StoreError> {
+        self.db.with_conn(|conn| {
+            integration_setting::mail_integration_setting
+                .filter(integration_setting::id.eq(EMAIL_READ_INTEGRATION_ID))
+                .select(MailIntegrationSettingRow::as_select())
+                .first::<MailIntegrationSettingRow>(conn)
+                .optional()
+                .map_err(map_diesel_error)?
+                .map(email_read_integration_from_row)
+                .ok_or_else(|| StoreError::Unavailable("mail.integration.not_seeded".to_string()))
+        })
+    }
+
+    fn save_email_read_integration(
+        &self,
+        config: MailEmailReadIntegrationConfig,
+    ) -> Result<MailEmailReadIntegrationConfig, StoreError> {
+        let api_base = config.api_base.trim();
+        if config.enabled && api_base.is_empty() {
+            return Err(StoreError::Unavailable(
+                "mail.integration.api_base_required".to_string(),
+            ));
+        }
+        let updated_at = now_string();
+        let parse_script = config.parse_script.trim().to_string();
+        self.db.with_conn(|conn| {
+            diesel::replace_into(integration_setting::mail_integration_setting)
+                .values((
+                    integration_setting::id.eq(EMAIL_READ_INTEGRATION_ID),
+                    integration_setting::enabled.eq(config.enabled),
+                    integration_setting::api_base.eq(api_base),
+                    integration_setting::pixel_path_template.eq(config.pixel_path_template.trim()),
+                    integration_setting::query_path_template.eq(config.query_path_template.trim()),
+                    integration_setting::parse_script.eq(&parse_script),
+                    integration_setting::updated_at.eq(&updated_at),
+                ))
+                .execute(conn)
+                .map_err(map_diesel_error)?;
+            Ok(())
+        })?;
+        Ok(MailEmailReadIntegrationConfig {
+            enabled: config.enabled,
+            api_base: api_base.to_string(),
+            pixel_path_template: config.pixel_path_template.trim().to_string(),
+            query_path_template: config.query_path_template.trim().to_string(),
+            parse_script,
+        })
+    }
 }
 
 fn insert_timeline_entry(
@@ -805,6 +904,18 @@ fn insert_timeline_entry(
         .execute(conn)
         .map(|_| ())
         .map_err(map_diesel_error)
+}
+
+fn email_read_integration_from_row(
+    row: MailIntegrationSettingRow,
+) -> MailEmailReadIntegrationConfig {
+    MailEmailReadIntegrationConfig {
+        enabled: row.enabled,
+        api_base: row.api_base,
+        pixel_path_template: row.pixel_path_template,
+        query_path_template: row.query_path_template,
+        parse_script: row.parse_script,
+    }
 }
 
 impl From<MailTemplateRow> for MailTemplateRecord {
@@ -872,7 +983,10 @@ impl From<MailMessageRow> for MailMessageRecord {
             in_reply_to: row.in_reply_to,
             references: row.references_header,
             is_favorite: row.is_favorite,
+            is_read: row.is_read,
             open_tracking_id: row.open_tracking_id,
+            opened_at: row.opened_at,
+            open_count: row.open_count,
             created_at: row.created_at,
             updated_at: row.updated_at,
         }

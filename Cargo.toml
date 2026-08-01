@@ -10,22 +10,10 @@ members = [
   "crates/common",
   "crates/ports",
   "crates/adapter",
-  "crates/runtime",
-  "crates/chat",
-  "crates/mail",
   "crates/agent",
-  "crates/workflow",
-  "crates/knowledge",
-  "crates/browser",
-  "crates/ocr",
-  "crates/mcp",
-  "crates/plugin",
-  "crates/tenant",
-  "crates/user",
-  "crates/channel",
+  "crates/mail",
+  "crates/workflow_runtime",
   "crates/storage",
-  "crates/vector",
-  "crates/file",
   "crates/mail-net",
   "crates/worker",
 ]
@@ -40,6 +28,7 @@ license = "MIT"
 [workspace.dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+thiserror = "2"
 tauri = { version = "2", features = [] }
 tauri-build = { version = "2", features = [] }
 tauri-plugin-opener = "2"
@@ -47,7 +36,10 @@ reqwest = { version = "0.12", default-features = false, features = ["blocking", 
 async-trait = "0.1"
 tokio = { version = "1", features = ["process", "io-util", "time", "sync", "rt", "macros"] }
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = "0.2"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "registry"] }
+chrono = { version = "0.4", features = ["clock", "std"] }
+flate2 = "1"
 diesel = { version = "2.2", features = ["sqlite", "returning_clauses_for_sqlite_3_35"] }
 diesel_migrations = "2.2"
 libsqlite3-sys = { version = "0.30", features = ["bundled"] }

@@ -8,3 +8,4 @@ lettre = { workspace = true }
 imap = { workspace = true }
 native-tls = { workspace = true }
 mailparse = { workspace = true }
+tracing = { workspace = true }

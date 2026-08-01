@@ -5,6 +5,7 @@ edition.workspace = true
 
 [dependencies]
 common = { path = "../common" }
+agent = { path = "../agent" }
 ports = { path = "../ports" }
 reqwest = { workspace = true }
 serde_json = { workspace = true }

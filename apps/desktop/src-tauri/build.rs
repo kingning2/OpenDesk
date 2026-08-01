@@ -2,7 +2,6 @@ use std::fs;
 use std::path::PathBuf;
 
 fn main() {
-    ensure_external_bin_stub_for_dev("sidecar");
     ensure_external_bin_stub_for_dev("license-verifier");
     tauri_build::build();
 }

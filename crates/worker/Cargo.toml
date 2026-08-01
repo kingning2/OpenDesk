@@ -11,6 +11,8 @@ path = "src/main.rs"
 [dependencies]
 crawler-enrich = { path = "../crawler-enrich" }
 dirs = { workspace = true }
+kernel = { path = "../kernel" }
+mail = { path = "../mail" }
 mail-net = { path = "../mail-net" }
 ports = { path = "../ports" }
 serde = { workspace = true }
@@ -18,5 +20,4 @@ serde_json = { workspace = true }
 storage = { path = "../storage" }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread", "signal", "time"] }
 tracing = { workspace = true }
-tracing-subscriber = { workspace = true }
 thiserror = "2"
