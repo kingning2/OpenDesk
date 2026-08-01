@@ -46,22 +46,6 @@ jobs:
             librsvg2-dev
       - run: pnpm lint:rust
 
-  python:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - uses: astral-sh/setup-uv@v5
-      - run: uv sync --group dev
-      - run: pnpm lint:python
-
   subscription:
     runs-on: ubuntu-latest
     steps:

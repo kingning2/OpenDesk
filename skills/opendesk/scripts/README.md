@@ -1,44 +1,12 @@
-# Scripts
+# OpenDesk Scripts
 
-OpenDesk 脚手架与架构检查脚本。均需从仓库根目录运行。
+所有命令从仓库根目录运行。
 
-## 脚手架
+| pnpm 命令 | 脚本 | 用途 |
+|---|---|---|
+| `pnpm branch` / `branch:create` / `branch:sync` | `branch-tools.mjs` | 创建分支并生成当前 scope |
+| `pnpm contracts:sync` | `sync-contracts.mjs` | 从 JSON Schema 生成 Rust 与 TypeScript |
+| `pnpm contracts:check` | `sync-contracts.mjs --check` | 检查生成物是否过期 |
+| `pnpm check:architecture` | `check-architecture.mjs` | 检查 React/Rust 边界、零 Python 运行时、命名、Schema 与生成物 |
 
-| 脚本 | 用途 |
-|------|------|
-| `create_feature.py` | 完整 Feature（contract + crate + frontend） |
-| `create_crate.py` | Rust crate + workspace 注册 |
-| `create_contract.py` | JSON Schema |
-| `create_ipc.py` | IPC request/response 对 |
-| `create_event.py` | Event schema |
-| `create_query_port.py` | ports trait |
-| `create_usecase.py` | UseCase 模块 |
-| `create_python_package.py` | Python 包 + uv workspace 注册 |
-| `create_rust_python_ipc.py` | Rust ↔ Python sidecar IPC 骨架 |
-| `sync_contracts.py` | 契约 codegen 占位同步 |
-
-## 检查
-
-| 脚本 | 用途 |
-|------|------|
-| `check_architecture.py` | **聚合检查（推荐）** |
-| `check_layers.py` | Feature UI 禁 @tauri-apps/api |
-| `check_boundary.py` | Python 禁 SQLite |
-| `check_imports.py` | Feature crate 互依赖 |
-| `check_naming.py` | 命名规范 |
-| `check_contracts.py` | Schema JSON 合法性 |
-| `lint_all.py` | 运行 `pnpm lint` |
-| `generate_tree.py` | 项目树 |
-| `migrate_email_agent.py` | email-agent 真实数据迁入 `opendesk.db`（不含日志） |
-
-## 示例
-
-```bash
-python skills/opendesk/scripts/create_feature.py --name myfeature --dry-run
-python skills/opendesk/scripts/check_architecture.py
-python skills/opendesk/scripts/generate_tree.py --max-depth 3
-```
-
-## 扩展
-
-共享工具见 `_common.py`。新增检查脚本后在 `check_architecture.py` 中注册。
+这些脚本是当前唯一受支持的 OpenDesk 仓库工具。新增工具前优先扩展根 `package.json` 的 pnpm 入口，避免文档直接绑定内部脚本参数。

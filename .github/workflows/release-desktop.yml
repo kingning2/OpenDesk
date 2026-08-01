@@ -49,13 +49,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-
-      - name: Install uv
-        run: pip install uv
-
       - name: Install Perl (vendored OpenSSL)
         shell: pwsh
         run: |
@@ -63,9 +56,6 @@ jobs:
           "C:\Strawberry\perl\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           "C:\Strawberry\c\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           perl -v
-
-      - name: Build frozen sidecar
-        run: node tooling/scripts/build-sidecar.mjs --target x86_64-pc-windows-msvc
 
       - name: Build locked Windows x64 bundle
         run: node tooling/scripts/tauri-build-locked.mjs --target x86_64-pc-windows-msvc
@@ -122,7 +112,7 @@ jobs:
           }
           Copy-Item $mainExe $portableDir -Force
           Get-ChildItem -Path $releaseDir -File | Where-Object {
-            $_.Name -match '^(sidecar|license-verifier)' -or $_.Extension -in @(".dll")
+            $_.Name -match '^license-verifier' -or $_.Extension -in @(".dll")
           } | ForEach-Object { Copy-Item $_.FullName $portableDir -Force }
 
           $zipPath = "dist/$baseName.zip"
@@ -169,14 +159,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-          architecture: x86
-
-      - name: Install uv
-        run: pip install uv
-
       - name: Install Perl (vendored OpenSSL)
         shell: pwsh
         run: |
@@ -184,9 +166,6 @@ jobs:
           "C:\Strawberry\perl\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           "C:\Strawberry\c\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           perl -v
-
-      - name: Build frozen sidecar
-        run: node tooling/scripts/build-sidecar.mjs --target i686-pc-windows-msvc
 
       - name: Build locked Windows x86 bundle
         run: node tooling/scripts/tauri-build-locked.mjs --target i686-pc-windows-msvc
@@ -243,7 +222,7 @@ jobs:
           }
           Copy-Item $mainExe $portableDir -Force
           Get-ChildItem -Path $releaseDir -File | Where-Object {
-            $_.Name -match '^(sidecar|license-verifier)' -or $_.Extension -in @(".dll")
+            $_.Name -match '^license-verifier' -or $_.Extension -in @(".dll")
           } | ForEach-Object { Copy-Item $_.FullName $portableDir -Force }
 
           $zipPath = "dist/$baseName.zip"
@@ -290,16 +269,6 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-
-      - name: Install uv
-        run: pip install uv
-
-      - name: Build frozen sidecar
-        run: node tooling/scripts/build-sidecar.mjs --target x86_64-apple-darwin
 
       - name: Build locked macOS Intel bundle
         run: node tooling/scripts/tauri-build-locked.mjs --target x86_64-apple-darwin
@@ -390,16 +359,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-
-      - name: Install uv
-        run: pip install uv
-
-      - name: Build frozen sidecar
-        run: node tooling/scripts/build-sidecar.mjs --target aarch64-apple-darwin
-
       - name: Build locked macOS Apple Silicon bundle
         run: node tooling/scripts/tauri-build-locked.mjs --target aarch64-apple-darwin
 
@@ -483,39 +442,19 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           gh release view "$TAG" --repo "$GH_REPO" --json assets > release.json
-          python - <<'PY'
-          import json
-          from pathlib import Path
-
-          data = json.loads(Path("release.json").read_text(encoding="utf-8"))
-          names = [asset["name"] for asset in data.get("assets", [])]
-          required_variants = [
-              "-windows-x64",
-              "-windows-x86",
-              "-macos-intel",
-              "-macos-apple-silicon",
-          ]
-          installer_suffixes = (".msi", ".exe", ".dmg", ".pkg")
-
-          missing = []
-          for variant in required_variants:
-              variant_names = [
-                  name for name in names
-                  if name.startswith("opendesk-") and variant in name
-              ]
-              has_installer = any(
-                  name.endswith(installer_suffixes) for name in variant_names
-              )
-              has_zip = any(name.endswith(".zip") for name in variant_names)
-              if not has_installer:
-                  missing.append(f"{variant} installer")
-              if not has_zip:
-                  missing.append(f"{variant} zip")
-
-          if missing:
-              raise SystemExit(
-                  f"Missing release assets for: {', '.join(missing)}. Current assets: {names}"
-              )
-
-          print("Verified release assets:", names)
-          PY
+          mapfile -t names < <(jq -r '.assets[].name' release.json)
+          missing=()
+          for variant in -windows-x64 -windows-x86 -macos-intel -macos-apple-silicon; do
+            variant_names="$(printf '%s\n' "${names[@]}" | grep '^opendesk-' | grep -- "$variant" || true)"
+            if ! grep -Eq '\.(msi|exe|dmg|pkg)$' <<< "$variant_names"; then
+              missing+=("$variant installer")
+            fi
+            if ! grep -Eq '\.zip$' <<< "$variant_names"; then
+              missing+=("$variant zip")
+            fi
+          done
+          if (( ${#missing[@]} > 0 )); then
+            echo "Missing release assets for: ${missing[*]}. Current assets: ${names[*]}" >&2
+            exit 1
+          fi
+          echo "Verified release assets: ${names[*]}"

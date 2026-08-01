@@ -7,15 +7,6 @@ const args = process.argv.slice(2);
 const normalizedArgs = args.filter((arg) => arg !== "--");
 const env = { ...process.env };
 
-function commandExists(command) {
-  const checker = platform() === "win32" ? "where" : "which";
-  const result = spawnSync(checker, [command], {
-    shell: true,
-    stdio: "ignore",
-  });
-  return result.status === 0;
-}
-
 function parseCliTarget(argv) {
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -51,11 +42,6 @@ function rewriteCliTarget(argv, target) {
   }
   next.push("--target", target);
   return next;
-}
-
-// Sidecar spawn defaults to uv; fall back to python when uv is not installed.
-if (!commandExists("uv")) {
-  env.OPENDESK_USE_UV = "0";
 }
 
 const cliTarget = parseCliTarget(normalizedArgs);
