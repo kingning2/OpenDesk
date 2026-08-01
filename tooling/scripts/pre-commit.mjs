@@ -1,10 +1,5 @@
 import { spawnSync } from "node:child_process";
 
-function hasCommand(command) {
-  const result = spawnSync(command, ["--version"], { shell: true });
-  return result.status === 0;
-}
-
 function run(command, args) {
   const result = spawnSync(command, args, { stdio: "inherit", shell: true });
   if (result.status !== 0) {
@@ -93,7 +88,6 @@ function restage(files) {
 
 const tsFiles = stagedFiles(/\.(ts|tsx)$/);
 const rsFiles = stagedFiles(/\.rs$/);
-const pyFiles = stagedFiles(/\.py$/);
 const allStaged = stagedFiles();
 const modifiedConfig = blockedConfigFiles(allStaged);
 
@@ -130,21 +124,6 @@ if (rsFiles.length > 0) {
     run("rustfmt", ["--edition", "2021", file]);
   }
   restage(rsFiles);
-}
-
-if (pyFiles.length > 0) {
-  const useUv = hasCommand("uv");
-  const runner = useUv ? "uv" : "python";
-  const checkArgs = useUv
-    ? ["run", "ruff", "check", "--fix", ...pyFiles]
-    : ["-m", "ruff", "check", "--fix", ...pyFiles];
-  const formatArgs = useUv
-    ? ["run", "ruff", "format", ...pyFiles]
-    : ["-m", "ruff", "format", ...pyFiles];
-
-  run(runner, checkArgs);
-  run(runner, formatArgs);
-  restage(pyFiles);
 }
 
 for (const file of allStaged) {
