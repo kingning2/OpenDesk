@@ -1,6 +1,6 @@
 //! Outbound mail sending use case.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-21
 
 use common::contracts::{MailIpcSendRequest, MailIpcSendResponse};
@@ -10,7 +10,7 @@ use ports::mail::{MailSendInput, MailStore};
 
 /// Send one outbound message via SMTP and persist the result.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 pub struct SendMail;
 
@@ -19,7 +19,7 @@ impl SendMail {
     ///
     /// Recipient comes from `to_address`. Optional `customer_id` only links CRM.
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-21
     ///
     /// # 参数

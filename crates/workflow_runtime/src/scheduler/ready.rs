@@ -1,6 +1,6 @@
 //! Ready 集合计算。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use crate::dag::WorkflowGraph;
@@ -10,7 +10,7 @@ use std::collections::HashMap;
 
 /// 计算当前可调度节点（稳定按 NodeId 排序）。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 ///
 /// @param graph - 图

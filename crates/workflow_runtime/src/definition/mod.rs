@@ -1,6 +1,6 @@
 //! 工作流静态定义（来自 React Flow / Contract）。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 mod edge;

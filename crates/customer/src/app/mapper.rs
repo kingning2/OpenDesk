@@ -5,7 +5,7 @@ use ports::customer::CustomerRecord;
 
 /// Serialize a customer record to contract profile JSON.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 ///
 /// # 参数
@@ -41,7 +41,7 @@ pub fn record_to_profile_json(record: &CustomerRecord) -> Result<String, String>
 
 /// Serialize multiple customer records to a JSON array string.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 pub fn records_to_profiles_json(records: &[CustomerRecord]) -> Result<String, String> {
     let profiles: Result<Vec<CustomerDtoProfile>, String> = records

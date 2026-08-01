@@ -1,6 +1,6 @@
 //! 内存 CheckpointStore（单测 / 无 DB 场景）。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use ports::repository::StoreError;
@@ -12,7 +12,7 @@ use std::sync::Mutex;
 
 /// 进程内检查点实现。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Default)]
 pub struct InMemoryCheckpointStore {
@@ -29,7 +29,7 @@ struct Inner {
 impl InMemoryCheckpointStore {
     /// 新建空存储。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns 存储

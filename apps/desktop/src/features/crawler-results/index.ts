@@ -1,7 +1,7 @@
 /**
  * Crawler results list feature — persisted channel table.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 

@@ -1,7 +1,7 @@
 /**
  * shadcn/ui Table primitives — semantic table layout for TanStack Table.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 
@@ -17,7 +17,7 @@ export interface TableProps extends React.ComponentProps<"table"> {
 /**
  * Scrollable table container.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export function Table({ className, scrollWrapper = true, ...props }: TableProps) {
@@ -43,7 +43,7 @@ export function Table({ className, scrollWrapper = true, ...props }: TableProps)
 /**
  * Table header section.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
@@ -59,7 +59,7 @@ export function TableHeader({ className, ...props }: React.ComponentProps<"thead
 /**
  * Table body section.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
@@ -75,7 +75,7 @@ export function TableBody({ className, ...props }: React.ComponentProps<"tbody">
 /**
  * Table footer section.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
@@ -94,7 +94,7 @@ export function TableFooter({ className, ...props }: React.ComponentProps<"tfoot
 /**
  * Table row.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
@@ -113,7 +113,7 @@ export function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
 /**
  * Table head cell.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export function TableHead({ className, ...props }: React.ComponentProps<"th">) {
@@ -133,7 +133,7 @@ export function TableHead({ className, ...props }: React.ComponentProps<"th">) {
 /**
  * Table body cell.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export function TableCell({ className, ...props }: React.ComponentProps<"td">) {
@@ -149,7 +149,7 @@ export function TableCell({ className, ...props }: React.ComponentProps<"td">) {
 /**
  * Table caption.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export function TableCaption({ className, ...props }: React.ComponentProps<"caption">) {

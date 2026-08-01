@@ -1,13 +1,13 @@
 //! 节点 Retry 状态。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use serde::{Deserialize, Serialize};
 
 /// Retry 状态机。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "kind")]
@@ -28,7 +28,7 @@ pub enum RetryState {
 impl RetryState {
     /// 序列化为 JSON 字符串（落库）。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns JSON 或错误信息字符串（不应失败）
@@ -41,7 +41,7 @@ impl RetryState {
 
     /// 从 JSON 解析；失败则 `NotRetrying`。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param raw - JSON

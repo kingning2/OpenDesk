@@ -1,7 +1,7 @@
 /**
  * Poll IMAP sync status and trigger manual sync.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 
@@ -18,7 +18,7 @@ const POLL_MS = 15_000;
 /**
  * Track IMAP sync state for the mail workbench.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  *
  * @param accountId - Optional account filter

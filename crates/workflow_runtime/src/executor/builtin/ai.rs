@@ -1,6 +1,6 @@
 //! AI 最小适配执行器（不调用 LLM；写入 Context 占位）。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use crate::context::ContextPatch;
@@ -12,7 +12,7 @@ use serde_json::json;
 
 /// AI 占位执行器。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 pub struct AiExecutor;
 

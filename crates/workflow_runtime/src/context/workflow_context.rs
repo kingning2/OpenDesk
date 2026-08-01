@@ -1,6 +1,6 @@
 //! WorkflowContext 与补丁。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use crate::error::WorkflowError;
@@ -9,7 +9,7 @@ use serde_json::{Map, Value};
 
 /// Context 补丁：按路径写入。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ContextPatch {
@@ -21,7 +21,7 @@ pub struct ContextPatch {
 
 /// 全图共享 JSON 上下文。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct WorkflowContext {
@@ -41,7 +41,7 @@ impl Default for WorkflowContext {
 impl WorkflowContext {
     /// 空 Context。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns 新 Context
@@ -51,7 +51,7 @@ impl WorkflowContext {
 
     /// 从 JSON 值构造。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param root - JSON 根（应为 object）
@@ -67,7 +67,7 @@ impl WorkflowContext {
 
     /// 当前版本。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns 版本号
@@ -77,7 +77,7 @@ impl WorkflowContext {
 
     /// 序列化为 JSON 值。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns 根 Value
@@ -87,7 +87,7 @@ impl WorkflowContext {
 
     /// 按路径读取。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param path - 点分路径
@@ -116,7 +116,7 @@ impl WorkflowContext {
 
     /// 应用补丁并递增版本。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param patch - 补丁
@@ -129,7 +129,7 @@ impl WorkflowContext {
 
     /// 批量应用补丁（每补丁 +1 版本）。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param patches - 补丁列表

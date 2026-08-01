@@ -1,6 +1,6 @@
 //! Mappers between mail store records and IPC JSON payloads.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-21
 
 use ports::mail::{MailAccountRecord, MailMessageRecord, MailTemplateRecord};
@@ -8,7 +8,7 @@ use serde_json::json;
 
 /// Serialize mail templates to JSON for IPC responses.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 ///
 /// # 参数
@@ -45,7 +45,7 @@ pub fn templates_to_json(records: &[MailTemplateRecord]) -> Result<String, Strin
 
 /// Serialize mail accounts to JSON for IPC responses.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 ///
 /// # 参数
@@ -85,7 +85,7 @@ pub fn accounts_to_json(records: &[MailAccountRecord]) -> Result<String, String>
 
 /// Serialize mail messages to JSON for IPC responses.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 ///
 /// # 参数
@@ -136,7 +136,7 @@ pub fn messages_to_json(records: &[MailMessageRecord]) -> Result<String, String>
 
 /// Serialize IMAP sync state rows to JSON for IPC responses.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 pub fn imap_sync_states_to_json<F>(
     records: &[ports::mail::MailImapSyncStateRecord],

@@ -1,6 +1,6 @@
 //! Mail template listing, rendering, and custom save use cases.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-21
 
 use common::contracts::{
@@ -15,14 +15,14 @@ use crate::domain::DEFAULT_SENDER_NAME;
 
 /// List available mail templates.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 pub struct ListMailTemplates;
 
 impl ListMailTemplates {
     /// Load all templates from the mail store.
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-21
     ///
     /// # 参数
@@ -45,14 +45,14 @@ impl ListMailTemplates {
 
 /// Create or update a custom mail template.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 pub struct SaveMailTemplate;
 
 impl SaveMailTemplate {
     /// Persist one custom template and return the refreshed list.
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-22
     ///
     /// # 参数
@@ -100,14 +100,14 @@ impl SaveMailTemplate {
 
 /// Render a template for one customer.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 pub struct ApplyMailTemplate;
 
 impl ApplyMailTemplate {
     /// Apply one template to one customer and optional sender account.
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-21
     ///
     /// # 参数

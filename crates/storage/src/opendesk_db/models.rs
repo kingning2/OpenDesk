@@ -218,7 +218,7 @@ pub struct NewMailMessageRow {
 
 /// Insertable row for `script_snippet`.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 #[derive(Debug, Insertable)]
 #[diesel(table_name = script_snippet)]
@@ -244,7 +244,7 @@ pub struct NewScriptSnippetRow {
 
 /// Queryable `script_snippet` row.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 #[derive(Debug, Queryable, Selectable, Clone)]
 #[diesel(table_name = script_snippet)]

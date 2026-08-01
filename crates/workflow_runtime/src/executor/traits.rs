@@ -1,6 +1,6 @@
 //! NodeExecutor 契约。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use crate::context::{ContextPatch, WorkflowContext};
@@ -12,7 +12,7 @@ use serde_json::Value;
 
 /// 执行输入。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 pub struct ExecuteInput<'a> {
     /// 节点 id。
@@ -27,7 +27,7 @@ pub struct ExecuteInput<'a> {
 
 /// 执行输出。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, Default)]
 pub struct ExecuteOutput {
@@ -41,13 +41,13 @@ pub struct ExecuteOutput {
 
 /// 节点执行器统一 Trait。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[async_trait]
 pub trait NodeExecutor: Send + Sync {
     /// 本执行器对应的节点类型。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns 节点类型
@@ -55,7 +55,7 @@ pub trait NodeExecutor: Send + Sync {
 
     /// 执行节点；禁止自行 Retry / 更新 UI。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param input - 执行输入

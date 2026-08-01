@@ -1,7 +1,7 @@
 /**
  * Workflow Runtime IPC（start / cancel / resume / active）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 
@@ -20,7 +20,7 @@ import type {
 /**
  * 可恢复实例摘要（active.instances_json 解析项）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 export interface WorkflowRuntimeActiveInstance {
@@ -35,7 +35,7 @@ export interface WorkflowRuntimeActiveInstance {
 /**
  * 启动工作流实例。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param request - definition_json / context_json
@@ -50,7 +50,7 @@ export async function workflowRuntimeStart(
 /**
  * 取消实例。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param request - instance_id
@@ -65,7 +65,7 @@ export async function workflowRuntimeCancel(
 /**
  * 恢复实例。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param request - instance_id
@@ -80,7 +80,7 @@ export async function workflowRuntimeResume(
 /**
  * 查询可恢复实例列表。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param request - 预留空对象

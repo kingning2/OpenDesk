@@ -1,6 +1,6 @@
 //! 工作流事件枚举。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use crate::id::{InstanceId, NodeId};
@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 /// Runtime 领域事件（非魔法字符串 topic）。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", tag = "kind")]
@@ -64,7 +64,7 @@ pub enum WorkflowEvent {
 impl WorkflowEvent {
     /// 事件稳定名（适配层映射 Tauri topic 时使用）。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns 事件名

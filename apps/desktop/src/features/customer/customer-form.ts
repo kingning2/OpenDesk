@@ -1,7 +1,7 @@
 /**
  * Customer profile form field values.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 
@@ -61,7 +61,7 @@ export const SOURCE_CHANNEL_OPTIONS = ["manual", "youtube"] as const;
 /**
  * Empty form defaults for creating a customer.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export function emptyCustomerFormValues(): CustomerFormValues {
@@ -88,7 +88,7 @@ export function emptyCustomerFormValues(): CustomerFormValues {
 /**
  * Map API profile to editable form values.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export function profileToFormValues(profile: CustomerProfile): CustomerFormValues {
@@ -115,7 +115,7 @@ export function profileToFormValues(profile: CustomerProfile): CustomerFormValue
 /**
  * Map form values to create IPC payload.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export function formValuesToCreatePayload(values: CustomerFormValues) {
@@ -142,7 +142,7 @@ export function formValuesToCreatePayload(values: CustomerFormValues) {
 /**
  * Map form values to update IPC payload.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export function formValuesToUpdatePayload(id: string, values: CustomerFormValues) {

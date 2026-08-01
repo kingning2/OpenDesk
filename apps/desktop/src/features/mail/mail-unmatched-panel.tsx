@@ -1,7 +1,7 @@
 /**
  * Unmatched inbound queue — link IMAP messages to customers.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 
@@ -26,7 +26,7 @@ import {
 /**
  * List and link unmatched inbound messages.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export function MailUnmatchedPanel({

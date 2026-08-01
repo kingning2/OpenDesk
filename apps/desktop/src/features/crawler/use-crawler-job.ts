@@ -29,7 +29,7 @@ import { useI18n, useT } from "../../i18n";
 /**
  * 单个关键词进度行。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 export interface KeywordStatRow {
@@ -41,7 +41,7 @@ export interface KeywordStatRow {
 /**
  * 采集过程日志行。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 export interface CrawlerLogRow {
@@ -60,7 +60,7 @@ export interface CrawlerLogRow {
 /**
  * 已收录频道行（来自 Event / SQLite）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 export interface ChannelResultRow {
@@ -82,7 +82,7 @@ export interface ChannelResultRow {
 /**
  * UI 任务状态。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 export type CrawlUiStatus =
@@ -96,7 +96,7 @@ export type CrawlUiStatus =
 /**
  * AI 生成阶段状态（工作流节点）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 export type GeneratePhase = "idle" | "running" | "done" | "error";
@@ -206,7 +206,7 @@ function channelFromAccepted(payload: CrawlerEventChannelAccepted): ChannelResul
 /**
  * 采集任务 hook：手动 CSV / AI 生成 + 结束后自动连跑。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @returns 采集状态、AI 参数与启停动作
@@ -641,7 +641,7 @@ export function useCrawlerJob() {
   /**
    * 启动采集：优先走 AI 生成批次，否则用已选 batch。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-23
    */
   async function start() {
@@ -676,7 +676,7 @@ export function useCrawlerJob() {
   /**
    * 由 Workflow Runtime 拉起 crawl 前，武装 UI 监听（不直接 start job）。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-23
    */
   function armForRuntimeCrawl() {

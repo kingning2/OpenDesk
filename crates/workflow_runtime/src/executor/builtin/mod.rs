@@ -1,6 +1,6 @@
 //! 内置与最小业务适配执行器。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 mod ai;
@@ -17,7 +17,7 @@ use std::sync::Arc;
 
 /// 注册全部内置 + 最小业务适配 Executor。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 ///
 /// @param registry - 目标注册表

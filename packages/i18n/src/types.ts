@@ -36,7 +36,7 @@ export type TranslateParams = Record<string, string | number | boolean | null | 
  *
  * Unknown placeholders are left literal (e.g. docs showing `{{email}}`).
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  *
  * @param text - Template string

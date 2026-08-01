@@ -81,7 +81,7 @@ export async function crawlerJobResults(
 /**
  * List persisted crawler channels with optional filters and pagination.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export async function crawlerChannelList(
@@ -123,7 +123,7 @@ export interface CrawlerChannelListRow {
 /**
  * Save human-verified email for one crawler channel row.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export async function crawlerChannelUpdate(
@@ -149,7 +149,7 @@ export async function crawlerKeywordsImport(
 /**
  * 用已配置 LLM 按方向 / 语言 / 数量生成关键词并写入新 batch。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param input - 方向（英文逗号分隔）、语言、每语言数量

@@ -1,6 +1,6 @@
 //! 边定义。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use crate::id::NodeId;
@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 /// 有向边；可选分支键（If/Switch）。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EdgeSpec {

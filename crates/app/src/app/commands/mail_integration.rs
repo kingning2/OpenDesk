@@ -1,6 +1,6 @@
 //! Mail external integration settings Tauri IPC commands.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-08-01
 
 use mail::app::{GetEmailReadIntegration, ProbeEmailReadIntegration, SaveEmailReadIntegration};
@@ -11,7 +11,7 @@ use crate::app::state::AppState;
 
 /// IPC DTO for email-read integration settings (matches React contract).
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -54,7 +54,7 @@ impl From<MailEmailReadIntegrationConfigDto> for MailEmailReadIntegrationConfig 
 
 /// Probe request for the settings UI test runner.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -69,7 +69,7 @@ pub struct MailEmailReadIntegrationProbeRequest {
 
 /// Probe response with raw JSON from the external API.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -80,7 +80,7 @@ pub struct MailEmailReadIntegrationProbeResponse {
 
 /// Load persisted email-read integration settings.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 #[tauri::command]
 pub async fn mail_email_read_integration_get(
@@ -97,7 +97,7 @@ pub async fn mail_email_read_integration_get(
 
 /// Save email-read integration settings from the settings UI.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 #[tauri::command]
 pub async fn mail_email_read_integration_save(
@@ -116,7 +116,7 @@ pub async fn mail_email_read_integration_save(
 
 /// Probe query URL and return raw JSON for UI script testing.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 #[tauri::command]
 pub async fn mail_email_read_integration_probe(

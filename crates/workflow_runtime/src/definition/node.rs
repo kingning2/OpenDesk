@@ -1,6 +1,6 @@
 //! 节点类型、规格与 Retry 策略。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use crate::id::NodeId;
@@ -11,7 +11,7 @@ use std::time::Duration;
 
 /// 节点类型（封闭枚举 + Registry 键）。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -41,7 +41,7 @@ pub enum NodeType {
 impl NodeType {
     /// 稳定字符串键。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns snake_case 名
@@ -62,7 +62,7 @@ impl NodeType {
 
     /// 解析字符串。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param raw - 类型名
@@ -92,7 +92,7 @@ impl fmt::Display for NodeType {
 
 /// Retry 退避策略。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -108,7 +108,7 @@ pub enum RetryStrategy {
 impl RetryStrategy {
     /// 计算下次等待时长。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param attempt - 即将进行的 attempt（从 1 起）
@@ -131,7 +131,7 @@ impl RetryStrategy {
 
 /// 节点 Retry 策略配置。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RetryPolicy {
@@ -156,7 +156,7 @@ impl Default for RetryPolicy {
 impl RetryPolicy {
     /// 基础延迟。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns Duration
@@ -167,7 +167,7 @@ impl RetryPolicy {
 
 /// 静态节点规格。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct NodeSpec {

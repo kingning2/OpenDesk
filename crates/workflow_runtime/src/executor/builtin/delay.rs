@@ -1,6 +1,6 @@
 //! Delay 节点。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use crate::definition::NodeType;
@@ -11,7 +11,7 @@ use std::time::Duration;
 
 /// 延迟执行器；config.delay_ms。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 pub struct DelayExecutor;
 

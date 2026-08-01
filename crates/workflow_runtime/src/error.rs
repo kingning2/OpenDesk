@@ -1,13 +1,13 @@
 //! Workflow Runtime 唯一错误类型。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use thiserror::Error;
 
 /// Runtime 统一错误；公共 API 一律 `Result<T, WorkflowError>`。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Error, Clone, PartialEq, Eq)]
 pub enum WorkflowError {
@@ -59,7 +59,7 @@ pub enum WorkflowError {
 impl WorkflowError {
     /// 构造非法图错误。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param message - 说明
@@ -72,7 +72,7 @@ impl WorkflowError {
 
     /// 构造持久化错误。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param message - 说明
@@ -85,7 +85,7 @@ impl WorkflowError {
 
     /// 构造节点执行错误。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param message - 说明

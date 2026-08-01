@@ -1,6 +1,6 @@
 //! IMAP transport for inbound business mail.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-22
 
 use std::net::TcpStream;
@@ -26,7 +26,7 @@ pub const DEFAULT_IMAP_MAX_FETCH: usize = 50;
 
 /// Result of one IMAP UID search + fetch pass.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 #[derive(Debug, Clone)]
 pub struct ImapFetchResult {
@@ -48,7 +48,7 @@ struct UidSearchPlan {
 
 /// IMAP connection settings for one inbox sync.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 #[derive(Debug, Clone)]
 pub struct ImapEndpoint {
@@ -66,7 +66,7 @@ pub struct ImapEndpoint {
 
 /// One message fetched from IMAP INBOX.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 #[derive(Debug, Clone)]
 pub struct ImapFetchedMessage {
@@ -102,7 +102,7 @@ pub struct ImapFetchedMessage {
 
 /// Fetch messages with UID greater than `last_uid` from one folder.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 ///
 /// # 参数
@@ -169,7 +169,7 @@ pub fn fetch_messages_since(
 
 /// Watch one mailbox with IMAP IDLE and fetch new messages.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 ///
 /// # 参数

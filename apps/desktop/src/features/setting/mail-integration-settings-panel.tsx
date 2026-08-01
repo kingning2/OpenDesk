@@ -1,7 +1,7 @@
 /**
  * Mail open-tracking external integration settings panel.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  */
 
@@ -12,7 +12,7 @@ import { useMailIntegrationSettings } from "./use-mail-integration-settings";
 /**
  * `MailIntegrationSettingsPanel` 属性。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  */
 export interface MailIntegrationSettingsPanelProps {
@@ -23,7 +23,7 @@ export interface MailIntegrationSettingsPanelProps {
 /**
  * 邮件开信追踪外部服务配置 + API 探测与解析脚本测试。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  *
  * @param props - 见 {@link MailIntegrationSettingsPanelProps}

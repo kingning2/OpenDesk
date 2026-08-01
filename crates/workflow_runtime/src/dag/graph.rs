@@ -1,6 +1,6 @@
 //! 校验后的工作流图（邻接表）。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use crate::definition::NodeSpec;
@@ -9,7 +9,7 @@ use std::collections::HashMap;
 
 /// Scheduler 使用的有向无环图。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone)]
 pub struct WorkflowGraph {
@@ -30,7 +30,7 @@ pub struct WorkflowGraph {
 impl WorkflowGraph {
     /// 取节点规格。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param id - 节点 id
@@ -41,7 +41,7 @@ impl WorkflowGraph {
 
     /// 前驱列表。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param id - 节点 id
@@ -55,7 +55,7 @@ impl WorkflowGraph {
 
     /// 后继列表（所有分支合并）。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param id - 节点 id

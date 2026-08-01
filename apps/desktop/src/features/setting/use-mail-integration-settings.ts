@@ -1,7 +1,7 @@
 /**
  * Email-read integration settings — load, save, probe, and script test.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  */
 
@@ -29,7 +29,7 @@ function blankMailIntegrationConfig(): MailEmailReadIntegrationConfig {
 /**
  * Hook for mail open-tracking external integration settings.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  */
 export function useMailIntegrationSettings() {

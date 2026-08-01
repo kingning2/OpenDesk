@@ -1,6 +1,6 @@
 //! SQLite CheckpointStore。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use diesel::prelude::*;
@@ -14,7 +14,7 @@ use crate::opendesk_db::OpendeskDb;
 
 /// Diesel 实现的检查点存储。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 pub struct SqliteCheckpointStore {
     db: OpendeskDb,
@@ -23,7 +23,7 @@ pub struct SqliteCheckpointStore {
 impl SqliteCheckpointStore {
     /// 包装数据库句柄。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param db - opendesk.db

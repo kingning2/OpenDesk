@@ -2,7 +2,7 @@
  * Script snippet library — two-column layout: category tree + card list + edit modal.
  * Design mirrors email-agent dashboard's 话术库 tab.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 
@@ -131,7 +131,7 @@ function countByCategory(
 /**
  * Workflow script library page.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export function WorkflowPage() {
@@ -424,7 +424,7 @@ export function WorkflowPage() {
 /**
  * Snippet create/edit modal — owns draft form + saving so list keystrokes stay out of the page root.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 const SnippetEditModal = memo(function SnippetEditModal({

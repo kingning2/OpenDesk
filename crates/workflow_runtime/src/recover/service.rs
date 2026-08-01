@@ -1,6 +1,6 @@
 //! RecoveryService：扫描 Running 等并支持 Resume。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use crate::dag::DagBuilder;
@@ -14,7 +14,7 @@ use std::sync::Arc;
 
 /// 恢复服务。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 pub struct RecoveryService {
     checkpoint: CheckpointGateway,
@@ -24,7 +24,7 @@ pub struct RecoveryService {
 impl RecoveryService {
     /// 构造。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     pub fn new(checkpoint: CheckpointGateway, scheduler: Arc<Scheduler>) -> Self {
         Self {
@@ -35,7 +35,7 @@ impl RecoveryService {
 
     /// 扫描可恢复实例（供 UI 展示）。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns 实例列表
@@ -45,7 +45,7 @@ impl RecoveryService {
 
     /// 心跳刷新（可选周期调用）。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     pub fn touch_heartbeat(&self, instance_id: &InstanceId) -> Result<(), WorkflowError> {
         let mut record = match self.checkpoint.get_instance(instance_id)? {
@@ -63,7 +63,7 @@ impl RecoveryService {
 
     /// 恢复并继续跑到 idle。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param instance_id - 实例
@@ -91,7 +91,7 @@ impl RecoveryService {
 
     /// 加载句柄。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     pub fn load_handle(&self, instance_id: &InstanceId) -> Result<SchedulerHandle, WorkflowError> {
         let record = match self.checkpoint.get_instance(instance_id)? {

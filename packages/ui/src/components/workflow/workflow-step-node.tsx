@@ -1,7 +1,7 @@
 /**
  * 工作流步骤节点（画布默认节点）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 
@@ -12,7 +12,7 @@ import { cn } from "../../lib/cn";
 /**
  * 步骤节点状态色。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 export type WorkflowStepTone = "idle" | "running" | "done" | "warn" | "error";
@@ -20,7 +20,7 @@ export type WorkflowStepTone = "idle" | "running" | "done" | "warn" | "error";
 /**
  * 步骤节点展示数据。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 export interface WorkflowStepNodeData extends Record<string, unknown> {
@@ -39,7 +39,7 @@ export interface WorkflowStepNodeData extends Record<string, unknown> {
 /**
  * 默认工作流步骤节点。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param props - React Flow 节点 props

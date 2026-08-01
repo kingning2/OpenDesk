@@ -12,7 +12,7 @@ export type ScriptSnippet = WorkflowDtoScriptSnippet;
 /**
  * List script snippets with optional filters.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  *
  * @param input - optional category_l1, category_l2, query filters
@@ -35,7 +35,7 @@ export async function workflowSnippetList(
 /**
  * Create or update a script snippet.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  *
  * @param input - snippet fields; omit id to create
@@ -58,7 +58,7 @@ export async function workflowSnippetSave(
 /**
  * Delete a script snippet by id.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  *
  * @param input - { id } of snippet to delete

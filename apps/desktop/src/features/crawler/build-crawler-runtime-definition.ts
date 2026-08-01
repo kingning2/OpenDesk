@@ -1,7 +1,7 @@
 /**
  * 将采集画布节点/边编译为 Workflow Runtime Definition JSON。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 
@@ -10,7 +10,7 @@ import type { Edge, Node } from "@desk/ui";
 /**
  * 采集步骤 kind（与 crawler-page 对齐）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 export type CrawlerFlowKind = "source" | "generate" | "search" | "summary";
@@ -18,7 +18,7 @@ export type CrawlerFlowKind = "source" | "generate" | "search" | "summary";
 /**
  * 画布节点 data 最小形状。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 export interface CrawlerFlowNodeData {
@@ -29,7 +29,7 @@ export interface CrawlerFlowNodeData {
 /**
  * kind → Runtime NodeType（snake_case）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param kind - 采集步骤
@@ -53,7 +53,7 @@ function nodeTypeForKind(kind: CrawlerFlowKind): string {
 /**
  * 从采集画布构建 Runtime Definition（自动补 Start / End）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param nodes - 画布节点

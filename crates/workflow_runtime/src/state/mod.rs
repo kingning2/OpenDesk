@@ -1,6 +1,6 @@
 //! 工作流 / 节点 / 执行 / Retry 状态枚举与合法迁移。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 mod execution_state;

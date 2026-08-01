@@ -1,13 +1,13 @@
 //! Outbound open-tracking pixel helpers (email-agent parity).
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-22
 
 use ports::mail::MailEmailReadIntegrationConfig;
 
 /// Generate a 32-char hex tracking id (same shape as email-agent).
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 pub fn make_tracking_id() -> String {
     uuid::Uuid::new_v4().simple().to_string()
@@ -15,7 +15,7 @@ pub fn make_tracking_id() -> String {
 
 /// Whether remote open tracking is enabled from UI settings.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 pub fn integration_enabled(config: &MailEmailReadIntegrationConfig) -> bool {
     config.enabled && !config.api_base.trim().is_empty()
@@ -23,7 +23,7 @@ pub fn integration_enabled(config: &MailEmailReadIntegrationConfig) -> bool {
 
 /// Append a 1×1 hidden tracking pixel to HTML (before `</body>` or at end).
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 pub fn append_open_tracking_pixel(
     config: &MailEmailReadIntegrationConfig,
@@ -58,7 +58,7 @@ pub fn append_open_tracking_pixel(
 
 /// Build HTML for SMTP when only plain text was provided (no tracking pixel).
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 pub fn prepare_outbound_html(body_text: &str, body_html: Option<&str>) -> Option<String> {
     let html = body_html
@@ -74,7 +74,7 @@ pub fn prepare_outbound_html(body_text: &str, body_html: Option<&str>) -> Option
 
 /// Build HTML for SMTP when only plain text was provided, then inject tracking pixel.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 pub fn prepare_tracked_html(
     config: &MailEmailReadIntegrationConfig,
@@ -94,7 +94,7 @@ pub fn prepare_tracked_html(
 
 /// Query remote email-read API for recipient open events.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 pub fn fetch_open_status(
     config: &MailEmailReadIntegrationConfig,
@@ -130,7 +130,7 @@ pub fn fetch_open_status(
 
 /// Probe integration query URL and return raw JSON for the settings UI test runner.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 pub fn probe_open_status(
     config: &MailEmailReadIntegrationConfig,
@@ -164,7 +164,7 @@ pub fn probe_open_status(
 
 /// Build absolute URL from base + path template placeholders.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 pub fn build_integration_url(
     config: &MailEmailReadIntegrationConfig,

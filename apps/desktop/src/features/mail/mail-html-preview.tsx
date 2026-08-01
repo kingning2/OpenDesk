@@ -1,7 +1,7 @@
 /**
  * Sandboxed HTML email preview (DOMPurify + iframe).
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 
@@ -13,7 +13,7 @@ import { resolveMailPreviewHtml, sanitizeMailHtml, wrapMailHtmlDocument } from "
 /**
  * Render one mail message body as real HTML inside a sandboxed iframe.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export const MailHtmlPreview = memo(function MailHtmlPreview({

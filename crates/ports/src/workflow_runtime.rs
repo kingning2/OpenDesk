@@ -1,13 +1,13 @@
 //! Workflow Runtime 检查点 Port。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use crate::repository::StoreError;
 
 /// 工作流实例落库行。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, PartialEq)]
 pub struct WfRtInstanceRecord {
@@ -28,7 +28,7 @@ pub struct WfRtInstanceRecord {
 
 /// 节点实例落库行。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, PartialEq)]
 pub struct WfRtNodeRecord {
@@ -49,7 +49,7 @@ pub struct WfRtNodeRecord {
 
 /// 日志行。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, PartialEq)]
 pub struct WfRtLogRecord {
@@ -64,7 +64,7 @@ pub struct WfRtLogRecord {
 
 /// 单节点进度事务提交载荷。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone)]
 pub struct NodeProgressCommit {
@@ -75,7 +75,7 @@ pub struct NodeProgressCommit {
 
 /// 工作流检查点存储。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 pub trait CheckpointStore: Send + Sync {
     /// 插入新实例及全部 Pending 节点。

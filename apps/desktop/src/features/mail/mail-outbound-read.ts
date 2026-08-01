@@ -1,7 +1,7 @@
 /**
  * Recipient open status for outbound (sent) messages.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  */
 
@@ -12,7 +12,7 @@ export type OutboundRecipientReadState = "tracking_off" | "unread" | "read";
 /**
  * Resolve whether the recipient has opened a tracked outbound message.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  *
  * @param message - Outbound mail row
@@ -31,7 +31,7 @@ export function outboundRecipientReadState(message: MailMessage): OutboundRecipi
 /**
  * i18n key for recipient read label in sent mailbox.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  *
  * @param message - Outbound mail row
@@ -51,7 +51,7 @@ export function outboundRecipientReadLabelKey(message: MailMessage): string {
 /**
  * Whether outbound row should use emphasis (recipient has not opened yet).
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  */
 export function isOutboundAwaitingRead(message: MailMessage): boolean {

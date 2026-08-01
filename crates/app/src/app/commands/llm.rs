@@ -2,7 +2,7 @@
 //!
 //! 约束：get/save 响应**永不**回传 api_key（含脱敏）。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-22
 
 use common::contracts::{
@@ -38,7 +38,7 @@ fn record_to_save_response(record: LlmSettingsRecord) -> RuntimeIpcLlmSettingsSa
 
 /// 读取 LLM 设置元数据（不含 api_key）。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 ///
 /// # 参数
@@ -70,7 +70,7 @@ pub async fn llm_settings_get(
 
 /// 保存 LLM 设置；密钥写入 OS keyring，响应不回传密钥。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 ///
 /// # 参数
@@ -106,7 +106,7 @@ pub async fn llm_settings_save(
 
 /// 测试 LLM 连接（草稿或已存密钥）；响应不含 api_key。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 ///
 /// # 参数

@@ -1,6 +1,6 @@
 //! 共享 tracing 初始化与本地文件日志。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-08-01
 
 use std::fs::{self, File, OpenOptions};

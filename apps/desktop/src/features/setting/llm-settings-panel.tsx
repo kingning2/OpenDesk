@@ -1,7 +1,7 @@
 /**
  * LLM Provider 设置面板（嵌入 SettingsDialog）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 
@@ -21,7 +21,7 @@ import { useLlmSettings } from "./use-llm-settings";
 /**
  * `LlmSettingsPanel` 属性。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export interface LlmSettingsPanelProps {
@@ -32,7 +32,7 @@ export interface LlmSettingsPanelProps {
 /**
  * LLM 配置表单。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  *
  * @param props - 见 {@link LlmSettingsPanelProps}

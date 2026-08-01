@@ -1,6 +1,6 @@
 //! 强类型 ID，禁止用裸字符串驱动业务分支。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use serde::{Deserialize, Serialize};
@@ -8,7 +8,7 @@ use std::fmt;
 
 /// 工作流定义 ID。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct WorkflowId(String);
@@ -16,7 +16,7 @@ pub struct WorkflowId(String);
 impl WorkflowId {
     /// 从字符串构造。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param value - 原始 id
@@ -27,7 +27,7 @@ impl WorkflowId {
 
     /// 借用内部字符串。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns id 切片
@@ -44,7 +44,7 @@ impl fmt::Display for WorkflowId {
 
 /// 节点 ID（图内唯一）。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, PartialOrd, Ord)]
 pub struct NodeId(String);
@@ -52,7 +52,7 @@ pub struct NodeId(String);
 impl NodeId {
     /// 从字符串构造。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param value - 原始 id
@@ -63,7 +63,7 @@ impl NodeId {
 
     /// 借用内部字符串。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns id 切片
@@ -80,7 +80,7 @@ impl fmt::Display for NodeId {
 
 /// 运行实例 ID。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct InstanceId(String);
@@ -88,7 +88,7 @@ pub struct InstanceId(String);
 impl InstanceId {
     /// 生成新的 UUID 实例 id。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns 新实例 id
@@ -98,7 +98,7 @@ impl InstanceId {
 
     /// 从已有字符串构造。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param value - 原始 id
@@ -109,7 +109,7 @@ impl InstanceId {
 
     /// 借用内部字符串。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns id 切片

@@ -1,7 +1,7 @@
 /**
  * Persisted crawler channel list hook — search, filters, pagination.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 
@@ -46,7 +46,7 @@ const defaultFilters = (): CrawlerChannelFilters => ({
 /**
  * Load and filter persisted crawler channels from SQLite.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export function useCrawlerChannels() {

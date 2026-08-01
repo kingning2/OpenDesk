@@ -1,6 +1,6 @@
 //! Executor Registry 与 Builder。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use super::traits::NodeExecutor;
@@ -11,7 +11,7 @@ use std::sync::Arc;
 
 /// 节点类型 → Executor。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Clone, Default)]
 pub struct ExecutorRegistry {
@@ -21,7 +21,7 @@ pub struct ExecutorRegistry {
 impl ExecutorRegistry {
     /// 空注册表。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns 空 Registry
@@ -33,7 +33,7 @@ impl ExecutorRegistry {
 
     /// 注册执行器；同类型重复则报错。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param executor - 执行器
@@ -53,7 +53,7 @@ impl ExecutorRegistry {
 
     /// 获取执行器。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param node_type - 类型

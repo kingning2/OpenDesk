@@ -1,6 +1,6 @@
 //! 工作流定义与运行策略。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use super::{EdgeSpec, NodeSpec};
@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 /// 实例级运行策略（不在 DAG 内造环）。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
@@ -26,7 +26,7 @@ pub enum RunPolicy {
 
 /// 静态工作流定义。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct WorkflowDefinition {

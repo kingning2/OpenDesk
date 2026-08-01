@@ -1,6 +1,6 @@
 //! Diesel-backed script snippet store.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-21
 
 use diesel::prelude::*;
@@ -13,7 +13,7 @@ use crate::opendesk_db::{NewScriptSnippetRow, OpendeskDb, ScriptSnippetRow};
 
 /// SQLite implementation of [`ScriptSnippetStore`].
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 pub struct SqliteScriptSnippetStore {
     db: OpendeskDb,
@@ -22,7 +22,7 @@ pub struct SqliteScriptSnippetStore {
 impl SqliteScriptSnippetStore {
     /// Wrap an existing [`OpendeskDb`] handle.
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-21
     pub fn new(db: OpendeskDb) -> Self {
         Self { db }

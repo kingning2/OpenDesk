@@ -1,7 +1,7 @@
 /**
  * Plain-text + HTML compose editor with live HTML preview.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 
@@ -15,7 +15,7 @@ export type MailBodyEditorMode = "text" | "html";
 /**
  * Dual-mode body editor: plain text tab + HTML source tab with optional inline preview.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export const MailHtmlEditor = memo(function MailHtmlEditor({

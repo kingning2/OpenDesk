@@ -6,7 +6,7 @@ import { cn } from "../lib/cn";
 /**
  * Accessible on/off switch built on Radix Switch.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export function Switch({

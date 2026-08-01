@@ -1,6 +1,6 @@
 //! Mail account list and save use cases.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-21
 
 use common::contracts::{MailIpcAccountListResponse, MailIpcAccountSaveRequest};
@@ -10,14 +10,14 @@ use super::mapper::accounts_to_json;
 
 /// List saved mail accounts.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 pub struct ListMailAccounts;
 
 impl ListMailAccounts {
     /// Load all configured mail accounts.
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-21
     pub fn execute<S: MailStore + ?Sized>(store: &S) -> Result<MailIpcAccountListResponse, String> {
         let accounts = store.list_accounts().map_err(|error| error.to_string())?;
@@ -30,7 +30,7 @@ impl ListMailAccounts {
 
 /// Save one mail account.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 pub struct SaveMailAccount;
 
@@ -39,7 +39,7 @@ impl SaveMailAccount {
     ///
     /// Empty password on update keeps the existing keyring secret.
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-21
     pub fn execute<S: MailStore + ?Sized>(
         store: &S,

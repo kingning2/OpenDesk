@@ -1,7 +1,7 @@
 /**
  * TanStack Table column definitions for crawler results.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 
@@ -41,7 +41,7 @@ function channelUrl(row: CrawlerChannelListRow): string {
 /**
  * Inline verified-email editor for one table row.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 function VerifiedEmailCell({
@@ -82,7 +82,7 @@ function VerifiedEmailCell({
 /**
  * Build crawler results table columns.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  *
  * @param options - i18n, save handler and saving state

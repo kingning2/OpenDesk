@@ -4,7 +4,7 @@
  * 默认四步图（source → generate → search → summary）；左侧 palette 可继续添加节点并连线。
  * 开始采集时调用 Workflow Runtime IPC。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 
@@ -59,7 +59,7 @@ type Translate = (key: string, params?: Record<string, string | number>) => stri
 /**
  * 采集节点 data：在公共步骤节点上增加 `kind`，配置与日志按 kind 分流。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 interface CrawlerNodeData extends WorkflowStepNodeData {
@@ -70,7 +70,7 @@ interface CrawlerNodeData extends WorkflowStepNodeData {
 /**
  * 将 i18n locale 映射为 `toLocaleTimeString` 可用的 BCP 47 标签。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param locale - 应用内 locale（如 `zh-CN`）
@@ -86,7 +86,7 @@ function localeTag(locale: string): string {
 /**
  * 主题解析为 React Flow `colorMode`。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param resolvedTheme - 已解析主题名；缺省按 light
@@ -102,7 +102,7 @@ function colorModeFromTheme(resolvedTheme: string | undefined): "dark" | "light"
 /**
  * 生成阶段文案。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param phase - 生成阶段
@@ -125,7 +125,7 @@ function generatePhaseText(phase: GeneratePhase, t: Translate): string {
 /**
  * 生成阶段节点色调。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param phase - 生成阶段
@@ -147,7 +147,7 @@ function generatePhaseTone(phase: GeneratePhase): WorkflowStepTone {
 /**
  * 搜索 / 汇总共用的运行态 tone（失败 / 配额 / 忙碌）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param isFailed - 任务失败
@@ -180,7 +180,7 @@ function runProgressTone(
 /**
  * 汇总节点 tone（含 completed 终态）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 function summaryToneForStatus(
@@ -211,7 +211,7 @@ function summaryToneForStatus(
 /**
  * 开始按钮文案。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 function startButtonLabel(busy: boolean, aiReady: boolean, t: Translate): string {
@@ -227,7 +227,7 @@ function startButtonLabel(busy: boolean, aiReady: boolean, t: Translate): string
 /**
  * 默认四步采集画布节点。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param t - i18n 翻译函数
@@ -290,7 +290,7 @@ function createDefaultNodes(t: Translate): Node<CrawlerNodeData>[] {
 /**
  * 默认采集流程连线。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @returns 初始边列表
@@ -327,7 +327,7 @@ function createDefaultEdges(): Edge[] {
 /**
  * 左侧可添加节点模板（四类采集步骤）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param t - i18n
@@ -389,7 +389,7 @@ function createPaletteItems(t: Translate): WorkflowPaletteItem[] {
 /**
  * 批次下拉展示文案。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param row - 批次行
@@ -407,7 +407,7 @@ function batchLabel(row: KeywordBatchRow, index: number, t: Translate): string {
 /**
  * 格式化日志时间。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param iso - ISO 时间串
@@ -429,7 +429,7 @@ function formatLogTime(iso: string, locale: string): string {
 /**
  * 是否为搜索阶段日志。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param row - 日志行
@@ -464,7 +464,7 @@ function isSearchPhaseLog(row: CrawlerLogRow): boolean {
 /**
  * 按当前步骤过滤日志。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param stage - 当前步骤；null 时返回全部
@@ -498,7 +498,7 @@ function filterLogsForStage(stage: FlowStage | null, logs: CrawlerLogRow[]): Cra
 /**
  * 关键词进度文案。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param done - 已完成关键词数
@@ -521,7 +521,7 @@ function formatKeywordProgress(done: number, total: number, active: boolean): st
 /**
  * 将 count 输入限制在 1–200。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param raw - 原始输入
@@ -538,7 +538,7 @@ function clampCountPerLanguage(raw: string): number {
 /**
  * 步骤日志空态文案。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 function stepLogsEmptyText(selectedStage: FlowStage | null, t: Translate): string {
@@ -551,7 +551,7 @@ function stepLogsEmptyText(selectedStage: FlowStage | null, t: Translate): strin
 /**
  * 采集页分步日志列表。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param props.rows - 日志行
@@ -584,7 +584,7 @@ function LogList({ rows, emptyText }: { rows: CrawlerLogRow[]; emptyText: string
 /**
  * 频道结果列表（汇总步骤）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param props.rows - 频道行
@@ -636,7 +636,7 @@ function ChannelList({ rows }: { rows: ChannelResultRow[] }) {
 /**
  * 关键词扫描统计列表（搜索步骤）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param props.rows - 关键词统计行
@@ -671,7 +671,7 @@ function KeywordStatsList({ rows }: { rows: KeywordStatRow[] }) {
 /**
  * Source 步骤：导入 CSV + 选择批次。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 function SourceConfigPanel({
@@ -783,7 +783,7 @@ function SourceConfigPanel({
 /**
  * Generate 步骤：AI 方向 / 语言 / 数量与已生成关键词预览。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 function GenerateConfigPanel({
@@ -909,7 +909,7 @@ function GenerateConfigPanel({
 /**
  * Search 步骤：当前词、浏览/收录与按词进度。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 function SearchConfigPanel({
@@ -970,7 +970,7 @@ function SearchConfigPanel({
 /**
  * Summary 步骤：任务状态与频道结果。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 function SummaryConfigPanel({
@@ -1015,7 +1015,7 @@ function SummaryConfigPanel({
 /**
  * 右侧节点配置面板（按选中步骤分流）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 function NodeConfigPanel({
@@ -1153,7 +1153,7 @@ function NodeConfigPanel({
 /**
  * 是否允许点击开始（已配置 API Key，且 AI 就绪或已有非空批次）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 function canStartCrawl(
@@ -1183,7 +1183,7 @@ function canStartCrawl(
 /**
  * 运行中强制聚焦的配置面板节点（固定 id，不依赖 nodes 引用）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param generatePhase - AI 生成阶段
@@ -1208,7 +1208,7 @@ function resolvePanelSelectedId(
 /**
  * 单步节点的展示覆盖（文案 / tone），不写入 React Flow nodes state。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 interface NodeDisplayOverlay {
@@ -1222,7 +1222,7 @@ interface NodeDisplayOverlay {
  * 按运行态计算各 kind 的展示覆盖。
  * 供自定义节点通过 Context 读取，避免 remap nodes 触发 StoreUpdater 死循环。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 function buildNodeDisplayByKind(params: {
@@ -1359,7 +1359,7 @@ function buildNodeDisplayByKind(params: {
 /**
  * 采集节点展示 Context：自定义节点只读覆盖层，不写回 RF nodes。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 const CrawlerNodeDisplayContext = createContext<{
@@ -1370,7 +1370,7 @@ const CrawlerNodeDisplayContext = createContext<{
 /**
  * 采集步骤节点：用 Context 覆盖文案 / tone / 选中高亮。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param props - React Flow 节点 props
@@ -1400,7 +1400,7 @@ const CRAWLER_NODE_TYPES: NodeTypes = {
 /**
  * 顶部告警条：API Key / 配额 / 失败 / 错误。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 function CrawlerAlertBanner({
@@ -1465,7 +1465,7 @@ function CrawlerAlertBanner({
 /**
  * 可恢复 Runtime 实例横幅。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 function RecoverableRuntimeBanner({
@@ -1519,7 +1519,7 @@ function RecoverableRuntimeBanner({
  *
  * 默认四步图 + 左侧 palette 增删改连；开始时 `workflow_runtime_start`。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-20
  */
 export function CrawlerPage() {
@@ -1652,7 +1652,7 @@ export function CrawlerPage() {
   /**
    * 经 Workflow Runtime IPC 启动采集图（真实 Generate / Search Executor）。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-23
    */
   async function handleStart() {
@@ -1685,7 +1685,7 @@ export function CrawlerPage() {
   /**
    * 停止 Runtime 与当前 crawl job。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-23
    */
   async function handleStop() {
@@ -1724,7 +1724,7 @@ export function CrawlerPage() {
   /**
    * 从左侧面板点击 / 拖入新增节点。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-23
    *
    * @param item - palette 模板

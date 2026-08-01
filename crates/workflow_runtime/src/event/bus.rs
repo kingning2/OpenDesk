@@ -1,6 +1,6 @@
 //! EventBus trait 与内存实现。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use super::kinds::WorkflowEvent;
@@ -9,12 +9,12 @@ use std::sync::{Arc, Mutex};
 
 /// 事件总线。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 pub trait WorkflowEventBus: Send + Sync {
     /// 发布事件。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param event - 事件
@@ -26,7 +26,7 @@ type Listener = Arc<dyn Fn(&WorkflowEvent) + Send + Sync>;
 
 /// 内存 EventBus（测试 / 进程内适配前缓冲）。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Clone, Default)]
 pub struct InMemoryEventBus {
@@ -37,7 +37,7 @@ pub struct InMemoryEventBus {
 impl InMemoryEventBus {
     /// 新建总线。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns 总线
@@ -47,7 +47,7 @@ impl InMemoryEventBus {
 
     /// 订阅。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param listener - 回调
@@ -60,7 +60,7 @@ impl InMemoryEventBus {
 
     /// 历史事件快照（测试用）。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns 事件列表

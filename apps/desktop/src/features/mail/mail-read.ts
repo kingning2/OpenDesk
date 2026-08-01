@@ -1,7 +1,7 @@
 /**
  * Local read/unread helpers for mail list rows.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  */
 
@@ -10,7 +10,7 @@ import type { MailMessage } from "@desk/platform";
 /**
  * Whether an inbound message is still unread in the workbench.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  *
  * @param message - Mail list row

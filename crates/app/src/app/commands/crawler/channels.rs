@@ -1,6 +1,6 @@
 //! 爬虫频道列表 Tauri IPC command（持久化 `crawler_channel` 分页查询）。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-22
 
 use common::contracts::{
@@ -16,7 +16,7 @@ const MAX_LIMIT: i64 = 200;
 
 /// List persisted crawler channels with optional filters and pagination.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 #[tauri::command]
 pub async fn crawler_channel_list(
@@ -74,7 +74,7 @@ pub async fn crawler_channel_list(
 
 /// Update human-verified email for one persisted crawler channel row.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 #[tauri::command]
 pub async fn crawler_channel_update(

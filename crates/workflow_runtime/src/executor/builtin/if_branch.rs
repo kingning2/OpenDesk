@@ -1,6 +1,6 @@
 //! If 分支节点。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use crate::context::ContextPatch;
@@ -14,7 +14,7 @@ use serde_json::Value;
 ///
 /// config: `{ "path": "flags.enabled" }` 或 `{ "literal": true }`
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 pub struct IfExecutor;
 

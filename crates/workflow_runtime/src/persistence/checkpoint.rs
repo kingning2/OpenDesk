@@ -1,6 +1,6 @@
 //! Checkpoint 网关：Runtime 类型 ↔ Port 记录。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use crate::context::WorkflowContext;
@@ -18,7 +18,7 @@ use uuid::Uuid;
 
 /// 将 StoreError 映射为 WorkflowError。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 ///
 /// @param error - 存储错误
@@ -29,7 +29,7 @@ pub fn map_store_error(error: StoreError) -> WorkflowError {
 
 /// 当前时间 RFC3339 简化（Unix ms 字符串不够；用 ISO-ish）。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 ///
 /// @returns 时间字符串
@@ -43,7 +43,7 @@ pub fn now_rfc3339() -> String {
 
 /// 当前 Unix 毫秒。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 ///
 /// @returns 毫秒
@@ -56,7 +56,7 @@ pub fn now_ms() -> i64 {
 
 /// 检查点读写门面。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Clone)]
 pub struct CheckpointGateway {
@@ -66,7 +66,7 @@ pub struct CheckpointGateway {
 impl CheckpointGateway {
     /// 构造。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param store - Port 实现
@@ -77,7 +77,7 @@ impl CheckpointGateway {
 
     /// 底层 store。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns Arc
@@ -87,7 +87,7 @@ impl CheckpointGateway {
 
     /// 创建实例。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     pub fn create_instance(
         &self,
@@ -151,7 +151,7 @@ impl CheckpointGateway {
 
     /// 提交节点进度。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     pub fn commit_node_progress(
         &self,
@@ -180,7 +180,7 @@ impl CheckpointGateway {
 
     /// 更新实例。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     pub fn update_instance(&self, instance: &WfRtInstanceRecord) -> Result<(), WorkflowError> {
         self.store
@@ -190,7 +190,7 @@ impl CheckpointGateway {
 
     /// 读取实例。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     pub fn get_instance(
         &self,
@@ -203,7 +203,7 @@ impl CheckpointGateway {
 
     /// 列出节点。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     pub fn list_nodes(
         &self,
@@ -216,7 +216,7 @@ impl CheckpointGateway {
 
     /// 可恢复列表。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     pub fn list_recoverable(&self) -> Result<Vec<WfRtInstanceRecord>, WorkflowError> {
         self.store.list_recoverable().map_err(map_store_error)
@@ -225,7 +225,7 @@ impl CheckpointGateway {
 
 /// 从 JSON 重建 Context。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 pub fn context_from_record(record: &WfRtInstanceRecord) -> Result<WorkflowContext, WorkflowError> {
     let value: serde_json::Value = serde_json::from_str(&record.context_json)
@@ -238,7 +238,7 @@ pub fn context_from_record(record: &WfRtInstanceRecord) -> Result<WorkflowContex
 
 /// 从 JSON 重建 Definition。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 pub fn definition_from_record(
     record: &WfRtInstanceRecord,

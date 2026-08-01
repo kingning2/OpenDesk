@@ -1,6 +1,6 @@
 //! WorkflowRuntimeFacade：start / pause / resume / cancel。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use crate::context::WorkflowContext;
@@ -21,7 +21,7 @@ use tokio::sync::Mutex;
 
 /// 运行时门面（非 God Object：委托 Scheduler / Recovery / Checkpoint）。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 pub struct WorkflowRuntimeFacade {
     registry: Arc<ExecutorRegistry>,
@@ -35,7 +35,7 @@ pub struct WorkflowRuntimeFacade {
 impl WorkflowRuntimeFacade {
     /// 装配 Runtime。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     pub fn new(
         registry: ExecutorRegistry,
@@ -64,7 +64,7 @@ impl WorkflowRuntimeFacade {
 
     /// 启动工作流。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param definition - 图定义
@@ -141,7 +141,7 @@ impl WorkflowRuntimeFacade {
 
     /// 启动工作流并在后台跑到结束（立即返回 instance_id）。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param definition - 图定义
@@ -217,7 +217,7 @@ impl WorkflowRuntimeFacade {
 
     /// 请求暂停。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     pub async fn pause(&self, instance_id: &InstanceId) -> Result<(), WorkflowError> {
         let handle = self.active_handle(instance_id).await?;
@@ -228,7 +228,7 @@ impl WorkflowRuntimeFacade {
 
     /// 取消。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     pub async fn cancel(&self, instance_id: &InstanceId) -> Result<(), WorkflowError> {
         match self.active_handle(instance_id).await {
@@ -246,7 +246,7 @@ impl WorkflowRuntimeFacade {
 
     /// 恢复：后台继续调度，立即返回 Running。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     pub async fn resume(&self, instance_id: &InstanceId) -> Result<WorkflowState, WorkflowError> {
         let mut handle = self.recovery.load_handle(instance_id)?;
@@ -290,7 +290,7 @@ impl WorkflowRuntimeFacade {
 
     /// 可恢复列表。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     pub fn list_recoverable(
         &self,
@@ -300,7 +300,7 @@ impl WorkflowRuntimeFacade {
 
     /// 查询实例状态。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     pub fn get_instance_state(
         &self,
@@ -314,7 +314,7 @@ impl WorkflowRuntimeFacade {
 
     /// Registry 引用（供外部注册更多 Executor）。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     pub fn registry(&self) -> &ExecutorRegistry {
         &self.registry

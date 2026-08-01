@@ -1,6 +1,6 @@
 //! SMTP transport for outbound business mail.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-22
 
 mod imap;
@@ -18,7 +18,7 @@ use lettre::{Message, SmtpTransport, Transport};
 
 /// SMTP connection settings for one outbound send.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 #[derive(Debug, Clone)]
 pub struct SmtpEndpoint {
@@ -36,7 +36,7 @@ pub struct SmtpEndpoint {
 
 /// Outbound message payload for SMTP.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 #[derive(Debug, Clone)]
 pub struct SmtpOutboundMessage {
@@ -56,7 +56,7 @@ pub struct SmtpOutboundMessage {
 
 /// Send one message over SMTP and return the server response summary.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 ///
 /// # 参数

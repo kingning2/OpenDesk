@@ -1,11 +1,11 @@
 //! 并发配置。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 /// Scheduler 配置。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, Copy)]
 pub struct SchedulerConfig {

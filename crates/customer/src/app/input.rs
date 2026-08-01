@@ -10,7 +10,7 @@ const DEFAULT_COOPERATION_STATUS: &str = "none";
 
 /// Map create IPC request to store write input.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 pub fn write_input_from_create(request: &CustomerIpcCreateRequest) -> CustomerWriteInput {
     CustomerWriteInput {

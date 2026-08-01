@@ -1,19 +1,19 @@
 //! Mail persistence port for templates, accounts, and message history.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-21
 
 use crate::repository::StoreError;
 
 /// OS keyring service name shared with other OpenDesk secrets.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 pub const MAIL_KEYRING_SERVICE: &str = "OpenDesk";
 
 /// Build keyring user id for one mail account password.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 ///
 /// # 参数
@@ -29,7 +29,7 @@ pub fn mail_keyring_user(account_id: &str) -> String {
 
 /// Build DB `password_ref` pointing at OS keyring.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 ///
 /// # 参数
@@ -48,7 +48,7 @@ pub fn mail_password_ref(account_id: &str) -> String {
 
 /// Saved mail template record.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 #[derive(Debug, Clone)]
 pub struct MailTemplateRecord {
@@ -68,7 +68,7 @@ pub struct MailTemplateRecord {
 
 /// Saved mail account record.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 #[derive(Debug, Clone)]
 pub struct MailAccountRecord {
@@ -92,7 +92,7 @@ pub struct MailAccountRecord {
 
 /// Mutable mail account input from settings UI.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 #[derive(Debug, Clone)]
 pub struct MailAccountWriteInput {
@@ -113,7 +113,7 @@ pub struct MailAccountWriteInput {
 
 /// Persisted mail message record.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 #[derive(Debug, Clone)]
 pub struct MailMessageRecord {
@@ -147,7 +147,7 @@ pub struct MailMessageRecord {
 
 /// Outbound message write input.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 #[derive(Debug, Clone)]
 pub struct MailSendInput {
@@ -169,7 +169,7 @@ pub struct MailSendInput {
 
 /// Custom template create/update input.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 #[derive(Debug, Clone)]
 pub struct MailTemplateWriteInput {
@@ -186,7 +186,7 @@ pub struct MailTemplateWriteInput {
 
 /// Manual inbound record write input.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 #[derive(Debug, Clone)]
 pub struct MailInboundWriteInput {
@@ -203,7 +203,7 @@ pub struct MailInboundWriteInput {
 
 /// UI-configurable email-read (open tracking) integration.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 #[derive(Debug, Clone)]
 pub struct MailEmailReadIntegrationConfig {
@@ -216,7 +216,7 @@ pub struct MailEmailReadIntegrationConfig {
 
 /// IMAP-fetched inbound message write input.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 #[derive(Debug, Clone)]
 pub struct MailImapInboundWriteInput {
@@ -238,7 +238,7 @@ pub struct MailImapInboundWriteInput {
 
 /// IMAP sync cursor for one account folder.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 #[derive(Debug, Clone)]
 pub struct MailImapSyncStateRecord {
@@ -254,7 +254,7 @@ pub struct MailImapSyncStateRecord {
 
 /// Unmatched inbound list filter.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 #[derive(Debug, Clone)]
 pub struct MailUnmatchedListFilter {
@@ -265,7 +265,7 @@ pub struct MailUnmatchedListFilter {
 
 /// Local mailbox list filter.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 #[derive(Debug, Clone)]
 pub struct MailMessageListFilter {
@@ -279,7 +279,7 @@ pub struct MailMessageListFilter {
 
 /// Mail domain storage contract.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 pub trait MailStore: Send + Sync {
     fn list_templates(&self) -> Result<Vec<MailTemplateRecord>, StoreError>;

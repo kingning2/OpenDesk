@@ -3,7 +3,7 @@ name = "workflow_runtime"
 version.workspace = true
 edition.workspace = true
 description = "OpenDesk Workflow Runtime — DAG scheduler, checkpoint, executor registry"
-authors = ["Xiaoman"]
+authors = ["coisini"]
 
 [dependencies]
 async-trait = { workspace = true }

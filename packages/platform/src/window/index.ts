@@ -134,7 +134,7 @@ export async function startWindowDrag(): Promise<void> {
 /**
  * Open an http(s) URL in the system default browser.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  *
  * @param url - Absolute URL to open

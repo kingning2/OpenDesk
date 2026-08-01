@@ -2,7 +2,7 @@
  * Mail workbench aligned with email-agent legacy `#tab-mail`:
  * account rail | inbox/sent list | preview + reply | compose modal.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 
@@ -82,7 +82,7 @@ type MailboxMode = "inbound" | "outbound";
 /**
  * Prefill payload for the compose modal.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  */
 type ComposeDraft = {
@@ -106,7 +106,7 @@ const EMPTY_COMPOSE_DRAFT: ComposeDraft = {
 /**
  * Build compose draft from an existing outbound message (resend / edit).
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  */
 function messageToComposeDraft(message: MailMessage): ComposeDraft {
@@ -123,7 +123,7 @@ function messageToComposeDraft(message: MailMessage): ComposeDraft {
 /**
  * Pick initial mailbox tab from DB counts (no browser storage).
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 function resolveInitialMailbox(
@@ -179,7 +179,7 @@ const EMPTY_INBOUND_FORM = {
 /**
  * Mail page.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  *
  * @returns Mail workbench node
@@ -867,7 +867,7 @@ const CUSTOMER_NONE = "__none__";
 /**
  * Resolve outbound body fields (plain text required by contract; HTML optional).
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 function resolveOutboundBody(
@@ -888,7 +888,7 @@ function resolveOutboundBody(
 /**
  * Extract bare email from a RFC-like address string.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 function extractEmailAddress(value: string | undefined): string {
@@ -905,7 +905,7 @@ function extractEmailAddress(value: string | undefined): string {
 /**
  * Normalize RFC Message-ID for matching reply chains.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 function normalizeMessageId(value: string): string {
@@ -915,7 +915,7 @@ function normalizeMessageId(value: string): string {
 /**
  * Build quick lookup from outbound RFC Message-ID to message row.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 function buildOutboundReplyIndex(items: MailMessage[]): Map<string, MailMessage> {
@@ -937,7 +937,7 @@ function buildOutboundReplyIndex(items: MailMessage[]): Map<string, MailMessage>
 /**
  * Resolve which outbound message an inbound reply references.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 function resolveRepliedOutbound(
@@ -974,7 +974,7 @@ function resolveRepliedOutbound(
 /**
  * Resolve list/preview counterparty label (inbound from / outbound to).
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 function messageCounterpartyLabel(
@@ -993,7 +993,7 @@ function messageCounterpartyLabel(
 /**
  * Resolve address subline for list rows.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 function messageAddressSubline(message: MailMessage): string {
@@ -1008,7 +1008,7 @@ function messageAddressSubline(message: MailMessage): string {
 /**
  * Basic email shape check for compose/reply.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 function isValidEmail(value: string): boolean {
@@ -1019,7 +1019,7 @@ function isValidEmail(value: string): boolean {
 /**
  * Resolve default reply recipient from message / linked customer.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 function resolveReplyToAddress(
@@ -1044,7 +1044,7 @@ function resolveReplyToAddress(
 /**
  * Right pane: message preview + reply composer (legacy `pv-reply` pattern).
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 const PreviewReplyPane = memo(function PreviewReplyPane({
@@ -1327,7 +1327,7 @@ const PreviewReplyPane = memo(function PreviewReplyPane({
 /**
  * Toggle outbound open-tracking pixel injection.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 function OpenTrackingSwitch({
@@ -1370,7 +1370,7 @@ function OpenTrackingSwitch({
 /**
  * In-app confirm dialog (replaces browser `window.confirm`).
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 function ConfirmDialog({
@@ -1422,7 +1422,7 @@ function ConfirmDialog({
 /**
  * Compose modal — legacy `openCompose()` flow with OpenDesk template-first send.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 const ComposeModal = memo(function ComposeModal({
@@ -1751,7 +1751,7 @@ const ComposeModal = memo(function ComposeModal({
 /**
  * Labeled field wrapper for mail forms.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 const Field = memo(function Field({
@@ -1774,7 +1774,7 @@ const Field = memo(function Field({
 /**
  * Lightweight modal chrome for mail dialogs.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 const Modal = memo(function Modal({
@@ -1819,7 +1819,7 @@ const Modal = memo(function Modal({
 /**
  * Bind-mailbox dialog — IMAP / SMTP / auth sections (legacy `#bindModal`).
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 const AccountBindModal = memo(function AccountBindModal({
@@ -1995,7 +1995,7 @@ const AccountBindModal = memo(function AccountBindModal({
 /**
  * Create custom mail template dialog.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 const TemplateSaveModal = memo(function TemplateSaveModal({
@@ -2088,7 +2088,7 @@ const TemplateSaveModal = memo(function TemplateSaveModal({
 /**
  * Manual inbound record dialog.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 const InboundRecordModal = memo(function InboundRecordModal({

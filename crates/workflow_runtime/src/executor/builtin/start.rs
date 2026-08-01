@@ -1,6 +1,6 @@
 //! Start 节点。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use crate::definition::NodeType;
@@ -10,7 +10,7 @@ use async_trait::async_trait;
 
 /// Start 执行器（空操作）。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 pub struct StartExecutor;
 

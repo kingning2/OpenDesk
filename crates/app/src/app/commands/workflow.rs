@@ -1,6 +1,6 @@
 //! Workflow Tauri IPC commands — script snippet CRUD.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-21
 
 use common::contracts::{
@@ -13,7 +13,7 @@ use crate::app::state::AppState;
 
 /// List script snippets with optional category / free-text filters.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 ///
 /// # 参数
@@ -76,7 +76,7 @@ pub async fn workflow_snippet_list(
 
 /// Create or update a script snippet.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 ///
 /// # 参数
@@ -157,7 +157,7 @@ pub async fn workflow_snippet_save(
 
 /// Delete a script snippet by id.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 ///
 /// # 参数

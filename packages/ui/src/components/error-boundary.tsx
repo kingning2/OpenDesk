@@ -4,7 +4,7 @@
  * 注意：无法捕获事件处理器内错误，也无法阻止「Maximum update depth」在抛出前的风暴；
  * 一旦 React 抛出该错误，本边界可展示 message + componentStack，便于定位。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 
@@ -16,7 +16,7 @@ import { Button } from "./button";
 /**
  * ErrorBoundary 属性。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 export interface ErrorBoundaryProps {
@@ -54,7 +54,7 @@ interface ErrorBoundaryState {
 /**
  * 捕获子组件错误的边界。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
@@ -66,7 +66,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   /**
    * 从错误派生 UI 状态。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-23
    *
    * @param error - 抛出的错误
@@ -79,7 +79,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   /**
    * 记录 componentStack 并通知外部。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-23
    *
    * @param error - 抛出的错误
@@ -94,7 +94,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   /**
    * 清除错误并尝试重新渲染子树。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-23
    */
   reset = (): void => {

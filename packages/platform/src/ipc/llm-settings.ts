@@ -3,7 +3,7 @@
  *
  * 约束：get/save 响应永不包含 api_key（含脱敏）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 
@@ -18,7 +18,7 @@ export const LLM_TEST_FAILED = "LLM_TEST_FAILED" as const;
 /**
  * LLM 设置元数据（无密钥）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export interface LlmSettingsResponse {
@@ -37,7 +37,7 @@ export interface LlmSettingsResponse {
 /**
  * 保存请求；`api_key` 空串表示保留 keyring 中已有密钥。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export interface LlmSettingsSaveRequest {
@@ -50,7 +50,7 @@ export interface LlmSettingsSaveRequest {
 /**
  * 连通性探测请求。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export interface LlmTestConnectionRequest {
@@ -63,7 +63,7 @@ export interface LlmTestConnectionRequest {
 /**
  * 连通性探测结果。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export interface LlmTestConnectionResponse {
@@ -75,7 +75,7 @@ export interface LlmTestConnectionResponse {
 /**
  * 读取 LLM 设置元数据（不含 api_key）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  *
  * @returns 当前配置快照
@@ -87,7 +87,7 @@ export async function llmSettingsGet(): Promise<LlmSettingsResponse> {
 /**
  * 保存 LLM 设置；密钥写入 OS keyring，响应不回传密钥。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  *
  * @param request - 保存请求
@@ -102,7 +102,7 @@ export async function llmSettingsSave(
 /**
  * 测试 LLM 连接。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  *
  * @param request - 探测请求
@@ -117,7 +117,7 @@ export async function llmTestConnection(
 /**
  * 判断设置快照是否已可调用 LLM。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  *
  * @param settings - get/save 返回的元数据

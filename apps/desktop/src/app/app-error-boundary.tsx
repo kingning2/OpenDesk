@@ -1,7 +1,7 @@
 /**
  * React 渲染错误边界：捕获组件树错误并写入日志。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  */
 

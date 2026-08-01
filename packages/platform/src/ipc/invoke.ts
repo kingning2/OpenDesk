@@ -1,7 +1,7 @@
 /**
  * Tauri IPC：调用封装、错误归一化、日志落盘、前端错误上报。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  */
 

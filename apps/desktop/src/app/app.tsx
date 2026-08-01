@@ -83,7 +83,7 @@ function AppChrome() {
 /**
  * 安装错误上报：IPC toast、window.onerror、未处理的 Promise 拒绝。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  */
 function installErrorReporters(): void {

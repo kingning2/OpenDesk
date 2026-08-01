@@ -1,6 +1,6 @@
 //! Scheduler 引擎主循环。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use super::concurrency::SchedulerConfig;
@@ -26,7 +26,7 @@ use std::time::Duration;
 
 /// 运行中实例句柄（内存态）。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 pub struct SchedulerHandle {
     pub instance_id: InstanceId,
@@ -43,7 +43,7 @@ pub struct SchedulerHandle {
 
 /// Scheduler：无业务 I/O，只调度 Registry 中的 Executor。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 pub struct Scheduler {
     registry: Arc<ExecutorRegistry>,
@@ -55,7 +55,7 @@ pub struct Scheduler {
 impl Scheduler {
     /// 构造。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     pub fn new(
         registry: Arc<ExecutorRegistry>,
@@ -73,7 +73,7 @@ impl Scheduler {
 
     /// 跑完一个实例（阻塞直到终态或 pause drained）。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param handle - 可变句柄
@@ -663,7 +663,7 @@ impl Scheduler {
 
 /// 从检查点重建句柄。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 pub fn handle_from_checkpoint(
     gateway: &CheckpointGateway,

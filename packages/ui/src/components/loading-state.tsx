@@ -1,7 +1,7 @@
 /**
  * Centered loading placeholder with spinner animation.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 
@@ -22,7 +22,7 @@ export interface LoadingStateProps {
 /**
  * Panel / list loading surface with rotating spinner.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  *
  * @param props.label - Optional text shown under the spinner

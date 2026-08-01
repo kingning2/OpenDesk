@@ -1,7 +1,7 @@
 /**
  * TanStack Table + shadcn/ui table renderer.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 
@@ -54,7 +54,7 @@ export interface DataTableProps<TData> {
 /**
  * Render a TanStack Table with shadcn/ui table primitives.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  *
  * @param props - columns, data, loading and empty states
@@ -99,7 +99,7 @@ const stickyHeadClass =
 /**
  * Presentational table view for an existing TanStack table instance.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export function DataTableView<TData>({

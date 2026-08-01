@@ -1,7 +1,7 @@
 /**
  * Mail timestamp parsing, list date grouping, and display formatting.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  */
 
@@ -23,7 +23,7 @@ export type MailMessageDateGroup = {
 /**
  * Parse mail timestamp from epoch millis or ISO-ish strings.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  *
  * @param raw - Raw timestamp from contract field
@@ -47,7 +47,7 @@ export function parseMailTimestamp(raw: string | undefined): Date | null {
 /**
  * Resolve the display/sort instant for a mail row (sent → received → created).
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  *
  * @param message - Mail message row
@@ -65,7 +65,7 @@ export function messageDisplayTime(message: MailMessage): Date {
 /**
  * Format mail timestamp millis / ISO-ish strings for detail views.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  *
  * @param raw - Raw timestamp string
@@ -82,7 +82,7 @@ export function formatMailTime(raw: string): string {
 /**
  * Format list-row clock time (HH:mm) under a date group header.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  *
  * @param date - Message instant
@@ -96,7 +96,7 @@ export function formatMailListTime(date: Date, locale?: string): string {
 /**
  * Midnight local time for calendar-day comparisons.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  *
  * @param date - Any instant on the target calendar day
@@ -111,7 +111,7 @@ function startOfDay(date: Date): Date {
 /**
  * Stable `YYYY-MM-DD` key for grouping messages by calendar day.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  *
  * @param date - Calendar day source
@@ -127,7 +127,7 @@ function dateKey(date: Date): string {
 /**
  * Human label for a mail list date group (today / yesterday / full date).
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  *
  * @param date - Group calendar day
@@ -157,7 +157,7 @@ export function formatMailDateGroupLabel(
 /**
  * Group messages by calendar day for inbox / sent list sections.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  *
  * @param messages - Messages in any order (sorted by display time desc internally)

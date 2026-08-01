@@ -1,6 +1,6 @@
 //! Persist IMAP inbound messages from known senders (outbound recipients or customers).
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-08-01
 
 use mail_net::ImapFetchedMessage;
@@ -12,7 +12,7 @@ pub const IMAP_SYNC_MAX_FETCH: usize = 50;
 
 /// Advance `last_uid` only to the highest UID actually FETCHed this pass.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 pub fn next_imap_sync_cursor(last_uid: i64, fetched_max_uid: u32) -> i64 {
     let fetched = i64::from(fetched_max_uid);
@@ -25,7 +25,7 @@ pub fn next_imap_sync_cursor(last_uid: i64, fetched_max_uid: u32) -> i64 {
 
 /// Summary of one IMAP persist pass.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 #[derive(Debug, Clone, Copy, Default)]
 pub struct PersistImapInboundSummary {
@@ -46,7 +46,7 @@ enum InboundMatchReason {
 /// - 当前账号曾向其发送过 outbound 邮件
 /// - 发件人邮箱在客户库中
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 pub fn should_persist_inbound<M: MailStore + ?Sized, C: CustomerStore + ?Sized>(
     mail_store: &M,
@@ -83,7 +83,7 @@ fn evaluate_inbound_match<M: MailStore + ?Sized, C: CustomerStore + ?Sized>(
 
 /// Insert IMAP messages from known outbound recipients or customers.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 pub fn persist_imap_fetched_messages<M: MailStore + ?Sized, C: CustomerStore + ?Sized>(
     mail_store: &M,

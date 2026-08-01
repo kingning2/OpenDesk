@@ -1,6 +1,6 @@
 //! Scheduler：就绪判定、并发、Retry、派发。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 mod concurrency;

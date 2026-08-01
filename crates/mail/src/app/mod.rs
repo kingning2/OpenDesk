@@ -1,6 +1,6 @@
 //! Mail application use cases.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-21
 
 mod account;

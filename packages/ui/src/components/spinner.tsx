@@ -1,7 +1,7 @@
 /**
  * Animated loading spinner for buttons, lists, and panels.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 
@@ -29,7 +29,7 @@ export interface SpinnerProps extends SVGAttributes<SVGSVGElement>, VariantProps
 /**
  * Rotating loader icon.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  *
  * @param props.size - Visual size (`sm` | `md` | `lg`)

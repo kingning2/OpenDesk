@@ -1,6 +1,6 @@
 //! DAG Builder。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use super::graph::WorkflowGraph;
@@ -10,14 +10,14 @@ use crate::error::WorkflowError;
 
 /// 将 Workflow JSON 定义构建为邻接表图。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 pub struct DagBuilder;
 
 impl DagBuilder {
     /// 校验并构建图。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param definition - 静态定义

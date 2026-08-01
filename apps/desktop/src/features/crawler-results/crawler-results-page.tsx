@@ -1,7 +1,7 @@
 /**
  * Crawler results list page — persisted channel table with filters.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 
@@ -32,7 +32,7 @@ import {
 /**
  * Persisted crawler channel results table.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export function CrawlerResultsPage() {

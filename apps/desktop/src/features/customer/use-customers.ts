@@ -1,7 +1,7 @@
 /**
  * Customer list + detail state hook.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 
@@ -26,7 +26,7 @@ export type CustomerPanelMode = "empty" | "create" | "view" | "edit";
 /**
  * Customer page state and mutations.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export function useCustomers() {

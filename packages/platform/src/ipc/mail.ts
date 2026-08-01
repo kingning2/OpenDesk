@@ -38,7 +38,7 @@ export type MailImapSyncState = MailDtoImapSyncState;
 /**
  * Load all mail templates.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export async function mailTemplateList(): Promise<{ items: MailTemplate[]; total: number }> {
@@ -54,7 +54,7 @@ export async function mailTemplateList(): Promise<{ items: MailTemplate[]; total
 /**
  * Create or update a custom mail template.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  *
  * @param input - Template save payload
@@ -77,7 +77,7 @@ export async function mailTemplateSave(
 /**
  * Apply a template for one customer.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export async function mailTemplateApply(
@@ -89,7 +89,7 @@ export async function mailTemplateApply(
 /**
  * Load saved mail accounts.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export async function mailAccountList(): Promise<{ items: MailAccount[]; total: number }> {
@@ -105,7 +105,7 @@ export async function mailAccountList(): Promise<{ items: MailAccount[]; total: 
 /**
  * Save one mail account.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export async function mailAccountSave(
@@ -125,7 +125,7 @@ export async function mailAccountSave(
 /**
  * Send one outbound message via SMTP.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export async function mailSend(input: MailIpcSendRequest): Promise<MailIpcSendResponse> {
@@ -135,7 +135,7 @@ export async function mailSend(input: MailIpcSendRequest): Promise<MailIpcSendRe
 /**
  * Record one inbound message manually.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export async function mailRecordInbound(
@@ -147,7 +147,7 @@ export async function mailRecordInbound(
 /**
  * List local inbox/sent messages for the mail workbench.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  *
  * @param input - Direction and optional filters
@@ -170,7 +170,7 @@ export async function mailMessageList(
 /**
  * Enqueue IMAP sync background jobs.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export async function mailSyncNow(
@@ -193,7 +193,7 @@ export async function mailSyncNow(
 /**
  * Read IMAP sync status for one or all accounts.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export async function mailSyncStatus(
@@ -213,7 +213,7 @@ export async function mailSyncStatus(
 /**
  * List inbound messages without a linked customer.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export async function mailInboxUnmatchedList(
@@ -233,7 +233,7 @@ export async function mailInboxUnmatchedList(
 /**
  * Mark one local message as read.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  */
 export async function mailMessageMarkRead(
@@ -248,7 +248,7 @@ export async function mailMessageMarkRead(
 /**
  * Link one unmatched inbound message to a customer.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export async function mailLinkInboundCustomer(
@@ -263,7 +263,7 @@ export async function mailLinkInboundCustomer(
 /**
  * Generate styled HTML email from plain text via configured LLM.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  */
 export async function mailGenerateHtml(

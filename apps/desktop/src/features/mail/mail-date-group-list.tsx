@@ -1,7 +1,7 @@
 /**
  * Collapsible date sections for inbox / sent mail lists.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  */
 
@@ -14,7 +14,7 @@ import type { MailMessageDateGroup } from "./mail-time";
 /**
  * Collapsible mail list grouped by calendar day.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  *
  * @param props.groups - Date buckets from `groupMessagesByDate`

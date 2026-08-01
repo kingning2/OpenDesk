@@ -1,7 +1,7 @@
 /**
  * Customer CRM page — list, detail, create and edit.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 
@@ -38,7 +38,7 @@ import { useCustomers } from "./use-customers";
 /**
  * Customer list + detail workspace.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export function CustomerPage() {

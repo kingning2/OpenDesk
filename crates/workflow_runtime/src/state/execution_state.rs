@@ -1,13 +1,13 @@
 //! Scheduler 内部执行相位（可不落库）。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use serde::{Deserialize, Serialize};
 
 /// Scheduler 内部相位。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]

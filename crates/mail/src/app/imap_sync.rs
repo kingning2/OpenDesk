@@ -1,6 +1,6 @@
 //! IMAP inbox sync: fetch, persist, and IPC use cases.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-22
 
 use common::contracts::{
@@ -23,14 +23,14 @@ const DEFAULT_FOLDER: &str = "INBOX";
 
 /// Run one IMAP fetch cycle for a single account and folder.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 pub struct RunImapAccountSync;
 
 impl RunImapAccountSync {
     /// Connect to IMAP, fetch UID > `last_uid`, persist inbound rows, update cursor.
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-08-01
     ///
     /// # 参数
@@ -161,14 +161,14 @@ impl RunImapAccountSync {
 
 /// Run IMAP sync for one or all enabled accounts.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 pub struct SyncMailNow;
 
 impl SyncMailNow {
     /// Sync inbox inline for the requested account(s).
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-22
     pub fn execute<
         J: BackgroundJobStore + ?Sized,
@@ -235,14 +235,14 @@ impl SyncMailNow {
 
 /// Read IMAP sync state for UI settings and polling.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 pub struct GetMailSyncStatus;
 
 impl GetMailSyncStatus {
     /// Return sync cursor rows with active-job flags.
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-22
     pub fn execute<J: BackgroundJobStore + ?Sized, M: MailStore + ?Sized>(
         job_store: &J,
@@ -266,14 +266,14 @@ impl GetMailSyncStatus {
 
 /// List inbound messages waiting for customer association.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 pub struct ListUnmatchedInbound;
 
 impl ListUnmatchedInbound {
     /// Return unmatched inbound rows for the mail workbench.
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-22
     pub fn execute<M: MailStore + ?Sized>(
         mail_store: &M,
@@ -298,14 +298,14 @@ impl ListUnmatchedInbound {
 
 /// Link one unmatched inbound message to a customer.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 pub struct LinkInboundCustomer;
 
 impl LinkInboundCustomer {
     /// Associate one inbound message and append customer timeline.
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-22
     pub fn execute<M: MailStore + ?Sized, C: CustomerStore + ?Sized>(
         mail_store: &M,
@@ -328,14 +328,14 @@ impl LinkInboundCustomer {
 
 /// Run periodic IMAP sync for all enabled accounts (best-effort).
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 pub struct ScheduleImapSync;
 
 impl ScheduleImapSync {
     /// Sync every IMAP-enabled account inline.
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-22
     pub fn execute<
         J: BackgroundJobStore + ?Sized,

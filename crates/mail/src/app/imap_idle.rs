@@ -1,6 +1,6 @@
 //! IMAP IDLE — one Tokio task per enabled account, process mail as it arrives.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-08-01
 
 use std::sync::Arc;
@@ -22,7 +22,7 @@ pub type ImapIdlePersistHook = Arc<dyn Fn(&str) + Send + Sync>;
 
 /// List enabled accounts and spawn one Tokio IDLE task per account.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 ///
 /// # 参数
@@ -62,7 +62,7 @@ pub fn spawn_imap_idle_watchers(
 
 /// Keep one IMAP account connected with IDLE and persist inbound updates.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 ///
 /// # 参数

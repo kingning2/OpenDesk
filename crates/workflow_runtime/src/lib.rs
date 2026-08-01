@@ -2,7 +2,7 @@
 //!
 //! DAG 调度、状态机、Executor Registry、检查点与恢复。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 // 状态机风格大量使用 match；与 clippy single_match / manual_unwrap_or 偏好冲突，在此统一允许。

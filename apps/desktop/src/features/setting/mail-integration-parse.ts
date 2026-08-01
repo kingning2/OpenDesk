@@ -1,7 +1,7 @@
 /**
  * Run user-authored parse scripts in the settings UI test runner.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  */
 
@@ -13,7 +13,7 @@ export type ParsedOpenStatus = {
 /**
  * Execute `parseResponse(data)` from the user's script against API JSON.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  */
 export function runEmailReadParseScript(

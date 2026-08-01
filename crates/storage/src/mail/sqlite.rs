@@ -1,6 +1,6 @@
 //! Diesel-backed mail store.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-21
 
 use diesel::prelude::*;
@@ -29,7 +29,7 @@ const EMAIL_READ_INTEGRATION_ID: &str = "email_read";
 
 /// SQLite implementation of [`MailStore`].
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 pub struct SqliteMailStore {
     db: OpendeskDb,
@@ -38,7 +38,7 @@ pub struct SqliteMailStore {
 impl SqliteMailStore {
     /// Wrap an existing [`OpendeskDb`] handle.
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-21
     pub fn new(db: OpendeskDb) -> Self {
         Self { db }

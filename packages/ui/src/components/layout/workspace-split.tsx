@@ -6,7 +6,7 @@ import { ScrollArea } from "../scroll-area";
 /**
  * 主从分栏工作区容器属性。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export interface WorkspaceSplitProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -32,7 +32,7 @@ const WorkspaceSplitContext = React.createContext<WorkspaceSplitContextValue | n
  * 线框栅格布局：外边框 + 面板间竖线分隔，无嵌套卡片。
  * 配合 `PageScaffold fill containerPadding="none"` 占满工作区。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  *
  * @param props - 见 {@link WorkspaceSplitProps}
@@ -126,7 +126,7 @@ const paneWidthClass = {
 /**
  * 主从分栏单面板属性。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export interface WorkspaceSplitPaneProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -147,7 +147,7 @@ export interface WorkspaceSplitPaneProps extends React.HTMLAttributes<HTMLDivEle
  *
  * 竖线/横线分隔的扁平面板，头部固定、内容区可滚动。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  *
  * @param props - 见 {@link WorkspaceSplitPaneProps}
@@ -193,7 +193,7 @@ export function WorkspaceSplitPane({
 /**
  * 分栏面板工具栏属性。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export interface WorkspaceSplitToolbarProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -203,7 +203,7 @@ export interface WorkspaceSplitToolbarProps extends React.HTMLAttributes<HTMLDiv
 /**
  * 分栏面板工具栏行。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  *
  * @param props - 见 {@link WorkspaceSplitToolbarProps}
@@ -220,7 +220,7 @@ export function WorkspaceSplitToolbar({ className, children, ...props }: Workspa
 /**
  * 分栏面板标题属性。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export interface WorkspaceSplitTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
@@ -230,7 +230,7 @@ export interface WorkspaceSplitTitleProps extends React.HTMLAttributes<HTMLHeadi
 /**
  * 分栏面板标题。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  *
  * @param props - 见 {@link WorkspaceSplitTitleProps}
@@ -253,7 +253,7 @@ export function WorkspaceSplitTitle({ className, children, ...props }: Workspace
 /**
  * 分栏列表面板行属性。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export interface WorkspaceSplitRowProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -266,7 +266,7 @@ export interface WorkspaceSplitRowProps extends React.ButtonHTMLAttributes<HTMLB
  *
  * 横线分隔的扁平列表项，用于主从布局左侧列表。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  *
  * @param props - 见 {@link WorkspaceSplitRowProps}
@@ -300,7 +300,7 @@ export function WorkspaceSplitRow({
 /**
  * 线框表单栅格属性。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export interface WorkspaceSplitGridProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -314,7 +314,7 @@ export interface WorkspaceSplitGridProps extends React.HTMLAttributes<HTMLDivEle
  *
  * 用横竖线分隔字段单元格，替代嵌套卡片式表单布局。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  *
  * @param props - 见 {@link WorkspaceSplitGridProps}
@@ -343,7 +343,7 @@ export function WorkspaceSplitGrid({
 /**
  * 线框表单栅格单元属性。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export interface WorkspaceSplitCellProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -355,7 +355,7 @@ export interface WorkspaceSplitCellProps extends React.HTMLAttributes<HTMLDivEle
 /**
  * 线框表单栅格单元。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  *
  * @param props - 见 {@link WorkspaceSplitCellProps}

@@ -1,7 +1,7 @@
 /**
  * Mail Tauri event topics and typed listeners.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  */
 
@@ -12,7 +12,7 @@ import { listenEvent } from "../events";
 /**
  * Mail → UI Tauri event topics.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  */
 export enum MailUiEvent {
@@ -23,7 +23,7 @@ export enum MailUiEvent {
 /**
  * Subscribe to IMAP IDLE persistence updates.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  *
  * @param onUpdated - Called with the account id that received new mail

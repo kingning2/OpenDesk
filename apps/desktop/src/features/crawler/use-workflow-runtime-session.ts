@@ -1,7 +1,7 @@
 /**
  * 采集页对接 Workflow Runtime：active / resume / start / phase。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 
@@ -20,7 +20,7 @@ import type { WorkflowStepTone } from "@desk/ui";
 /**
  * 将 Runtime phase 映射为画布 tone。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param state - phase.state
@@ -45,7 +45,7 @@ export function toneFromRuntimeState(state?: string | null): WorkflowStepTone {
 /**
  * Workflow Runtime 会话钩子。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @returns 会话状态与操作
@@ -116,7 +116,7 @@ export function useWorkflowRuntimeSession() {
   /**
    * 用 definition JSON 启动 Runtime。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-23
    *
    * @param definitionJson - 图定义
@@ -142,7 +142,7 @@ export function useWorkflowRuntimeSession() {
   /**
    * 取消当前实例。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-23
    */
   const cancelRuntime = useCallback(async () => {
@@ -160,7 +160,7 @@ export function useWorkflowRuntimeSession() {
   /**
    * 恢复可恢复实例。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-23
    *
    * @param id - instance_id
@@ -183,7 +183,7 @@ export function useWorkflowRuntimeSession() {
   /**
    * 忽略可恢复实例（仅从横幅移除本地列表；不删库）。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-23
    *
    * @param id - instance_id

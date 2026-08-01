@@ -1,7 +1,7 @@
 /**
  * HTML mail sanitization and plain-text fallbacks.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 
@@ -43,7 +43,7 @@ const EMAIL_HTML_ALLOWED_TAGS = [
 /**
  * Sanitize untrusted email HTML for in-app preview.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  *
  * @param html - Raw HTML from mail storage or compose
@@ -79,7 +79,7 @@ export function sanitizeMailHtml(html: string): string {
 /**
  * Wrap fragment HTML in a minimal document for iframe rendering.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  *
  * @param html - Sanitized HTML fragment
@@ -102,7 +102,7 @@ html{scrollbar-width:thin;scrollbar-color:rgba(31,41,55,.32) transparent}
 /**
  * Strip tags to plain text (compose fallback / list search).
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  *
  * @param html - HTML string
@@ -127,7 +127,7 @@ export function stripMailHtml(html: string | undefined): string {
 /**
  * Pick preview HTML or synthesize from plain text.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  *
  * @param bodyHtml - Stored HTML body

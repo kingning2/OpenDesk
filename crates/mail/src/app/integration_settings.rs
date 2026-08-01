@@ -1,6 +1,6 @@
 //! Email-read integration settings use cases (UI-configured external API).
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-08-01
 
 use ports::mail::{MailEmailReadIntegrationConfig, MailStore};
@@ -9,7 +9,7 @@ use super::tracking::probe_open_status;
 
 /// Load email-read integration settings for the settings UI.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 pub struct GetEmailReadIntegration;
 
@@ -26,7 +26,7 @@ impl GetEmailReadIntegration {
 
 /// Save email-read integration settings from the settings UI.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 pub struct SaveEmailReadIntegration;
 
@@ -44,7 +44,7 @@ impl SaveEmailReadIntegration {
 
 /// Probe query URL and return raw JSON for the UI script test runner.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 pub struct ProbeEmailReadIntegration;
 

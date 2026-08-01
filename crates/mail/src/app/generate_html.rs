@@ -1,6 +1,6 @@
 //! LLM plain-text → HTML email template generation.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-08-01
 
 /// System prompt for styled HTML email generation (email-agent parity).
@@ -24,7 +24,7 @@ pub const EMAIL_HTML_SYSTEM_PROMPT: &str = r#"你是一个专业的 HTML 邮件�
 
 /// Parsed AI email HTML result.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 #[derive(Debug, Clone)]
 pub struct GeneratedMailHtml {
@@ -66,7 +66,7 @@ impl GenerateMailHtml {
 
 /// Parse raw LLM output into HTML + optional notes.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-08-01
 pub fn parse_email_html_response(raw_response: &str) -> GeneratedMailHtml {
     let mut without_fences = raw_response.trim().to_string();

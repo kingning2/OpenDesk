@@ -14,7 +14,7 @@ pub struct ListCustomers;
 impl ListCustomers {
     /// Execute list query against the customer store.
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-21
     pub fn execute<S: CustomerStore + ?Sized>(
         store: &S,

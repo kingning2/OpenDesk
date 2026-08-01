@@ -21,7 +21,7 @@ pub struct SqliteCustomerStore {
 impl SqliteCustomerStore {
     /// Open `opendesk.db` and return a customer store handle.
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-21
     pub fn open(path: impl AsRef<Path>) -> Result<Self, StoreError> {
         Ok(Self {
@@ -31,7 +31,7 @@ impl SqliteCustomerStore {
 
     /// Wrap an existing [`OpendeskDb`] handle.
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-21
     pub fn new(db: OpendeskDb) -> Self {
         Self { db }

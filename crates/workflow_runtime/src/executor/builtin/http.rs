@@ -1,6 +1,6 @@
 //! Http 最小适配执行器（不发起真实网络；写入 Context 占位）。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use crate::context::ContextPatch;
@@ -12,7 +12,7 @@ use serde_json::{json, Value};
 
 /// Http 占位：记录 url/method，返回 stub 状态。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 pub struct HttpExecutor;
 

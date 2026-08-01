@@ -1,6 +1,6 @@
 //! Retry 延迟计算（Scheduler 侧）。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use crate::definition::RetryPolicy;
@@ -8,7 +8,7 @@ use std::time::Duration;
 
 /// 计算第 `attempt` 次失败后的等待。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 ///
 /// @param policy - 策略

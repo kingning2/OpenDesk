@@ -1,6 +1,6 @@
 //! Customer profile Tauri IPC commands.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-21
 
 use common::contracts::{
@@ -14,7 +14,7 @@ use crate::app::state::AppState;
 
 /// List customers with optional search and pagination.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 #[tauri::command]
 pub async fn customer_list(
@@ -29,7 +29,7 @@ pub async fn customer_list(
 
 /// Fetch one customer profile by id.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 #[tauri::command]
 pub async fn customer_get(
@@ -44,7 +44,7 @@ pub async fn customer_get(
 
 /// Create a new customer profile.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 #[tauri::command]
 pub async fn customer_create(
@@ -59,7 +59,7 @@ pub async fn customer_create(
 
 /// Update an existing customer profile.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 #[tauri::command]
 pub async fn customer_update(

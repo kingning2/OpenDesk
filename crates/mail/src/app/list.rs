@@ -1,6 +1,6 @@
 //! Local mailbox message list use case.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-22
 
 use common::contracts::{MailIpcMessageListRequest, MailIpcMessageListResponse};
@@ -11,14 +11,14 @@ use super::tracking::fetch_open_status;
 
 /// List local inbox/sent messages for the mail workbench.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 pub struct ListMailMessages;
 
 impl ListMailMessages {
     /// Load paged local messages by direction and optional filters.
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-22
     ///
     /// # 参数

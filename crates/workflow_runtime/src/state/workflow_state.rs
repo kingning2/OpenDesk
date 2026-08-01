@@ -1,6 +1,6 @@
 //! 工作流实例状态。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use serde::{Deserialize, Serialize};
@@ -8,7 +8,7 @@ use std::fmt;
 
 /// 工作流实例生命周期状态（落库用枚举名，禁止数字码）。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -38,7 +38,7 @@ pub enum WorkflowState {
 impl WorkflowState {
     /// 是否为终态。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns 终态为 true
@@ -57,7 +57,7 @@ impl WorkflowState {
 
     /// 是否可被恢复扫描视为进行中。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns 可恢复为 true
@@ -72,7 +72,7 @@ impl WorkflowState {
 
     /// 解析落库字符串。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param raw - 枚举名（snake_case）
@@ -95,7 +95,7 @@ impl WorkflowState {
 
     /// 落库用 snake_case 名。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns 稳定字符串

@@ -1,6 +1,6 @@
 //! LLM 设置 SQLite 元数据 + OS keyring 密钥存储。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-22
 
 use diesel::prelude::*;
@@ -18,7 +18,7 @@ const API_KEY_REF: &str = "keyring:OpenDesk/llm_api_key";
 
 /// Diesel + keyring 实现的 LLM 设置存储。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 pub struct SqliteLlmSettingsStore {
     db: OpendeskDb,
@@ -33,7 +33,7 @@ impl SqliteLlmSettingsStore {
     /// # 返回值
     /// 新的 store 实例。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-22
     pub fn new(db: OpendeskDb) -> Self {
         Self { db }

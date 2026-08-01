@@ -1,6 +1,6 @@
 //! Mail Tauri IPC commands.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-21
 
 use common::contracts::{
@@ -24,7 +24,7 @@ use crate::app::state::AppState;
 
 /// List mail templates.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 #[tauri::command]
 pub async fn mail_template_list(
@@ -38,7 +38,7 @@ pub async fn mail_template_list(
 
 /// Create or update a custom mail template.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 #[tauri::command]
 pub async fn mail_template_save(
@@ -53,7 +53,7 @@ pub async fn mail_template_save(
 
 /// Apply one template to one customer.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 #[tauri::command]
 pub async fn mail_template_apply(
@@ -71,7 +71,7 @@ pub async fn mail_template_apply(
 
 /// List saved mail accounts.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 #[tauri::command]
 pub async fn mail_account_list(
@@ -85,7 +85,7 @@ pub async fn mail_account_list(
 
 /// Save one mail account.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 #[tauri::command]
 pub async fn mail_account_save(
@@ -100,7 +100,7 @@ pub async fn mail_account_save(
 
 /// List local inbox/sent messages.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 #[tauri::command]
 pub async fn mail_message_list(
@@ -115,7 +115,7 @@ pub async fn mail_message_list(
 
 /// Send one outbound email via SMTP and persist the result.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 #[tauri::command]
 pub async fn mail_send(
@@ -133,7 +133,7 @@ pub async fn mail_send(
 
 /// Record one inbound email manually.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 #[tauri::command]
 pub async fn mail_record_inbound(
@@ -151,7 +151,7 @@ pub async fn mail_record_inbound(
 
 /// Enqueue IMAP sync background jobs.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 #[tauri::command]
 pub async fn mail_sync_now(
@@ -175,7 +175,7 @@ pub async fn mail_sync_now(
 
 /// Read IMAP sync status for mail settings UI.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 #[tauri::command]
 pub async fn mail_sync_status(
@@ -193,7 +193,7 @@ pub async fn mail_sync_status(
 
 /// List inbound messages without a linked customer.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 #[tauri::command]
 pub async fn mail_inbox_unmatched_list(
@@ -210,7 +210,7 @@ pub async fn mail_inbox_unmatched_list(
 
 /// Link one unmatched inbound message to a customer.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 #[tauri::command]
 pub async fn mail_link_inbound_customer(

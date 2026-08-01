@@ -1,7 +1,7 @@
 /**
  * Mail external integration settings IPC.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  */
 

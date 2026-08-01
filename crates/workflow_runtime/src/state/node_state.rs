@@ -1,6 +1,6 @@
 //! 节点实例状态。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use serde::{Deserialize, Serialize};
@@ -8,7 +8,7 @@ use std::fmt;
 
 /// 节点运行状态。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -36,7 +36,7 @@ pub enum NodeState {
 impl NodeState {
     /// 前驱是否视为「已满足依赖」。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns Succeeded / Skipped 为 true
@@ -55,7 +55,7 @@ impl NodeState {
 
     /// 是否为节点终态。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns 终态为 true
@@ -70,7 +70,7 @@ impl NodeState {
 
     /// 解析落库字符串。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @param raw - snake_case 名
@@ -92,7 +92,7 @@ impl NodeState {
 
     /// 落库用名。
     ///
-    /// @author Xiaoman
+    /// @author coisini
     /// @created 2026-07-23
     ///
     /// @returns 稳定字符串

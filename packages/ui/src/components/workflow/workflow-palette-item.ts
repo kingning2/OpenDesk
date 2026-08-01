@@ -1,7 +1,7 @@
 /**
  * 工作流节点面板（可新增节点）条目定义。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 
@@ -10,7 +10,7 @@ import type { WorkflowStepNodeData } from "./workflow-step-node";
 /**
  * 左侧节点面板中的可添加模板。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 export interface WorkflowPaletteItem {

@@ -1,6 +1,6 @@
 //! LLM Provider 设置 Port（元数据 + keyring 密钥所有权）。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-22
 
 use crate::repository::StoreError;
@@ -16,7 +16,7 @@ pub const LLM_SETTINGS_ROW_ID: &str = "default";
 
 /// 持久化元数据视图（不含 api_key 明文）。
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LlmSettingsRecord {
@@ -35,7 +35,7 @@ impl LlmSettingsRecord {
     ///
     /// `openai_compatible`（如 Ollama）允许无 key；其余类型必须有 key。
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-22
     ///
     /// # 返回值
@@ -58,7 +58,7 @@ impl LlmSettingsRecord {
 /// - OS keyring（`keyring` crate）存 API Key
 /// - 仅 Rust 内部可 `resolve_api_key`，禁止经 IPC 回传前端
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 pub trait LlmSettingsStore: Send + Sync {
     /// 读取当前设置；从未保存时返回 `None`。

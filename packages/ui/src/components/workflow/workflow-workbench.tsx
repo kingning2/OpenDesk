@@ -16,7 +16,7 @@
  * 用 `applyNodeChanges` 更新），禁止在传入前每渲 `map` 出新对象数组，否则会与
  * React Flow 内部 `setNodes` 形成 Maximum update depth 死循环。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 
@@ -64,7 +64,7 @@ const DELETE_KEY_CODE = ["Backspace", "Delete"];
 /**
  * 工作流工作台属性。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 export interface WorkflowWorkbenchProps {
@@ -162,7 +162,7 @@ export interface WorkflowWorkbenchProps {
 /**
  * 内部画布：需要 `ReactFlowProvider` 才能用 `screenToFlowPosition`。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  */
 function WorkflowCanvas({
@@ -298,7 +298,7 @@ function WorkflowCanvas({
 /**
  * Coze 式工作流工作台：节点面板 + 画布 + 右侧配置 + 底部分步日志 + 执行栏。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @param props - 见 {@link WorkflowWorkbenchProps}

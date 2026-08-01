@@ -1,6 +1,6 @@
 //! DAG 合法性校验。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use crate::definition::{NodeType, WorkflowDefinition};
@@ -10,7 +10,7 @@ use std::collections::HashMap;
 
 /// 图构建中间结构。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 pub(crate) struct GraphParts {
     pub nodes: HashMap<NodeId, crate::definition::NodeSpec>,
@@ -23,7 +23,7 @@ pub(crate) struct GraphParts {
 
 /// 校验定义并组装邻接表。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 ///
 /// @param definition - 静态定义

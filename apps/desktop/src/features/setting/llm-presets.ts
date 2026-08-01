@@ -1,14 +1,14 @@
 /**
  * LLM Provider 厂商预设（仅 UI；Contract 仍用 openai / anthropic / openai_compatible）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 
 /**
  * 设置页可选的厂商预设 id。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export type LlmVendorPresetId =
@@ -23,7 +23,7 @@ export type LlmVendorPresetId =
 /**
  * 单个厂商预设。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export interface LlmVendorPreset {
@@ -42,7 +42,7 @@ export interface LlmVendorPreset {
 /**
  * 主流厂商预设表。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 export const LLM_VENDOR_PRESETS: readonly LlmVendorPreset[] = [
@@ -103,7 +103,7 @@ export const LLM_VENDOR_PRESETS: readonly LlmVendorPreset[] = [
 /**
  * 根据已存 provider + base_url 推断预设。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  *
  * @param provider - Contract provider

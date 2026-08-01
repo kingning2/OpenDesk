@@ -1,7 +1,7 @@
 /**
  * LLM Provider 设置状态与持久化（密钥仅本地草稿，永不从 Rust 回读）。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  */
 
@@ -20,7 +20,7 @@ import {
 /**
  * LLM 设置 hook。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-22
  *
  * @returns 草稿状态、脏标记与读写 / 测试操作
@@ -89,7 +89,7 @@ export function useLlmSettings() {
   /**
    * 应用厂商预设到草稿字段。
    *
-   * @author Xiaoman
+   * @author coisini
    * @created 2026-07-22
    *
    * @param next - 预设 id

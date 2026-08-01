@@ -1,7 +1,7 @@
 /**
  * Live compose preview rail (subject / recipients / HTML body).
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  */
 
@@ -13,7 +13,7 @@ import { MailHtmlPreview } from "./mail-html-preview";
 /**
  * Sticky right-rail preview for compose and reply forms.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-08-01
  */
 export const MailComposePreview = memo(function MailComposePreview({

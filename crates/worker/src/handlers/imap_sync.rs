@@ -1,6 +1,6 @@
 //! Handle `imap_sync` background jobs.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-22
 
 use std::sync::Arc;
@@ -25,7 +25,7 @@ pub enum HandlerError {
 
 /// Execute one IMAP inbox sync job.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-22
 pub async fn handle(
     job: &BackgroundJobRecord,

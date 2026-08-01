@@ -1,6 +1,6 @@
 //! 检查点适配（调用 ports::CheckpointStore）。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 mod checkpoint;

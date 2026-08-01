@@ -1,13 +1,13 @@
 //! Workflow persistence port — script snippets.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-21
 
 use crate::repository::StoreError;
 
 /// A single script snippet record.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 #[derive(Debug, Clone)]
 pub struct ScriptSnippetRecord {
@@ -33,7 +33,7 @@ pub struct ScriptSnippetRecord {
 
 /// Input to create or update a script snippet.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 #[derive(Debug, Clone)]
 pub struct ScriptSnippetWriteInput {
@@ -57,7 +57,7 @@ pub struct ScriptSnippetWriteInput {
 
 /// Workflow / script-snippet storage contract.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 pub trait ScriptSnippetStore: Send + Sync {
     /// List snippets, optionally filtered by category_l1 / category_l2 / free-text search.

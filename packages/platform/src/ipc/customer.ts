@@ -16,7 +16,7 @@ export type CustomerProfile = CustomerDtoProfile;
 /**
  * List customers with optional search and pagination.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export async function customerList(
@@ -37,7 +37,7 @@ export async function customerList(
 /**
  * Fetch one customer profile by id.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export async function customerGet(id: string): Promise<CustomerProfile> {
@@ -49,7 +49,7 @@ export async function customerGet(id: string): Promise<CustomerProfile> {
 /**
  * Create a new customer profile.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export async function customerCreate(
@@ -62,7 +62,7 @@ export async function customerCreate(
 /**
  * Update an existing customer profile.
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-21
  */
 export async function customerUpdate(

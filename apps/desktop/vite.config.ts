@@ -9,7 +9,7 @@ const host = process.env.TAURI_DEV_HOST;
 /**
  * 仅在 `vite` 开发服注入 react-scan CDN，生产 build 不带入。
  *
- * @author Xiaoman
+ * @author coisini
  * @created 2026-07-23
  *
  * @returns Vite 插件

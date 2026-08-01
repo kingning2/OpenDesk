@@ -1,6 +1,6 @@
 //! Manual inbound record use case.
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-21
 
 use common::contracts::{MailIpcRecordInboundRequest, MailIpcRecordInboundResponse};
@@ -9,14 +9,14 @@ use ports::mail::{MailInboundWriteInput, MailStore};
 
 /// Record one inbound message manually.
 ///
-/// 作者：Xiaoman
+/// 作者：coisini
 /// 创建时间：2026-07-21
 pub struct RecordInboundMail;
 
 impl RecordInboundMail {
     /// Persist one inbound message and append a customer timeline entry.
     ///
-    /// 作者：Xiaoman
+    /// 作者：coisini
     /// 创建时间：2026-07-21
     pub fn execute<M: MailStore + ?Sized, C: CustomerStore + ?Sized>(
         mail_store: &M,

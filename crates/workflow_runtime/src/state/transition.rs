@@ -1,6 +1,6 @@
 //! 状态迁移（仅 match，禁止 if status ==）。
 //!
-//! 作者：Xiaoman
+//! 作者：coisini
 //! 创建时间：2026-07-23
 
 use super::{NodeState, WorkflowState};
@@ -8,7 +8,7 @@ use crate::error::WorkflowError;
 
 /// 工作流目标迁移意图。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WorkflowTransition {
@@ -36,7 +36,7 @@ pub enum WorkflowTransition {
 
 /// 节点目标迁移意图。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NodeTransition {
@@ -62,7 +62,7 @@ pub enum NodeTransition {
 
 /// 应用工作流状态迁移。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 ///
 /// @param current - 当前状态
@@ -97,7 +97,7 @@ pub fn transition_workflow_state(
 
 /// 应用节点状态迁移。
 ///
-/// @author Xiaoman
+/// @author coisini
 /// @created 2026-07-23
 ///
 /// @param current - 当前状态
