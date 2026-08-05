@@ -36,6 +36,8 @@ export function useLlmSettings() {
   const [baselineModelId, setBaselineModelId] = useState("gpt-4o-mini");
   const [hasApiKey, setHasApiKey] = useState(false);
   const [configured, setConfigured] = useState(false);
+  const [toolsEnabled, setToolsEnabled] = useState(true);
+  const [baselineToolsEnabled, setBaselineToolsEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -62,6 +64,8 @@ export function useLlmSettings() {
       setBaselineModelId(nextModel);
       setHasApiKey(response.has_api_key);
       setConfigured(response.configured);
+      setToolsEnabled(response.tools_enabled);
+      setBaselineToolsEnabled(response.tools_enabled);
       setApiKey("");
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -82,7 +86,8 @@ export function useLlmSettings() {
   const metaDirty =
     provider !== baselineProvider ||
     baseUrl !== baselineBaseUrl ||
-    modelId !== baselineModelId;
+    modelId !== baselineModelId ||
+    toolsEnabled !== baselineToolsEnabled;
   const keyDirty = apiKey.trim().length > 0;
   const dirty = metaDirty || keyDirty;
 
@@ -120,6 +125,7 @@ export function useLlmSettings() {
         base_url: baseUrl.trim() || undefined,
         model_id: modelId.trim(),
         api_key: apiKey,
+        tools_enabled: toolsEnabled,
       });
       setBaselineProvider(response.provider);
       setBaselineBaseUrl(response.base_url ?? "");
@@ -129,6 +135,8 @@ export function useLlmSettings() {
       setModelId(response.model_id);
       setHasApiKey(response.has_api_key);
       setConfigured(response.configured);
+      setToolsEnabled(response.tools_enabled);
+      setBaselineToolsEnabled(response.tools_enabled);
       setApiKey("");
       setSavedMessage("saved");
     } catch (err) {
@@ -137,7 +145,7 @@ export function useLlmSettings() {
     } finally {
       setSaving(false);
     }
-  }, [apiKey, baseUrl, modelId, provider]);
+  }, [apiKey, baseUrl, modelId, provider, toolsEnabled]);
 
   const test = useCallback(async () => {
     setError("");
@@ -168,13 +176,14 @@ export function useLlmSettings() {
     setProvider(baselineProvider);
     setBaseUrl(baselineBaseUrl);
     setModelId(baselineModelId);
+    setToolsEnabled(baselineToolsEnabled);
     setPreset(inferLlmPreset(baselineProvider, baselineBaseUrl));
     setApiKey("");
     setSavedMessage("");
     setTestMessage("");
     setTestOk(null);
     setError("");
-  }, [baselineBaseUrl, baselineModelId, baselineProvider]);
+  }, [baselineBaseUrl, baselineModelId, baselineProvider, baselineToolsEnabled]);
 
   return {
     preset,
@@ -189,6 +198,8 @@ export function useLlmSettings() {
     setApiKey,
     hasApiKey,
     configured,
+    toolsEnabled,
+    setToolsEnabled,
     loading,
     saving,
     testing,

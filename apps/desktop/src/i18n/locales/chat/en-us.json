@@ -1,4 +1,15 @@
 {
-  "title": "Chat",
-  "description": "Customer conversation workspace — in development."
+  "title": "AI Chat",
+  "description": "Chat with an AI assistant",
+  "input.placeholder": "Type your message…",
+  "send": "Send",
+  "sending": "Generating…",
+  "error": "Something went wrong",
+  "errorNotConfigured": "No LLM configured. Set up a model and API key in Settings first.",
+  "empty": "Start a conversation with the AI",
+  "dismiss": "Dismiss",
+  "thinking": "Thinking…",
+  "thinkingDetails": "Thinking process",
+  "toolOk": "done",
+  "toolFailed": "failed"
 }

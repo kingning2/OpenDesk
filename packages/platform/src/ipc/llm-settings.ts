@@ -32,6 +32,8 @@ export interface LlmSettingsResponse {
   configured: boolean;
   /** keyring 是否已有密钥 */
   has_api_key: boolean;
+  /** 是否允许 AI 调用数据查询工具 */
+  tools_enabled: boolean;
 }
 
 /**
@@ -45,6 +47,7 @@ export interface LlmSettingsSaveRequest {
   base_url?: string;
   model_id: string;
   api_key: string;
+  tools_enabled: boolean;
 }
 
 /**

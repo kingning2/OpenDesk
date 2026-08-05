@@ -1,4 +1,15 @@
 {
-  "title": "Chat",
-  "description": "客户会话工作区 — 开发中。"
+  "title": "AI 对话",
+  "description": "与 AI 助手对话，分析业务数据",
+  "input.placeholder": "输入你的问题…",
+  "send": "发送",
+  "sending": "生成中…",
+  "error": "出错了",
+  "errorNotConfigured": "尚未配置大模型。请先在「设置」中配置模型与 API Key，再回来对话。",
+  "empty": "开始和 AI 对话吧",
+  "dismiss": "关闭",
+  "thinking": "思考中…",
+  "thinkingDetails": "思考过程",
+  "toolOk": "完成",
+  "toolFailed": "失败"
 }

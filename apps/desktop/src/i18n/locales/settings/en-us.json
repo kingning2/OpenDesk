@@ -32,6 +32,8 @@
   "llmTest": "Test connection",
   "llmTesting": "Testing…",
   "llmKeyStored": "Key stored in keyring",
+  "llmToolsEnabled": "Allow AI to call data-query tools",
+  "llmToolsEnabledHint": "When on, the chat LLM may query the local business database with read-only tools. Only applies to OpenAI-compatible providers.",
   "apiKey": "API key",
   "apiKeyPlaceholder": "Paste YouTube API key",
   "save": "Save",

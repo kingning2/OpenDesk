@@ -193,6 +193,7 @@ diesel::table! {
         model_id -> Text,
         api_key_ref -> Text,
         has_api_key -> Bool,
+        tools_enabled -> Bool,
         updated_at -> Text,
     }
 }

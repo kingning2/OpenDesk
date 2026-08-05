@@ -32,6 +32,8 @@
   "llmTest": "测试连接",
   "llmTesting": "测试中…",
   "llmKeyStored": "密钥已存钥匙串",
+  "llmToolsEnabled": "允许 AI 调用数据查询工具",
+  "llmToolsEnabledHint": "开启后，聊天中的大模型可使用内置只读工具查询本机业务数据库；仅对 OpenAI 兼容协议生效。",
   "apiKey": "API 密钥",
   "apiKeyPlaceholder": "粘贴 YouTube API 密钥",
   "save": "保存",

@@ -13,6 +13,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Switch,
 } from "@desk/ui";
 import { useI18n } from "../../i18n";
 import { LLM_VENDOR_PRESETS, type LlmVendorPresetId } from "./llm-presets";
@@ -51,6 +52,8 @@ export function LlmSettingsPanel({ llm }: LlmSettingsPanelProps) {
     setApiKey,
     hasApiKey,
     configured,
+    toolsEnabled,
+    setToolsEnabled,
     loading,
     saving,
     testing,
@@ -154,6 +157,23 @@ export function LlmSettingsPanel({ llm }: LlmSettingsPanelProps) {
         <p className="text-[length:var(--text-xs)] text-muted-foreground">
           {t("settings.llmApiKeyHint")}
         </p>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-border px-3 py-2">
+        <div className="min-w-0">
+          <p className="text-[length:var(--text-sm)] font-medium text-foreground">
+            {t("settings.llmToolsEnabled")}
+          </p>
+          <p className="text-[length:var(--text-xs)] text-muted-foreground">
+            {t("settings.llmToolsEnabledHint")}
+          </p>
+        </div>
+        <Switch
+          checked={toolsEnabled}
+          disabled={loading || saving}
+          aria-label={t("settings.llmToolsEnabled")}
+          onCheckedChange={setToolsEnabled}
+        />
       </div>
 
       <div className="flex flex-wrap items-center gap-3">

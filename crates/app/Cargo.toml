@@ -14,11 +14,14 @@ tauri-plugin-opener = { workspace = true }
 common = { path = "../common" }
 adapter = { path = "../adapter" }
 crawler = { path = "../crawler" }
+chat = { path = "../chat" }
 customer = { path = "../customer" }
 mail = { path = "../mail" }
 ports = { path = "../ports" }
 storage = { path = "../storage" }
 agent = { path = "../agent" }
+opendesk-mcp = { path = "../agent/mcp" }
+rmcp = { version = "0", features = ["client", "server", "transport-io", "schemars"] }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 serde = { workspace = true }

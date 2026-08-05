@@ -57,3 +57,29 @@ export type { DataTableColumnMeta, DataTableProps } from "./data-table";
 export type { ColumnDef } from "@tanstack/react-table";
 export * from "./layout";
 export * from "./workflow";
+export {
+  Message,
+  MessageAvatar,
+  MessageContent,
+  MessageFooter,
+  MessageGroup,
+  MessageHeader,
+} from "./message";
+export {
+  Bubble,
+  BubbleContent,
+  BubbleGroup,
+  BubbleReactions,
+} from "./bubble";
+export { Marker, MarkerContent, MarkerIcon, markerVariants } from "./marker";
+export {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+  useMessageScroller,
+  useMessageScrollerScrollable,
+  useMessageScrollerVisibility,
+} from "./message-scroller";

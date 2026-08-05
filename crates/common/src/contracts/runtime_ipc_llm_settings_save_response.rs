@@ -7,4 +7,5 @@ pub struct RuntimeIpcLlmSettingsSaveResponse {
     pub model_id: String,
     pub configured: bool,
     pub has_api_key: bool,
+    pub tools_enabled: bool,
 }

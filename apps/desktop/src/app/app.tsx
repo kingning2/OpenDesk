@@ -113,6 +113,8 @@ function installErrorReporters(): void {
 /**
  * 应用根组件。
  *
+ * 多语言、错误边界与授权门禁（AppChrome + 路由）。
+ *
  * @author coisini
  * @created 2026-07-20
  *

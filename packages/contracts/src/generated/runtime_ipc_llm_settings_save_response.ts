@@ -4,4 +4,5 @@ export interface RuntimeIpcLlmSettingsSaveResponse {
   model_id: string;
   configured: boolean;
   has_api_key: boolean;
+  tools_enabled: boolean;
 }

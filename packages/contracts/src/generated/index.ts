@@ -2,6 +2,10 @@
 
 export type { AgentIpcPingRequest } from "./agent_ipc_ping_request";
 export type { AgentIpcPingResponse } from "./agent_ipc_ping_response";
+export type { ChatEventToken } from "./chat_event_token";
+export type { ChatEventTool } from "./chat_event_tool";
+export type { ChatIpcSendRequest } from "./chat_ipc_send_request";
+export type { ChatIpcSendResponse } from "./chat_ipc_send_response";
 export type { CrawlerDtoChannelResult } from "./crawler_dto_channel_result";
 export type { CrawlerDtoJobConfig } from "./crawler_dto_job_config";
 export type { CrawlerEventChannelAccepted } from "./crawler_event_channel_accepted";

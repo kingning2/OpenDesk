@@ -89,13 +89,14 @@ impl LlmSettingsStore for SqliteLlmSettingsStore {
                     llm_setting::base_url,
                     llm_setting::model_id,
                     llm_setting::has_api_key,
+                    llm_setting::tools_enabled,
                 ))
-                .first::<(String, Option<String>, String, bool)>(conn)
+                .first::<(String, Option<String>, String, bool, bool)>(conn)
                 .optional()
                 .map_err(|error| StoreError::Unavailable(error.to_string()))
         })?;
 
-        let Some((provider, base_url, model_id, has_api_key)) = row else {
+        let Some((provider, base_url, model_id, has_api_key, tools_enabled)) = row else {
             return Ok(None);
         };
         Ok(Some(LlmSettingsRecord {
@@ -103,6 +104,7 @@ impl LlmSettingsStore for SqliteLlmSettingsStore {
             base_url,
             model_id,
             has_api_key,
+            tools_enabled,
         }))
     }
 
@@ -112,6 +114,7 @@ impl LlmSettingsStore for SqliteLlmSettingsStore {
         base_url: Option<&str>,
         model_id: &str,
         api_key: Option<&str>,
+        tools_enabled: bool,
     ) -> Result<LlmSettingsRecord, StoreError> {
         let provider = provider.trim();
         let model_id = model_id.trim();
@@ -147,6 +150,7 @@ impl LlmSettingsStore for SqliteLlmSettingsStore {
                     llm_setting::model_id.eq(model_id),
                     llm_setting::api_key_ref.eq(API_KEY_REF),
                     llm_setting::has_api_key.eq(has_api_key),
+                    llm_setting::tools_enabled.eq(tools_enabled),
                     llm_setting::updated_at.eq(&updated_at),
                 ))
                 .execute(conn)
@@ -159,6 +163,7 @@ impl LlmSettingsStore for SqliteLlmSettingsStore {
             base_url: base_url_owned,
             model_id: model_id.to_string(),
             has_api_key,
+            tools_enabled,
         })
     }
 

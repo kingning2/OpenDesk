@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://chat/event/token/v1",
+  "title": "chat/message/token",
+  "description": "One streamed token of an assistant reply pushed to the UI.",
+  "type": "object",
+  "required": ["event_id", "occurred_at", "session_id", "message_id", "seq", "delta"],
+  "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "occurred_at": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string",
+      "description": "Conversation session this token belongs to (scopes events to the owning window)."
+    },
+    "message_id": {
+      "type": "string",
+      "description": "Id of the assistant reply this token belongs to."
+    },
+    "seq": {
+      "type": "integer",
+      "description": "Monotonic token sequence within the message (0-based)."
+    },
+    "delta": {
+      "type": "string",
+      "description": "One chunk of answer text. Empty on reasoning deltas and on the final done event."
+    },
+    "reasoning": {
+      "type": "string",
+      "description": "One chunk of model reasoning/thinking (e.g. DeepSeek reasoning_content, Anthropic thinking). Empty when absent."
+    },
+    "done": {
+      "type": "boolean",
+      "description": "true on the final event of a message; delta empty."
+    },
+    "error_message": {
+      "type": "string",
+      "description": "Set on the done event when streaming failed."
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://chat/ipc/send.response/v1",
+  "title": "chat/send.response",
+  "description": "Tauri IPC: ack that the chat message was accepted and streaming started.",
+  "type": "object",
+  "required": ["ok", "session_id", "message_id"],
+  "properties": {
+    "ok": {
+      "type": "boolean"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "message_id": {
+      "type": "string",
+      "description": "Id of the assistant reply being streamed."
+    },
+    "error_message": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://chat/event/tool/v1",
+  "title": "chat/message/tool",
+  "description": "One tool call executed by the assistant during a reply, pushed to the UI.",
+  "type": "object",
+  "required": ["event_id", "occurred_at", "session_id", "message_id", "seq", "name", "arguments", "ok"],
+  "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "occurred_at": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string",
+      "description": "Conversation session this tool call belongs to (scopes events to the owning window)."
+    },
+    "message_id": {
+      "type": "string",
+      "description": "Id of the assistant reply this tool call belongs to."
+    },
+    "seq": {
+      "type": "integer",
+      "description": "Monotonic tool-call sequence within the message (0-based)."
+    },
+    "name": {
+      "type": "string",
+      "description": "Tool name, e.g. list_databases."
+    },
+    "arguments": {
+      "type": "string",
+      "description": "JSON-encoded tool arguments object."
+    },
+    "ok": {
+      "type": "boolean",
+      "description": "true when the tool executed successfully."
+    },
+    "result": {
+      "type": "string",
+      "description": "JSON-encoded tool result; when ok=false this is the error message."
+    }
+  },
+  "additionalProperties": false
+}

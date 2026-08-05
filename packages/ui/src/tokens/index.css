@@ -73,6 +73,16 @@
   --scrollbar-track: transparent;
 }
 
+/* Chat component utilities (vendored from shadcn/ui chat components) */
+@utility wrap-break-word {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+@utility scrollbar-gutter-stable {
+  scrollbar-gutter: stable;
+}
+
 .dark {
   --color-shell: oklch(0.14 0.015 280);
   --color-workspace: oklch(0.19 0.015 280);

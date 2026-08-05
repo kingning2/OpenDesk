@@ -5,6 +5,8 @@
 //! 作者：coisini
 //! 创建时间：2026-07-16
 
+mod chat_emit;
+mod chat_tools;
 mod commands;
 mod crawler_emit;
 mod logging;
@@ -126,6 +128,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
         })
         .invoke_handler(tauri::generate_handler![
             commands::agent::agent_ping,
+            commands::chat::chat_send,
             commands::license::license_status,
             commands::license::license_machine_code,
             commands::license::license_activate,

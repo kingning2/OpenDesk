@@ -4,7 +4,7 @@
   "title": "runtime/llm_settings",
   "description": "Persisted LLM settings metadata. Never includes api_key plaintext.",
   "type": "object",
-  "required": ["provider", "model_id", "configured", "has_api_key"],
+  "required": ["provider", "model_id", "configured", "has_api_key", "tools_enabled"],
   "properties": {
     "provider": {
       "type": "string",
@@ -25,6 +25,10 @@
     "has_api_key": {
       "type": "boolean",
       "description": "True when a secret is stored in OS keyring. Never returns the key itself."
+    },
+    "tools_enabled": {
+      "type": "boolean",
+      "description": "True when the LLM may call the built-in read-only data-query MCP tools."
     }
   },
   "additionalProperties": false

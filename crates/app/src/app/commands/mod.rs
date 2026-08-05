@@ -7,6 +7,7 @@
 //! - [`mail`] — 邮件模板 / 账号 / 发信 / 入站记录
 
 pub mod agent;
+pub mod chat;
 pub mod crawler;
 pub mod customer;
 pub mod license;
