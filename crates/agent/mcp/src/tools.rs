@@ -21,6 +21,14 @@ const DEFAULT_LIMIT: usize = 100;
 /// 查询行数硬上限。
 const MAX_LIMIT: usize = 500;
 
+/// AI 可访问的表白名单（硬编码，默认只开放 `customer`）。
+///
+/// 需要放开更多表时，直接把表名追加到这个数组末尾即可；对 `opendesk` 与
+/// `crawler` 两个库同时生效，Claude Code 与内置 chat 共用同一套白名单。
+/// `list_tables` 只返回白名单内的表；`table_schema` 与 `run_query` 访问
+/// 白名单外的表会被拒绝。
+const ALLOWED_TABLES: &[&str] = &["customer"];
+
 /// MCP 工具参数中的数据库标识。
 #[derive(Debug, Clone, Deserialize, JsonSchema)]
 #[serde(rename_all = "lowercase")]
@@ -131,8 +139,10 @@ impl OpendeskMcp {
         Ok(json!({ "databases": databases }).to_string())
     }
 
-    /// 列出某数据库的所有用户表。
-    #[tool(description = "列出指定数据库（opendesk 或 crawler）中的所有用户表名")]
+    /// 列出某数据库中白名单内的用户表。
+    #[tool(
+        description = "列出指定数据库（opendesk 或 crawler）中 AI 可见的用户表名（仅白名单内的表）"
+    )]
     async fn list_tables(
         &self,
         Parameters(input): Parameters<ListTablesInput>,
@@ -141,21 +151,28 @@ impl OpendeskMcp {
         let tables = conn
             .list_tables()
             .map_err(|error| format!("查询表列表失败: {error}"))?;
+        let visible: Vec<String> = tables
+            .into_iter()
+            .filter(|table| ALLOWED_TABLES.contains(&table.as_str()))
+            .collect();
         Ok(json!({
             "db": input.db.name(),
-            "tables": tables,
+            "tables": visible,
         })
         .to_string())
     }
 
-    /// 查看单张表的列、索引与外键定义。
+    /// 查看白名单内单张表的列、索引与外键定义。
     #[tool(
-        description = "查看指定数据库某张表的列（name/type/notnull/pk/default）、索引与外键定义"
+        description = "查看指定数据库某张 AI 可见表（白名单内）的列（name/type/notnull/pk/default）、索引与外键定义"
     )]
     async fn table_schema(
         &self,
         Parameters(input): Parameters<TableSchemaInput>,
     ) -> Result<String, String> {
+        if !ALLOWED_TABLES.contains(&input.table.as_str()) {
+            return Err(format!("不允许查看表 {}（白名单外）", input.table));
+        }
         let conn = open_readonly(input.db.as_db(), &self.data_dir)?;
         let schema = conn
             .table_schema(&input.table)
@@ -166,9 +183,10 @@ impl OpendeskMcp {
     /// 只读执行 SQL 查询并返回 JSON 结果。
     ///
     /// 仅允许 SELECT / WITH / EXPLAIN / PRAGMA；连接以 SQLite 只读模式打开，
-    /// 任何写入都会被拒绝。敏感列（密码 / API key / token 等）自动脱敏。
+    /// 任何写入都会被拒绝。只允许访问白名单内的表，读取白名单外表会被拒绝。
+    /// 敏感列（密码 / API key / token 等）自动脱敏。
     #[tool(
-        description = "在指定数据库上只读执行一条 SQL（仅 SELECT/WITH/EXPLAIN/PRAGMA，任何写操作都会被拒绝），返回 JSON；limit 控制行数上限（默认 100，最大 500）"
+        description = "在指定数据库上只读执行一条 SQL（仅 SELECT/WITH/EXPLAIN/PRAGMA，只允许访问 AI 可见的白名单表，任何写操作或访问白名单外表都会被拒绝），返回 JSON；limit 控制行数上限（默认 100，最大 500）"
     )]
     async fn run_query(
         &self,
@@ -177,7 +195,7 @@ impl OpendeskMcp {
         let limit = input.limit.unwrap_or(DEFAULT_LIMIT).clamp(1, MAX_LIMIT);
         let conn = open_readonly(input.db.as_db(), &self.data_dir)?;
         let (columns, mut rows) = conn
-            .query_rows(&input.sql, limit)
+            .query_rows_if_allowed(&input.sql, limit, ALLOWED_TABLES)
             .map_err(|error| format!("查询失败（{}）: {error}", input.sql))?;
 
         for row in &mut rows {
@@ -346,5 +364,94 @@ mod tests {
             .await
             .expect_err("db does not exist");
         assert!(err.contains("无法读取"), "unexpected error: {err}");
+    }
+
+    fn seed_db_with_hidden(dir: &std::path::Path) {
+        let conn = rusqlite::Connection::open(dir.join("opendesk.db")).expect("open");
+        conn.execute_batch(
+            "CREATE TABLE customer (id TEXT PRIMARY KEY, email TEXT);\
+             INSERT INTO customer VALUES ('1','a@b.com');\
+             CREATE TABLE mail_account (id TEXT PRIMARY KEY, password_value TEXT);\
+             INSERT INTO mail_account VALUES ('1','pw');",
+        )
+        .expect("seed");
+    }
+
+    #[tokio::test]
+    async fn list_tables_filters_to_allowlist() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        seed_db_with_hidden(dir.path());
+        let server = OpendeskMcp::new(dir.path().to_path_buf());
+        let out = server
+            .list_tables(Parameters(ListTablesInput {
+                db: DbName::Opendesk,
+            }))
+            .await
+            .expect("list_tables");
+        let parsed: Value = serde_json::from_str(&out).expect("json");
+        assert_eq!(parsed["tables"], json!(["customer"]));
+    }
+
+    #[tokio::test]
+    async fn table_schema_rejects_hidden_table() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        seed_db_with_hidden(dir.path());
+        let server = OpendeskMcp::new(dir.path().to_path_buf());
+        let err = server
+            .table_schema(Parameters(TableSchemaInput {
+                db: DbName::Opendesk,
+                table: "mail_account".into(),
+            }))
+            .await
+            .expect_err("hidden table rejected");
+        assert!(err.contains("白名单"), "unexpected error: {err}");
+    }
+
+    #[tokio::test]
+    async fn run_query_rejects_hidden_table() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        seed_db_with_hidden(dir.path());
+        let server = OpendeskMcp::new(dir.path().to_path_buf());
+        let err = server
+            .run_query(Parameters(RunQueryInput {
+                db: DbName::Opendesk,
+                sql: "SELECT * FROM mail_account".into(),
+                limit: None,
+            }))
+            .await
+            .expect_err("hidden table rejected");
+        assert!(err.contains("白名单"), "unexpected error: {err}");
+    }
+
+    #[tokio::test]
+    async fn run_query_rejects_subquery_referencing_hidden_table() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        seed_db_with_hidden(dir.path());
+        let server = OpendeskMcp::new(dir.path().to_path_buf());
+        let err = server
+            .run_query(Parameters(RunQueryInput {
+                db: DbName::Opendesk,
+                sql: "SELECT * FROM customer WHERE id IN (SELECT id FROM mail_account)".into(),
+                limit: None,
+            }))
+            .await
+            .expect_err("hidden table in subquery rejected");
+        assert!(err.contains("白名单"), "unexpected error: {err}");
+    }
+
+    #[tokio::test]
+    async fn run_query_allows_whitelisted_table() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        seed_db_with_hidden(dir.path());
+        let server = OpendeskMcp::new(dir.path().to_path_buf());
+        let out = server
+            .run_query(Parameters(RunQueryInput {
+                db: DbName::Opendesk,
+                sql: "SELECT * FROM customer".into(),
+                limit: None,
+            }))
+            .await
+            .expect("allowed query");
+        assert!(out.contains("a@b.com"), "unexpected output: {out}");
     }
 }
