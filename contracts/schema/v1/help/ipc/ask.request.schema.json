@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://help/ipc/ask.request/v1",
+  "title": "help/ask.request",
+  "description": "Tauri IPC: ask the system navigation assistant one stateless question (React to Rust).",
+  "type": "object",
+  "required": ["text"],
+  "properties": {
+    "message_id": {
+      "type": "string",
+      "description": "Client-generated id of the assistant reply placeholder; the backend reuses it so token events land on the placeholder."
+    },
+    "text": {
+      "type": "string",
+      "description": "The user question about system usage / navigation."
+    }
+  },
+  "additionalProperties": false
+}
