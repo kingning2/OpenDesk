@@ -48,3 +48,5 @@ crates/adapter/generated/license_attest_key.hex
 docs/managed/changes/*
 
 .agents
+
+apps/desktop/src-tauri/binaries/opendesk-worker-x86_64-pc-windows-msvc.exe
