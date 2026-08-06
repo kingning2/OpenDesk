@@ -7,3 +7,6 @@
 | CHG-20260723-002-workflow-runtime | in_progress | P0 | workflow-runtime | coisini | none | none |
 | CHG-20260720-026-mail-inbound-reply-record | in_progress | P1 | mail | developer | EPIC-20260720-001-mvp-sales-workbench | CHG-20260720-029-imap-inbound-sync |
 | CHG-20260720-029-imap-inbound-sync | in_progress | P0 | mail | developer | EPIC-20260720-001-mvp-sales-workbench | CHG-20260720-018-ai-mail-draft |
+| CHG-20260806-001-knowledge-base-rag | in_progress | P1 | knowledge | developer | none | none |
+| CHG-20260806-002-parser-tools | in_progress | P1 | knowledge | developer | none | none |
+| CHG-20260806-003-knowledge-import-worker | in_progress | P1 | knowledge | developer | none | none |
