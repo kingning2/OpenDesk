@@ -3,6 +3,7 @@ use std::path::PathBuf;
 
 fn main() {
     ensure_external_bin_stub_for_dev("license-verifier");
+    ensure_external_bin_stub_for_dev("opendesk-worker");
     tauri_build::build();
 }
 
@@ -26,11 +27,8 @@ fn ensure_external_bin_stub_for_dev(base_name: &str) {
 
     fs::create_dir_all(&binaries_dir).expect("create binaries directory");
 
-    #[cfg(unix)]
-    write_unix_stub(&binary_path);
-
-    #[cfg(windows)]
-    write_windows_stub(&binary_path);
+    // 1 字节占位即可，运行时通过大小跳过 stub（dev 流程会先构建真二进制覆盖它）。
+    fs::write(&binary_path, [0]).expect("write externalBin stub");
 
     println!(
         "cargo:warning=created dev {base_name} stub at {}",
@@ -46,32 +44,4 @@ fn external_binary_name(base_name: &str, target: &str) -> String {
     } else {
         base
     }
-}
-
-#[cfg(unix)]
-fn write_unix_stub(path: &PathBuf) {
-    use std::os::unix::fs::PermissionsExt;
-
-    const STUB: &[u8] = b"#!/bin/sh\nexit 0\n";
-    fs::write(path, STUB).expect("write externalBin stub");
-    let mut permissions = fs::metadata(path)
-        .expect("externalBin stub metadata")
-        .permissions();
-    permissions.set_mode(0o755);
-    fs::set_permissions(path, permissions).expect("chmod externalBin stub");
-}
-
-#[cfg(windows)]
-fn write_windows_stub(path: &PathBuf) {
-    if let Ok(system_root) = std::env::var("SystemRoot") {
-        let donor = PathBuf::from(system_root)
-            .join("System32")
-            .join("where.exe");
-        if donor.is_file() {
-            fs::copy(donor, path).expect("copy externalBin stub");
-            return;
-        }
-    }
-
-    fs::write(path, [0]).expect("write externalBin stub");
 }

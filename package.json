@@ -7,6 +7,8 @@
     "dev": "pnpm --filter @desk/desktop dev",
     "build": "pnpm --filter @desk/desktop build",
     "build:license-verifier": "node tooling/scripts/build-license-verifier.mjs",
+    "build:worker": "node tooling/scripts/build-worker.mjs",
+    "build:worker:release": "node tooling/scripts/build-worker.mjs --release",
     "activation-gen:gui": "node tooling/scripts/run-activation-gen-gui.mjs",
     "preview": "pnpm --filter @desk/desktop preview",
     "tauri": "node tooling/scripts/tauri.mjs",
@@ -35,6 +37,7 @@
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
     "husky": "^9.1.7",
+    "playwright-core": "^1.62.1",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.48.0"
   }

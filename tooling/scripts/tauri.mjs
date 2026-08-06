@@ -70,6 +70,19 @@ if (platform() === "win32") {
   }
 }
 
+// dev 前先构建 worker sidecar（debug），保证主进程自动拉起时能拿到真二进制。
+const subcommand = normalizedArgs.find((arg) => !arg.startsWith("-"));
+if (subcommand === "dev") {
+  const workerBuild = spawnSync(
+    "node",
+    ["tooling/scripts/build-worker.mjs"],
+    { stdio: "inherit", shell: true, env },
+  );
+  if (workerBuild.status !== 0) {
+    process.exit(workerBuild.status ?? 1);
+  }
+}
+
 const result = spawnSync(
   "pnpm",
   ["--filter", "@desk/desktop", "exec", "tauri", ...tauriArgs],

@@ -112,7 +112,7 @@ jobs:
           }
           Copy-Item $mainExe $portableDir -Force
           Get-ChildItem -Path $releaseDir -File | Where-Object {
-            $_.Name -match '^license-verifier' -or $_.Extension -in @(".dll")
+            $_.Name -match '^license-verifier' -or $_.Name -match '^opendesk-worker' -or $_.Extension -in @(".dll")
           } | ForEach-Object { Copy-Item $_.FullName $portableDir -Force }
 
           $zipPath = "dist/$baseName.zip"
@@ -222,7 +222,7 @@ jobs:
           }
           Copy-Item $mainExe $portableDir -Force
           Get-ChildItem -Path $releaseDir -File | Where-Object {
-            $_.Name -match '^license-verifier' -or $_.Extension -in @(".dll")
+            $_.Name -match '^license-verifier' -or $_.Name -match '^opendesk-worker' -or $_.Extension -in @(".dll")
           } | ForEach-Object { Copy-Item $_.FullName $portableDir -Force }
 
           $zipPath = "dist/$baseName.zip"

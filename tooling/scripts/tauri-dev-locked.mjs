@@ -45,6 +45,7 @@ if (platform() === "win32") {
 }
 
 run("node", ["tooling/scripts/build-license-verifier.mjs"], { env });
+run("node", ["tooling/scripts/build-worker.mjs"], { env });
 
 const triple =
   platform() === "win32"

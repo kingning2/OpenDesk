@@ -71,6 +71,12 @@ if (buildTarget) {
 }
 run("node", verifierArgs, { env });
 
+const workerArgs = ["tooling/scripts/build-worker.mjs", "--release"];
+if (buildTarget) {
+  workerArgs.push("--target", buildTarget);
+}
+run("node", workerArgs, { env });
+
 const tauriArgs = ["tauri", "build", "--features", "license-lock"];
 if (buildTarget) {
   // Must match CARGO_BUILD_TARGET so the bundler finds target/<triple>/release/.
