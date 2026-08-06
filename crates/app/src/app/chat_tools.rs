@@ -1,4 +1,4 @@
-//! 进程内 MCP client 桥：把 `opendesk-mcp` 的只读数据查询工具暴露给聊天 LLM。
+//! 进程内 MCP client 桥：把 `agent::mcp` 的只读数据查询工具暴露给聊天 LLM。
 //!
 //! 用两根交叉的 `tokio::io::duplex` 构造进程内 MCP 会话：server 端在后台 task 中
 //! 运行 `rmcp::serve_server(OpendeskMcp)`，client 端经 `rmcp::serve_client` 握手后
@@ -6,9 +6,9 @@
 
 use std::path::PathBuf;
 
+use agent::mcp::OpendeskMcp;
 use async_trait::async_trait;
 use chat::{ChatTool, ChatToolCaller};
-use opendesk_mcp::OpendeskMcp;
 use rmcp::model::{CallToolRequestParams, RawContent};
 use rmcp::{serve_client, serve_server, RoleClient};
 use serde_json::Value;

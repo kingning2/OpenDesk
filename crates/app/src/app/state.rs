@@ -8,6 +8,7 @@ use adapter::license::UnlockedLicenseGate;
 #[cfg(feature = "license-lock")]
 use adapter::license::{FailClosedLicenseGate, VerifierProcessLicense};
 use agent::embedding::Embedder;
+use agent::skills::SkillRegistry;
 use crawler::CrawlerService;
 use ports::background_job::BackgroundJobStore;
 use ports::chat::{ChatMemoryStore, ChatStore};
@@ -19,7 +20,9 @@ use ports::license::LicenseGate;
 use ports::llm_settings::LlmSettingsStore;
 use ports::mail::MailStore;
 use ports::workflow::ScriptSnippetStore;
-use std::sync::Arc;
+use std::process::Child;
+use std::sync::{Arc, Mutex};
+use workflow_runtime::WorkflowRuntimeFacade;
 
 /// 桌面应用共享状态。
 ///
@@ -56,6 +59,12 @@ pub struct AppState {
     pub chat_memory_store: Arc<dyn ChatMemoryStore>,
     /// Local embedding service (fastembed, lazy model load).
     pub embedder: Arc<dyn Embedder>,
+    /// 内置系统操作指引 Skill 注册表（注入聊天上下文，让 AI 了解系统）。
+    pub skill_registry: Arc<SkillRegistry>,
+    /// 通用工作流运行时（DAG 调度 + 检查点）。
+    pub workflow_runtime: Arc<WorkflowRuntimeFacade>,
+    /// 主进程自动拉起的 `opendesk-worker` 子进程（退出时清理）。
+    pub worker: Arc<Mutex<Option<Child>>>,
 }
 
 /// 按 Cargo feature 构造 License 闸门。

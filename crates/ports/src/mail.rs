@@ -298,6 +298,9 @@ pub trait MailStore: Send + Sync {
 
     fn save_account(&self, input: MailAccountWriteInput) -> Result<MailAccountRecord, StoreError>;
 
+    /// Delete one bound account, its keyring secret, and IMAP sync state.
+    fn delete_account(&self, id: &str) -> Result<(), StoreError>;
+
     /// Resolve plaintext SMTP password from keyring (or legacy inline column).
     ///
     /// # 注意事项

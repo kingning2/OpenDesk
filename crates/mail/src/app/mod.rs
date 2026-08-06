@@ -17,7 +17,7 @@ mod send;
 mod template;
 mod tracking;
 
-pub use account::{ListMailAccounts, SaveMailAccount};
+pub use account::{DeleteMailAccount, ListMailAccounts, SaveMailAccount};
 pub use generate_html::{
     parse_email_html_response, GenerateMailHtml, GeneratedMailHtml, EMAIL_HTML_SYSTEM_PROMPT,
 };

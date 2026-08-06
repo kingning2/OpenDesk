@@ -3,7 +3,9 @@
 //! 作者：coisini
 //! 创建时间：2026-07-21
 
-use common::contracts::{MailIpcAccountListResponse, MailIpcAccountSaveRequest};
+use common::contracts::{
+    MailIpcAccountDeleteRequest, MailIpcAccountListResponse, MailIpcAccountSaveRequest,
+};
 use ports::mail::{MailAccountWriteInput, MailStore};
 
 use super::mapper::accounts_to_json;
@@ -61,6 +63,29 @@ impl SaveMailAccount {
                 imap_use_tls: request.imap_use_tls,
                 imap_sync_enabled: request.imap_sync_enabled,
             })
+            .map_err(|error| error.to_string())?;
+
+        ListMailAccounts::execute(store)
+    }
+}
+
+/// Delete one bound mail account.
+///
+/// 作者：coisini
+/// 创建时间：2026-08-06
+pub struct DeleteMailAccount;
+
+impl DeleteMailAccount {
+    /// Remove the account row, its keyring secret, and IMAP sync state.
+    ///
+    /// 作者：coisini
+    /// 创建时间：2026-08-06
+    pub fn execute<S: MailStore + ?Sized>(
+        store: &S,
+        request: MailIpcAccountDeleteRequest,
+    ) -> Result<MailIpcAccountListResponse, String> {
+        store
+            .delete_account(&request.id)
             .map_err(|error| error.to_string())?;
 
         ListMailAccounts::execute(store)

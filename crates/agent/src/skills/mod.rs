@@ -2,6 +2,8 @@
 //!
 //! 不放业务实现；具体 Skill 由 Feature 或后续模块注册。
 
+pub mod system;
+
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -25,6 +27,9 @@ pub struct SkillDescriptor {
 pub trait Skill: Send + Sync {
     /// Skill 元数据。
     fn descriptor(&self) -> SkillDescriptor;
+
+    /// Skill 正文（指引文本），供注入系统提示词或按需检索。
+    fn content(&self) -> String;
 }
 
 /// Skill 注册表错误。
@@ -74,5 +79,20 @@ impl SkillRegistry {
             .values()
             .map(|skill| skill.descriptor())
             .collect()
+    }
+
+    /// 把所有 Skill 的「名称 + 正文」拼成一块指引文本（供注入系统提示词）。
+    pub fn guide_text(&self) -> String {
+        let mut out = String::new();
+        for skill in self.skills.values() {
+            let descriptor = skill.descriptor();
+            out.push_str(&format!(
+                "## {}（{}）\n{}\n\n",
+                descriptor.name,
+                descriptor.id,
+                skill.content()
+            ));
+        }
+        out
     }
 }

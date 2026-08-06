@@ -4,8 +4,8 @@
 //! 创建时间：2026-07-21
 
 use common::contracts::{
-    MailIpcAccountListResponse, MailIpcAccountSaveRequest, MailIpcGenerateHtmlRequest,
-    MailIpcGenerateHtmlResponse, MailIpcInboxUnmatchedListRequest,
+    MailIpcAccountDeleteRequest, MailIpcAccountListResponse, MailIpcAccountSaveRequest,
+    MailIpcGenerateHtmlRequest, MailIpcGenerateHtmlResponse, MailIpcInboxUnmatchedListRequest,
     MailIpcInboxUnmatchedListResponse, MailIpcLinkInboundCustomerRequest,
     MailIpcLinkInboundCustomerResponse, MailIpcMessageListRequest, MailIpcMessageListResponse,
     MailIpcRecordInboundRequest, MailIpcRecordInboundResponse, MailIpcSendRequest,
@@ -14,9 +14,9 @@ use common::contracts::{
     MailIpcTemplateListResponse, MailIpcTemplateSaveRequest,
 };
 use mail::app::{
-    ApplyMailTemplate, GenerateMailHtml, GetMailSyncStatus, LinkInboundCustomer, ListMailAccounts,
-    ListMailMessages, ListMailTemplates, ListUnmatchedInbound, RecordInboundMail, SaveMailAccount,
-    SaveMailTemplate, SendMail, SyncMailNow,
+    ApplyMailTemplate, DeleteMailAccount, GenerateMailHtml, GetMailSyncStatus, LinkInboundCustomer,
+    ListMailAccounts, ListMailMessages, ListMailTemplates, ListUnmatchedInbound, RecordInboundMail,
+    SaveMailAccount, SaveMailTemplate, SendMail, SyncMailNow,
 };
 
 use crate::app::commands::llm::stored_llm_client;
@@ -96,6 +96,23 @@ pub async fn mail_account_save(
     tauri::async_runtime::spawn_blocking(move || SaveMailAccount::execute(store.as_ref(), request))
         .await
         .map_err(|error| error.to_string())?
+}
+
+/// Delete one bound mail account.
+///
+/// 作者：coisini
+/// 创建时间：2026-08-06
+#[tauri::command]
+pub async fn mail_account_delete(
+    state: tauri::State<'_, AppState>,
+    request: MailIpcAccountDeleteRequest,
+) -> Result<MailIpcAccountListResponse, String> {
+    let store = state.mail_store.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        DeleteMailAccount::execute(store.as_ref(), request)
+    })
+    .await
+    .map_err(|error| error.to_string())?
 }
 
 /// List local inbox/sent messages.

@@ -14,6 +14,7 @@ use agent::embedding::Embedder;
 use agent::llm::{
     FunctionTool, LlmClient, StreamMessage, StreamRequest, ToolCallDelta, ToolCallMsg,
 };
+use agent::skills::SkillRegistry;
 use common::contracts::{ChatEventToken, ChatEventTool, ChatIpcSendRequest, ChatIpcSendResponse};
 use ports::chat::{ChatMemoryStore, ChatStore, SaveChatMessage};
 use serde_json::{json, Value};
@@ -98,6 +99,7 @@ impl SendChat {
     /// - `emitter` — 事件推送器
     /// - `request` — 聊天请求
     /// - `tools` — 工具调用器；`None` 表示不启用工具
+    /// - `skills` — 系统操作指引 Skill 注册表；`Some` 时注入一条 system 指引消息
     /// - `store` — 会话/消息持久化端口；`None` 表示不落库
     /// - `memory` — 长期记忆端口；`None` 表示不启用记忆
     /// - `embedder` — 本地嵌入服务；`None` 表示不启用记忆检索
@@ -105,11 +107,13 @@ impl SendChat {
     /// # Errors
     ///
     /// 历史 JSON 非法、LLM 未配置或网络失败时返回错误。
+    #[allow(clippy::too_many_arguments)]
     pub async fn execute(
         client: &LlmClient,
         emitter: &dyn ChatUiEmitter,
         request: ChatIpcSendRequest,
         tools: Option<Arc<dyn ChatToolCaller>>,
+        skills: Option<Arc<SkillRegistry>>,
         store: Option<&dyn ChatStore>,
         memory: Option<Arc<dyn ChatMemoryStore>>,
         embedder: Option<Arc<dyn Embedder>>,
@@ -207,6 +211,22 @@ impl SendChat {
                 tool_calls: None,
                 tool_call_id: None,
             });
+        }
+        // 系统操作指引：注入内置 Skill 知识，让 AI 了解页面 / 设置 / 操作路径。
+        // 放到消息最前（system_prompt 会把所有 system 消息 join，OpenAI 与 Anthropic 路径均生效）。
+        if let Some(skills) = &skills {
+            let guide = skills.guide_text();
+            if !guide.trim().is_empty() {
+                messages.insert(
+                    0,
+                    StreamMessage {
+                        role: "system".to_string(),
+                        content: Some(format!("【系统操作指南】\n{guide}")),
+                        tool_calls: None,
+                        tool_call_id: None,
+                    },
+                );
+            }
         }
         messages.push(StreamMessage {
             role: "user".to_string(),
@@ -615,8 +635,21 @@ mod tests {
                         break;
                     }
                     request.extend_from_slice(&buffer[..read]);
-                    if String::from_utf8_lossy(&request).contains("\r\n\r\n") {
-                        break;
+                    // 读完请求头后按 Content-Length 继续读完整请求体（大请求体可能分多次到达）。
+                    let text = String::from_utf8_lossy(&request);
+                    if let Some(head_end) = text.find("\r\n\r\n") {
+                        let content_length = text
+                            .lines()
+                            .find_map(|line| {
+                                let lower = line.to_ascii_lowercase();
+                                lower
+                                    .strip_prefix("content-length:")
+                                    .and_then(|value| value.trim().parse::<usize>().ok())
+                            })
+                            .unwrap_or(0);
+                        if request.len() >= head_end + 4 + content_length {
+                            break;
+                        }
                     }
                 }
                 let header = format!(
@@ -781,6 +814,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         )
         .await?;
 
@@ -831,6 +865,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         )
         .await?;
         let _ = emitter;
@@ -860,6 +895,7 @@ mod tests {
                 message_id: Some("msg-3".to_string()),
             },
             None,
+            None,
             Some(&store),
             None,
             None,
@@ -872,6 +908,101 @@ mod tests {
         assert_eq!(messages[0].content, "你好");
         assert_eq!(messages[1].role, "assistant");
         assert_eq!(messages[1].content, "回复内容");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn injects_system_guide_when_skills_provided() -> Result<(), Box<dyn std::error::Error>> {
+        let round_text = concat!(
+            "data: {\"choices\":[{\"delta\":{\"content\":\"好的\"}}]}\n",
+            "data: {\"choices\":[{\"delta\":{}}]}\n",
+            "data: [DONE]\n",
+            "\n",
+        );
+        let (base_url, requests) = mock_llm_rounds(&[round_text])?;
+        let client = LlmClient::new(llm_config(base_url))?;
+        let skills = Arc::new(agent::skills::system::system_registry());
+
+        SendChat::execute(
+            &client,
+            &NoopChatUiEmitter,
+            ChatIpcSendRequest {
+                session_id: "sess-skills".to_string(),
+                messages_json: None,
+                text: "怎么配置 LLM".to_string(),
+                trace_id: None,
+                message_id: Some("msg-skills".to_string()),
+            },
+            None,
+            Some(skills),
+            None,
+            None,
+            None,
+        )
+        .await?;
+
+        let raw = requests.recv_timeout(std::time::Duration::from_secs(2))?;
+        let body = raw.split("\r\n\r\n").nth(1).unwrap_or_default();
+        let parsed: Value = serde_json::from_str(body)?;
+        let messages = parsed["messages"].as_array().expect("messages array");
+        let guide = messages
+            .iter()
+            .find(|message| message["role"] == "system")
+            .and_then(|message| message["content"].as_str())
+            .unwrap_or_default();
+        assert!(
+            guide.contains("系统操作指南"),
+            "system guide injected: {guide}"
+        );
+        assert!(
+            guide.contains("navigate_page"),
+            "page map mentions navigate_page: {guide}"
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn no_guide_injected_without_skills() -> Result<(), Box<dyn std::error::Error>> {
+        let round_text = concat!(
+            "data: {\"choices\":[{\"delta\":{\"content\":\"好的\"}}]}\n",
+            "data: {\"choices\":[{\"delta\":{}}]}\n",
+            "data: [DONE]\n",
+            "\n",
+        );
+        let (base_url, requests) = mock_llm_rounds(&[round_text])?;
+        let client = LlmClient::new(llm_config(base_url))?;
+
+        SendChat::execute(
+            &client,
+            &NoopChatUiEmitter,
+            ChatIpcSendRequest {
+                session_id: "sess-noskill".to_string(),
+                messages_json: None,
+                text: "你好".to_string(),
+                trace_id: None,
+                message_id: Some("msg-noskill".to_string()),
+            },
+            None,
+            None,
+            None,
+            None,
+            None,
+        )
+        .await?;
+
+        let raw = requests.recv_timeout(std::time::Duration::from_secs(2))?;
+        let body = raw.split("\r\n\r\n").nth(1).unwrap_or_default();
+        let parsed: Value = serde_json::from_str(body)?;
+        let messages = parsed["messages"].as_array().expect("messages array");
+        let guide = messages
+            .iter()
+            .find(|message| message["role"] == "system")
+            .and_then(|message| message["content"].as_str())
+            .unwrap_or_default();
+        assert!(
+            !guide.contains("系统操作指南"),
+            "no guide when skills is None: {guide}"
+        );
         Ok(())
     }
 }

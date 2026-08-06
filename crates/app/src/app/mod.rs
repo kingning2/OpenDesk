@@ -6,6 +6,7 @@
 //! 创建时间：2026-07-16
 
 mod chat_emit;
+mod chat_skills;
 mod chat_tools;
 mod commands;
 mod crawler_emit;
@@ -13,6 +14,7 @@ mod logging;
 mod paths;
 mod platform;
 mod state;
+mod workflow_runtime_emit;
 
 use crawler::{CrawlerService, CrawlerUiEmitter};
 use crawler_emit::TauriCrawlerEmitter;
@@ -25,8 +27,9 @@ use ports::crawler_channels::CrawlerChannelStore;
 use ports::crawler_keywords::CrawlerKeywordStore;
 use ports::crawler_settings::CrawlerSettingsStore;
 use ports::customer::CustomerStore;
+use ports::workflow_runtime::CheckpointStore;
 use state::{build_license_gate, AppState};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use storage::background_job::SqliteBackgroundJobStore;
 use storage::chat::SqliteChatStore;
 use storage::crawler_channels::SqliteCrawlerChannelStore;
@@ -38,7 +41,13 @@ use storage::llm_settings::SqliteLlmSettingsStore;
 use storage::mail::SqliteMailStore;
 use storage::opendesk_db::OpendeskDb;
 use storage::workflow::SqliteScriptSnippetStore;
-use tauri::Manager;
+use storage::workflow_runtime::SqliteCheckpointStore;
+use tauri::{Emitter, Manager};
+use workflow_runtime::{
+    register_builtin_executors, ExecutorRegistry, InMemoryEventBus, SchedulerConfig,
+    WorkflowRuntimeFacade,
+};
+use workflow_runtime_emit::TauriWorkflowRuntimeEmitter;
 
 /// 启动桌面应用：打开数据库、挂载 crawler emitter、注册 IPC、运行事件循环。
 ///
@@ -81,6 +90,18 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
     let embedder = Arc::new(agent::embedding::EmbeddingService::new(Some(
         embedding_cache_dir(),
     ))) as Arc<dyn agent::embedding::Embedder>;
+    let skill_registry = Arc::new(agent::skills::system::system_registry());
+    let mut workflow_registry = ExecutorRegistry::new();
+    register_builtin_executors(&mut workflow_registry).expect("register workflow executors");
+    let workflow_checkpoint =
+        Arc::new(SqliteCheckpointStore::new(opendesk_db.clone())) as Arc<dyn CheckpointStore>;
+    let workflow_event_bus = Arc::new(InMemoryEventBus::new());
+    let workflow_runtime = Arc::new(WorkflowRuntimeFacade::new(
+        workflow_registry,
+        workflow_checkpoint,
+        workflow_event_bus.clone(),
+        SchedulerConfig::default(),
+    ));
     let app_state = AppState {
         license,
         crawler: crawler.clone(),
@@ -95,6 +116,9 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
         chat_store,
         chat_memory_store,
         embedder,
+        skill_registry,
+        workflow_runtime,
+        worker: Arc::new(Mutex::new(None)),
     };
 
     tauri::Builder::default()
@@ -105,6 +129,12 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             let emitter = Arc::new(TauriCrawlerEmitter::new(app.handle().clone()))
                 as Arc<dyn CrawlerUiEmitter>;
             crawler.attach_emitter(emitter);
+
+            let workflow_emitter = Arc::new(TauriWorkflowRuntimeEmitter::new(app.handle().clone()));
+            let workflow_emitter_for_sub = Arc::clone(&workflow_emitter);
+            workflow_event_bus.subscribe(Arc::new(move |event| {
+                workflow_emitter_for_sub.emit_phase(event);
+            }));
 
             let state = app.state::<AppState>();
 
@@ -153,6 +183,53 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
                     }
                 }
             });
+
+            // 邮件同步状态推送：同步在独立 worker 进程写库，主进程低频检测 `mail_imap_sync_state`
+            // 与 `background_job` 的变化并 emit 到 webview，让前端免轮询刷新。
+            let push_app = app.handle().clone();
+            let push_mail_store = state.mail_store.clone();
+            let push_job_store = state.job_store.clone();
+            tauri::async_runtime::spawn(watch_imap_sync_push(
+                push_app,
+                push_mail_store,
+                push_job_store,
+            ));
+
+            // 自动拉起 opendesk-worker：IMAP 收信与后台任务都在独立 worker 进程执行，
+            // 这里保证它随主进程一起启动。worker 自身带单实例文件锁，避免重复拉起。
+            let worker_handle = state.worker.clone();
+            match find_worker_binary() {
+                Some(path) => {
+                    match std::process::Command::new(&path)
+                        .stdout(std::process::Stdio::null())
+                        .stderr(std::process::Stdio::null())
+                        .spawn()
+                    {
+                        Ok(child) => {
+                            *worker_handle.lock().expect("worker mutex") = Some(child);
+                            tracing::info!(
+                                target: "lifecycle",
+                                ?path,
+                                "opendesk-worker spawned"
+                            );
+                        }
+                        Err(error) => {
+                            tracing::error!(
+                                target: "lifecycle",
+                                %error,
+                                ?path,
+                                "failed to spawn opendesk-worker"
+                            );
+                        }
+                    }
+                }
+                None => {
+                    tracing::warn!(
+                        target: "lifecycle",
+                        "opendesk-worker binary not found; mail sync/idle disabled (run pnpm build:worker)"
+                    );
+                }
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -163,6 +240,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             commands::chat::chat_session_rename,
             commands::chat::chat_session_delete,
             commands::chat::chat_messages_load,
+            commands::help::help_ask,
             commands::license::license_status,
             commands::license::license_machine_code,
             commands::license::license_activate,
@@ -190,6 +268,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             commands::mail::mail_template_apply,
             commands::mail::mail_account_list,
             commands::mail::mail_account_save,
+            commands::mail::mail_account_delete,
             commands::mail::mail_message_list,
             commands::mail::mail_generate_html,
             commands::mail::mail_send,
@@ -203,10 +282,133 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             commands::mail_integration::mail_email_read_integration_probe,
             commands::workflow::workflow_snippet_list,
             commands::workflow::workflow_snippet_save,
-            commands::workflow::workflow_snippet_delete
+            commands::workflow::workflow_snippet_delete,
+            commands::workflow_runtime::workflow_runtime_start,
+            commands::workflow_runtime::workflow_runtime_cancel,
+            commands::workflow_runtime::workflow_runtime_resume,
+            commands::workflow_runtime::workflow_runtime_active
         ])
         .build(context)?
-        .run(|_, _| {});
+        .run(|app, event| {
+            if let tauri::RunEvent::Exit = event {
+                if let Some(state) = app.try_state::<AppState>() {
+                    if let Some(mut child) = state.worker.lock().expect("worker mutex").take() {
+                        let _ = child.kill();
+                        let _ = child.wait();
+                        tracing::info!(target: "lifecycle", "opendesk-worker stopped");
+                    }
+                }
+            }
+        });
 
     Ok(())
+}
+
+/// 邮件同步状态推送循环：每秒检测各账号 sync 状态（last_sync_at / last_error / is_syncing），
+/// 有变化即 emit `mail:imap-sync-updated`。worker 是独立进程、无法直接访问 Tauri，只能靠
+/// 主进程读共享数据库这座桥把更新推给 webview。
+async fn watch_imap_sync_push(
+    app: tauri::AppHandle,
+    mail_store: Arc<dyn ports::mail::MailStore>,
+    job_store: Arc<dyn BackgroundJobStore>,
+) {
+    use std::collections::HashMap;
+    use std::time::Duration;
+
+    type Fingerprint = (Option<String>, Option<String>, bool);
+
+    async fn capture(
+        mail_store: Arc<dyn ports::mail::MailStore>,
+        job_store: Arc<dyn BackgroundJobStore>,
+    ) -> HashMap<String, Fingerprint> {
+        tauri::async_runtime::spawn_blocking(move || {
+            let mut map: HashMap<String, Fingerprint> = HashMap::new();
+            let Ok(states) = mail_store.list_imap_sync_states(None) else {
+                return map;
+            };
+            for state in states {
+                let syncing = job_store
+                    .has_active_imap_sync(&state.account_id)
+                    .unwrap_or(false);
+                map.insert(
+                    state.account_id,
+                    (state.last_sync_at, state.last_error, syncing),
+                );
+            }
+            map
+        })
+        .await
+        .unwrap_or_default()
+    }
+
+    let mut last = capture(mail_store.clone(), job_store.clone()).await;
+    loop {
+        tokio::time::sleep(Duration::from_secs(1)).await;
+        let snapshot = capture(mail_store.clone(), job_store.clone()).await;
+        for (account_id, fingerprint) in &snapshot {
+            if last.get(account_id) != Some(fingerprint) {
+                let _ = app.emit("mail:imap-sync-updated", account_id);
+            }
+        }
+        last = snapshot;
+    }
+}
+
+/// 查找 `opendesk-worker` 可执行文件：优先打包后的 sidecar（主程序旁、带 triple 后缀），
+/// 其次构建脚本产物 `apps/desktop/src-tauri/binaries` 与 Cargo target 目录。
+/// 跳过 build.rs 生成的 1 字节 dev stub。
+fn find_worker_binary() -> Option<std::path::PathBuf> {
+    let triple = env!("OPENDESK_WORKER_TARGET_TRIPLE");
+    let exe = if triple.contains("windows") {
+        ".exe"
+    } else {
+        ""
+    };
+    let name = format!("opendesk-worker{exe}");
+    let bundled = format!("opendesk-worker-{triple}{exe}");
+
+    let mut dirs: Vec<std::path::PathBuf> = Vec::new();
+    if let Ok(current) = std::env::current_exe() {
+        if let Some(dir) = current.parent() {
+            dirs.push(dir.to_path_buf());
+        }
+    }
+    if let Ok(mut dir) = std::env::current_dir() {
+        for _ in 0..6 {
+            dirs.push(dir.clone());
+            let binaries = dir.join("apps/desktop/src-tauri/binaries");
+            if binaries.is_dir() {
+                dirs.push(binaries);
+            }
+            if !dir.pop() {
+                break;
+            }
+        }
+    }
+
+    for dir in dirs {
+        for candidate in [dir.join(&bundled), dir.join(&name)] {
+            if is_real_worker(&candidate) {
+                return Some(candidate);
+            }
+        }
+        for sub in [
+            format!("target/{triple}/debug"),
+            format!("target/{triple}/release"),
+            "target/debug".to_string(),
+            "target/release".to_string(),
+        ] {
+            let candidate = dir.join(sub).join(&name);
+            if is_real_worker(&candidate) {
+                return Some(candidate);
+            }
+        }
+    }
+    None
+}
+
+fn is_real_worker(path: &std::path::Path) -> bool {
+    std::fs::metadata(path)
+        .map(|meta| meta.is_file() && meta.len() > 2)
+        .unwrap_or(false)
 }

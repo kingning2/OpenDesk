@@ -15,25 +15,10 @@ use common::contracts::{
 use ports::chat::{ChatMessageRecord, ChatSessionRecord};
 
 use super::llm::stored_llm_client;
+use super::tools_enabled;
 use crate::app::chat_emit::TauriChatEmitter;
 use crate::app::chat_tools::ChatToolsBridge;
 use crate::app::state::AppState;
-
-/// 读取用户是否允许内置 LLM 调用数据查询工具；未配置时按默认开启处理。
-async fn tools_enabled(state: &AppState) -> Result<bool, String> {
-    let store = state.llm_settings_store.clone();
-    tauri::async_runtime::spawn_blocking(move || {
-        Ok::<_, String>(
-            store
-                .get()
-                .map_err(|error| error.to_string())?
-                .map(|record| record.tools_enabled)
-                .unwrap_or(true),
-        )
-    })
-    .await
-    .map_err(|error| error.to_string())?
-}
 
 /// 读取用户是否允许内置 LLM 使用跨会话长期记忆；未配置时按默认开启处理。
 async fn memory_enabled(state: &AppState) -> Result<bool, String> {
@@ -51,9 +36,10 @@ async fn memory_enabled(state: &AppState) -> Result<bool, String> {
     .map_err(|error| error.to_string())?
 }
 
-/// 建立进程内只读数据库 MCP 桥（复用 `opendesk-mcp` 的 4 个查询工具）。
+/// 建立聊天工具：进程内只读数据库 MCP 桥（`agent::mcp` 查询工具）。
+/// 系统导航动作工具（`navigate_page` / `open_settings`）已移到 Help 页，不在此提供。
 async fn build_chat_tools() -> Result<Arc<dyn ChatToolCaller>, String> {
-    let data_dir = opendesk_mcp::paths::data_dir(None);
+    let data_dir = agent::mcp::paths::data_dir(None);
     Ok(Arc::new(ChatToolsBridge::new(data_dir).await?))
 }
 
@@ -107,6 +93,7 @@ pub async fn chat_send(
         &emitter,
         request,
         tools,
+        None,
         Some(chat_store.as_ref()),
         memory,
         embedder,

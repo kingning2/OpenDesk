@@ -73,6 +73,14 @@ impl SqliteMailStore {
             Err(error) => Err(StoreError::Unavailable(format!("keyring get: {error}"))),
         }
     }
+
+    fn keyring_delete(account_id: &str) -> Result<(), StoreError> {
+        match Self::keyring_entry(account_id)?.delete_credential() {
+            Ok(()) => Ok(()),
+            Err(keyring::Error::NoEntry) => Ok(()),
+            Err(error) => Err(StoreError::Unavailable(format!("keyring delete: {error}"))),
+        }
+    }
 }
 
 impl MailStore for SqliteMailStore {
@@ -303,6 +311,19 @@ impl MailStore for SqliteMailStore {
         Err(StoreError::Unavailable(
             "mail.account.password_missing".to_string(),
         ))
+    }
+
+    fn delete_account(&self, id: &str) -> Result<(), StoreError> {
+        Self::keyring_delete(id)?;
+        self.db.with_conn(|conn| {
+            let deleted = diesel::delete(account::mail_account.filter(account::id.eq(id)))
+                .execute(conn)
+                .map_err(map_diesel_error)?;
+            if deleted == 0 {
+                return Err(StoreError::NotFound);
+            }
+            Ok(())
+        })
     }
 
     fn create_outbound_message(

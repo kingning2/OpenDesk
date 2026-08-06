@@ -34,7 +34,14 @@ const MEMORY_VEC_DIMS: usize = 512;
 fn register_vec_extension() {
     static REGISTER: Once = Once::new();
     REGISTER.call_once(|| unsafe {
-        sqlite3_auto_extension(Some(std::mem::transmute(sqlite3_vec_init as *const ())));
+        sqlite3_auto_extension(Some(std::mem::transmute::<
+            *const (),
+            unsafe extern "C" fn(
+                *mut libsqlite3_sys::sqlite3,
+                *mut *mut i8,
+                *const libsqlite3_sys::sqlite3_api_routines,
+            ) -> i32,
+        >(sqlite3_vec_init as *const ())));
     });
 }
 
