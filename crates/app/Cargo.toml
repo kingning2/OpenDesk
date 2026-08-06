@@ -10,16 +10,19 @@ license-lock = []
 [dependencies]
 async-trait = { workspace = true }
 tauri = { workspace = true }
+tauri-plugin-dialog = "2"
 tauri-plugin-opener = { workspace = true }
 common = { path = "../common" }
 adapter = { path = "../adapter" }
 crawler = { path = "../crawler" }
 chat = { path = "../chat" }
 customer = { path = "../customer" }
+knowledge = { path = "../knowledge" }
 mail = { path = "../mail" }
 ports = { path = "../ports" }
 storage = { path = "../storage" }
 agent = { path = "../agent" }
+base64 = { workspace = true }
 rmcp = { version = "0", features = ["client", "server", "transport-io", "schemars"] }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }

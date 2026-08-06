@@ -13,6 +13,7 @@ members = [
   "crates/agent",
   "crates/chat",
   "crates/mail",
+  "crates/knowledge",
   "crates/workflow_runtime",
   "crates/storage",
   "crates/mail-net",
@@ -68,3 +69,12 @@ fs2 = "0.4"
 enigo = "0.3"
 screenshots = "0.8"
 imageproc = "0.25"
+pdf-extract = "0.12"
+docx-rs = "0.4"
+html2md = "0.2"
+base64 = "0.22"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+tar = "0.4"
+pdf2md = "0.1"
+pdfium-render = { version = "0.9", features = ["thread_safe"] }
+tempfile = "3"
