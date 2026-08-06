@@ -91,13 +91,22 @@ impl LlmSettingsStore for SqliteLlmSettingsStore {
                     llm_setting::has_api_key,
                     llm_setting::tools_enabled,
                     llm_setting::memory_enabled,
+                    llm_setting::knowledge_enabled,
                 ))
-                .first::<(String, Option<String>, String, bool, bool, bool)>(conn)
+                .first::<(String, Option<String>, String, bool, bool, bool, bool)>(conn)
                 .optional()
                 .map_err(|error| StoreError::Unavailable(error.to_string()))
         })?;
 
-        let Some((provider, base_url, model_id, has_api_key, tools_enabled, memory_enabled)) = row
+        let Some((
+            provider,
+            base_url,
+            model_id,
+            has_api_key,
+            tools_enabled,
+            memory_enabled,
+            knowledge_enabled,
+        )) = row
         else {
             return Ok(None);
         };
@@ -108,6 +117,7 @@ impl LlmSettingsStore for SqliteLlmSettingsStore {
             has_api_key,
             tools_enabled,
             memory_enabled,
+            knowledge_enabled,
         }))
     }
 
@@ -119,6 +129,7 @@ impl LlmSettingsStore for SqliteLlmSettingsStore {
         api_key: Option<&str>,
         tools_enabled: bool,
         memory_enabled: bool,
+        knowledge_enabled: bool,
     ) -> Result<LlmSettingsRecord, StoreError> {
         let provider = provider.trim();
         let model_id = model_id.trim();
@@ -156,6 +167,7 @@ impl LlmSettingsStore for SqliteLlmSettingsStore {
                     llm_setting::has_api_key.eq(has_api_key),
                     llm_setting::tools_enabled.eq(tools_enabled),
                     llm_setting::memory_enabled.eq(memory_enabled),
+                    llm_setting::knowledge_enabled.eq(knowledge_enabled),
                     llm_setting::updated_at.eq(&updated_at),
                 ))
                 .execute(conn)
@@ -170,6 +182,7 @@ impl LlmSettingsStore for SqliteLlmSettingsStore {
             has_api_key,
             tools_enabled,
             memory_enabled,
+            knowledge_enabled,
         })
     }
 

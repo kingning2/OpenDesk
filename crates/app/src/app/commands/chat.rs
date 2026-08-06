@@ -36,6 +36,22 @@ async fn memory_enabled(state: &AppState) -> Result<bool, String> {
     .map_err(|error| error.to_string())?
 }
 
+/// 读取用户是否允许内置 LLM 在聊天时检索知识库；未配置时按默认开启处理。
+async fn knowledge_enabled(state: &AppState) -> Result<bool, String> {
+    let store = state.llm_settings_store.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        Ok::<_, String>(
+            store
+                .get()
+                .map_err(|error| error.to_string())?
+                .map(|record| record.knowledge_enabled)
+                .unwrap_or(true),
+        )
+    })
+    .await
+    .map_err(|error| error.to_string())?
+}
+
 /// 建立聊天工具：进程内只读数据库 MCP 桥（`agent::mcp` 查询工具）。
 /// 系统导航动作工具（`navigate_page` / `open_settings`）已移到 Help 页，不在此提供。
 async fn build_chat_tools() -> Result<Arc<dyn ChatToolCaller>, String> {
@@ -87,6 +103,12 @@ pub async fn chat_send(
     } else {
         None
     };
+    let allow_knowledge = knowledge_enabled(&state).await?;
+    let knowledge = if allow_knowledge {
+        Some(state.knowledge_store.clone())
+    } else {
+        None
+    };
     let session_id = request.session_id.clone();
     let response = SendChat::execute(
         &client,
@@ -97,6 +119,7 @@ pub async fn chat_send(
         Some(chat_store.as_ref()),
         memory,
         embedder,
+        knowledge,
     )
     .await?;
 

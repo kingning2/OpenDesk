@@ -17,6 +17,7 @@ use agent::llm::{
 use agent::skills::SkillRegistry;
 use common::contracts::{ChatEventToken, ChatEventTool, ChatIpcSendRequest, ChatIpcSendResponse};
 use ports::chat::{ChatMemoryStore, ChatStore, SaveChatMessage};
+use ports::knowledge::KnowledgeStore;
 use serde_json::{json, Value};
 use tokio::task::spawn_blocking;
 use uuid::Uuid;
@@ -35,6 +36,8 @@ const WINDOW_MAX_MESSAGES: usize = 30;
 const WINDOW_KEEP_MESSAGES: usize = 20;
 /// 每次发送从长期记忆检索注入的相关记忆条数。
 const MEMORY_TOP_K: usize = 5;
+/// 每次发送从知识库检索注入的相关文档分块条数。
+const KNOWLEDGE_TOP_K: usize = 5;
 
 /// 一轮流式过程中按 `index` 累积的工具调用片段。
 #[derive(Debug, Clone, Default)]
@@ -94,6 +97,9 @@ impl SendChat {
     /// `memory` + `embedder` 同时为 `Some` 时启用长期记忆：检索相关记忆注入
     /// 上下文，历史超窗时用会话 digest 摘要压缩最旧批次（均为 best-effort）。
     ///
+    /// `knowledge` 为 `Some` 时启用知识库检索：嵌入用户文本检索 top-k 文档分块
+    /// 注入上下文（best-effort，失败不阻塞发送）。
+    ///
     /// # 参数
     /// - `client` — LLM 客户端
     /// - `emitter` — 事件推送器
@@ -103,6 +109,7 @@ impl SendChat {
     /// - `store` — 会话/消息持久化端口；`None` 表示不落库
     /// - `memory` — 长期记忆端口；`None` 表示不启用记忆
     /// - `embedder` — 本地嵌入服务；`None` 表示不启用记忆检索
+    /// - `knowledge` — 知识库检索端口；`None` 表示不启用知识库检索
     ///
     /// # Errors
     ///
@@ -117,6 +124,7 @@ impl SendChat {
         store: Option<&dyn ChatStore>,
         memory: Option<Arc<dyn ChatMemoryStore>>,
         embedder: Option<Arc<dyn Embedder>>,
+        knowledge: Option<Arc<dyn KnowledgeStore>>,
     ) -> Result<ChatIpcSendResponse, String> {
         let ChatIpcSendRequest {
             session_id,
@@ -201,12 +209,67 @@ impl SendChat {
             }
         }
 
+        // 知识库检索：嵌入用户文本取 top-k 文档分块，作为 system 上下文注入。
+        // best-effort：检索失败或知识库为空时只告警，不阻塞发送。
+        let mut knowledge_context: Option<String> = None;
+        if let (Some(knowledge), Some(embedder)) = (&knowledge, &embedder) {
+            let empty = match knowledge.count_documents() {
+                Ok(count) => count == 0,
+                Err(_) => true,
+            };
+            if !empty {
+                let query = text.clone();
+                let embedder = Arc::clone(embedder);
+                let embedding = match spawn_blocking(move || embedder.embed_text(&query)).await {
+                    Ok(Ok(embedding)) => Some(embedding),
+                    Ok(Err(error)) => {
+                        tracing::warn!(%session_id, %error, "knowledge embed failed; skip retrieval");
+                        None
+                    }
+                    Err(error) => {
+                        tracing::warn!(
+                            %session_id,
+                            %error,
+                            "knowledge embed task join failed; skip retrieval"
+                        );
+                        None
+                    }
+                };
+                if let Some(embedding) = embedding {
+                    match knowledge.search_chunks(&embedding, KNOWLEDGE_TOP_K) {
+                        Ok(hits) if !hits.is_empty() => {
+                            knowledge_context = Some(
+                                hits.iter()
+                                    .map(|hit| format!("[来自《{}》]\n{}", hit.name, hit.content))
+                                    .collect::<Vec<_>>()
+                                    .join("\n\n"),
+                            );
+                        }
+                        Ok(_) => {}
+                        Err(error) => {
+                            tracing::warn!(%session_id, %error, "knowledge search failed; skip retrieval");
+                        }
+                    }
+                }
+            }
+        }
+
         let user_text = text.clone();
         if let Some(context) = memory_context {
             messages.insert(0, StreamMessage {
                 role: "system".to_string(),
                 content: Some(format!(
                     "以下是此前对话中检索到的相关记忆（可能有过时或重复，仅在与当前问题相关时参考）：\n{context}"
+                )),
+                tool_calls: None,
+                tool_call_id: None,
+            });
+        }
+        if let Some(context) = knowledge_context {
+            messages.insert(0, StreamMessage {
+                role: "system".to_string(),
+                content: Some(format!(
+                    "以下是知识库中检索到的相关资料（公司产品 / 客户文档，仅在与当前问题相关时参考，不要编造资料中不存在的信息）：\n{context}"
                 )),
                 tool_calls: None,
                 tool_call_id: None,
@@ -565,6 +628,7 @@ mod tests {
     use crate::tool::{ChatTool, ChatToolCaller};
     use crate::SendChat;
     use agent::llm::{LlmClient, StreamMessage, ToolCallDelta};
+    use ports::knowledge::{KnowledgeChunkHit, KnowledgeDocumentRecord, KnowledgeStore};
 
     /// 内存版 `ChatStore`，用于验证 send_chat 的落库行为。
     #[derive(Default)]
@@ -815,6 +879,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         )
         .await?;
 
@@ -866,6 +931,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         )
         .await?;
         let _ = emitter;
@@ -897,6 +963,7 @@ mod tests {
             None,
             None,
             Some(&store),
+            None,
             None,
             None,
         )
@@ -935,6 +1002,7 @@ mod tests {
             },
             None,
             Some(skills),
+            None,
             None,
             None,
             None,
@@ -987,6 +1055,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         )
         .await?;
 
@@ -1002,6 +1071,145 @@ mod tests {
         assert!(
             !guide.contains("系统操作指南"),
             "no guide when skills is None: {guide}"
+        );
+        Ok(())
+    }
+
+    /// 假嵌入器：返回固定 512 维向量，供知识库检索测试使用。
+    struct FakeEmbedder;
+
+    impl agent::embedding::Embedder for FakeEmbedder {
+        fn dims(&self) -> usize {
+            512
+        }
+        fn preload(&self) -> Result<(), agent::embedding::EmbeddingError> {
+            Ok(())
+        }
+        fn embed_texts(
+            &self,
+            texts: &[String],
+        ) -> Result<Vec<Vec<f32>>, agent::embedding::EmbeddingError> {
+            Ok(texts.iter().map(|_| vec![0.5f32; 512]).collect())
+        }
+    }
+
+    /// 内存版 `KnowledgeStore`，用于验证知识库检索注入。
+    #[derive(Default)]
+    struct FakeKnowledgeStore {
+        chunks: Mutex<Vec<KnowledgeChunkHit>>,
+    }
+
+    impl FakeKnowledgeStore {
+        fn seed(content: &str) -> Arc<Self> {
+            let store = FakeKnowledgeStore {
+                chunks: Mutex::new(vec![KnowledgeChunkHit {
+                    doc_id: "doc-1".to_string(),
+                    name: "产品手册.md".to_string(),
+                    content: content.to_string(),
+                    distance: 0.1,
+                }]),
+            };
+            Arc::new(store)
+        }
+    }
+
+    impl KnowledgeStore for FakeKnowledgeStore {
+        fn create_document(
+            &self,
+            _id: &str,
+            _name: &str,
+            _source_type: &str,
+        ) -> Result<KnowledgeDocumentRecord, StoreError> {
+            Ok(KnowledgeDocumentRecord {
+                id: "doc-1".to_string(),
+                name: "产品手册.md".to_string(),
+                source_type: "md".to_string(),
+                status: "ready".to_string(),
+                chunk_count: 1,
+                created_at: 0,
+                updated_at: 0,
+            })
+        }
+        fn insert_chunk(
+            &self,
+            _doc_id: &str,
+            _content: &str,
+            _seq: i64,
+            _embedding: &[f32],
+        ) -> Result<(), StoreError> {
+            Ok(())
+        }
+        fn finish_document(&self, _id: &str, _chunk_count: i64) -> Result<(), StoreError> {
+            Ok(())
+        }
+        fn search_chunks(
+            &self,
+            _query_embedding: &[f32],
+            _k: usize,
+        ) -> Result<Vec<KnowledgeChunkHit>, StoreError> {
+            Ok(self.chunks.lock().unwrap().clone())
+        }
+        fn list_documents(&self) -> Result<Vec<KnowledgeDocumentRecord>, StoreError> {
+            Ok(Vec::new())
+        }
+        fn delete_document(&self, _id: &str) -> Result<(), StoreError> {
+            Ok(())
+        }
+        fn count_documents(&self) -> Result<usize, StoreError> {
+            Ok(self.chunks.lock().unwrap().len())
+        }
+    }
+
+    #[tokio::test]
+    async fn injects_knowledge_context_when_store_has_documents(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let round_text = concat!(
+            "data: {\"choices\":[{\"delta\":{\"content\":\"好的\"}}]}\n",
+            "data: {\"choices\":[{\"delta\":{}}]}\n",
+            "data: [DONE]\n",
+            "\n",
+        );
+        let (base_url, requests) = mock_llm_rounds(&[round_text])?;
+        let client = LlmClient::new(llm_config(base_url))?;
+        let knowledge = FakeKnowledgeStore::seed("本产品支持多语言邮件模板。");
+        let embedder: Arc<dyn agent::embedding::Embedder> = Arc::new(FakeEmbedder);
+
+        SendChat::execute(
+            &client,
+            &NoopChatUiEmitter,
+            ChatIpcSendRequest {
+                session_id: "sess-kb".to_string(),
+                messages_json: None,
+                text: "邮件模板支持哪些语言？".to_string(),
+                trace_id: None,
+                message_id: Some("msg-kb".to_string()),
+            },
+            None,
+            None,
+            None,
+            None,
+            Some(embedder),
+            Some(knowledge),
+        )
+        .await?;
+
+        let raw = requests.recv_timeout(std::time::Duration::from_secs(2))?;
+        let body = raw.split("\r\n\r\n").nth(1).unwrap_or_default();
+        let parsed: Value = serde_json::from_str(body)?;
+        let messages = parsed["messages"].as_array().expect("messages array");
+        let system_text = messages
+            .iter()
+            .filter(|message| message["role"] == "system")
+            .map(|message| message["content"].as_str().unwrap_or_default())
+            .collect::<Vec<_>>()
+            .join("\n");
+        assert!(
+            system_text.contains("知识库"),
+            "knowledge context injected: {system_text}"
+        );
+        assert!(
+            system_text.contains("多语言邮件模板"),
+            "knowledge content present: {system_text}"
         );
         Ok(())
     }
