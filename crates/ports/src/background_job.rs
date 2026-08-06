@@ -11,6 +11,8 @@ use crate::repository::StoreError;
 pub const JOB_TYPE_CRAWLER_EMAIL_ENRICH: &str = "crawler_email_enrich";
 /// Job type: IMAP inbox sync for one mail account.
 pub const JOB_TYPE_IMAP_SYNC: &str = "imap_sync";
+/// Job type: knowledge base document import (parse + vectorize a local file).
+pub const JOB_TYPE_KNOWLEDGE_IMPORT: &str = "knowledge_import";
 
 pub const JOB_STATUS_QUEUED: &str = "queued";
 pub const JOB_STATUS_RUNNING: &str = "running";
@@ -58,6 +60,13 @@ pub struct CrawlerEmailEnrichPayload {
 pub struct ImapSyncPayload {
     pub account_id: String,
     pub folder: String,
+}
+
+/// Payload for `knowledge_import` jobs.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct KnowledgeImportPayload {
+    /// Absolute path of the document to parse; the worker reads it directly.
+    pub file_path: String,
 }
 
 /// Queue operations for `opendesk.db.background_job`.

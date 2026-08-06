@@ -5,3 +5,4 @@
 
 pub mod crawler_email_enrich;
 pub mod imap_sync;
+pub mod knowledge_import;

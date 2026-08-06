@@ -6,15 +6,18 @@
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use agent::embedding::Embedder;
 use ports::background_job::{
     BackgroundJobStore, JOB_STATUS_COMPLETED, JOB_TYPE_CRAWLER_EMAIL_ENRICH, JOB_TYPE_IMAP_SYNC,
+    JOB_TYPE_KNOWLEDGE_IMPORT,
 };
 use ports::crawler_channels::CrawlerChannelStore;
 use ports::customer::CustomerStore;
+use ports::knowledge::KnowledgeStore;
 use ports::mail::MailStore;
 use thiserror::Error;
 
-use crate::handlers::{crawler_email_enrich, imap_sync};
+use crate::handlers::{crawler_email_enrich, imap_sync, knowledge_import};
 
 /// Poll loop orchestrator for Worker jobs.
 pub struct JobRunner {
@@ -22,6 +25,8 @@ pub struct JobRunner {
     channel_store: Arc<dyn CrawlerChannelStore>,
     mail_store: Arc<dyn MailStore>,
     customer_store: Arc<dyn CustomerStore>,
+    knowledge_store: Arc<dyn KnowledgeStore>,
+    embedder: Arc<dyn Embedder>,
 }
 
 #[derive(Debug, Error)]
@@ -40,12 +45,16 @@ impl JobRunner {
         channel_store: Arc<dyn CrawlerChannelStore>,
         mail_store: Arc<dyn MailStore>,
         customer_store: Arc<dyn CustomerStore>,
+        knowledge_store: Arc<dyn KnowledgeStore>,
+        embedder: Arc<dyn Embedder>,
     ) -> Self {
         Self {
             job_store,
             channel_store,
             mail_store,
             customer_store,
+            knowledge_store,
+            embedder,
         }
     }
 
@@ -76,6 +85,11 @@ impl JobRunner {
             }
             JOB_TYPE_IMAP_SYNC => {
                 imap_sync::handle(&job, self.mail_store.clone(), self.customer_store.clone())
+                    .await
+                    .map_err(|error| error.to_string())
+            }
+            JOB_TYPE_KNOWLEDGE_IMPORT => {
+                knowledge_import::handle(&job, self.knowledge_store.clone(), self.embedder.clone())
                     .await
                     .map_err(|error| error.to_string())
             }

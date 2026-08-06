@@ -56,3 +56,16 @@ pub fn embedding_cache_dir() -> PathBuf {
     path.push(".fastembed_cache");
     path
 }
+
+/// `knowledge.db` 绝对路径（知识库文档 / 分块 / 向量）。
+///
+/// 与 chat.db 一致使用 rusqlite + sqlite-vec 管理（向量扩展无法走 Diesel）。
+///
+/// # 返回值
+/// OpenDesk 数据目录下的 `knowledge.db`。
+pub fn knowledge_db_path() -> PathBuf {
+    let mut path = dirs::data_local_dir().unwrap_or_else(std::env::temp_dir);
+    path.push("OpenDesk");
+    path.push("knowledge.db");
+    path
+}

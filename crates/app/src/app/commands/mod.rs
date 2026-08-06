@@ -12,6 +12,7 @@ pub mod chat;
 pub mod crawler;
 pub mod customer;
 pub mod help;
+pub mod knowledge;
 pub mod license;
 pub mod llm;
 pub mod mail;

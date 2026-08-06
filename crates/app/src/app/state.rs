@@ -16,6 +16,7 @@ use ports::crawler_channels::CrawlerChannelStore;
 use ports::crawler_keywords::CrawlerKeywordStore;
 use ports::crawler_settings::CrawlerSettingsStore;
 use ports::customer::CustomerStore;
+use ports::knowledge::KnowledgeStore;
 use ports::license::LicenseGate;
 use ports::llm_settings::LlmSettingsStore;
 use ports::mail::MailStore;
@@ -57,6 +58,8 @@ pub struct AppState {
     pub chat_store: Arc<dyn ChatStore>,
     /// Long-term memory + vector search (`chat.db` sqlite-vec, shares connection with chat_store).
     pub chat_memory_store: Arc<dyn ChatMemoryStore>,
+    /// Knowledge base documents + vector search (`knowledge.db`, sqlite-vec).
+    pub knowledge_store: Arc<dyn KnowledgeStore>,
     /// Local embedding service (fastembed, lazy model load).
     pub embedder: Arc<dyn Embedder>,
     /// 内置系统操作指引 Skill 注册表（注入聊天上下文，让 AI 了解系统）。
