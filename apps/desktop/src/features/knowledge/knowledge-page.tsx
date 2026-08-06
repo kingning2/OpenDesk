@@ -20,90 +20,11 @@ import {
 import { FileText, Loader2, Plus, Trash2 } from "@desk/ui/icons";
 
 import { useT } from "../../i18n";
-import {
-  useKnowledge,
-  type KnowledgeDocument,
-  type KnowledgeToolStatus,
-} from "./use-knowledge";
+import { useKnowledge, type KnowledgeDocument } from "./use-knowledge";
 
 /** 文档来源类型显示名。 */
 function sourceTypeLabel(type: string): string {
   return type.toUpperCase();
-}
-
-/** 工具下载进度百分比的展示文案。 */
-function progressLabel(p: { bytes_downloaded: number; bytes_total: number }): string {
-  if (!p.bytes_total) {
-    return p.bytes_downloaded > 0 ? `${Math.round(p.bytes_downloaded / 1024)} KB` : "";
-  }
-  const percent = Math.min(100, Math.round((p.bytes_downloaded / p.bytes_total) * 100));
-  return `${percent}%`;
-}
-
-/**
- * 单个解析工具行：状态 / 版本 / 下载按钮 + 进度条。
- *
- * @param tool - 工具状态
- * @param downloading - 该工具当前的下载进度（null 表示未在下载）
- * @param onDownload - 触发下载
- */
-function ToolRow({
-  tool,
-  downloading,
-  onDownload,
-}: {
-  tool: KnowledgeToolStatus;
-  downloading: { bytes_downloaded: number; bytes_total: number; status: string } | null;
-  onDownload: (id: string) => void;
-}) {
-  const t = useT();
-  const inProgress = downloading?.status === "downloading" || downloading?.status === "extracting";
-  const percent = downloading ? progressLabel(downloading) : "";
-
-  return (
-    <div className="flex items-center gap-3">
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="text-[length:var(--text-sm)] font-medium">{tool.name}</span>
-          {tool.installed ? (
-            <span className="text-[length:var(--text-xs)] text-emerald-600 dark:text-emerald-400">
-              {tool.version || t("knowledge.toolInstalled")}
-            </span>
-          ) : (
-            <span className="text-[length:var(--text-xs)] text-muted-foreground">
-              {t("knowledge.toolNotInstalled")}
-            </span>
-          )}
-        </div>
-        {inProgress ? (
-          <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-primary transition-[width] duration-150"
-              style={{ width: percent }}
-            />
-          </div>
-        ) : null}
-      </div>
-      {tool.installed ? null : (
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          disabled={inProgress}
-          onClick={() => onDownload(tool.id)}
-        >
-          {inProgress ? (
-            <>
-              <Loader2 className="mr-1.5 size-3.5 animate-spin" aria-hidden />
-              {percent || t("knowledge.toolDownloading")}
-            </>
-          ) : (
-            t("knowledge.toolDownload")
-          )}
-        </Button>
-      )}
-    </div>
-  );
 }
 
 /**
@@ -168,10 +89,6 @@ export function KnowledgePage() {
     pickFile,
     remove,
     clearError,
-    tools,
-    toolsLoading,
-    downloading,
-    downloadTool,
   } = useKnowledge();
 
   return (
@@ -210,29 +127,6 @@ export function KnowledgePage() {
               </button>
             </div>
           ) : null}
-
-          <Card variant="solid" padding="sm">
-            <div className="space-y-2.5">
-              <p className="text-[length:var(--text-sm)] font-medium">{t("knowledge.toolsTitle")}</p>
-              <p className="text-[length:var(--text-xs)] text-muted-foreground">
-                {t("knowledge.toolsHint")}
-              </p>
-              {toolsLoading ? (
-                <LoadingState label={t("knowledge.toolsLoading")} />
-              ) : (
-                <div className="space-y-2.5">
-                  {tools.map((tool) => (
-                    <ToolRow
-                      key={tool.id}
-                      tool={tool}
-                      downloading={downloading[tool.id] ?? null}
-                      onDownload={downloadTool}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </Card>
 
           {loading ? (
             <LoadingState label={t("knowledge.loading")} />
