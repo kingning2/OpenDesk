@@ -32,7 +32,7 @@ Contract → pnpm contracts:sync → Rust → React
 - Feature 间禁止直接调用内部实现。写传播用 `kernel::event`，只读跨域查询用 Query Port，共享数据用 Contract。
 - `crates/app` 与 Tauri 壳负责组装；`crates/agent` 只提供 AI 基建（`llm/`、`prompt/`、`skills/`），业务 Prompt/用例留在 Feature；长任务由 Workflow Runtime、Worker 或明确的异步任务承载。
 - 业务路径使用 `Result` 与明确错误类型，禁止 `unwrap`、`expect`、`panic!`。
-- 日志使用 `tracing`，不得记录密钥或完整敏感正文。
+- 所有后端操作（command / UseCase / worker handler / 后台任务）必须在应用边界用 `tracing` 记录：操作名、实体/任务 id、**开始与结果**；长任务另记录阶段/进度（低频，避免循环内噪声）。不得记录密钥或完整敏感正文。具体清单见 `skills/opendesk/guides/logging.md`。
 
 ## React 边界
 

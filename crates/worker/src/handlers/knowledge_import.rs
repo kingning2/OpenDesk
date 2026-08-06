@@ -33,12 +33,13 @@ pub async fn handle(
     let payload: KnowledgeImportPayload = serde_json::from_str(&job.payload_json)
         .map_err(|error| HandlerError::InvalidPayload(error.to_string()))?;
 
+    tracing::info!(job_id = %job.id, file_path = %payload.file_path, "knowledge import started");
+
     let file_path = std::path::PathBuf::from(&payload.file_path);
     if !file_path.is_file() {
-        return Err(HandlerError::ReadFailed(format!(
-            "文件不存在: {}",
-            payload.file_path
-        )));
+        let error = HandlerError::ReadFailed(format!("文件不存在: {}", payload.file_path));
+        tracing::warn!(job_id = %job.id, %error, "knowledge import failed");
+        return Err(error);
     }
     let bytes =
         std::fs::read(&file_path).map_err(|error| HandlerError::ReadFailed(error.to_string()))?;
@@ -48,10 +49,19 @@ pub async fn handle(
         .unwrap_or("document")
         .to_string();
 
-    ImportDocument::execute(&name, &bytes, store, embedder)
-        .await
-        .map_err(HandlerError::Import)?;
-
-    tracing::info!(job_id = %job.id, file_path = %payload.file_path, "knowledge import completed");
-    Ok(())
+    match ImportDocument::execute(&name, &bytes, store, embedder).await {
+        Ok(_) => {
+            tracing::info!(
+                job_id = %job.id,
+                file_path = %payload.file_path,
+                "knowledge import completed"
+            );
+            Ok(())
+        }
+        Err(error) => {
+            let handler_error = HandlerError::Import(error);
+            tracing::warn!(job_id = %job.id, %handler_error, "knowledge import failed");
+            Err(handler_error)
+        }
+    }
 }

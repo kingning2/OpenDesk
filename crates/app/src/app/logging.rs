@@ -1,11 +1,8 @@
 //! Application tracing subscriber initialization.
-
-use tracing_subscriber::{fmt, EnvFilter};
+//!
+//! 复用 kernel 的文件日志（写 `{data}/OpenDesk/logs/opendesk.log.*`），
+//! 与 worker 进程对齐，便于排查下载 / 安装等后台任务。
 
 pub fn init_tracing() {
-    let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-        EnvFilter::new("info,crawler=info,opendesk=debug,runtime=debug,app=debug")
-    });
-
-    let _ = fmt().with_env_filter(filter).with_target(true).try_init();
+    kernel::logging::init_tracing("opendesk");
 }

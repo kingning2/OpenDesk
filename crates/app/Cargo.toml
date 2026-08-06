@@ -18,6 +18,7 @@ crawler = { path = "../crawler" }
 chat = { path = "../chat" }
 customer = { path = "../customer" }
 knowledge = { path = "../knowledge" }
+kernel = { path = "../kernel" }
 mail = { path = "../mail" }
 ports = { path = "../ports" }
 storage = { path = "../storage" }
