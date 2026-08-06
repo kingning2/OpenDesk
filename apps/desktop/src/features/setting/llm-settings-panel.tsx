@@ -56,6 +56,8 @@ export function LlmSettingsPanel({ llm }: LlmSettingsPanelProps) {
     setToolsEnabled,
     memoryEnabled,
     setMemoryEnabled,
+    knowledgeEnabled,
+    setKnowledgeEnabled,
     loading,
     saving,
     testing,
@@ -192,6 +194,23 @@ export function LlmSettingsPanel({ llm }: LlmSettingsPanelProps) {
           disabled={loading || saving}
           aria-label={t("settings.llmMemoryEnabled")}
           onCheckedChange={setMemoryEnabled}
+        />
+      </div>
+
+      <div className="flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-border px-3 py-2">
+        <div className="min-w-0">
+          <p className="text-[length:var(--text-sm)] font-medium text-foreground">
+            {t("settings.llmKnowledgeEnabled")}
+          </p>
+          <p className="text-[length:var(--text-xs)] text-muted-foreground">
+            {t("settings.llmKnowledgeEnabledHint")}
+          </p>
+        </div>
+        <Switch
+          checked={knowledgeEnabled}
+          disabled={loading || saving}
+          aria-label={t("settings.llmKnowledgeEnabled")}
+          onCheckedChange={setKnowledgeEnabled}
         />
       </div>
 

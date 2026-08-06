@@ -36,6 +36,8 @@ export interface LlmSettingsResponse {
   tools_enabled: boolean;
   /** 是否允许 AI 使用跨会话长期记忆 */
   memory_enabled: boolean;
+  /** 是否允许 AI 在聊天时检索知识库 */
+  knowledge_enabled: boolean;
 }
 
 /**
@@ -51,6 +53,7 @@ export interface LlmSettingsSaveRequest {
   api_key: string;
   tools_enabled: boolean;
   memory_enabled: boolean;
+  knowledge_enabled: boolean;
 }
 
 /**
