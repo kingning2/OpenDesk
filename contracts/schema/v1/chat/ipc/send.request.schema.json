@@ -4,7 +4,7 @@
   "title": "chat/send.request",
   "description": "Tauri IPC: send one user chat message to the LLM (React to Rust).",
   "type": "object",
-  "required": ["session_id", "messages_json", "text"],
+  "required": ["session_id", "text"],
   "properties": {
     "trace_id": {
       "type": "string"

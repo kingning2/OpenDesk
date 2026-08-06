@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://chat/dto/session/v1",
+  "title": "chat/dto.session",
+  "description": "A persisted chat session (conversation).",
+  "type": "object",
+  "required": ["id", "title", "created_at", "updated_at", "last_message_at", "message_count"],
+  "properties": {
+    "id": { "type": "string" },
+    "title": { "type": "string" },
+    "created_at": { "type": "integer", "description": "Unix epoch millis." },
+    "updated_at": { "type": "integer", "description": "Unix epoch millis." },
+    "last_message_at": { "type": "integer", "description": "Unix epoch millis of the most recent message; 0 when empty." },
+    "message_count": { "type": "integer" }
+  },
+  "additionalProperties": false
+}

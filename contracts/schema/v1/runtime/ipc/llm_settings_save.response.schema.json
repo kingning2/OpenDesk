@@ -4,14 +4,15 @@
   "title": "runtime/ipc/llm_settings_save.response",
   "description": "Save result metadata. API key is never echoed back.",
   "type": "object",
-  "required": ["provider", "model_id", "configured", "has_api_key", "tools_enabled"],
+  "required": ["provider", "model_id", "configured", "has_api_key", "tools_enabled", "memory_enabled"],
   "properties": {
     "provider": { "type": "string" },
     "base_url": { "type": "string" },
     "model_id": { "type": "string" },
     "configured": { "type": "boolean" },
     "has_api_key": { "type": "boolean" },
-    "tools_enabled": { "type": "boolean" }
+    "tools_enabled": { "type": "boolean" },
+    "memory_enabled": { "type": "boolean" }
   },
   "additionalProperties": false
 }

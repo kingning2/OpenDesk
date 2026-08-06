@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://chat/ipc/messages_load/request/v1",
+  "title": "chat/ipc/messages_load.request",
+  "description": "Load all completed messages of a chat session.",
+  "type": "object",
+  "required": ["session_id"],
+  "properties": {
+    "session_id": { "type": "string" }
+  },
+  "additionalProperties": false
+}

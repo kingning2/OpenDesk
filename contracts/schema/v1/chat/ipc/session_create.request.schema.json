@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://chat/ipc/session_create/request/v1",
+  "title": "chat/ipc/session_create.request",
+  "description": "Create a new chat session (optional initial title).",
+  "type": "object",
+  "required": [],
+  "properties": {
+    "title": { "type": "string", "description": "Optional title; empty means a placeholder default." }
+  },
+  "additionalProperties": false
+}

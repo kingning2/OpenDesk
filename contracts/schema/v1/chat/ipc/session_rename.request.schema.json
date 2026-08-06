@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://chat/ipc/session_rename/request/v1",
+  "title": "chat/ipc/session_rename.request",
+  "description": "Rename a chat session.",
+  "type": "object",
+  "required": ["id", "title"],
+  "properties": {
+    "id": { "type": "string" },
+    "title": { "type": "string" }
+  },
+  "additionalProperties": false
+}

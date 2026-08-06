@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://chat/ipc/session_create/response/v1",
+  "title": "chat/ipc/session_create.response",
+  "description": "Created session as a JSON string.",
+  "type": "object",
+  "required": ["session_json"],
+  "properties": {
+    "session_json": { "type": "string", "description": "chat_dto_session." }
+  },
+  "additionalProperties": false
+}

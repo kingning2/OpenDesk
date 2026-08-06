@@ -8,4 +8,5 @@ pub struct RuntimeIpcLlmSettingsSaveResponse {
     pub configured: bool,
     pub has_api_key: bool,
     pub tools_enabled: bool,
+    pub memory_enabled: bool,
 }

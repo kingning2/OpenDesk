@@ -4,4 +4,5 @@ export interface RuntimeIpcLlmSettingsSaveRequest {
   model_id: string;
   api_key: string;
   tools_enabled: boolean;
+  memory_enabled: boolean;
 }

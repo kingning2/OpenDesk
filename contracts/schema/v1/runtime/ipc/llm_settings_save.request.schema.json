@@ -4,7 +4,7 @@
   "title": "runtime/ipc/llm_settings_save.request",
   "description": "Save LLM settings. api_key empty string means keep existing keyring secret unchanged.",
   "type": "object",
-  "required": ["provider", "model_id", "api_key", "tools_enabled"],
+  "required": ["provider", "model_id", "api_key", "tools_enabled", "memory_enabled"],
   "properties": {
     "provider": { "type": "string" },
     "base_url": { "type": "string" },
@@ -16,6 +16,10 @@
     "tools_enabled": {
       "type": "boolean",
       "description": "Whether the LLM may call the built-in read-only data-query MCP tools."
+    },
+    "memory_enabled": {
+      "type": "boolean",
+      "description": "Whether the LLM may use cross-session long-term memory."
     }
   },
   "additionalProperties": false

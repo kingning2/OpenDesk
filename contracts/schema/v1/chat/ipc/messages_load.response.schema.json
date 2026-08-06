@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://chat/ipc/messages_load/response/v1",
+  "title": "chat/ipc/messages_load.response",
+  "description": "Completed messages of a session as a JSON string.",
+  "type": "object",
+  "required": ["messages_json"],
+  "properties": {
+    "messages_json": { "type": "string", "description": "JSON array of chat_dto_message." }
+  },
+  "additionalProperties": false
+}

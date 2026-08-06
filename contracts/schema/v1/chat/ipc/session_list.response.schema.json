@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://chat/ipc/session_list/response/v1",
+  "title": "chat/ipc/session_list.response",
+  "description": "List of chat sessions as a JSON string (newest updated first).",
+  "type": "object",
+  "required": ["sessions_json"],
+  "properties": {
+    "sessions_json": { "type": "string", "description": "JSON array of chat_dto_session." }
+  },
+  "additionalProperties": false
+}

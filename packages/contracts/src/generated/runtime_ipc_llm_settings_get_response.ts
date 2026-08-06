@@ -5,4 +5,5 @@ export interface RuntimeIpcLlmSettingsGetResponse {
   configured: boolean;
   has_api_key: boolean;
   tools_enabled: boolean;
+  memory_enabled: boolean;
 }

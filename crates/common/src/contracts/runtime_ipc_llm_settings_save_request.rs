@@ -7,4 +7,5 @@ pub struct RuntimeIpcLlmSettingsSaveRequest {
     pub model_id: String,
     pub api_key: String,
     pub tools_enabled: bool,
+    pub memory_enabled: bool,
 }

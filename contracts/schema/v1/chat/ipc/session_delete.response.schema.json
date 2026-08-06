@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://chat/ipc/session_delete/response/v1",
+  "title": "chat/ipc/session_delete.response",
+  "description": "Ack that the session was deleted.",
+  "type": "object",
+  "required": ["ok"],
+  "properties": {
+    "ok": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}

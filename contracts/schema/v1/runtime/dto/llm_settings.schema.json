@@ -4,7 +4,7 @@
   "title": "runtime/llm_settings",
   "description": "Persisted LLM settings metadata. Never includes api_key plaintext.",
   "type": "object",
-  "required": ["provider", "model_id", "configured", "has_api_key", "tools_enabled"],
+  "required": ["provider", "model_id", "configured", "has_api_key", "tools_enabled", "memory_enabled"],
   "properties": {
     "provider": {
       "type": "string",
@@ -29,6 +29,10 @@
     "tools_enabled": {
       "type": "boolean",
       "description": "True when the LLM may call the built-in read-only data-query MCP tools."
+    },
+    "memory_enabled": {
+      "type": "boolean",
+      "description": "True when the LLM may use cross-session long-term memory (vector retrieval)."
     }
   },
   "additionalProperties": false

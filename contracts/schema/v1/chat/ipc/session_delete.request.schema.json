@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://chat/ipc/session_delete/request/v1",
+  "title": "chat/ipc/session_delete.request",
+  "description": "Delete a chat session and cascade its messages.",
+  "type": "object",
+  "required": ["id"],
+  "properties": {
+    "id": { "type": "string" }
+  },
+  "additionalProperties": false
+}

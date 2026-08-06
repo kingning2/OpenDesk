@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://chat/dto/message/v1",
+  "title": "chat/dto.message",
+  "description": "A persisted chat message (completed only; placeholders/streaming are not persisted).",
+  "type": "object",
+  "required": ["id", "session_id", "role", "content", "seq", "created_at"],
+  "properties": {
+    "id": { "type": "string" },
+    "session_id": { "type": "string" },
+    "role": { "type": "string", "description": "user | assistant" },
+    "content": { "type": "string" },
+    "thinking": { "type": "string", "description": "Accumulated reasoning/thinking text, when the model emits it." },
+    "tools_json": { "type": "string", "description": "JSON array of tool steps executed during this reply." },
+    "seq": { "type": "integer", "description": "Monotonic order within the session." },
+    "created_at": { "type": "integer", "description": "Unix epoch millis." }
+  },
+  "additionalProperties": false
+}

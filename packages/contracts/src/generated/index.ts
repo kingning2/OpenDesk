@@ -2,10 +2,21 @@
 
 export type { AgentIpcPingRequest } from "./agent_ipc_ping_request";
 export type { AgentIpcPingResponse } from "./agent_ipc_ping_response";
+export type { ChatDtoMessage } from "./chat_dto_message";
+export type { ChatDtoSession } from "./chat_dto_session";
 export type { ChatEventToken } from "./chat_event_token";
 export type { ChatEventTool } from "./chat_event_tool";
+export type { ChatIpcMessagesLoadRequest } from "./chat_ipc_messages_load_request";
+export type { ChatIpcMessagesLoadResponse } from "./chat_ipc_messages_load_response";
 export type { ChatIpcSendRequest } from "./chat_ipc_send_request";
 export type { ChatIpcSendResponse } from "./chat_ipc_send_response";
+export type { ChatIpcSessionCreateRequest } from "./chat_ipc_session_create_request";
+export type { ChatIpcSessionCreateResponse } from "./chat_ipc_session_create_response";
+export type { ChatIpcSessionDeleteRequest } from "./chat_ipc_session_delete_request";
+export type { ChatIpcSessionDeleteResponse } from "./chat_ipc_session_delete_response";
+export type { ChatIpcSessionListResponse } from "./chat_ipc_session_list_response";
+export type { ChatIpcSessionRenameRequest } from "./chat_ipc_session_rename_request";
+export type { ChatIpcSessionRenameResponse } from "./chat_ipc_session_rename_response";
 export type { CrawlerDtoChannelResult } from "./crawler_dto_channel_result";
 export type { CrawlerDtoJobConfig } from "./crawler_dto_job_config";
 export type { CrawlerEventChannelAccepted } from "./crawler_event_channel_accepted";
