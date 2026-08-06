@@ -5,4 +5,5 @@ export interface RuntimeIpcLlmSettingsSaveRequest {
   api_key: string;
   tools_enabled: boolean;
   memory_enabled: boolean;
+  knowledge_enabled: boolean;
 }

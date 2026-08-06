@@ -13,10 +13,13 @@ use std::time::Duration;
 use fs2::FileExt;
 use job_runner::JobRunner;
 use mail::app::spawn_imap_idle_watchers;
-use paths::{crawler_db_path, opendesk_db_path, worker_lock_path};
+use paths::{
+    crawler_db_path, embedding_cache_dir, knowledge_db_path, opendesk_db_path, worker_lock_path,
+};
 use storage::background_job::SqliteBackgroundJobStore;
 use storage::crawler_channels::SqliteCrawlerChannelStore;
 use storage::customer::SqliteCustomerStore;
+use storage::knowledge::SqliteKnowledgeStore;
 use storage::mail::SqliteMailStore;
 #[tokio::main]
 async fn main() {
@@ -74,10 +77,22 @@ async fn main() {
         storage::opendesk_db::OpendeskDb::open(&opendesk_path).expect("open opendesk.db");
     let mail_store = Arc::new(SqliteMailStore::new(opendesk_db.clone()));
     let customer_store = Arc::new(SqliteCustomerStore::new(opendesk_db));
+    let knowledge_store =
+        Arc::new(SqliteKnowledgeStore::open(knowledge_db_path()).expect("open knowledge.db"));
+    let embedder = Arc::new(agent::embedding::EmbeddingService::new(Some(
+        embedding_cache_dir(),
+    ))) as Arc<dyn agent::embedding::Embedder>;
 
     spawn_imap_idle_watchers(mail_store.clone(), customer_store.clone(), None);
 
-    let runner = JobRunner::new(job_store, channel_store, mail_store, customer_store);
+    let runner = JobRunner::new(
+        job_store,
+        channel_store,
+        mail_store,
+        customer_store,
+        knowledge_store,
+        embedder,
+    );
     let poll_ms = std::env::var("OPENDESK_WORKER_POLL_MS")
         .ok()
         .and_then(|value| value.parse().ok())

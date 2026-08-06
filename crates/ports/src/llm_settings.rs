@@ -32,6 +32,8 @@ pub struct LlmSettingsRecord {
     pub tools_enabled: bool,
     /// 是否允许内置 LLM 使用跨会话长期记忆（默认开）。
     pub memory_enabled: bool,
+    /// 是否允许内置 LLM 在聊天时检索知识库（默认开）。
+    pub knowledge_enabled: bool,
 }
 
 impl LlmSettingsRecord {
@@ -82,9 +84,11 @@ pub trait LlmSettingsStore: Send + Sync {
     /// - `api_key` — 新密钥；`None` 或空串不改动 keyring
     /// - `tools_enabled` — 是否允许内置 LLM 调用数据查询工具
     /// - `memory_enabled` — 是否允许内置 LLM 使用长期记忆
+    /// - `knowledge_enabled` — 是否允许内置 LLM 在聊天时检索知识库
     ///
     /// # 返回值
     /// 保存后的记录（无明文 key）。
+    #[allow(clippy::too_many_arguments)]
     fn save(
         &self,
         provider: &str,
@@ -93,6 +97,7 @@ pub trait LlmSettingsStore: Send + Sync {
         api_key: Option<&str>,
         tools_enabled: bool,
         memory_enabled: bool,
+        knowledge_enabled: bool,
     ) -> Result<LlmSettingsRecord, StoreError>;
 
     /// 从 keyring 解析明文 API Key，供 Rust LLM 客户端调用。

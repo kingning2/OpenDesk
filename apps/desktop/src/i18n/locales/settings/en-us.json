@@ -36,6 +36,8 @@
   "llmToolsEnabledHint": "When on, the chat LLM may query the local business database with read-only tools. Only applies to OpenAI-compatible providers.",
   "llmMemoryEnabled": "Allow AI to use long-term memory",
   "llmMemoryEnabledHint": "When on, the AI remembers conversation highlights across sessions and auto-retrieves relevant memories by vector similarity.",
+  "llmKnowledgeEnabled": "Allow AI to search the knowledge base",
+  "llmKnowledgeEnabledHint": "When on, the AI auto-retrieves knowledge base documents by vector similarity and references them when answering related questions.",
   "apiKey": "API key",
   "apiKeyPlaceholder": "Paste YouTube API key",
   "save": "Save",

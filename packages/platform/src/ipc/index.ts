@@ -22,6 +22,7 @@ export {
 export * from "./customer";
 export * from "./chat";
 export * from "./help";
+export * from "./knowledge";
 export * from "./mail";
 export * from "./mail-events";
 export * from "./workflow";

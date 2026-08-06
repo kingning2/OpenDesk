@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://knowledge/ipc/tool_download.response/v1",
+  "title": "knowledge/ipc/tool_download.response",
+  "description": "Acknowledgement that a tool download task has started.",
+  "type": "object",
+  "required": ["ok"],
+  "properties": {
+    "ok": { "type": "boolean", "description": "True when the download task started; progress arrives via the download_progress event." },
+    "error_message": { "type": "string", "description": "Present when the task could not start." }
+  },
+  "additionalProperties": false
+}

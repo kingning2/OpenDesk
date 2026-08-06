@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://knowledge/ipc/document_list.response/v1",
+  "title": "knowledge/ipc/document_list.response",
+  "description": "List of knowledge documents as a JSON string (newest updated first).",
+  "type": "object",
+  "required": ["documents_json"],
+  "properties": {
+    "documents_json": { "type": "string", "description": "JSON array of knowledge_dto_document." }
+  },
+  "additionalProperties": false
+}

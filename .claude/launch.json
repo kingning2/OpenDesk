@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "opendesk-vite",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@desk/desktop", "dev"],
+      "port": 1420
+    }
+  ]
+}

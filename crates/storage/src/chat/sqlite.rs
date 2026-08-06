@@ -6,7 +6,7 @@
 //! (sessions, messages, memory) lives in this one self-contained file.
 
 use std::path::Path;
-use std::sync::{Arc, Mutex, Once};
+use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use ports::chat::{
@@ -14,36 +14,17 @@ use ports::chat::{
     SaveChatMessage,
 };
 use ports::repository::StoreError;
-use rusqlite::ffi::sqlite3_auto_extension;
 use rusqlite::{params, Connection, OptionalExtension};
-use sqlite_vec::sqlite3_vec_init;
 use uuid::Uuid;
 use zerocopy::IntoBytes;
+
+use crate::vec_extension::register_vec_extension;
 
 /// Current `PRAGMA user_version`; bump + extend `migrate` when the schema changes.
 const SCHEMA_VERSION: i64 = 2;
 
 /// bge-small-zh-v1.5 embedding dimension; must match `chat_memory_vec`'s `float[512]`.
 const MEMORY_VEC_DIMS: usize = 512;
-
-/// Register sqlite-vec as a process-wide SQLite auto-extension once.
-///
-/// `sqlite3_auto_extension` runs the callback on every new connection, so the
-/// `vec0` vtable is available on any rusqlite connection opened after this call.
-/// Must run before `Connection::open`.
-fn register_vec_extension() {
-    static REGISTER: Once = Once::new();
-    REGISTER.call_once(|| unsafe {
-        sqlite3_auto_extension(Some(std::mem::transmute::<
-            *const (),
-            unsafe extern "C" fn(
-                *mut libsqlite3_sys::sqlite3,
-                *mut *mut i8,
-                *const libsqlite3_sys::sqlite3_api_routines,
-            ) -> i32,
-        >(sqlite3_vec_init as *const ())));
-    });
-}
 
 /// Thread-safe handle to `chat.db`.
 #[derive(Clone)]

@@ -8,4 +8,5 @@ pub struct RuntimeIpcLlmSettingsSaveRequest {
     pub api_key: String,
     pub tools_enabled: bool,
     pub memory_enabled: bool,
+    pub knowledge_enabled: bool,
 }

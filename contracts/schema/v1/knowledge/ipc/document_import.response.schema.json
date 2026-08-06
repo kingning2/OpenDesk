@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://knowledge/ipc/document_import.response/v1",
+  "title": "knowledge/ipc/document_import.response",
+  "description": "Acknowledgement that a knowledge import job was enqueued for the worker.",
+  "type": "object",
+  "required": ["ok"],
+  "properties": {
+    "ok": { "type": "boolean", "description": "True when the import job was enqueued." },
+    "job_id": { "type": "string", "description": "Id of the background job." },
+    "error_message": { "type": "string", "description": "Present when the job could not be enqueued." }
+  },
+  "additionalProperties": false
+}

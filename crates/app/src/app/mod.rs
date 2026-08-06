@@ -20,13 +20,16 @@ use crawler::{CrawlerService, CrawlerUiEmitter};
 use crawler_emit::TauriCrawlerEmitter;
 use logging::init_tracing;
 use mail::app::ScheduleImapSync;
-use paths::{chat_db_path, crawler_db_path, embedding_cache_dir, opendesk_db_path};
+use paths::{
+    chat_db_path, crawler_db_path, embedding_cache_dir, knowledge_db_path, opendesk_db_path,
+};
 use ports::background_job::BackgroundJobStore;
 use ports::chat::{ChatMemoryStore, ChatStore};
 use ports::crawler_channels::CrawlerChannelStore;
 use ports::crawler_keywords::CrawlerKeywordStore;
 use ports::crawler_settings::CrawlerSettingsStore;
 use ports::customer::CustomerStore;
+use ports::knowledge::KnowledgeStore;
 use ports::workflow_runtime::CheckpointStore;
 use state::{build_license_gate, AppState};
 use std::sync::{Arc, Mutex};
@@ -37,6 +40,7 @@ use storage::crawler_db::CrawlerDb;
 use storage::crawler_keywords::SqliteCrawlerKeywordStore;
 use storage::crawler_settings::SqliteCrawlerSettingsStore;
 use storage::customer::SqliteCustomerStore;
+use storage::knowledge::SqliteKnowledgeStore;
 use storage::llm_settings::SqliteLlmSettingsStore;
 use storage::mail::SqliteMailStore;
 use storage::opendesk_db::OpendeskDb;
@@ -87,6 +91,9 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
     let chat = Arc::new(SqliteChatStore::open(chat_db_path()).expect("open chat database"));
     let chat_store = Arc::clone(&chat) as Arc<dyn ChatStore>;
     let chat_memory_store = Arc::clone(&chat) as Arc<dyn ChatMemoryStore>;
+    let knowledge_store =
+        Arc::new(SqliteKnowledgeStore::open(knowledge_db_path()).expect("open knowledge database"))
+            as Arc<dyn KnowledgeStore>;
     let embedder = Arc::new(agent::embedding::EmbeddingService::new(Some(
         embedding_cache_dir(),
     ))) as Arc<dyn agent::embedding::Embedder>;
@@ -115,6 +122,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
         snippet_store,
         chat_store,
         chat_memory_store,
+        knowledge_store,
         embedder,
         skill_registry,
         workflow_runtime,
@@ -123,6 +131,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .append_invoke_initialization_script(platform::platform_initialization_script())
         .manage(app_state)
         .setup(move |app| {
@@ -195,6 +204,12 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
                 push_job_store,
             ));
 
+            // 知识库导入状态推送：导入在独立 worker 进程写 knowledge.db，主进程低频检测
+            // `knowledge_doc` 的状态变化并 emit 到 webview，让前端免轮询刷新。
+            let kb_push_app = app.handle().clone();
+            let kb_knowledge_store = state.knowledge_store.clone();
+            tauri::async_runtime::spawn(watch_knowledge_import_push(kb_push_app, kb_knowledge_store));
+
             // 自动拉起 opendesk-worker：IMAP 收信与后台任务都在独立 worker 进程执行，
             // 这里保证它随主进程一起启动。worker 自身带单实例文件锁，避免重复拉起。
             let worker_handle = state.worker.clone();
@@ -241,6 +256,11 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             commands::chat::chat_session_delete,
             commands::chat::chat_messages_load,
             commands::help::help_ask,
+            commands::knowledge::knowledge_doc_import,
+            commands::knowledge::knowledge_doc_list,
+            commands::knowledge::knowledge_doc_delete,
+            commands::knowledge::knowledge_tool_status,
+            commands::knowledge::knowledge_tool_download,
             commands::license::license_status,
             commands::license::license_machine_code,
             commands::license::license_activate,
@@ -348,6 +368,60 @@ async fn watch_imap_sync_push(
         for (account_id, fingerprint) in &snapshot {
             if last.get(account_id) != Some(fingerprint) {
                 let _ = app.emit("mail:imap-sync-updated", account_id);
+            }
+        }
+        last = snapshot;
+    }
+}
+
+/// 知识库导入状态推送循环：每秒检测 `knowledge_doc` 的状态（parsing → ready/failed），
+/// 有变化即 emit `knowledge:import/updated`。worker 是独立进程无法直接访问 Tauri，
+/// 靠主进程读共享 knowledge.db 把导入完成/失败推给 webview。
+async fn watch_knowledge_import_push(
+    app: tauri::AppHandle,
+    knowledge_store: Arc<dyn ports::knowledge::KnowledgeStore>,
+) {
+    use std::collections::HashMap;
+    use std::time::Duration;
+
+    type Fingerprint = (String, String);
+
+    async fn capture(
+        knowledge_store: Arc<dyn ports::knowledge::KnowledgeStore>,
+    ) -> HashMap<String, Fingerprint> {
+        tauri::async_runtime::spawn_blocking(move || {
+            let mut map: HashMap<String, Fingerprint> = HashMap::new();
+            let Ok(documents) = knowledge_store.list_documents() else {
+                return map;
+            };
+            for doc in documents {
+                map.insert(doc.id, (doc.status, doc.updated_at.to_string()));
+            }
+            map
+        })
+        .await
+        .unwrap_or_default()
+    }
+
+    let mut last = capture(knowledge_store.clone()).await;
+    loop {
+        tokio::time::sleep(Duration::from_secs(1)).await;
+        let snapshot = capture(knowledge_store.clone()).await;
+        // 逐条比较：新出现的文档（last 没有）或状态变化的文档推事件。
+        for (document_id, (status, _)) in &snapshot {
+            let changed = last
+                .get(document_id)
+                .map(|(old_status, _)| old_status != status)
+                .unwrap_or(true);
+            if changed {
+                let _ = app.emit(
+                    "knowledge:import/updated",
+                    common::contracts::KnowledgeEventImportUpdated {
+                        document_id: document_id.clone(),
+                        status: status.clone(),
+                        error_message: None,
+                    },
+                );
             }
         }
         last = snapshot;

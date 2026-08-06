@@ -6,6 +6,7 @@ pub mod crawler_channels;
 pub mod crawler_keywords;
 pub mod crawler_settings;
 pub mod customer;
+pub mod knowledge;
 pub mod license;
 pub mod llm_settings;
 pub mod mail;

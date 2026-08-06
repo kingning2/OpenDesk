@@ -1,4 +1,19 @@
 {
-  "title": "Knowledge",
-  "description": "知识库与检索 — 开发中。"
+  "title": "知识库",
+  "description": "上传文档并供聊天自动检索。",
+  "upload": "上传文档",
+  "importing": "导入中…",
+  "loading": "正在加载文档…",
+  "empty": "还没有文档",
+  "emptyHint": "上传 PDF、Word、纯文本、Markdown 或 HTML 文档，导入后聊天可自动检索其中的知识。",
+  "chunks": "个分块",
+  "delete": "删除文档",
+  "dismiss": "关闭",
+  "toolsTitle": "解析工具",
+  "toolsHint": "安装后提高文档解析质量：Pandoc 转换 Word/HTML，Tesseract 识别扫描 PDF，PDFium 提取 PDF 结构。未安装时使用内置解析器回退。",
+  "toolsLoading": "正在检测工具…",
+  "toolInstalled": "已安装",
+  "toolNotInstalled": "未安装",
+  "toolDownload": "下载",
+  "toolDownloading": "下载中…"
 }

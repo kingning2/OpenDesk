@@ -13,5 +13,6 @@
 | Contracts | `contracts/**`, generated Rust/TS | [contracts](../domains/contracts/README.md) | active |
 | Agent / LLM | `crates/agent/**`, Agent commands/features | [agent](../domains/agent/README.md) | active |
 | Documentation | `docs/managed/**` | [documentation](../domains/documentation/README.md) | active |
+| Knowledge | `crates/knowledge/**`, `features/knowledge/**` | [knowledge](../domains/knowledge/README.md) | active |
 
 其他已登记领域入口保留在 `domains/`。同一路径命中多个领域时，以更具体的业务领域为主。

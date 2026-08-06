@@ -40,6 +40,8 @@ export function useLlmSettings() {
   const [baselineToolsEnabled, setBaselineToolsEnabled] = useState(true);
   const [memoryEnabled, setMemoryEnabled] = useState(true);
   const [baselineMemoryEnabled, setBaselineMemoryEnabled] = useState(true);
+  const [knowledgeEnabled, setKnowledgeEnabled] = useState(true);
+  const [baselineKnowledgeEnabled, setBaselineKnowledgeEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -70,6 +72,8 @@ export function useLlmSettings() {
       setBaselineToolsEnabled(response.tools_enabled);
       setMemoryEnabled(response.memory_enabled);
       setBaselineMemoryEnabled(response.memory_enabled);
+      setKnowledgeEnabled(response.knowledge_enabled);
+      setBaselineKnowledgeEnabled(response.knowledge_enabled);
       setApiKey("");
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -92,7 +96,8 @@ export function useLlmSettings() {
     baseUrl !== baselineBaseUrl ||
     modelId !== baselineModelId ||
     toolsEnabled !== baselineToolsEnabled ||
-    memoryEnabled !== baselineMemoryEnabled;
+    memoryEnabled !== baselineMemoryEnabled ||
+    knowledgeEnabled !== baselineKnowledgeEnabled;
   const keyDirty = apiKey.trim().length > 0;
   const dirty = metaDirty || keyDirty;
 
@@ -132,6 +137,7 @@ export function useLlmSettings() {
         api_key: apiKey,
         tools_enabled: toolsEnabled,
         memory_enabled: memoryEnabled,
+        knowledge_enabled: knowledgeEnabled,
       });
       setBaselineProvider(response.provider);
       setBaselineBaseUrl(response.base_url ?? "");
@@ -145,6 +151,8 @@ export function useLlmSettings() {
       setBaselineToolsEnabled(response.tools_enabled);
       setMemoryEnabled(response.memory_enabled);
       setBaselineMemoryEnabled(response.memory_enabled);
+      setKnowledgeEnabled(response.knowledge_enabled);
+      setBaselineKnowledgeEnabled(response.knowledge_enabled);
       setApiKey("");
       setSavedMessage("saved");
     } catch (err) {
@@ -153,7 +161,7 @@ export function useLlmSettings() {
     } finally {
       setSaving(false);
     }
-  }, [apiKey, baseUrl, memoryEnabled, modelId, provider, toolsEnabled]);
+  }, [apiKey, baseUrl, knowledgeEnabled, memoryEnabled, modelId, provider, toolsEnabled]);
 
   const test = useCallback(async () => {
     setError("");
@@ -186,6 +194,7 @@ export function useLlmSettings() {
     setModelId(baselineModelId);
     setToolsEnabled(baselineToolsEnabled);
     setMemoryEnabled(baselineMemoryEnabled);
+    setKnowledgeEnabled(baselineKnowledgeEnabled);
     setPreset(inferLlmPreset(baselineProvider, baselineBaseUrl));
     setApiKey("");
     setSavedMessage("");
@@ -194,6 +203,7 @@ export function useLlmSettings() {
     setError("");
   }, [
     baselineBaseUrl,
+    baselineKnowledgeEnabled,
     baselineMemoryEnabled,
     baselineModelId,
     baselineProvider,
@@ -217,6 +227,8 @@ export function useLlmSettings() {
     setToolsEnabled,
     memoryEnabled,
     setMemoryEnabled,
+    knowledgeEnabled,
+    setKnowledgeEnabled,
     loading,
     saving,
     testing,

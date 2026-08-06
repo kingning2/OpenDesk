@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://knowledge/ipc/tool_download.request/v1",
+  "title": "knowledge/ipc/tool_download.request",
+  "description": "Tauri IPC: download and install one external parsing tool (React to Rust).",
+  "type": "object",
+  "required": ["tool"],
+  "properties": {
+    "tool": { "type": "string", "description": "pandoc | tesseract | pdfium." }
+  },
+  "additionalProperties": false
+}

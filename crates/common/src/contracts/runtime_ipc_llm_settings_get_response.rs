@@ -9,4 +9,5 @@ pub struct RuntimeIpcLlmSettingsGetResponse {
     pub has_api_key: bool,
     pub tools_enabled: bool,
     pub memory_enabled: bool,
+    pub knowledge_enabled: bool,
 }

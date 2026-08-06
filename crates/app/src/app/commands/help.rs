@@ -61,6 +61,7 @@ pub async fn help_ask(
         None,
         None,
         None,
+        None,
     )
     .await?;
 

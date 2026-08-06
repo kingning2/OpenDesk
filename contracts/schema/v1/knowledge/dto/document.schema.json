@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://knowledge/dto/document/v1",
+  "title": "knowledge/dto.document",
+  "description": "A knowledge base document imported from an uploaded file.",
+  "type": "object",
+  "required": ["id", "name", "source_type", "status", "chunk_count", "created_at", "updated_at"],
+  "properties": {
+    "id": { "type": "string", "description": "Persisted document id." },
+    "name": { "type": "string", "description": "Original uploaded file name." },
+    "source_type": { "type": "string", "description": "pdf | docx | html | txt | md." },
+    "status": { "type": "string", "description": "ready | failed." },
+    "chunk_count": { "type": "integer", "description": "Number of vectorized chunks." },
+    "created_at": { "type": "integer", "description": "Unix epoch millis." },
+    "updated_at": { "type": "integer", "description": "Unix epoch millis." }
+  },
+  "additionalProperties": false
+}

@@ -9,10 +9,12 @@ name = "opendesk-worker"
 path = "src/main.rs"
 
 [dependencies]
+agent = { path = "../agent" }
 crawler-enrich = { path = "../crawler-enrich" }
 dirs = { workspace = true }
 fs2 = { workspace = true }
 kernel = { path = "../kernel" }
+knowledge = { path = "../knowledge" }
 mail = { path = "../mail" }
 mail-net = { path = "../mail-net" }
 ports = { path = "../ports" }

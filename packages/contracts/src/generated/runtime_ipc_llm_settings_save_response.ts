@@ -6,4 +6,5 @@ export interface RuntimeIpcLlmSettingsSaveResponse {
   has_api_key: boolean;
   tools_enabled: boolean;
   memory_enabled: boolean;
+  knowledge_enabled: boolean;
 }

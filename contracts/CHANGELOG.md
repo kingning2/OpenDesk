@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.23
+
+- `knowledge/document_import.request`：`content_base64` → `file_path`（文件选择走 Tauri dialog，worker 按路径读文件）。
+- `knowledge/document_import.response`：返回 `{ok, job_id}`（入队后立即返回，解析在 worker）。
+- 新增 knowledge event：`import_updated`（导入状态 parsing→ready/failed 变化，主进程轮询推送）。
+
+## 0.1.22
+
+- 新增 knowledge 工具契约：`tool_status` / `tool_download` IPC 与 `download_progress` 事件（外部解析工具安装状态与下载进度）。
+
+## 0.1.21
+
+- 新增 knowledge 契约：`document_import` / `document_list` / `document_delete` IPC 与 `document` DTO。
+- `llm_settings_save.request` / `llm_settings_get.response` 新增必填 `knowledge_enabled`（是否允许聊天检索知识库）。
+
 ## 0.1.20
 
 - **Breaking:** 删除 Python Sidecar OpenAPI、路由 schema、`runtime.sidecar.restarted` 事件及对应生成物。
