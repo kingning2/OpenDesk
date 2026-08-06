@@ -34,6 +34,8 @@
   "llmKeyStored": "密钥已存钥匙串",
   "llmToolsEnabled": "允许 AI 调用数据查询工具",
   "llmToolsEnabledHint": "开启后，聊天中的大模型可使用内置只读工具查询本机业务数据库；仅对 OpenAI 兼容协议生效。",
+  "llmMemoryEnabled": "允许 AI 使用长期记忆",
+  "llmMemoryEnabledHint": "开启后，AI 会记住跨会话的对话要点，新对话按向量相似度自动检索相关记忆。",
   "apiKey": "API 密钥",
   "apiKeyPlaceholder": "粘贴 YouTube API 密钥",
   "save": "保存",

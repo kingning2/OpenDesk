@@ -34,6 +34,8 @@
   "llmKeyStored": "Key stored in keyring",
   "llmToolsEnabled": "Allow AI to call data-query tools",
   "llmToolsEnabledHint": "When on, the chat LLM may query the local business database with read-only tools. Only applies to OpenAI-compatible providers.",
+  "llmMemoryEnabled": "Allow AI to use long-term memory",
+  "llmMemoryEnabledHint": "When on, the AI remembers conversation highlights across sessions and auto-retrieves relevant memories by vector similarity.",
   "apiKey": "API key",
   "apiKeyPlaceholder": "Paste YouTube API key",
   "save": "Save",

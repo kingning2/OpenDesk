@@ -10,6 +10,20 @@
   "dismiss": "关闭",
   "thinking": "思考中…",
   "thinkingDetails": "思考过程",
+  "toolCalls": "工具调用",
   "toolOk": "完成",
-  "toolFailed": "失败"
+  "toolFailed": "失败",
+  "sessions.title": "会话",
+  "sessions.new": "新建会话",
+  "sessions.untitled": "新会话",
+  "sessions.empty": "还没有会话，点右上角 + 新建",
+  "sessions.loading": "正在加载会话…",
+  "sessions.rename": "重命名",
+  "sessions.delete": "删除",
+  "sessions.renameTitle": "重命名会话",
+  "sessions.renamePlaceholder": "输入新标题…",
+  "sessions.deleteTitle": "删除会话",
+  "sessions.deleteConfirm": "确定删除「{{title}}」？该会话下的所有消息也会被删除。",
+  "sessions.cancel": "取消",
+  "sessions.messages": "{{count}} 条"
 }

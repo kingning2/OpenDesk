@@ -10,6 +10,20 @@
   "dismiss": "Dismiss",
   "thinking": "Thinking…",
   "thinkingDetails": "Thinking process",
+  "toolCalls": "Tool calls",
   "toolOk": "done",
-  "toolFailed": "failed"
+  "toolFailed": "failed",
+  "sessions.title": "Sessions",
+  "sessions.new": "New chat",
+  "sessions.untitled": "New session",
+  "sessions.empty": "No sessions yet. Use + to create one.",
+  "sessions.loading": "Loading sessions…",
+  "sessions.rename": "Rename",
+  "sessions.delete": "Delete",
+  "sessions.renameTitle": "Rename session",
+  "sessions.renamePlaceholder": "Enter a new title…",
+  "sessions.deleteTitle": "Delete session",
+  "sessions.deleteConfirm": "Delete \"{{title}}\"? All of its messages will be removed.",
+  "sessions.cancel": "Cancel",
+  "sessions.messages": "{{count}} messages"
 }

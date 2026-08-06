@@ -54,6 +54,8 @@ export function LlmSettingsPanel({ llm }: LlmSettingsPanelProps) {
     configured,
     toolsEnabled,
     setToolsEnabled,
+    memoryEnabled,
+    setMemoryEnabled,
     loading,
     saving,
     testing,
@@ -173,6 +175,23 @@ export function LlmSettingsPanel({ llm }: LlmSettingsPanelProps) {
           disabled={loading || saving}
           aria-label={t("settings.llmToolsEnabled")}
           onCheckedChange={setToolsEnabled}
+        />
+      </div>
+
+      <div className="flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-border px-3 py-2">
+        <div className="min-w-0">
+          <p className="text-[length:var(--text-sm)] font-medium text-foreground">
+            {t("settings.llmMemoryEnabled")}
+          </p>
+          <p className="text-[length:var(--text-xs)] text-muted-foreground">
+            {t("settings.llmMemoryEnabledHint")}
+          </p>
+        </div>
+        <Switch
+          checked={memoryEnabled}
+          disabled={loading || saving}
+          aria-label={t("settings.llmMemoryEnabled")}
+          onCheckedChange={setMemoryEnabled}
         />
       </div>
 

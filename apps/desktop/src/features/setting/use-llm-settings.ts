@@ -38,6 +38,8 @@ export function useLlmSettings() {
   const [configured, setConfigured] = useState(false);
   const [toolsEnabled, setToolsEnabled] = useState(true);
   const [baselineToolsEnabled, setBaselineToolsEnabled] = useState(true);
+  const [memoryEnabled, setMemoryEnabled] = useState(true);
+  const [baselineMemoryEnabled, setBaselineMemoryEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -66,6 +68,8 @@ export function useLlmSettings() {
       setConfigured(response.configured);
       setToolsEnabled(response.tools_enabled);
       setBaselineToolsEnabled(response.tools_enabled);
+      setMemoryEnabled(response.memory_enabled);
+      setBaselineMemoryEnabled(response.memory_enabled);
       setApiKey("");
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -87,7 +91,8 @@ export function useLlmSettings() {
     provider !== baselineProvider ||
     baseUrl !== baselineBaseUrl ||
     modelId !== baselineModelId ||
-    toolsEnabled !== baselineToolsEnabled;
+    toolsEnabled !== baselineToolsEnabled ||
+    memoryEnabled !== baselineMemoryEnabled;
   const keyDirty = apiKey.trim().length > 0;
   const dirty = metaDirty || keyDirty;
 
@@ -126,6 +131,7 @@ export function useLlmSettings() {
         model_id: modelId.trim(),
         api_key: apiKey,
         tools_enabled: toolsEnabled,
+        memory_enabled: memoryEnabled,
       });
       setBaselineProvider(response.provider);
       setBaselineBaseUrl(response.base_url ?? "");
@@ -137,6 +143,8 @@ export function useLlmSettings() {
       setConfigured(response.configured);
       setToolsEnabled(response.tools_enabled);
       setBaselineToolsEnabled(response.tools_enabled);
+      setMemoryEnabled(response.memory_enabled);
+      setBaselineMemoryEnabled(response.memory_enabled);
       setApiKey("");
       setSavedMessage("saved");
     } catch (err) {
@@ -145,7 +153,7 @@ export function useLlmSettings() {
     } finally {
       setSaving(false);
     }
-  }, [apiKey, baseUrl, modelId, provider, toolsEnabled]);
+  }, [apiKey, baseUrl, memoryEnabled, modelId, provider, toolsEnabled]);
 
   const test = useCallback(async () => {
     setError("");
@@ -177,13 +185,20 @@ export function useLlmSettings() {
     setBaseUrl(baselineBaseUrl);
     setModelId(baselineModelId);
     setToolsEnabled(baselineToolsEnabled);
+    setMemoryEnabled(baselineMemoryEnabled);
     setPreset(inferLlmPreset(baselineProvider, baselineBaseUrl));
     setApiKey("");
     setSavedMessage("");
     setTestMessage("");
     setTestOk(null);
     setError("");
-  }, [baselineBaseUrl, baselineModelId, baselineProvider, baselineToolsEnabled]);
+  }, [
+    baselineBaseUrl,
+    baselineMemoryEnabled,
+    baselineModelId,
+    baselineProvider,
+    baselineToolsEnabled,
+  ]);
 
   return {
     preset,
@@ -200,6 +215,8 @@ export function useLlmSettings() {
     configured,
     toolsEnabled,
     setToolsEnabled,
+    memoryEnabled,
+    setMemoryEnabled,
     loading,
     saving,
     testing,
