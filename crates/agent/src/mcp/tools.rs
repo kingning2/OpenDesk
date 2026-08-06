@@ -13,8 +13,8 @@ use schemars::JsonSchema;
 use serde::Deserialize;
 use serde_json::{json, Value};
 
-use crate::paths::{db_path, Db};
-use crate::readonly::ReadOnlyDb;
+use super::paths::{db_path, Db};
+use super::readonly::ReadOnlyDb;
 
 /// 默认查询行数上限。
 const DEFAULT_LIMIT: usize = 100;

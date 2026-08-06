@@ -2,7 +2,7 @@
   "mcpServers": {
     "opendesk-db": {
       "command": "cargo",
-      "args": ["run", "--release", "-p", "opendesk-mcp"]
+      "args": ["run", "--release", "-p", "agent", "--bin", "opendesk-mcp"]
     }
   }
 }

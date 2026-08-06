@@ -11,7 +11,6 @@ members = [
   "crates/ports",
   "crates/adapter",
   "crates/agent",
-  "crates/agent/mcp",
   "crates/chat",
   "crates/mail",
   "crates/workflow_runtime",
@@ -65,6 +64,7 @@ imap = "2.4"
 native-tls = "0.2"
 mailparse = "0.16"
 rand = "0.8"
+fs2 = "0.4"
 enigo = "0.3"
 screenshots = "0.8"
 imageproc = "0.25"

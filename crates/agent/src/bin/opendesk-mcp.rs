@@ -1,13 +1,12 @@
 //! OpenDesk 只读数据库 MCP Server 入口。
 //!
 //! 以 stdio transport 运行，供 Claude Code 等 MCP 客户端通过 `cargo run
-//! -p opendesk-mcp` 启动。数据库路径默认 `{data_local}/OpenDesk`，可用
+//! -p agent --bin opendesk-mcp` 启动。数据库路径默认 `{data_local}/OpenDesk`，可用
 //! `--data-dir <path>` 或 `OPENDESK_DATA_DIR` 覆盖。
 
+use agent::mcp::paths::data_dir;
+use agent::mcp::OpendeskMcp;
 use rmcp::serve_server;
-
-use opendesk_mcp::paths::data_dir;
-use opendesk_mcp::OpendeskMcp;
 
 const USAGE: &str = "\
 opendesk-mcp — OpenDesk 只读数据库 MCP Server
@@ -39,7 +38,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn init_logging() {
     use tracing_subscriber::EnvFilter;
     let filter = EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| EnvFilter::new("rmcp=info,opendesk_mcp=debug"));
+        .unwrap_or_else(|_| EnvFilter::new("rmcp=info,agent=debug"));
     let _ = tracing_subscriber::fmt()
         .with_env_filter(filter)
         .with_writer(std::io::stderr)

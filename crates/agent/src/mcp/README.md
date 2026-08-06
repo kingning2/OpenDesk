@@ -1,6 +1,6 @@
 # opendesk-mcp
 
-OpenDesk 的**只读**数据库 MCP Server（位于 `crates/agent/mcp/`）。给 Claude Code 等 AI 提供一个可安全查询 OpenDesk 业务数据的 MCP 接口。
+OpenDesk 的**只读**数据库 MCP Server（位于 `crates/agent/src/mcp/`）。给 Claude Code 等 AI 提供一个可安全查询 OpenDesk 业务数据的 MCP 接口。
 
 **核心承诺：只能读，绝不可能写。** 双重防线（见 [只读安全设计](#只读安全设计)），并自动脱敏邮件密码等凭证列。
 
@@ -28,7 +28,7 @@ OpenDesk 的**只读**数据库 MCP Server（位于 `crates/agent/mcp/`）。给
   "mcpServers": {
     "opendesk-db": {
       "command": "cargo",
-      "args": ["run", "--release", "-p", "opendesk-mcp"]
+      "args": ["run", "--release", "-p", "agent", "--bin", "opendesk-mcp"]
     }
   }
 }
@@ -37,7 +37,7 @@ OpenDesk 的**只读**数据库 MCP Server（位于 `crates/agent/mcp/`）。给
 首次启动会编译（约几十秒）。日常使用建议先构建一次，改用秒启的二进制：
 
 ```bash
-cargo build --release -p opendesk-mcp
+cargo build --release -p agent --bin opendesk-mcp
 # 将 .mcp.json 的 args 换成 target/release/opendesk-mcp.exe
 ```
 
@@ -69,6 +69,6 @@ OPENDESK_DATA_DIR=/path/to/data opendesk-mcp
 ## 开发
 
 ```bash
-cargo test -p opendesk-mcp   # 单元 + 集成测试（校验器 / 只读强制 / limit / 脱敏）
-cargo build -p opendesk-mcp
+cargo test -p agent --lib mcp   # 单元 + 集成测试（校验器 / 只读强制 / limit / 脱敏）
+cargo build -p agent --bin opendesk-mcp
 ```

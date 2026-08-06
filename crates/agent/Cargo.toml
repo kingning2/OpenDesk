@@ -3,10 +3,23 @@ name = "agent"
 version.workspace = true
 edition.workspace = true
 
+[[bin]]
+name = "opendesk-mcp"
+path = "src/bin/opendesk-mcp.rs"
+
 [dependencies]
+dirs = { workspace = true }
 fastembed = "5.17"
 reqwest = { workspace = true }
+rmcp = { version = "0", features = ["server", "schemars", "transport-io"] }
+rusqlite = { version = "0.32", features = ["bundled"] }
+schemars = "1"
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
-tokio = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3"
