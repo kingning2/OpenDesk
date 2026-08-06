@@ -20,6 +20,7 @@ export {
 } from "./invoke";
 
 export * from "./customer";
+export * from "./chat";
 export * from "./mail";
 export * from "./mail-events";
 export * from "./workflow";

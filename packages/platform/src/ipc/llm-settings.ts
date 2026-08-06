@@ -34,6 +34,8 @@ export interface LlmSettingsResponse {
   has_api_key: boolean;
   /** 是否允许 AI 调用数据查询工具 */
   tools_enabled: boolean;
+  /** 是否允许 AI 使用跨会话长期记忆 */
+  memory_enabled: boolean;
 }
 
 /**
@@ -48,6 +50,7 @@ export interface LlmSettingsSaveRequest {
   model_id: string;
   api_key: string;
   tools_enabled: boolean;
+  memory_enabled: boolean;
 }
 
 /**
