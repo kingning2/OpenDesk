@@ -1,0 +1,13 @@
+{
+  "title": "Help",
+  "description": "System navigation Q&A",
+  "empty": "Ask me anything about using this app, e.g. \"How do I configure the LLM?\"",
+  "input.placeholder": "Type your question…",
+  "send": "Send",
+  "sending": "Generating…",
+  "error": "Something went wrong",
+  "errorNotConfigured": "No LLM configured. Set up a model and API key in Settings first.",
+  "dismiss": "Dismiss",
+  "thinking": "Thinking…",
+  "thinkingDetails": "Thinking process"
+}

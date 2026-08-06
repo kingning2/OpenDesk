@@ -13,6 +13,7 @@ import { chatFeature } from "@feature/chat";
 import { crawlerFeature } from "@feature/crawler";
 import { crawlerResultsFeature } from "@feature/crawler-results";
 import { customerFeature } from "@feature/customer";
+import { helpFeature } from "@feature/help";
 import { knowledgeFeature } from "@feature/knowledge";
 import { mailFeature } from "@feature/mail";
 import { workflowFeature } from "@feature/workflow";
@@ -45,6 +46,7 @@ export const navItems: NavItem[] = [
   crawlerResultsFeature.navItem,
   customerFeature.navItem,
   chatFeature.navItem,
+  helpFeature.navItem,
   mailFeature.navItem,
   workflowFeature.navItem,
   knowledgeFeature.navItem,

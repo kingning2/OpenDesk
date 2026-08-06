@@ -13,6 +13,8 @@
   "toolCalls": "工具调用",
   "toolOk": "完成",
   "toolFailed": "失败",
+  "action.gotoPage": "前往「{{label}}」",
+  "action.openSettings": "打开「{{section}}」设置",
   "sessions.title": "会话",
   "sessions.new": "新建会话",
   "sessions.untitled": "新会话",

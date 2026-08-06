@@ -22,17 +22,7 @@ import {
 import { listenChatEvents } from "@desk/platform/ipc/chat-events";
 import type { ChatEventToken, ChatEventTool } from "@desk/contracts";
 
-/** 一次工具调用（LLM 查询业务库时产生）。 */
-export interface ToolStep {
-  /** 工具名（如 `list_databases` / `run_query`）。 */
-  name: string;
-  /** JSON 编码的工具参数。 */
-  arguments: string;
-  /** 调用是否成功。 */
-  ok: boolean;
-  /** 工具返回（JSON 字符串）；失败时为错误描述。 */
-  result?: string;
-}
+import { deriveAction, type ToolStep } from "./chat-tool-utils";
 
 /** 一条聊天消息。 */
 export interface ChatMessageView {
@@ -76,7 +66,10 @@ function parseToolsJson(json?: string): ToolStep[] {
 
 /** 把一条落库消息转成展示消息。 */
 function fromPersistedMessage(dto: ChatMessage): ChatMessageView {
-  const tools = parseToolsJson(dto.tools_json);
+  const tools = parseToolsJson(dto.tools_json).map((step) => {
+    const action = deriveAction(step);
+    return action ? { ...step, action } : step;
+  });
   return {
     id: dto.id,
     role: dto.role === "assistant" ? "assistant" : "user",
@@ -206,12 +199,16 @@ export function useChat() {
   const applyTool = useCallback(
     (payload: ChatEventTool) => {
       const entry = upsertStreamEntry(payload.session_id, payload.message_id);
-      entry.tools.push({
+      const step: ToolStep = {
         name: payload.name,
         arguments: payload.arguments,
         ok: payload.ok,
         result: payload.result,
-      });
+      };
+      // 动作工具（navigate_page / open_settings）解析出可执行动作，交给 UI 渲染按钮；
+      // 不自动跳转，由用户点击触发（数据查询类工具无 action，保持普通步骤展示）。
+      const action = deriveAction(step);
+      entry.tools.push(action ? { ...step, action } : step);
       if (payload.session_id === activeSessionIdRef.current) {
         applyEntry(payload.session_id, payload.message_id);
       }

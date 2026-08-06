@@ -48,7 +48,9 @@ import type { ChatSession } from "@desk/platform/ipc/chat";
 
 import { useT } from "../../i18n";
 import { MarkdownContent } from "./markdown";
-import { useChat, type ChatMessageView, type ToolStep } from "./use-chat";
+import { type ToolStep } from "./chat-tool-utils";
+import { SuggestedActions } from "./suggested-actions";
+import { useChat, type ChatMessageView } from "./use-chat";
 
 /** 「思考中…」三点跳动动画。 */
 function ThinkingDots() {
@@ -102,12 +104,15 @@ function ThinkingBlock({ message }: { message: ChatMessageView }) {
 
 /**
  * 工具调用步骤块：小号等宽展示工具名 + 参数 + 结果/错误，复用 muted 样式。
+ * 只展示数据查询等普通工具步骤；动作工具（navigate_page / open_settings）由
+ * `SuggestedActions` 渲染成按钮，二者区分开。
  * 整块可折叠（默认展开，让用户实时看到 AI 查了哪些库；手动折叠后保持折叠）。
  */
 function ToolSteps({ tools }: { tools: ToolStep[] }) {
   const t = useT();
   const [userClosed, setUserClosed] = useState(false);
-  if (tools.length === 0) {
+  const queryTools = tools.filter((tool) => !tool.action);
+  if (queryTools.length === 0) {
     return null;
   }
 
@@ -129,7 +134,7 @@ function ToolSteps({ tools }: { tools: ToolStep[] }) {
         />
       </summary>
       <div className="mt-2 flex flex-col gap-1.5">
-        {tools.map((tool, index) => (
+        {queryTools.map((tool, index) => (
           <div
             key={index}
             className="rounded-[var(--radius-md)] border border-border bg-muted/40 px-3 py-2"
@@ -171,7 +176,10 @@ function ChatBubble({ message }: { message: ChatMessageView }) {
       <MessageContent>
         {!isUser ? <ThinkingBlock message={message} /> : null}
         {!isUser && message.tools && message.tools.length > 0 ? (
-          <ToolSteps tools={message.tools} />
+          <>
+            <ToolSteps tools={message.tools} />
+            <SuggestedActions tools={message.tools} />
+          </>
         ) : null}
 
         <Bubble

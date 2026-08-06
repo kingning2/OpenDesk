@@ -34,6 +34,10 @@ const PAGE_LOADERS: Record<string, PageLoader> = {
     const { ChatPage } = await import("@feature/chat/chat-page");
     return ChatPage;
   },
+  "/features/help": async () => {
+    const { HelpPage } = await import("@feature/help/help-page");
+    return HelpPage;
+  },
   "/features/mail": async () => {
     const { MailPage } = await import("@feature/mail/mail-page");
     return MailPage;

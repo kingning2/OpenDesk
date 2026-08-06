@@ -13,6 +13,8 @@
   "toolCalls": "Tool calls",
   "toolOk": "done",
   "toolFailed": "failed",
+  "action.gotoPage": "Go to {{label}}",
+  "action.openSettings": "Open {{section}} settings",
   "sessions.title": "Sessions",
   "sessions.new": "New chat",
   "sessions.untitled": "New session",

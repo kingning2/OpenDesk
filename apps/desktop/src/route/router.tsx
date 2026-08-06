@@ -19,6 +19,7 @@ export const appRouter = createBrowserRouter([
       { path: "features/crawler-results" },
       { path: "features/customer" },
       { path: "features/chat" },
+      { path: "features/help" },
       { path: "features/mail" },
       { path: "features/workflow" },
       { path: "features/knowledge" },
