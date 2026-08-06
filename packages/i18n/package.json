@@ -12,8 +12,7 @@
     "react-dom": "^19.0.0"
   },
   "dependencies": {
-    "i18next": "^25.3.2",
-    "react-i18next": "^15.6.0"
+    "@fluent/bundle": "^0.19.1"
   },
   "devDependencies": {
     "@types/react": "^19.1.8",

@@ -1,0 +1,2 @@
+title = OpenDesk
+description = 架构脚手架 — 请从侧栏选择功能。

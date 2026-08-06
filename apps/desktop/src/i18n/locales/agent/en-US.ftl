@@ -1,0 +1,4 @@
+title = Agent
+subtitle = LLM connectivity
+ping = Test LLM
+pinging = Pinging...
