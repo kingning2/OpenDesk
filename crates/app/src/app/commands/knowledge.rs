@@ -7,7 +7,8 @@ use common::contracts::{
     KnowledgeIpcDocumentListResponse, KnowledgeIpcToolDownloadRequest,
     KnowledgeIpcToolDownloadResponse, KnowledgeIpcToolStatusResponse,
 };
-use knowledge::{DeleteDocument, ListDocuments, ToolId};
+use common::tools::{detect_tool, download_tool, DownloadProgress, ToolId, ToolStatus};
+use knowledge::{DeleteDocument, ListDocuments};
 use ports::background_job::JOB_TYPE_KNOWLEDGE_IMPORT;
 use serde_json::json;
 use tauri::Emitter;
@@ -29,7 +30,7 @@ fn record_to_dto(record: ports::knowledge::KnowledgeDocumentRecord) -> Knowledge
     }
 }
 
-fn tool_status_to_dto(status: knowledge::ToolStatus) -> KnowledgeDtoToolStatus {
+fn tool_status_to_dto(status: ToolStatus) -> KnowledgeDtoToolStatus {
     KnowledgeDtoToolStatus {
         id: status.id.to_string(),
         name: status.name.to_string(),
@@ -112,7 +113,7 @@ pub async fn knowledge_tool_status(
     let _ = state;
     let tools = [ToolId::Pandoc, ToolId::Tesseract, ToolId::Pdfium]
         .into_iter()
-        .map(|id| tool_status_to_dto(knowledge::detect_tool(id)))
+        .map(|id| tool_status_to_dto(detect_tool(id)))
         .collect::<Vec<_>>();
     Ok(KnowledgeIpcToolStatusResponse {
         tools_json: json!(tools).to_string(),
@@ -136,11 +137,12 @@ pub async fn knowledge_tool_download(
 ) -> Result<KnowledgeIpcToolDownloadResponse, String> {
     let _ = state;
     let tool = ToolId::parse(&request.tool).ok_or_else(|| format!("未知工具: {}", request.tool))?;
+    tracing::info!(tool = tool.as_str(), "tool download requested");
     let handle = app.clone();
 
     tauri::async_runtime::spawn(async move {
         let handle_for_emit = handle.clone();
-        let emit = move |progress: knowledge::DownloadProgress| {
+        let emit = move |progress: DownloadProgress| {
             let _ = handle_for_emit.emit(
                 TOOL_PROGRESS_EVENT,
                 KnowledgeEventDownloadProgress {
@@ -152,8 +154,9 @@ pub async fn knowledge_tool_download(
                 },
             );
         };
-        match knowledge::download_tool(tool, emit).await {
+        match download_tool(tool, emit).await {
             Ok(()) => {
+                tracing::info!(tool = tool.as_str(), "tool download task completed");
                 let _ = handle.emit(
                     TOOL_PROGRESS_EVENT,
                     KnowledgeEventDownloadProgress {
@@ -166,6 +169,7 @@ pub async fn knowledge_tool_download(
                 );
             }
             Err(error) => {
+                tracing::warn!(tool = tool.as_str(), %error, "tool download task failed");
                 let _ = handle.emit(
                     TOOL_PROGRESS_EVENT,
                     KnowledgeEventDownloadProgress {

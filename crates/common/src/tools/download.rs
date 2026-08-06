@@ -10,7 +10,8 @@ use std::time::Duration;
 
 use reqwest::Client;
 
-use super::urls::{download_kind, download_url, DownloadKind};
+use super::detect::{executable_name, find_executable_recursive};
+use super::urls::{download_kind, download_url, installer_default_dir, DownloadKind};
 use super::{tool_install_dir, ToolId};
 
 /// 下载过程中的进度事件。
@@ -48,6 +49,18 @@ impl std::fmt::Display for DownloadError {
 
 impl std::error::Error for DownloadError {}
 
+/// 下载临时文件名（扩展名与解压器分发对齐，避免 `.tmp` 无法匹配）。
+fn archive_file_name(tool: ToolId) -> String {
+    match download_kind(tool) {
+        DownloadKind::Archive => match tool {
+            ToolId::Pandoc => "download.zip".to_string(),
+            ToolId::Pdfium => "download.tgz".to_string(),
+            ToolId::Tesseract => "download.exe".to_string(),
+        },
+        DownloadKind::Installer => "download.exe".to_string(),
+    }
+}
+
 /// 下载并安装一个工具。`progress` 回调在下载 / 解压各阶段触发。
 pub async fn download_tool(
     tool: ToolId,
@@ -63,6 +76,14 @@ pub async fn download_tool(
 
     let install_dir = tool_install_dir(tool);
     std::fs::create_dir_all(&install_dir).map_err(|error| DownloadError::Io(error.to_string()))?;
+
+    tracing::info!(
+        target: "lifecycle",
+        tool = tool.as_str(),
+        url,
+        target_dir = %install_dir.display(),
+        "tool download started"
+    );
 
     let client = Client::builder()
         .timeout(Duration::from_secs(600))
@@ -88,11 +109,14 @@ pub async fn download_tool(
         .and_then(|value| value.parse::<u64>().ok())
         .unwrap_or(0);
 
-    // 下载到临时文件，避免中断污染安装目录。
-    let archive_path = install_dir.join("download.tmp");
+    // 下载到带正确扩展名的临时文件，避免中断污染安装目录。
+    let archive_path = install_dir.join(archive_file_name(tool));
     let mut file =
         File::create(&archive_path).map_err(|error| DownloadError::Io(error.to_string()))?;
     let mut downloaded = 0u64;
+    // 低频进度日志：每跨越 10% 或每 1MB 记一次，避免每次 chunk 刷屏。
+    let mut last_bucket = u64::MAX;
+    let mut last_mb = 0u64;
     loop {
         let read = response
             .chunk()
@@ -108,8 +132,36 @@ pub async fn download_tool(
             status: "downloading",
             error_message: None,
         });
+        // 进度桶：有总长按百分比（每 10% 一档），否则按 MB（每 1MB 一档）。
+        let bucket = if total > 0 {
+            downloaded
+                .saturating_mul(10)
+                .checked_div(total)
+                .unwrap_or(10)
+        } else {
+            downloaded / (1024 * 1024)
+        };
+        let mb = downloaded / (1024 * 1024);
+        if bucket != last_bucket || mb > last_mb {
+            tracing::debug!(
+                tool = tool.as_str(),
+                downloaded,
+                total,
+                "tool download progress"
+            );
+            last_bucket = bucket;
+            last_mb = mb;
+        }
     }
     drop(file);
+
+    tracing::info!(
+        target: "lifecycle",
+        tool = tool.as_str(),
+        downloaded,
+        total,
+        "tool download finished"
+    );
 
     progress(DownloadProgress {
         bytes_downloaded: downloaded,
@@ -128,6 +180,12 @@ pub async fn download_tool(
     .await
     .map_err(|error| DownloadError::Io(error.to_string()))?;
     let _ = std::fs::remove_file(&archive_path);
+    match &result {
+        Ok(()) => tracing::info!(target: "lifecycle", tool = tool.as_str(), "tool installed"),
+        Err(error) => {
+            tracing::warn!(target: "lifecycle", tool = tool.as_str(), %error, "tool install failed")
+        }
+    }
     result
 }
 
@@ -176,6 +234,7 @@ fn extract_zip(archive_path: &Path, install_dir: &Path, tool: ToolId) -> Result<
         }
     }
     drop(archive);
+    validate_install(install_dir, tool)?;
     mark_installed(install_dir, tool);
     Ok(())
 }
@@ -213,6 +272,7 @@ fn extract_tgz(archive_path: &Path, install_dir: &Path, tool: ToolId) -> Result<
                 .map_err(|error| DownloadError::Io(error.to_string()))?;
         }
     }
+    validate_install(install_dir, tool)?;
     mark_installed(install_dir, tool);
     Ok(())
 }
@@ -233,6 +293,9 @@ fn sanitized_path(install_dir: &Path, entry_name: &str) -> Result<PathBuf, Downl
 }
 
 /// 运行 NSIS 安装器（tesseract）到工具目录，静默安装。
+///
+/// 嵌套 NSIS 安装器可能忽略 `/D=` 把产物装到默认位置，因此 exit 0 不代表装进
+/// 了工具目录：先做真实校验，失败则从默认安装位置回收，仍失败才报错。
 fn run_installer(
     installer_path: &Path,
     install_dir: &Path,
@@ -249,11 +312,98 @@ fn run_installer(
             tool.display_name()
         )));
     }
+    if let Ok(()) = validate_install(install_dir, tool) {
+        mark_installed(install_dir, tool);
+        return Ok(());
+    }
+    recover_install(install_dir, tool)?;
     mark_installed(install_dir, tool);
+    Ok(())
+}
+
+/// 校验工具是否真的装进了安装目录（存在可执行文件/动态库）。
+///
+/// 可复用：任何工具在下载/安装/回收后都可用它确认产物真实落地，避免
+/// 「exit 0 + 标记文件」造成的假成功。
+fn validate_install(install_dir: &Path, tool: ToolId) -> Result<(), DownloadError> {
+    let name = executable_name(tool);
+    let direct = install_dir.join(name);
+    if direct.is_file() || find_executable_recursive(install_dir, name).is_some() {
+        return Ok(());
+    }
+    Err(DownloadError::Install(format!(
+        "{} 未找到可执行文件 {}（安装可能落到了其他目录）",
+        tool.display_name(),
+        name
+    )))
+}
+
+/// 从安装器的默认安装位置回收产物到工具目录。
+///
+/// 可复用：安装器型工具（如 Tesseract）静默安装可能忽略 `/D=`，把文件装到
+/// `installer_default_dir` 指定的系统目录。此函数检测到后整体拷贝回工具目录，
+/// 归一化工具目录为唯一事实源（检测逻辑无需改动）。
+fn recover_install(install_dir: &Path, tool: ToolId) -> Result<(), DownloadError> {
+    let Some(default_dir) = installer_default_dir(tool) else {
+        return validate_install(install_dir, tool);
+    };
+    let name = executable_name(tool);
+    let source = default_dir.join(name);
+    if !source.is_file() {
+        return Err(DownloadError::Install(format!(
+            "{} 安装校验失败且默认安装目录 {} 也没有产物",
+            tool.display_name(),
+            default_dir.display()
+        )));
+    }
+    tracing::info!(
+        target: "lifecycle",
+        tool = tool.as_str(),
+        from = %default_dir.display(),
+        to = %install_dir.display(),
+        "recovering tool install from default location"
+    );
+    copy_dir_recursive(&default_dir, install_dir).map_err(|error| {
+        DownloadError::Install(format!(
+            "从 {} 回收 {} 失败: {error}",
+            default_dir.display(),
+            tool.display_name()
+        ))
+    })?;
+    validate_install(install_dir, tool)
+}
+
+/// 递归拷贝目录内容到目标目录（合并，不删除目标已有文件）。
+fn copy_dir_recursive(source: &Path, target: &Path) -> std::io::Result<()> {
+    std::fs::create_dir_all(target)?;
+    for entry in std::fs::read_dir(source)? {
+        let entry = entry?;
+        let path = entry.path();
+        let file_name = entry.file_name();
+        let dest = target.join(&file_name);
+        if path.is_dir() {
+            copy_dir_recursive(&path, &dest)?;
+        } else {
+            std::fs::copy(&path, &dest)?;
+        }
+    }
     Ok(())
 }
 
 /// 写入 `.installed` 标记文件，供检测模块判断已安装。
 fn mark_installed(install_dir: &Path, tool: ToolId) {
     let _ = std::fs::write(install_dir.join(".installed"), tool.as_str());
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn archive_file_name_matches_extractor() {
+        // 临时文件扩展名必须能被 `extract_archive` 的扩展名分发正确匹配。
+        assert_eq!(archive_file_name(ToolId::Pandoc), "download.zip");
+        assert_eq!(archive_file_name(ToolId::Pdfium), "download.tgz");
+        assert_eq!(archive_file_name(ToolId::Tesseract), "download.exe");
+    }
 }

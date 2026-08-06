@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 
 use tokio::process::Command;
 
-use crate::tools::{detect::resolve_tool_path, ToolId};
+use common::tools::{detect::resolve_tool_path, ToolId};
 
 /// OCR 失败错误。
 #[derive(Debug, Clone)]

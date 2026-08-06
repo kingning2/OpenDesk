@@ -1,15 +1,17 @@
-//! 各平台解析工具下载 URL。
+//! 各平台解析工具下载 URL 与安装形态元数据。
 //!
 //! 版本号与 URL 集中在此，可被同名环境变量覆盖（便于内网镜像或固定版本）。
+
+use std::path::PathBuf;
 
 use super::ToolId;
 
 /// Pandoc 版本（GitHub release tag）。
 const PANDOC_VERSION: &str = "3.6.4";
 /// Tesseract 版本（UB-Mannheim 打包，Windows 安装器）。
-const TESSERACT_VERSION: &str = "5.5.3.20260724";
+const TESSERACT_VERSION: &str = "5.4.0.20240606";
 /// PDFium 版本（bblanchon/PDFium-binaries release tag）。
-const PDFIUM_VERSION: &str = "7381";
+const PDFIUM_VERSION: &str = "7988";
 
 /// 环境变量覆盖：`KNOWLEDGE_PANDOC_URL` / `KNOWLEDGE_TESSERACT_URL` / `KNOWLEDGE_PDFIUM_URL`。
 fn env_url(var: &str, default: &str) -> String {
@@ -30,6 +32,28 @@ pub fn download_kind(tool: ToolId) -> DownloadKind {
     match tool {
         ToolId::Pandoc | ToolId::Pdfium => DownloadKind::Archive,
         ToolId::Tesseract => DownloadKind::Installer,
+    }
+}
+
+/// 安装器型工具的默认安装位置（`/D=` 被嵌套 NSIS 忽略时落在这里）。
+///
+/// 例如 UB-Mannheim 的 Tesseract 安装器静默安装固定写到
+/// `C:\Program Files\Tesseract-OCR\`。装完后 `recover_install` 从这里把产物
+/// 回收进工具目录。归档型工具返回 `None`。
+pub fn installer_default_dir(tool: ToolId) -> Option<PathBuf> {
+    match tool {
+        ToolId::Tesseract => {
+            #[cfg(target_os = "windows")]
+            {
+                Some(PathBuf::from(r"C:\Program Files\Tesseract-OCR"))
+            }
+            #[cfg(not(target_os = "windows"))]
+            {
+                let _ = tool;
+                None
+            }
+        }
+        ToolId::Pandoc | ToolId::Pdfium => None,
     }
 }
 

@@ -7,9 +7,7 @@ pub mod app;
 pub mod chunk;
 pub mod ocr;
 pub mod parse;
-pub mod tools;
 
 pub use app::{DeleteDocument, ImportDocument, ImportOutcome, ListDocuments};
 pub use chunk::chunk_markdown;
 pub use parse::parse_to_markdown;
-pub use tools::{detect_tool, download_tool, DownloadError, DownloadProgress, ToolId, ToolStatus};

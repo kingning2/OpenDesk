@@ -11,6 +11,7 @@ use common::contracts::{
     CrawlerIpcJobLogsResponse, CrawlerIpcJobStartRequest, CrawlerIpcJobStartResponse,
     CrawlerIpcJobStatusRequest, CrawlerIpcJobStatusResponse,
 };
+use common::i18n::Locale;
 use ports::background_job::BackgroundJobStore;
 use ports::crawler_channels::CrawlerChannelStore;
 use reqwest::blocking::Client;
@@ -20,7 +21,7 @@ use crate::job::JobHandle;
 use crate::youtube::{
     calculate_expected_quota, crawl_keyword, reached_max_total, set_stop_reason, CrawlError,
 };
-use crate::{CrawlerUiEmitter, Locale, NoopCrawlerUiEmitter};
+use crate::{CrawlerUiEmitter, NoopCrawlerUiEmitter};
 
 const USER_AGENT: &str = "OpenDeskCrawler/0.1";
 

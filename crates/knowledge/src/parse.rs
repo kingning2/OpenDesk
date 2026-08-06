@@ -10,7 +10,7 @@
 
 use std::path::Path;
 
-use crate::tools::{detect_tool, resolve_tool_path, ToolId};
+use common::tools::{detect_tool, resolve_tool_path, ToolId};
 
 /// 文档解析错误。
 #[derive(Debug, Clone)]

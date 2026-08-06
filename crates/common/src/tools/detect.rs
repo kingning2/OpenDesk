@@ -16,7 +16,7 @@ fn env_override(tool: ToolId) -> Option<PathBuf> {
 }
 
 /// 工具安装目录下的可执行文件名（PDFium 为动态库）。
-fn executable_name(tool: ToolId) -> &'static str {
+pub(crate) fn executable_name(tool: ToolId) -> &'static str {
     match tool {
         ToolId::Pandoc => {
             if cfg!(target_os = "windows") {
@@ -132,7 +132,7 @@ fn find_on_path(name: &str) -> Option<PathBuf> {
 }
 
 /// 递归查找指定文件名（有限深度）。
-fn find_executable_recursive(dir: &Path, name: &str) -> Option<PathBuf> {
+pub(crate) fn find_executable_recursive(dir: &Path, name: &str) -> Option<PathBuf> {
     let mut stack = vec![dir.to_path_buf()];
     let mut depth = 0usize;
     while let Some(current) = stack.pop() {

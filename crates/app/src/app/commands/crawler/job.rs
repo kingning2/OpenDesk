@@ -9,6 +9,7 @@ use common::contracts::{
     CrawlerIpcJobStartRequest, CrawlerIpcJobStartResponse, CrawlerIpcJobStatusRequest,
     CrawlerIpcJobStatusResponse,
 };
+use common::i18n::Locale;
 
 use super::keywords::resolve_keywords;
 use crate::app::state::AppState;
@@ -32,7 +33,7 @@ pub async fn crawler_job_start(
     let store = state.keywords_store.clone();
     let keywords_input = request.keywords.clone();
     let batch_id_input = request.batch_id.clone();
-    let locale = crawler::Locale::parse(request.locale.as_deref());
+    let locale = Locale::parse(request.locale.as_deref());
     let keywords = tauri::async_runtime::spawn_blocking(move || {
         resolve_keywords(store.as_ref(), keywords_input, batch_id_input, locale)
     })
