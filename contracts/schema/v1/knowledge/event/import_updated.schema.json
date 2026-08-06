@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://knowledge/event/import_updated/v1",
+  "title": "knowledge/event.import_updated",
+  "description": "A knowledge document import reached a new status (parsing → ready/failed), pushed by the main process polling knowledge.db (Rust to React).",
+  "type": "object",
+  "required": ["document_id", "status"],
+  "properties": {
+    "document_id": { "type": "string", "description": "Id of the imported knowledge document." },
+    "status": { "type": "string", "description": "parsing | ready | failed." },
+    "error_message": { "type": "string", "description": "Failure reason when status is failed." }
+  },
+  "additionalProperties": false
+}

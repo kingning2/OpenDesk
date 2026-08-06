@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://knowledge/event/download_progress/v1",
+  "title": "knowledge/event.download_progress",
+  "description": "Download progress of one external parsing tool (Rust to React).",
+  "type": "object",
+  "required": ["tool", "bytes_downloaded", "bytes_total", "status"],
+  "properties": {
+    "tool": { "type": "string", "description": "pandoc | tesseract | pdfium." },
+    "bytes_downloaded": { "type": "integer", "description": "Bytes fetched so far." },
+    "bytes_total": { "type": "integer", "description": "Expected total bytes; 0 when unknown." },
+    "status": { "type": "string", "description": "downloading | extracting | done | failed." },
+    "error_message": { "type": "string", "description": "Failure reason when status is failed." }
+  },
+  "additionalProperties": false
+}

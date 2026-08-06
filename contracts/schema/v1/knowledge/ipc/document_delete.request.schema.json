@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://knowledge/ipc/document_delete.request/v1",
+  "title": "knowledge/ipc/document_delete.request",
+  "description": "Tauri IPC: delete one knowledge document and its chunks (React to Rust).",
+  "type": "object",
+  "required": ["document_id"],
+  "properties": {
+    "document_id": { "type": "string", "description": "Id of the knowledge document to delete." }
+  },
+  "additionalProperties": false
+}

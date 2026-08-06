@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://knowledge/ipc/tool_status.response/v1",
+  "title": "knowledge/ipc/tool_status.response",
+  "description": "Installation status of all external parsing tools as a JSON string.",
+  "type": "object",
+  "required": ["tools_json"],
+  "properties": {
+    "tools_json": { "type": "string", "description": "JSON array of knowledge_dto_tool_status." }
+  },
+  "additionalProperties": false
+}

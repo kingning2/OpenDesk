@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://knowledge/ipc/document_import.request/v1",
+  "title": "knowledge/ipc/document_import.request",
+  "description": "Tauri IPC: enqueue a knowledge base import for a local file selected via the file dialog (React to Rust).",
+  "type": "object",
+  "required": ["file_path"],
+  "properties": {
+    "file_path": { "type": "string", "description": "Absolute path of the selected document; the worker reads it directly." }
+  },
+  "additionalProperties": false
+}

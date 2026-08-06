@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://knowledge/dto/tool_status/v1",
+  "title": "knowledge/dto.tool_status",
+  "description": "Installation status of one external parsing tool.",
+  "type": "object",
+  "required": ["id", "name", "installed", "version"],
+  "properties": {
+    "id": { "type": "string", "description": "pandoc | tesseract | pdfium." },
+    "name": { "type": "string", "description": "Display name." },
+    "installed": { "type": "boolean", "description": "Whether the tool is available at runtime." },
+    "version": { "type": "string", "description": "Detected version; empty when not installed." },
+    "error": { "type": "string", "description": "Why detection failed (e.g. bad binary), when present." }
+  },
+  "additionalProperties": false
+}
