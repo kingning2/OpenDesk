@@ -1,5 +1,5 @@
 /**
- * Poll IMAP sync status and trigger manual sync.
+ * Track IMAP sync status via backend push events and trigger manual sync.
  *
  * @author coisini
  * @created 2026-07-22
@@ -12,8 +12,6 @@ import {
   mailSyncStatus,
   type MailImapSyncState,
 } from "@desk/platform";
-
-const POLL_MS = 15_000;
 
 /**
  * Track IMAP sync state for the mail workbench.
@@ -60,35 +58,19 @@ export function useMailSync(accountId?: string | null) {
 
   useEffect(() => {
     mountedRef.current = true;
-    let cancelled = false;
     void mailSyncStatus({
       account_id: accountId || undefined,
     })
       .then((response) => {
-        if (!cancelled && mountedRef.current) {
+        if (mountedRef.current) {
           setItems(response.items);
         }
       })
       .catch(() => {
-        /* keep previous items on poll failure */
+        /* keep previous items on initial load failure */
       });
-    const timer = window.setInterval(() => {
-      void mailSyncStatus({
-        account_id: accountId || undefined,
-      })
-        .then((response) => {
-          if (mountedRef.current) {
-            setItems(response.items);
-          }
-        })
-        .catch(() => {
-          /* keep previous items on poll failure */
-        });
-    }, POLL_MS);
     return () => {
-      cancelled = true;
       mountedRef.current = false;
-      window.clearInterval(timer);
     };
   }, [accountId]);
 

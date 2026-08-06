@@ -9,7 +9,7 @@
 import type { ReactNode } from "react";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
-import { Mail, Plus, RefreshCw } from "@desk/ui/icons";
+import { Mail, Pencil, Plus, RefreshCw, Trash2 } from "@desk/ui/icons";
 import { useT, useI18n } from "../../i18n";
 import {
   Button,
@@ -58,6 +58,7 @@ import {
 import { useMailSync } from "./use-mail-sync";
 import {
   customerList,
+  mailAccountDelete,
   mailAccountList,
   mailAccountSave,
   mailGenerateHtml,
@@ -163,6 +164,8 @@ const EMPTY_ACCOUNT_FORM = {
   password: "",
 };
 
+type AccountForm = typeof EMPTY_ACCOUNT_FORM;
+
 const EMPTY_TEMPLATE_FORM = {
   name: "",
   templateIntent: "custom",
@@ -201,6 +204,9 @@ export function MailPage() {
   const [loading, setLoading] = useState(true);
   const [listLoading, setListLoading] = useState(false);
   const [accountModalOpen, setAccountModalOpen] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<MailAccount | null>(null);
+  const [deleteAccountTarget, setDeleteAccountTarget] = useState<MailAccount | null>(null);
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
   const [inboundModalOpen, setInboundModalOpen] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
@@ -475,6 +481,38 @@ export function MailPage() {
     openCompose(messageToComposeDraft(message));
   }
 
+  function openAccountBind() {
+    setEditingAccount(null);
+    setAccountModalOpen(true);
+  }
+
+  function openAccountEdit(account: MailAccount) {
+    setEditingAccount(account);
+    setAccountModalOpen(true);
+  }
+
+  async function confirmDeleteAccount() {
+    if (!deleteAccountTarget) {
+      return;
+    }
+    const target = deleteAccountTarget;
+    setDeletingAccount(true);
+    try {
+      const response = await mailAccountDelete({ id: target.id });
+      setAccounts(response.items);
+      if (accountFilterId === target.id) {
+        setAccountFilterId(null);
+        await refreshMessages({ accountId: null });
+      }
+      toast.success(t("mail.statusAccountDeleted"));
+      setDeleteAccountTarget(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setDeletingAccount(false);
+    }
+  }
+
   if (loading) {
     return (
       <PageScaffold fill containerPadding="none">
@@ -491,48 +529,100 @@ export function MailPage() {
           header={
             <WorkspaceSplitToolbar className="justify-between px-3 py-2">
               <WorkspaceSplitTitle className="text-xs">{t("mail.accounts.title")}</WorkspaceSplitTitle>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="size-7 p-0"
-                disabled={listLoading}
-                title={mailbox === "outbound" ? t("mail.refreshReadHint") : t("mail.refresh")}
-                onClick={() => void refreshMessages({ keepSelection: true })}
-              >
-                <RefreshCw className={cn("size-3.5", listLoading && "animate-spin")} />
-              </Button>
+              <div className="flex items-center gap-0.5">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="size-7 p-0"
+                  disabled={listLoading}
+                  title={mailbox === "outbound" ? t("mail.refreshReadHint") : t("mail.refresh")}
+                  onClick={() => void refreshMessages({ keepSelection: true })}
+                >
+                  <RefreshCw className={cn("size-3.5", listLoading && "animate-spin")} />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="size-7 p-0"
+                  title={t("mail.accounts.bind")}
+                  onClick={() => openAccountBind()}
+                >
+                  <Plus className="size-4" />
+                </Button>
+              </div>
             </WorkspaceSplitToolbar>
           }
         >
           <div className="flex flex-col">
-            <WorkspaceSplitRow
-              active={accountFilterId === null}
-              className="px-3 py-2 text-xs"
+            <button
+              type="button"
               onClick={() => selectAccountFilter(null)}
+              className={cn(
+                "flex w-full items-center justify-between gap-2 border-b border-border/50 px-3 py-2.5 text-left text-xs transition-colors duration-150",
+                accountFilterId === null
+                  ? "bg-primary/10 text-foreground"
+                  : "text-foreground hover:bg-muted/40",
+              )}
             >
               <span className="font-medium">{t("mail.accounts.all")}</span>
-              <span className="mt-0.5 block text-[10px] text-muted-foreground">{accounts.length}</span>
-            </WorkspaceSplitRow>
+              <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                {accounts.length}
+              </span>
+            </button>
             {accounts.map((account) => (
-              <WorkspaceSplitRow
+              <div
                 key={account.id}
-                active={accountFilterId === account.id}
-                className="px-3 py-2 text-xs"
                 onClick={() => selectAccountFilter(account.id)}
+                className={cn(
+                  "group flex w-full cursor-pointer items-center gap-2 border-b border-border/50 px-3 py-2 text-xs transition-colors duration-150",
+                  accountFilterId === account.id
+                    ? "bg-primary/10 text-foreground"
+                    : "text-foreground hover:bg-muted/40",
+                )}
               >
-                <span className="inline-flex items-center gap-1.5 font-medium">
-                  <Mail className="size-3 shrink-0 text-sky-500" />
-                  <span className="truncate">{account.label}</span>
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-sky-500/10 text-sky-600">
+                    <Mail className="size-3.5" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium">{account.label}</span>
+                    <span className="block truncate text-[10px] text-muted-foreground">
+                      {account.from_address}
+                    </span>
+                  </span>
+                </div>
+                <span className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+                  <button
+                    type="button"
+                    title={t("mail.accounts.edit")}
+                    aria-label={t("mail.accounts.edit")}
+                    className="flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      openAccountEdit(account);
+                    }}
+                  >
+                    <Pencil className="size-3" />
+                  </button>
+                  <button
+                    type="button"
+                    title={t("mail.accounts.delete")}
+                    aria-label={t("mail.accounts.delete")}
+                    className="flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setDeleteAccountTarget(account);
+                    }}
+                  >
+                    <Trash2 className="size-3" />
+                  </button>
                 </span>
-                <span className="mt-0.5 block truncate text-[10px] text-muted-foreground">
-                  {account.from_address}
-                </span>
-              </WorkspaceSplitRow>
+              </div>
             ))}
             <button
               type="button"
-              className="flex items-center gap-1.5 border-b border-border/50 px-3 py-2.5 text-left text-xs text-primary hover:bg-muted/40"
-              onClick={() => setAccountModalOpen(true)}
+              className="flex items-center gap-1.5 border-b border-border/50 px-3 py-2.5 text-left text-xs font-medium text-primary transition-colors hover:bg-muted/40"
+              onClick={() => openAccountBind()}
             >
               <Plus className="size-3.5" />
               {t("mail.accounts.bind")}
@@ -828,6 +918,7 @@ export function MailPage() {
 
       {accountModalOpen ? (
         <AccountBindModal
+          account={editingAccount}
           onClose={() => setAccountModalOpen(false)}
           onSaved={(items) => {
             setAccounts(items);
@@ -835,6 +926,19 @@ export function MailPage() {
           }}
         />
       ) : null}
+
+      <ConfirmDialog
+        open={Boolean(deleteAccountTarget)}
+        title={t("mail.accounts.deleteTitle")}
+        description={t("mail.accounts.deleteConfirm", {
+          label: deleteAccountTarget?.label || deleteAccountTarget?.from_address || "",
+        })}
+        confirmLabel={t("mail.accounts.deleteAction")}
+        cancelLabel={t("mail.modal.cancel")}
+        loading={deletingAccount}
+        onConfirm={() => void confirmDeleteAccount()}
+        onClose={() => setDeleteAccountTarget(null)}
+      />
 
       {templateModalOpen ? (
         <TemplateSaveModal
@@ -1823,20 +1927,44 @@ const Modal = memo(function Modal({
  * @created 2026-07-22
  */
 const AccountBindModal = memo(function AccountBindModal({
+  account,
   onClose,
   onSaved,
 }: {
+  account?: MailAccount | null;
   onClose: () => void;
   onSaved: (items: MailAccount[]) => void;
 }) {
   const t = useT();
-  const [form, setForm] = useState(EMPTY_ACCOUNT_FORM);
+  const isEdit = Boolean(account);
+  const [form, setForm] = useState<AccountForm>(() =>
+    account
+      ? {
+          label: account.label,
+          fromAddress: account.from_address,
+          fromName: account.from_name ?? "",
+          smtpHost: account.smtp_host,
+          smtpPort: String(account.smtp_port),
+          useTls: account.use_tls,
+          imapHost: account.imap_host ?? "",
+          imapPort: account.imap_port != null ? String(account.imap_port) : "993",
+          imapUseTls: account.imap_use_tls ?? true,
+          username: account.username,
+          password: "",
+        }
+      : EMPTY_ACCOUNT_FORM,
+  );
   const [saving, setSaving] = useState(false);
 
   async function save() {
+    if (!isEdit && !form.password.trim()) {
+      toast.error(t("mail.statusPasswordRequired"));
+      return;
+    }
     setSaving(true);
     try {
       const response = await mailAccountSave({
+        id: account?.id,
         label: form.label,
         from_address: form.fromAddress,
         from_name: form.fromName || undefined,
@@ -1850,7 +1978,7 @@ const AccountBindModal = memo(function AccountBindModal({
         imap_use_tls: form.imapUseTls,
         imap_sync_enabled: Boolean(form.imapHost.trim()),
       });
-      toast.success(t("mail.statusAccountSaved"));
+      toast.success(isEdit ? t("mail.statusAccountUpdated") : t("mail.statusAccountSaved"));
       onSaved(response.items);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : String(error));
@@ -1861,7 +1989,7 @@ const AccountBindModal = memo(function AccountBindModal({
 
   return (
     <Modal
-      title={t("mail.accounts.bindTitle")}
+      title={isEdit ? t("mail.accounts.editTitle") : t("mail.accounts.bindTitle")}
       onClose={onClose}
       footer={
         <>
@@ -1869,7 +1997,11 @@ const AccountBindModal = memo(function AccountBindModal({
             {t("mail.modal.cancel")}
           </Button>
           <Button size="sm" onClick={() => void save()} disabled={saving}>
-            {saving ? t("mail.settings.savingAccount") : t("mail.settings.saveAccount")}
+            {saving
+              ? t("mail.settings.savingAccount")
+              : isEdit
+                ? t("mail.settings.updateAccount")
+                : t("mail.settings.saveAccount")}
           </Button>
         </>
       }
@@ -1980,12 +2112,16 @@ const AccountBindModal = memo(function AccountBindModal({
               <Input
                 type="password"
                 value={form.password}
+                placeholder={isEdit ? t("mail.settings.passwordKeep") : ""}
                 onChange={(event) =>
                   setForm((current) => ({ ...current, password: event.target.value }))
                 }
               />
             </Field>
           </div>
+          {isEdit ? (
+            <p className="text-[10px] text-muted-foreground">{t("mail.settings.passwordKeepHint")}</p>
+          ) : null}
         </div>
       </div>
     </Modal>

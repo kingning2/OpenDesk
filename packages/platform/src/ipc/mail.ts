@@ -4,6 +4,7 @@ import type {
   MailDtoMailAccount,
   MailDtoMailMessage,
   MailDtoMailTemplate,
+  MailIpcAccountDeleteRequest,
   MailIpcAccountListResponse,
   MailIpcAccountSaveRequest,
   MailIpcGenerateHtmlRequest,
@@ -112,6 +113,26 @@ export async function mailAccountSave(
   input: MailIpcAccountSaveRequest,
 ): Promise<{ items: MailAccount[]; total: number }> {
   const response = await invokeIpc<MailIpcAccountListResponse>("mail_account_save", {
+    request: input,
+  });
+  try {
+    const parsed = JSON.parse(response.accounts_json ?? "[]") as MailAccount[];
+    return { items: Array.isArray(parsed) ? parsed : [], total: response.total ?? 0 };
+  } catch {
+    return { items: [], total: 0 };
+  }
+}
+
+/**
+ * Delete one bound mail account.
+ *
+ * @author coisini
+ * @created 2026-08-06
+ */
+export async function mailAccountDelete(
+  input: MailIpcAccountDeleteRequest,
+): Promise<{ items: MailAccount[]; total: number }> {
+  const response = await invokeIpc<MailIpcAccountListResponse>("mail_account_delete", {
     request: input,
   });
   try {

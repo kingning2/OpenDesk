@@ -9,6 +9,9 @@
   "statusSelectFirst": "Choose a customer and template first (templates need a customer).",
   "statusTemplateApplied": "Template applied.",
   "statusAccountSaved": "Mail account saved.",
+  "statusAccountUpdated": "Mail account updated.",
+  "statusAccountDeleted": "Mail account removed.",
+  "statusPasswordRequired": "Password is required for a new mail account.",
   "statusTemplateSaved": "Template saved.",
   "statusSent": "Mail sent: {id}",
   "statusSendFailed": "Send failed (recorded): {id}",
@@ -21,7 +24,13 @@
     "title": "Accounts",
     "all": "All accounts",
     "bind": "Bind mailbox",
-    "bindTitle": "Bind new mailbox"
+    "bindTitle": "Bind new mailbox",
+    "edit": "Edit account",
+    "editTitle": "Edit mailbox",
+    "delete": "Delete account",
+    "deleteTitle": "Delete mailbox",
+    "deleteConfirm": "Remove \"{label}\"? Its saved password and IMAP sync state will be deleted. Existing messages are kept.",
+    "deleteAction": "Delete"
   },
   "mailbox": {
     "inbox": "Inbox",
@@ -121,6 +130,9 @@
     "username": "Username",
     "password": "Password or app password",
     "saveAccount": "Save binding",
+    "updateAccount": "Save changes",
+    "passwordKeep": "Keep current password",
+    "passwordKeepHint": "Leave the password empty to keep the currently saved one.",
     "savingAccount": "Saving…"
   },
   "inbound": {

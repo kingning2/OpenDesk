@@ -9,6 +9,9 @@
   "statusSelectFirst": "请先选择客户与模板（套用模板需要客户）。",
   "statusTemplateApplied": "模板已套用。",
   "statusAccountSaved": "邮件账号已保存。",
+  "statusAccountUpdated": "邮件账号已更新。",
+  "statusAccountDeleted": "邮件账号已删除。",
+  "statusPasswordRequired": "新建邮箱必须填写密码。",
   "statusTemplateSaved": "模板已保存。",
   "statusSent": "邮件已发送：{id}",
   "statusSendFailed": "发送失败（已留痕）：{id}",
@@ -21,7 +24,13 @@
     "title": "邮箱账号",
     "all": "全部账号",
     "bind": "绑定新邮箱",
-    "bindTitle": "绑定新邮箱"
+    "bindTitle": "绑定新邮箱",
+    "edit": "编辑账号",
+    "editTitle": "编辑邮箱",
+    "delete": "删除账号",
+    "deleteTitle": "删除邮箱",
+    "deleteConfirm": "确定删除“{label}”吗？已保存的密码与 IMAP 同步状态将一并清除，历史邮件会保留。",
+    "deleteAction": "删除"
   },
   "mailbox": {
     "inbox": "收件箱",
@@ -121,6 +130,9 @@
     "username": "用户名",
     "password": "密码或应用专用密码",
     "saveAccount": "保存绑定",
+    "updateAccount": "保存修改",
+    "passwordKeep": "保留当前密码",
+    "passwordKeepHint": "留空表示沿用已保存的密码。",
     "savingAccount": "保存中…"
   },
   "inbound": {
