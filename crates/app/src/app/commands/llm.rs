@@ -23,6 +23,7 @@ fn record_to_get_response(record: LlmSettingsRecord) -> RuntimeIpcLlmSettingsGet
         configured,
         has_api_key: record.has_api_key,
         tools_enabled: record.tools_enabled,
+        memory_enabled: record.memory_enabled,
     }
 }
 
@@ -35,6 +36,7 @@ fn record_to_save_response(record: LlmSettingsRecord) -> RuntimeIpcLlmSettingsSa
         configured,
         has_api_key: record.has_api_key,
         tools_enabled: record.tools_enabled,
+        memory_enabled: record.memory_enabled,
     }
 }
 
@@ -67,6 +69,7 @@ pub async fn llm_settings_get(
             configured: false,
             has_api_key: false,
             tools_enabled: true,
+            memory_enabled: true,
         },
     })
 }
@@ -93,6 +96,7 @@ pub async fn llm_settings_save(
     let model_id = request.model_id;
     let api_key = request.api_key;
     let tools_enabled = request.tools_enabled;
+    let memory_enabled = request.memory_enabled;
     let record = tauri::async_runtime::spawn_blocking(move || {
         store.save(
             &provider,
@@ -100,6 +104,7 @@ pub async fn llm_settings_save(
             &model_id,
             Some(api_key.as_str()),
             tools_enabled,
+            memory_enabled,
         )
     })
     .await

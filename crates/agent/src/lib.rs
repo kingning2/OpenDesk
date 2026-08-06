@@ -5,6 +5,7 @@
 //!
 //! 约定：一个基建能力一个目录（`llm/`、`prompt/`、`skills/` …）。
 
+pub mod embedding;
 pub mod llm;
 pub mod prompt;
 pub mod skills;

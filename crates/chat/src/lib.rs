@@ -9,6 +9,7 @@ pub mod app;
 pub mod emit;
 pub mod tool;
 
+pub use app::memory_digest::maybe_digest;
 pub use app::send_chat::SendChat;
 pub use emit::{ChatUiEmitter, ChatUiEvent, NoopChatUiEmitter};
 pub use tool::{ChatTool, ChatToolCaller};

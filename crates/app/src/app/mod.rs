@@ -18,8 +18,9 @@ use crawler::{CrawlerService, CrawlerUiEmitter};
 use crawler_emit::TauriCrawlerEmitter;
 use logging::init_tracing;
 use mail::app::ScheduleImapSync;
-use paths::{crawler_db_path, opendesk_db_path};
+use paths::{chat_db_path, crawler_db_path, embedding_cache_dir, opendesk_db_path};
 use ports::background_job::BackgroundJobStore;
+use ports::chat::{ChatMemoryStore, ChatStore};
 use ports::crawler_channels::CrawlerChannelStore;
 use ports::crawler_keywords::CrawlerKeywordStore;
 use ports::crawler_settings::CrawlerSettingsStore;
@@ -27,6 +28,7 @@ use ports::customer::CustomerStore;
 use state::{build_license_gate, AppState};
 use std::sync::Arc;
 use storage::background_job::SqliteBackgroundJobStore;
+use storage::chat::SqliteChatStore;
 use storage::crawler_channels::SqliteCrawlerChannelStore;
 use storage::crawler_db::CrawlerDb;
 use storage::crawler_keywords::SqliteCrawlerKeywordStore;
@@ -73,6 +75,12 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
         Arc::new(SqliteMailStore::new(opendesk_db.clone())) as Arc<dyn ports::mail::MailStore>;
     let snippet_store = Arc::new(SqliteScriptSnippetStore::new(opendesk_db.clone()))
         as Arc<dyn ports::workflow::ScriptSnippetStore>;
+    let chat = Arc::new(SqliteChatStore::open(chat_db_path()).expect("open chat database"));
+    let chat_store = Arc::clone(&chat) as Arc<dyn ChatStore>;
+    let chat_memory_store = Arc::clone(&chat) as Arc<dyn ChatMemoryStore>;
+    let embedder = Arc::new(agent::embedding::EmbeddingService::new(Some(
+        embedding_cache_dir(),
+    ))) as Arc<dyn agent::embedding::Embedder>;
     let app_state = AppState {
         license,
         crawler: crawler.clone(),
@@ -84,6 +92,9 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
         mail_store,
         job_store: job_store.clone(),
         snippet_store,
+        chat_store,
+        chat_memory_store,
+        embedder,
     };
 
     tauri::Builder::default()
@@ -96,6 +107,24 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             crawler.attach_emitter(emitter);
 
             let state = app.state::<AppState>();
+
+            // 预热嵌入模型：首次启动在后台联网下载 bge-small-zh-v1.5（~100MB）与
+            // onnxruntime 到缓存目录，之后完全离线。失败仅告警，首次记忆检索会惰性重试。
+            let warmup_embedder = state.embedder.clone();
+            tauri::async_runtime::spawn(async move {
+                let result =
+                    tauri::async_runtime::spawn_blocking(move || warmup_embedder.preload()).await;
+                match result {
+                    Ok(Ok(())) => tracing::info!("embedding model ready"),
+                    Ok(Err(error)) => {
+                        tracing::warn!(%error, "embedding model warmup failed; will retry on first memory use")
+                    }
+                    Err(error) => {
+                        tracing::warn!(%error, "embedding model warmup task join failed")
+                    }
+                }
+            });
+
             let imap_job_store = state.job_store.clone();
             let imap_mail_store = state.mail_store.clone();
             let imap_customer_store = state.customer_store.clone();
@@ -129,6 +158,11 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
         .invoke_handler(tauri::generate_handler![
             commands::agent::agent_ping,
             commands::chat::chat_send,
+            commands::chat::chat_session_list,
+            commands::chat::chat_session_create,
+            commands::chat::chat_session_rename,
+            commands::chat::chat_session_delete,
+            commands::chat::chat_messages_load,
             commands::license::license_status,
             commands::license::license_machine_code,
             commands::license::license_activate,

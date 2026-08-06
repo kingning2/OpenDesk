@@ -1,6 +1,7 @@
 //! storage crate scaffold.
 
 pub mod background_job;
+pub mod chat;
 pub mod crawler_channels;
 pub mod crawler_db;
 pub mod crawler_keywords;

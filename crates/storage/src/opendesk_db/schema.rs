@@ -194,6 +194,7 @@ diesel::table! {
         api_key_ref -> Text,
         has_api_key -> Bool,
         tools_enabled -> Bool,
+        memory_enabled -> Bool,
         updated_at -> Text,
     }
 }

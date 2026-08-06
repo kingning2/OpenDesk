@@ -10,11 +10,14 @@
 use std::sync::Arc;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
+use agent::embedding::Embedder;
 use agent::llm::{
     FunctionTool, LlmClient, StreamMessage, StreamRequest, ToolCallDelta, ToolCallMsg,
 };
 use common::contracts::{ChatEventToken, ChatEventTool, ChatIpcSendRequest, ChatIpcSendResponse};
-use serde_json::Value;
+use ports::chat::{ChatMemoryStore, ChatStore, SaveChatMessage};
+use serde_json::{json, Value};
+use tokio::task::spawn_blocking;
 use uuid::Uuid;
 
 use crate::emit::ChatUiEmitter;
@@ -25,6 +28,12 @@ use crate::tool::{ChatTool, ChatToolCaller};
 const REASONING_FLUSH_CHARS: usize = 128;
 /// 工具调用轮次上限，防止模型陷入无限循环。
 const MAX_TOOL_ROUNDS: usize = 8;
+/// 单会话历史窗口上限（条）：超过后最旧批次用会话 digest 摘要替换，控制 token 预算。
+const WINDOW_MAX_MESSAGES: usize = 30;
+/// 窗口压缩后保留的最近消息条数。
+const WINDOW_KEEP_MESSAGES: usize = 20;
+/// 每次发送从长期记忆检索注入的相关记忆条数。
+const MEMORY_TOP_K: usize = 5;
 
 /// 一轮流式过程中按 `index` 累积的工具调用片段。
 #[derive(Debug, Clone, Default)]
@@ -78,11 +87,20 @@ impl SendChat {
     ///
     /// `tools` 为 `Some` 时启用工具调用循环（最多 [`MAX_TOOL_ROUNDS`] 轮）。
     ///
+    /// `store` 为 `Some` 时历史从 `chat.db` 重建、用户/助手消息自动落库（多会话
+    /// 持久化模式）；为 `None` 时退化为解析前端上传的 `messages_json`（测试/未接线）。
+    ///
+    /// `memory` + `embedder` 同时为 `Some` 时启用长期记忆：检索相关记忆注入
+    /// 上下文，历史超窗时用会话 digest 摘要压缩最旧批次（均为 best-effort）。
+    ///
     /// # 参数
     /// - `client` — LLM 客户端
     /// - `emitter` — 事件推送器
     /// - `request` — 聊天请求
     /// - `tools` — 工具调用器；`None` 表示不启用工具
+    /// - `store` — 会话/消息持久化端口；`None` 表示不落库
+    /// - `memory` — 长期记忆端口；`None` 表示不启用记忆
+    /// - `embedder` — 本地嵌入服务；`None` 表示不启用记忆检索
     ///
     /// # Errors
     ///
@@ -92,6 +110,9 @@ impl SendChat {
         emitter: &dyn ChatUiEmitter,
         request: ChatIpcSendRequest,
         tools: Option<Arc<dyn ChatToolCaller>>,
+        store: Option<&dyn ChatStore>,
+        memory: Option<Arc<dyn ChatMemoryStore>>,
+        embedder: Option<Arc<dyn Embedder>>,
     ) -> Result<ChatIpcSendResponse, String> {
         let ChatIpcSendRequest {
             session_id,
@@ -101,17 +122,119 @@ impl SendChat {
             message_id,
         } = request;
 
-        let mut messages = parse_history(&messages_json)?;
+        let mut messages = match store {
+            Some(store) => {
+                let records = store
+                    .load_messages(&session_id)
+                    .map_err(|error| format!("加载会话历史失败: {error}"))?;
+                records
+                    .into_iter()
+                    .map(|record| StreamMessage {
+                        role: record.role,
+                        content: Some(record.content),
+                        tool_calls: None,
+                        tool_call_id: None,
+                    })
+                    .collect()
+            }
+            None => parse_history(messages_json.as_deref().unwrap_or(""))?,
+        };
+
+        // 窗口压缩：历史超窗时用该会话最新 digest 摘要替换最旧批次，控制 token 预算。
+        if let Some(memory) = &memory {
+            if messages.len() > WINDOW_MAX_MESSAGES {
+                if let Ok(Some(digest)) = memory.latest_session_digest(&session_id) {
+                    let kept = messages.split_off(messages.len() - WINDOW_KEEP_MESSAGES);
+                    let mut compacted = Vec::with_capacity(kept.len() + 1);
+                    compacted.push(StreamMessage {
+                        role: "system".to_string(),
+                        content: Some(format!("【早前对话摘要】\n{digest}")),
+                        tool_calls: None,
+                        tool_call_id: None,
+                    });
+                    compacted.extend(kept);
+                    messages = compacted;
+                }
+            }
+        }
+
+        // 跨会话记忆检索：嵌入用户文本取 top-k 相关记忆，作为 system 消息注入。
+        // best-effort：检索失败只告警，不阻塞发送。
+        let mut memory_context: Option<String> = None;
+        if let (Some(memory), Some(embedder)) = (&memory, &embedder) {
+            let query = text.clone();
+            let embedder = Arc::clone(embedder);
+            let embedding = match spawn_blocking(move || embedder.embed_text(&query)).await {
+                Ok(Ok(embedding)) => Some(embedding),
+                Ok(Err(error)) => {
+                    tracing::warn!(%session_id, %error, "memory embed failed; skip retrieval");
+                    None
+                }
+                Err(error) => {
+                    tracing::warn!(
+                        %session_id,
+                        %error,
+                        "memory embed task join failed; skip retrieval"
+                    );
+                    None
+                }
+            };
+            if let Some(embedding) = embedding {
+                match memory.search_memories(&embedding, MEMORY_TOP_K) {
+                    Ok(hits) if !hits.is_empty() => {
+                        memory_context = Some(
+                            hits.iter()
+                                .map(|hit| hit.content.clone())
+                                .collect::<Vec<_>>()
+                                .join("\n"),
+                        );
+                    }
+                    Ok(_) => {}
+                    Err(error) => {
+                        tracing::warn!(%session_id, %error, "memory search failed; skip retrieval");
+                    }
+                }
+            }
+        }
+
+        let user_text = text.clone();
+        if let Some(context) = memory_context {
+            messages.insert(0, StreamMessage {
+                role: "system".to_string(),
+                content: Some(format!(
+                    "以下是此前对话中检索到的相关记忆（可能有过时或重复，仅在与当前问题相关时参考）：\n{context}"
+                )),
+                tool_calls: None,
+                tool_call_id: None,
+            });
+        }
         messages.push(StreamMessage {
             role: "user".to_string(),
-            content: Some(text),
+            content: Some(user_text.clone()),
             tool_calls: None,
             tool_call_id: None,
         });
 
+        // 已配置持久化：用户消息先落库（即使后续流式失败也不丢）。
+        if let Some(store) = store {
+            if let Err(error) = store.save_message(SaveChatMessage {
+                id: Uuid::new_v4().to_string(),
+                session_id: session_id.clone(),
+                role: "user".to_string(),
+                content: user_text,
+                thinking: None,
+                tools_json: None,
+            }) {
+                tracing::warn!(%session_id, %error, "persist user message failed");
+            }
+        }
+
         // 前端已预建 assistant 占位消息（带自己的 id）；复用该 id 使 token 落到占位上。
         let message_id = message_id.unwrap_or_else(|| Uuid::new_v4().to_string());
         let started = Instant::now();
+        let mut assistant_content = String::new();
+        let mut assistant_thinking = String::new();
+        let mut assistant_tools: Vec<Value> = Vec::new();
         let tool_defs: Vec<FunctionTool> = tools
             .as_ref()
             .map(|caller| {
@@ -157,6 +280,7 @@ impl SendChat {
                     Ok(delta) => {
                         first_delta_ms.get_or_insert_with(|| started.elapsed().as_millis() as u64);
                         if let Some(reasoning) = delta.reasoning {
+                            assistant_thinking.push_str(&reasoning);
                             pending_reasoning.push_str(&reasoning);
                             reasoning_chars += reasoning.chars().count();
                             if pending_reasoning.chars().count() >= REASONING_FLUSH_CHARS {
@@ -171,6 +295,7 @@ impl SendChat {
                             }
                         }
                         if let Some(text) = delta.text {
+                            assistant_content.push_str(&text);
                             text_chars += text.chars().count();
                             emitter.emit_message_token(&token(
                                 &session_id,
@@ -236,6 +361,12 @@ impl SendChat {
                 });
                 tool_seq += 1;
                 tool_events += 1;
+                assistant_tools.push(json!({
+                    "name": name.clone(),
+                    "arguments": serde_json::to_string(&args_value).unwrap_or_default(),
+                    "ok": ok,
+                    "result": result_text.clone(),
+                }));
 
                 messages.push(StreamMessage {
                     role: "assistant".to_string(),
@@ -283,6 +414,26 @@ impl SendChat {
             done,
             "chat stream finished"
         );
+
+        // 已配置持久化：落库完成态的 assistant 消息（含推理与工具步骤）。
+        if let Some(store) = store {
+            let tools_json = serde_json::to_string(&assistant_tools).unwrap_or_default();
+            let has_content = !assistant_content.is_empty()
+                || !assistant_thinking.is_empty()
+                || !assistant_tools.is_empty();
+            if has_content {
+                if let Err(error) = store.save_message(SaveChatMessage {
+                    id: message_id.clone(),
+                    session_id: session_id.clone(),
+                    role: "assistant".to_string(),
+                    content: assistant_content,
+                    thinking: Some(assistant_thinking).filter(|value| !value.is_empty()),
+                    tools_json: Some(tools_json).filter(|value| !value.is_empty() && value != "[]"),
+                }) {
+                    tracing::warn!(%session_id, %message_id, %error, "persist assistant message failed");
+                }
+            }
+        }
 
         Ok(ChatIpcSendResponse {
             ok: true,
@@ -384,6 +535,8 @@ mod tests {
     use agent::llm::Config;
     use async_trait::async_trait;
     use common::contracts::{ChatEventToken, ChatEventTool, ChatIpcSendRequest};
+    use ports::chat::{ChatMessageRecord, ChatSessionRecord, ChatStore, SaveChatMessage};
+    use ports::repository::StoreError;
     use serde_json::{json, Value};
 
     use super::merge_tool_call;
@@ -392,6 +545,54 @@ mod tests {
     use crate::tool::{ChatTool, ChatToolCaller};
     use crate::SendChat;
     use agent::llm::{LlmClient, StreamMessage, ToolCallDelta};
+
+    /// 内存版 `ChatStore`，用于验证 send_chat 的落库行为。
+    #[derive(Default)]
+    struct FakeStore {
+        messages: Arc<Mutex<Vec<ChatMessageRecord>>>,
+    }
+
+    impl ChatStore for FakeStore {
+        fn list_sessions(&self) -> Result<Vec<ChatSessionRecord>, StoreError> {
+            Ok(Vec::new())
+        }
+        fn get_session(&self, _id: &str) -> Result<Option<ChatSessionRecord>, StoreError> {
+            Ok(None)
+        }
+        fn create_session(&self, _id: &str, _title: &str) -> Result<ChatSessionRecord, StoreError> {
+            unimplemented!("not used in send_chat tests")
+        }
+        fn rename_session(&self, _id: &str, _title: &str) -> Result<ChatSessionRecord, StoreError> {
+            unimplemented!("not used in send_chat tests")
+        }
+        fn delete_session(&self, _id: &str) -> Result<(), StoreError> {
+            Ok(())
+        }
+        fn load_messages(&self, _session_id: &str) -> Result<Vec<ChatMessageRecord>, StoreError> {
+            Ok(self.messages.lock().unwrap().clone())
+        }
+        fn save_message(&self, input: SaveChatMessage) -> Result<ChatMessageRecord, StoreError> {
+            let mut messages = self.messages.lock().unwrap();
+            let record = ChatMessageRecord {
+                id: input.id,
+                session_id: input.session_id,
+                role: input.role,
+                content: input.content,
+                thinking: input.thinking,
+                tools_json: input.tools_json,
+                seq: messages.len() as i64,
+                created_at: 0,
+            };
+            messages.push(record.clone());
+            Ok(record)
+        }
+        fn get_summary_state(&self, _session_id: &str) -> Result<Option<String>, StoreError> {
+            Ok(None)
+        }
+        fn set_summary_state(&self, _session_id: &str, _json: &str) -> Result<(), StoreError> {
+            Ok(())
+        }
+    }
 
     /// 依次接受 `bodies.len()` 个连接，每个连接返回一段 SSE 响应。
     fn mock_llm_rounds(bodies: &[&str]) -> std::io::Result<(String, Receiver<String>)> {
@@ -571,12 +772,15 @@ mod tests {
             &emitter,
             ChatIpcSendRequest {
                 session_id: "sess-1".to_string(),
-                messages_json: String::new(),
+                messages_json: None,
                 text: "有几张表？".to_string(),
                 trace_id: None,
                 message_id: Some("msg-1".to_string()),
             },
             Some(Arc::new(MockTools)),
+            None,
+            None,
+            None,
         )
         .await?;
 
@@ -618,15 +822,56 @@ mod tests {
             &NoopChatUiEmitter,
             ChatIpcSendRequest {
                 session_id: "sess-2".to_string(),
-                messages_json: String::new(),
+                messages_json: None,
                 text: "你好".to_string(),
                 trace_id: None,
                 message_id: Some("msg-2".to_string()),
             },
             None,
+            None,
+            None,
+            None,
         )
         .await?;
         let _ = emitter;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn persists_user_and_assistant_messages() -> Result<(), Box<dyn std::error::Error>> {
+        let round_text = concat!(
+            "data: {\"choices\":[{\"delta\":{\"content\":\"回复内容\"}}]}\n",
+            "data: {\"choices\":[{\"delta\":{}}]}\n",
+            "data: [DONE]\n",
+            "\n",
+        );
+        let (base_url, _requests) = mock_llm_rounds(&[round_text])?;
+        let client = LlmClient::new(llm_config(base_url))?;
+        let store = FakeStore::default();
+
+        SendChat::execute(
+            &client,
+            &NoopChatUiEmitter,
+            ChatIpcSendRequest {
+                session_id: "sess-3".to_string(),
+                messages_json: None,
+                text: "你好".to_string(),
+                trace_id: None,
+                message_id: Some("msg-3".to_string()),
+            },
+            None,
+            Some(&store),
+            None,
+            None,
+        )
+        .await?;
+
+        let messages = store.messages.lock().unwrap();
+        assert_eq!(messages.len(), 2, "user + assistant persisted");
+        assert_eq!(messages[0].role, "user");
+        assert_eq!(messages[0].content, "你好");
+        assert_eq!(messages[1].role, "assistant");
+        assert_eq!(messages[1].content, "回复内容");
         Ok(())
     }
 }

@@ -7,8 +7,10 @@
 use adapter::license::UnlockedLicenseGate;
 #[cfg(feature = "license-lock")]
 use adapter::license::{FailClosedLicenseGate, VerifierProcessLicense};
+use agent::embedding::Embedder;
 use crawler::CrawlerService;
 use ports::background_job::BackgroundJobStore;
+use ports::chat::{ChatMemoryStore, ChatStore};
 use ports::crawler_channels::CrawlerChannelStore;
 use ports::crawler_keywords::CrawlerKeywordStore;
 use ports::crawler_settings::CrawlerSettingsStore;
@@ -48,6 +50,12 @@ pub struct AppState {
     pub job_store: Arc<dyn BackgroundJobStore>,
     /// Script snippet library (`script_snippet` table in opendesk.db).
     pub snippet_store: Arc<dyn ScriptSnippetStore>,
+    /// Chat sessions + messages (`chat.db`, rusqlite-backed).
+    pub chat_store: Arc<dyn ChatStore>,
+    /// Long-term memory + vector search (`chat.db` sqlite-vec, shares connection with chat_store).
+    pub chat_memory_store: Arc<dyn ChatMemoryStore>,
+    /// Local embedding service (fastembed, lazy model load).
+    pub embedder: Arc<dyn Embedder>,
 }
 
 /// 按 Cargo feature 构造 License 闸门。
