@@ -8,6 +8,9 @@ ports = { path = "../ports" }
 diesel = { workspace = true }
 diesel_migrations = { workspace = true }
 libsqlite3-sys = { workspace = true }
+rusqlite = { version = "0.32", features = ["bundled"] }
+sqlite-vec = "0.1.9"
+zerocopy = "0.8"
 uuid = { workspace = true }
 keyring = { workspace = true }
 
