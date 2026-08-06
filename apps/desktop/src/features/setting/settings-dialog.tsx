@@ -5,7 +5,7 @@
  * @created 2026-07-21
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import {
   Button,
@@ -22,11 +22,12 @@ import {
   SelectValue,
   cn,
 } from "@desk/ui";
-import { Languages, Bot, Mail, X, Youtube, type LucideIcon } from "@desk/ui/icons";
+import { Languages, Bot, Mail, Plug, X, Youtube, type LucideIcon } from "@desk/ui/icons";
 import { useI18n } from "../../i18n";
 import type { AppLocale } from "../../i18n";
 import { LlmSettingsPanel } from "./llm-settings-panel";
 import { MailIntegrationSettingsPanel } from "./mail-integration-settings-panel";
+import { PluginsSettingsPanel } from "./plugins-settings-panel";
 import { useLlmSettings } from "./use-llm-settings";
 import { useMailIntegrationSettings } from "./use-mail-integration-settings";
 import { useYoutubeApiKeySettings } from "./use-youtube-api-key-settings";
@@ -76,6 +77,7 @@ const NAV_GROUPS: NavGroup[] = [
       { id: "llm", labelKey: "settings.navLlm", icon: Bot },
       { id: "youtube", labelKey: "settings.navYoutube", icon: Youtube },
       { id: "mailIntegration", labelKey: "settings.navMailIntegration", icon: Mail },
+      { id: "plugins", labelKey: "settings.navPlugins", icon: Plug },
     ],
   },
 ];
@@ -224,14 +226,23 @@ export function SettingsDialog({
     requestExit("close");
   }
 
-  const sectionTitle =
-    section === "language"
-      ? t("settings.language")
-      : section === "llm"
-        ? t("settings.llmTitle")
-        : section === "mailIntegration"
-          ? t("settings.mailIntegrationTitle")
-          : t("settings.youtubeTitle");
+
+  const sectionTitle = useMemo(() => {
+    switch (section) {
+      case "language":
+        return t("settings.language");
+      case "llm":
+        return t("settings.llmTitle");
+      case "mailIntegration":
+        return t("settings.mailIntegrationTitle");
+      case "plugins":
+        return t("settings.pluginsTitle");
+      case "youtube":
+        return t("settings.youtubeTitle")
+      default:
+        return ""
+    }
+  },[t, section])
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -358,6 +369,8 @@ export function SettingsDialog({
                 <LlmSettingsPanel llm={llm} />
               ) : section === "mailIntegration" ? (
                 <MailIntegrationSettingsPanel integration={mailIntegration} />
+              ) : section === "plugins" ? (
+                <PluginsSettingsPanel />
               ) : (
                 <section className="flex max-w-lg flex-col gap-8">
                   <p className="text-[length:var(--text-sm)] leading-relaxed text-muted-foreground">

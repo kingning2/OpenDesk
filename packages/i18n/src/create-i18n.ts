@@ -1,31 +1,34 @@
 /**
- * `createI18n`：基于 i18next / react-i18next 的多语言工厂。
+ * `createI18n`：基于 @fluent/bundle 的多语言工厂。
  *
- * 支持按路由（namespace）拆分资源；`t("crawler.status.idle")` 会解析为
- * namespace=`crawler`、key=`status.idle`。未知首段回落到 `defaultNS`（通常为 `common`）。
+ * 每个 domain（namespace）对应一个 `.ftl` → 一个 `FluentBundle`。
+ * `t("crawler.status.idle")` 解析为 namespace=`crawler`、message id=`status-idle`。
+ * 未知首段回落到 `defaultNS`（通常为 `common`）。
  *
  * @author coisini
  * @created 2026-07-20
+ * @updated 2026-08-06 由 i18next 迁移至 Fluent
  */
 
-import i18n, { type i18n as I18nClient, type Resource } from "i18next";
 import {
-  I18nextProvider,
-  initReactI18next,
-  useTranslation,
-} from "react-i18next";
-import { createElement, useMemo, type ReactNode } from "react";
+  createContext,
+  createElement,
+  useContext,
+  useMemo,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 
-import type { Messages, TranslateParams } from "./types";
-import { interpolateTranslation } from "./types";
+import { buildLocaleBundles, translate, type FtlByDomain } from "./fluent";
+import type { TranslateParams } from "./types";
 
 /**
- * 某一语言下各 namespace 的文案表。
+ * 某一语言下各 namespace 的 FTL 源码表（namespace → ftl 文本）。
  *
  * @author coisini
  * @created 2026-07-20
  */
-export type LocaleNamespaces = Record<string, Messages>;
+export type LocaleNamespaces = Record<string, unknown>;
 
 /**
  * `createI18n` 配置。
@@ -39,10 +42,10 @@ export interface CreateI18nOptions<Locale extends string> {
   /** 默认语言。 */
   defaultLocale: Locale;
   /**
-   * 各语言 → namespace → 文案。
-   * 推荐结构：`locales/{route}/{zh-cn|en-us}.json` 加载后填入。
+   * 各语言 → namespace → FTL 源码。
+   * 推荐结构：`locales/{route}/{zh-CN|en-US}.ftl` 加载后填入。
    */
-  resources: Record<Locale, LocaleNamespaces>;
+  resources: Record<Locale, FtlByDomain>;
   /** 默认 namespace（未知 key 首段时使用）。 */
   defaultNS?: string;
   /** 语言显示名。 */
@@ -82,6 +85,16 @@ export interface I18nApi<Locale extends string> {
   t: (key: string, params?: TranslateParams) => string;
 }
 
+/** 底层兼容 shim（替代原 i18next 实例；消费端未直接使用）。 */
+export interface I18nClientLike {
+  /** 翻译。 */
+  t: (key: string, opts?: { params?: TranslateParams }) => string;
+  /** 切换语言。 */
+  changeLanguage: (locale: string) => void;
+  /** 当前语言。 */
+  language: string;
+}
+
 /**
  * `createI18n` 返回的实例。
  *
@@ -97,8 +110,8 @@ export interface I18nInstance<Locale extends string> {
   useI18n: () => I18nApi<Locale>;
   /** 仅 `t`。 */
   useT: () => I18nApi<Locale>["t"];
-  /** 底层 i18next 实例。 */
-  i18n: I18nClient;
+  /** 底层兼容实例（原为 i18next；现为轻量 shim）。 */
+  i18n: I18nClientLike;
   /** 已注册 namespace。 */
   namespaces: readonly string[];
 }
@@ -125,6 +138,17 @@ function readPersistedLocale<Locale extends string>(
     // ignore
   }
   return defaultLocale;
+}
+
+function persistLocale(persistKey: string | false | undefined, locale: string) {
+  if (!persistKey || typeof window === "undefined") {
+    return;
+  }
+  try {
+    window.localStorage.setItem(persistKey, locale);
+  } catch {
+    // ignore
+  }
 }
 
 /**
@@ -156,10 +180,11 @@ export function resolveNamespaceKey(
 }
 
 /**
- * 创建基于 i18next 的多语言实例（按路由 namespace）。
+ * 创建基于 Fluent 的多语言实例（按路由 namespace）。
  *
  * @author coisini
  * @created 2026-07-20
+ * @updated 2026-08-06 底层由 i18next 迁移至 Fluent
  *
  * @typeParam Locale - 语言代码
  * @param options - 配置
@@ -185,97 +210,91 @@ export function createI18n<Locale extends string>(
       namespaceSet.add(ns);
     }
   }
-  if (!namespaceSet.has(defaultNS)) {
-    namespaceSet.add(defaultNS);
-  }
+  namespaceSet.add(defaultNS);
   const namespaces = Array.from(namespaceSet);
 
-  const i18nResources: Resource = {};
-  for (const locale of locales) {
-    i18nResources[locale] = options.resources[locale] as Resource[string];
+  // 轻量 store：locale 与 bundle 集合的可变状态 + 订阅。
+  let currentLocale: Locale = initialLocale;
+  let currentBundles = buildLocaleBundles(
+    initialLocale,
+    options.resources[initialLocale] ?? {},
+  );
+  const listeners = new Set<() => void>();
+
+  function emit() {
+    for (const listener of listeners) {
+      listener();
+    }
   }
 
-  const client = i18n.createInstance();
-  void client.use(initReactI18next).init({
-    resources: i18nResources,
-    lng: initialLocale,
-    fallbackLng: options.defaultLocale,
-    defaultNS,
-    ns: namespaces,
-    interpolation: {
-      escapeValue: false,
-      // Built-in i18next interpolation is disabled; `interpolateTranslation` handles `{key}` and `{{key}}`.
-      prefix: "__I18N_SKIP__",
-      suffix: "__",
-    },
-    returnNull: false,
-  });
+  function subscribe(listener: () => void): () => void {
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  }
 
-  function persistLocale(locale: Locale) {
-    if (!persistKey || typeof window === "undefined") {
+  function getSnapshot(): Locale {
+    return currentLocale;
+  }
+
+  function setLocale(next: Locale) {
+    if (next === currentLocale) {
       return;
     }
-    try {
-      window.localStorage.setItem(persistKey, locale);
-    } catch {
-      // ignore
-    }
+    currentLocale = next;
+    currentBundles = buildLocaleBundles(next, options.resources[next] ?? {});
+    persistLocale(persistKey, next);
+    emit();
   }
 
-  function translate(
-    i18nT: (key: string, opts?: Record<string, unknown>) => unknown,
-    key: string,
-    params?: TranslateParams,
-  ): string {
-    const resolved = resolveNamespaceKey(key, namespaces, defaultNS);
-    const raw = String(
-      i18nT(resolved.key, {
-        ns: resolved.ns,
-      }),
-    );
-    return interpolateTranslation(raw, params);
+  function translateKey(key: string, params?: TranslateParams): string {
+    return translate(currentBundles, defaultNS, key, params);
   }
+
+  const I18nContext = createContext<I18nApi<Locale> | null>(null);
 
   function I18nProvider({ children }: { children: ReactNode }) {
-    return createElement(I18nextProvider, { i18n: client }, children);
-  }
-
-  function useI18n(): I18nApi<Locale> {
-    const { t: i18nT, i18n: instance, ready } = useTranslation(namespaces);
-    const locale = (instance.language || options.defaultLocale) as Locale;
-
-    return useMemo(() => {
-      const t = (key: string, params?: TranslateParams): string => {
-        if (!ready) {
-          return key;
-        }
-        return translate(i18nT, key, params);
-      };
-
-      const setLocale = (next: Locale) => {
-        void instance.changeLanguage(next);
-        persistLocale(next);
-      };
-
-      return {
+    const locale = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+    const value = useMemo<I18nApi<Locale>>(
+      () => ({
         locale,
         setLocale,
         locales,
         localeLabels,
-        t,
-      };
-    }, [i18nT, instance, locale, ready]);
+        t: translateKey,
+      }),
+       
+      [locale],
+    );
+    return createElement(I18nContext.Provider, { value }, children);
+  }
+
+  function useI18n(): I18nApi<Locale> {
+    const api = useContext(I18nContext);
+    if (!api) {
+      throw new Error("useI18n must be used within <I18nProvider>");
+    }
+    return api;
   }
 
   function useT(): I18nApi<Locale>["t"] {
     return useI18n().t;
   }
 
+  const i18n: I18nClientLike = {
+    t: (key, opts) => translateKey(key, opts?.params),
+    changeLanguage: (locale) => setLocale(locale as Locale),
+    get language() {
+      return currentLocale;
+    },
+  };
+
   return {
     I18nProvider,
     useI18n,
     useT,
-    i18n: client,
+    i18n,
     namespaces,
   };
 }

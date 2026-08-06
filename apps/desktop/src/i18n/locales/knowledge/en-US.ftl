@@ -1,0 +1,17 @@
+title = Knowledge
+description = Upload documents and let chat retrieve from them automatically.
+upload = Upload document
+importing = Importing…
+loading = Loading documents…
+empty = No documents yet
+emptyHint = Upload a PDF, Word, plain text, Markdown or HTML document; chat can then retrieve its knowledge automatically.
+chunks = chunks
+delete = Delete document
+dismiss = Dismiss
+toolsTitle = Parsing tools
+toolsHint = Installing improves parsing: Pandoc for Word/HTML, Tesseract for scanned PDFs, PDFium for PDF structure. Built-in parsers are used as fallback.
+toolsLoading = Checking tools…
+toolInstalled = Installed
+toolNotInstalled = Not installed
+toolDownload = Download
+toolDownloading = Downloading…

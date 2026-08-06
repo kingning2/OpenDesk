@@ -1,0 +1,4 @@
+title = Agent
+subtitle = 大模型连通性
+ping = 测试大模型
+pinging = 请求中…

@@ -13,8 +13,9 @@ use ports::crawler_channels::ChannelRecord;
 use serde_json::Value;
 use uuid::Uuid;
 
-use crate::i18n as msg;
-use crate::{CrawlerUiEmitter, Locale};
+use crate::CrawlerUiEmitter;
+use common::i18n as msg;
+use common::i18n::Locale;
 
 #[derive(Debug, Clone)]
 struct KeywordProgress {

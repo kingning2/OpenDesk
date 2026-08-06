@@ -1,0 +1,2 @@
+title = OpenDesk
+description = Architecture scaffold — select a feature from the sidebar.

@@ -1,27 +1,10 @@
 /**
- * 多语言文案树与相关类型。
+ * 多语言文案相关类型。
  *
  * @author coisini
  * @created 2026-07-20
+ * @updated 2026-08-06 迁移 Fluent 后，JSON 树类型标记为 deprecated 仅作兼容
  */
-
-/**
- * 嵌套文案树；叶节点为字符串（供 i18next resources 使用）。
- *
- * @author coisini
- * @created 2026-07-20
- */
-export type TranslationTree = {
-  readonly [key: string]: string | TranslationTree;
-};
-
-/**
- * 某一语言的完整文案表。
- *
- * @author coisini
- * @created 2026-07-20
- */
-export type Messages = TranslationTree;
 
 /**
  * `t()` 插值参数。
@@ -32,16 +15,21 @@ export type Messages = TranslationTree;
 export type TranslateParams = Record<string, string | number | boolean | null | undefined>;
 
 /**
+ * @deprecated 已迁移 Fluent，JSON 文案树不再使用。仅作兼容保留。
+ */
+export type TranslationTree = {
+  readonly [key: string]: string | TranslationTree;
+};
+
+/**
+ * @deprecated 已迁移 Fluent，JSON 文案树不再使用。仅作兼容保留。
+ */
+export type Messages = TranslationTree;
+
+/**
  * Replace `{key}` and `{{key}}` placeholders when the key exists in `params`.
  *
- * Unknown placeholders are left literal (e.g. docs showing `{{email}}`).
- *
- * @author coisini
- * @created 2026-08-01
- *
- * @param text - Template string
- * @param params - Interpolation values
- * @returns Interpolated string
+ * @deprecated 已迁移 Fluent，插值由 FTL 引擎处理。仅作兼容保留。
  */
 export function interpolateTranslation(
   text: string,

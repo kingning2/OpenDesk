@@ -8,7 +8,7 @@
 import { createContext, useContext } from "react";
 
 /** 设置侧栏分区 id。 */
-export type SettingsSectionId = "language" | "youtube" | "llm" | "mailIntegration";
+export type SettingsSectionId = "language" | "youtube" | "llm" | "mailIntegration" | "plugins";
 
 /**
  * 设置弹窗上下文值。

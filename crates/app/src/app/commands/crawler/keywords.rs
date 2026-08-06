@@ -8,6 +8,7 @@ use common::contracts::{
     CrawlerIpcKeywordsGenerateResponse, CrawlerIpcKeywordsImportRequest,
     CrawlerIpcKeywordsImportResponse,
 };
+use common::i18n::{empty_batch, need_batch, Locale};
 use ports::crawler_keywords::CrawlerKeywordStore;
 
 use crate::app::commands::llm::stored_llm_client;
@@ -30,7 +31,7 @@ pub(crate) fn resolve_keywords(
     store: &dyn CrawlerKeywordStore,
     keywords: Option<String>,
     batch_id: Option<String>,
-    locale: crawler::Locale,
+    locale: Locale,
 ) -> Result<String, String> {
     if let Some(text) = keywords.and_then(|value| {
         let trimmed = value.trim().to_string();
@@ -51,12 +52,12 @@ pub(crate) fn resolve_keywords(
                 Some(trimmed)
             }
         })
-        .ok_or_else(|| crawler::need_batch(locale))?;
+        .ok_or_else(|| need_batch(locale))?;
     let list = store
         .enabled_keywords_for_batch(&batch)
         .map_err(|error| error.to_string())?;
     if list.is_empty() {
-        return Err(crawler::empty_batch(locale, &batch));
+        return Err(empty_batch(locale, &batch));
     }
     Ok(list.join(","))
 }

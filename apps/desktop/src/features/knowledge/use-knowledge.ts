@@ -14,16 +14,11 @@ import {
   knowledgeDocDelete,
   knowledgeDocImport,
   knowledgeDocList,
-  knowledgeToolDownload,
-  knowledgeToolStatus,
   listenKnowledgeImportUpdated,
-  listenKnowledgeToolProgress,
   type KnowledgeDocument,
-  type KnowledgeDownloadProgress,
-  type KnowledgeToolStatus,
 } from "@desk/platform/ipc/knowledge";
 
-export type { KnowledgeDocument, KnowledgeToolStatus };
+export type { KnowledgeDocument };
 
 const toDisplayError = (err: unknown): string =>
   err instanceof Error ? err.message : String(err);
@@ -39,24 +34,8 @@ export function useKnowledge() {
   const [importing, setImporting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState("");
-  const [tools, setTools] = useState<KnowledgeToolStatus[]>([]);
-  const [toolsLoading, setToolsLoading] = useState(true);
-  const [downloading, setDownloading] = useState<Record<string, KnowledgeDownloadProgress | null>>(
-    {},
-  );
 
-  const refreshTools = useCallback(async () => {
-    try {
-      const statuses = await knowledgeToolStatus();
-      setTools(statuses);
-    } catch (err) {
-      setError(toDisplayError(err));
-    } finally {
-      setToolsLoading(false);
-    }
-  }, []);
-
-  // 初次挂载时加载列表与工具状态。用 .then 链避免在 effect 体内同步 setState。
+  // 初次挂载时加载列表。用 .then 链避免在 effect 体内同步 setState。
   useEffect(() => {
     let cancelled = false;
     knowledgeDocList()
@@ -76,53 +55,10 @@ export function useKnowledge() {
           setLoading(false);
         }
       });
-    knowledgeToolStatus()
-      .then((statuses) => {
-        if (!cancelled) {
-          setTools(statuses);
-          setError("");
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setError(toDisplayError(err));
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setToolsLoading(false);
-        }
-      });
     return () => {
       cancelled = true;
     };
   }, []);
-
-  // 订阅下载进度事件，按工具更新进度；done/failed 后刷新工具状态。
-  useEffect(() => {
-    let cancelled = false;
-    let unlisten: (() => void) | undefined;
-    void listenKnowledgeToolProgress((payload) => {
-      if (cancelled) {
-        return;
-      }
-      setDownloading((prev) => ({ ...prev, [payload.tool]: payload }));
-      if (payload.status === "done" || payload.status === "failed") {
-        void refreshTools();
-        setDownloading((prev) => ({ ...prev, [payload.tool]: null }));
-      }
-    }).then((dispose) => {
-      if (cancelled) {
-        dispose();
-        return;
-      }
-      unlisten = dispose;
-    });
-    return () => {
-      cancelled = true;
-      unlisten?.();
-    };
-  }, [refreshTools]);
 
   const refresh = useCallback(async () => {
     try {
@@ -156,23 +92,6 @@ export function useKnowledge() {
       unlisten?.();
     };
   }, [refresh]);
-
-  const downloadTool = useCallback(
-    async (toolId: string) => {
-      setError("");
-      setDownloading((prev) => ({
-        ...prev,
-        [toolId]: { tool: toolId, bytes_downloaded: 0, bytes_total: 0, status: "downloading" },
-      }));
-      try {
-        await knowledgeToolDownload({ tool: toolId });
-      } catch (err) {
-        setError(toDisplayError(err));
-        setDownloading((prev) => ({ ...prev, [toolId]: null }));
-      }
-    },
-    [],
-  );
 
   // 弹文件选择窗口并入队导入；取消选择不动作。
   const pickFile = useCallback(async () => {
@@ -222,10 +141,5 @@ export function useKnowledge() {
     remove,
     clearError,
     refresh,
-    tools,
-    toolsLoading,
-    downloading,
-    downloadTool,
-    refreshTools,
   };
 }

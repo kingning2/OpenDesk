@@ -6,6 +6,10 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@desk/desktop", "dev"],
       "port": 1420
+    },
+    {
+      "name": "opendesk-running",
+      "url": "http://localhost:1420"
     }
   ]
 }

@@ -5,3 +5,13 @@ edition.workspace = true
 
 [dependencies]
 serde = { workspace = true }
+dirs = { workspace = true }
+reqwest = { workspace = true }
+zip = { workspace = true }
+flate2 = { workspace = true }
+tar = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+serde_json = { workspace = true }
+fluent-bundle = "0.16"
+unic-langid = { version = "0.9", features = ["unic-langid-macros"] }

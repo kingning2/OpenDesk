@@ -1,55 +1,56 @@
 /**
- * 从 `locales/{route}/{zh-cn|en-us}.json` 组装 i18next resources。
+ * 从 `locales/{route}/{zh-CN|en-US}.ftl` 组装 Fluent bundle 资源。
  *
  * @author coisini
  * @created 2026-07-20
+ * @updated 2026-08-06 由 JSON 迁移至 FTL
  */
 
-import type { LocaleNamespaces, Messages } from "@desk/i18n";
+import type { FtlByDomain } from "@desk/i18n";
 
 /**
- * Vite 预加载：`locales/<route>/<locale-file>.json`
+ * Vite 预加载：`locales/<route>/<locale-file>.ftl`
  *
- * 例：`locales/crawler/zh-cn.json` → namespace=`crawler`，语言文件=`zh-cn`
+ * 例：`locales/crawler/zh-CN.ftl` → namespace=`crawler`，语言文件=`zh-CN`
  */
-const localeModules = import.meta.glob<{ default: Messages }>(
-  "./locales/*/*.json",
-  { eager: true },
-);
+const ftlModules = import.meta.glob(
+  "./locales/*/*.ftl",
+  { eager: true, query: "?raw", import: "default" },
+) as Record<string, string>;
 
-/** 语言代码 → JSON 文件名（不含扩展名）。 */
+/** 语言代码 → 文件名（不含扩展名）。 */
 const LOCALE_FILE_BY_CODE = {
-  "zh-CN": "zh-cn",
-  "en-US": "en-us",
+  "zh-CN": "zh-CN",
+  "en-US": "en-US",
 } as const;
 
 /** 桌面端支持的语言。 */
 export type AppLocale = keyof typeof LOCALE_FILE_BY_CODE;
 
 /**
- * 构建某一语言的全部 namespace 资源。
+ * 构建某一语言的全部 namespace FTL 源码。
  *
  * @author coisini
- * @created 2026-07-20
+ * @created 2026-08-06
  *
  * @param locale - 语言代码
- * @returns namespace → 文案
+ * @returns namespace → FTL 源码
  */
-function buildLocaleResources(locale: AppLocale): LocaleNamespaces {
+function buildLocaleResources(locale: AppLocale): FtlByDomain {
   const fileTag = LOCALE_FILE_BY_CODE[locale];
-  const resources: LocaleNamespaces = {};
-  const suffix = `/${fileTag}.json`;
+  const resources: FtlByDomain = {};
+  const suffix = `/${fileTag}.ftl`;
 
-  for (const [path, mod] of Object.entries(localeModules)) {
+  for (const [path, source] of Object.entries(ftlModules)) {
     if (!path.endsWith(suffix)) {
       continue;
     }
-    // ./locales/crawler/zh-cn.json → crawler
-    const match = path.match(/\/locales\/([^/]+)\/[^/]+\.json$/);
+    // ./locales/crawler/zh-CN.ftl → crawler
+    const match = path.match(/\/locales\/([^/]+)\/[^/]+\.ftl$/);
     if (!match) {
       continue;
     }
-    resources[match[1]] = mod.default;
+    resources[match[1]] = source;
   }
 
   return resources;
@@ -60,8 +61,9 @@ function buildLocaleResources(locale: AppLocale): LocaleNamespaces {
  *
  * @author coisini
  * @created 2026-07-20
+ * @updated 2026-08-06
  */
-export const appLocaleResources: Record<AppLocale, LocaleNamespaces> = {
+export const appLocaleResources: Record<AppLocale, FtlByDomain> = {
   "zh-CN": buildLocaleResources("zh-CN"),
   "en-US": buildLocaleResources("en-US"),
 };
