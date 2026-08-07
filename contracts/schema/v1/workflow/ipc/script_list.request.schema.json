@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "opendesk://workflow/ipc/snippet_list/request/v1",
-  "title": "workflow/ipc/snippet_list.request",
-  "description": "Filters for listing script snippets.",
+  "$id": "opendesk://workflow/ipc/script_list/request/v1",
+  "title": "workflow/ipc/script_list.request",
+  "description": "Filters for listing workflow scripts.",
   "type": "object",
   "properties": {
     "category_l1": { "type": "string" },

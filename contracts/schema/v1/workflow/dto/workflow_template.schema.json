@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://workflow/dto/workflow_template/v1",
+  "title": "workflow/dto/workflow_template",
+  "description": "Workflow template DTO (email-agent port).",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "template_type",
+    "canvas_json",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "template_type": { "type": "string" },
+    "canvas_json": { "type": "string", "description": "Whole workflow-stages{_<id>}.json canvas verbatim." },
+    "canvas_version": { "type": "string" },
+    "canvas_updated": { "type": "string" },
+    "binding_count": { "type": "integer" },
+    "created_at": { "type": "string" },
+    "updated_at": { "type": "string" }
+  },
+  "additionalProperties": false
+}

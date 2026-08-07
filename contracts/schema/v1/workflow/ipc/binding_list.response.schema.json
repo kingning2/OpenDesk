@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://workflow/ipc/binding_list/response/v1",
+  "title": "workflow/ipc/binding_list.response",
+  "description": "Response listing workflow account bindings.",
+  "type": "object",
+  "required": ["bindings_json", "total"],
+  "properties": {
+    "bindings_json": { "type": "string", "description": "JSON array of workflow_binding DTOs." },
+    "total": { "type": "integer" }
+  },
+  "additionalProperties": false
+}

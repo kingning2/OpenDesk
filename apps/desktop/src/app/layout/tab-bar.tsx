@@ -167,7 +167,7 @@ export function TabBar({
       className={cn(
         "flex min-w-0 items-stretch",
         embedded
-          ? "shrink-0 self-stretch items-center gap-0.5 overflow-hidden px-1"
+          ? "self-stretch items-center gap-0.5 overflow-hidden px-1"
           : "h-9 shrink-0 border-b border-border bg-surface",
         className,
       )}
@@ -177,7 +177,7 @@ export function TabBar({
         className={cn(
           "flex min-w-0 flex-1",
           embedded
-            ? "items-center gap-0.5 overflow-hidden"
+            ? "items-center gap-0.5 overflow-x-auto overflow-y-hidden scrollbar-none"
             : "items-stretch overflow-x-auto overflow-y-hidden scrollbar-none",
         )}
       >

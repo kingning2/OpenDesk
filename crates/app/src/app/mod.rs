@@ -16,7 +16,7 @@ mod platform;
 mod state;
 mod workflow_runtime_emit;
 
-use crawler::{CrawlerService, CrawlerUiEmitter};
+use crawler::youtube::{CrawlerService, CrawlerUIEmitter};
 use crawler_emit::TauriCrawlerEmitter;
 use logging::init_tracing;
 use mail::app::ScheduleImapSync;
@@ -44,7 +44,7 @@ use storage::knowledge::SqliteKnowledgeStore;
 use storage::llm_settings::SqliteLlmSettingsStore;
 use storage::mail::SqliteMailStore;
 use storage::opendesk_db::OpendeskDb;
-use storage::workflow::SqliteScriptSnippetStore;
+use storage::workflow::SqliteWorkflowStore;
 use storage::workflow_runtime::SqliteCheckpointStore;
 use tauri::{Emitter, Manager};
 use workflow_runtime::{
@@ -86,8 +86,8 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
         Arc::new(SqliteCustomerStore::new(opendesk_db.clone())) as Arc<dyn CustomerStore>;
     let mail_store =
         Arc::new(SqliteMailStore::new(opendesk_db.clone())) as Arc<dyn ports::mail::MailStore>;
-    let snippet_store = Arc::new(SqliteScriptSnippetStore::new(opendesk_db.clone()))
-        as Arc<dyn ports::workflow::ScriptSnippetStore>;
+    let workflow_store = Arc::new(SqliteWorkflowStore::new(opendesk_db.clone()))
+        as Arc<dyn ports::workflow::WorkflowStore>;
     let chat = Arc::new(SqliteChatStore::open(chat_db_path()).expect("open chat database"));
     let chat_store = Arc::clone(&chat) as Arc<dyn ChatStore>;
     let chat_memory_store = Arc::clone(&chat) as Arc<dyn ChatMemoryStore>;
@@ -119,7 +119,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
         customer_store,
         mail_store,
         job_store: job_store.clone(),
-        snippet_store,
+        workflow_store,
         chat_store,
         chat_memory_store,
         knowledge_store,
@@ -136,7 +136,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
         .manage(app_state)
         .setup(move |app| {
             let emitter = Arc::new(TauriCrawlerEmitter::new(app.handle().clone()))
-                as Arc<dyn CrawlerUiEmitter>;
+                as Arc<dyn CrawlerUIEmitter>;
             crawler.attach_emitter(emitter);
 
             let workflow_emitter = Arc::new(TauriWorkflowRuntimeEmitter::new(app.handle().clone()));
@@ -300,9 +300,11 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             commands::mail_integration::mail_email_read_integration_get,
             commands::mail_integration::mail_email_read_integration_save,
             commands::mail_integration::mail_email_read_integration_probe,
-            commands::workflow::workflow_snippet_list,
-            commands::workflow::workflow_snippet_save,
-            commands::workflow::workflow_snippet_delete,
+            commands::workflow::workflow_template_list,
+            commands::workflow::workflow_template_get,
+            commands::workflow::workflow_binding_list,
+            commands::workflow::workflow_rule_list,
+            commands::workflow::workflow_script_list,
             commands::workflow_runtime::workflow_runtime_start,
             commands::workflow_runtime::workflow_runtime_cancel,
             commands::workflow_runtime::workflow_runtime_resume,

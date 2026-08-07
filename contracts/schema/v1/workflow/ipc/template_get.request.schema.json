@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "opendesk://workflow/ipc/snippet_delete/request/v1",
-  "title": "workflow/ipc/snippet_delete.request",
-  "description": "Delete a script snippet by id.",
+  "$id": "opendesk://workflow/ipc/template_get/request/v1",
+  "title": "workflow/ipc/template_get.request",
+  "description": "Request to fetch one workflow template by id.",
   "type": "object",
   "required": ["id"],
   "properties": {

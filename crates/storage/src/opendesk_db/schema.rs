@@ -164,19 +164,66 @@ diesel::table! {
 }
 
 diesel::table! {
-    script_snippet (id) {
+    workflow_template (id) {
         id -> Text,
-        source_id -> Text,
-        title -> Text,
+        name -> Text,
+        template_type -> Text,
+        canvas_json -> Text,
+        canvas_version -> Nullable<Text>,
+        canvas_updated -> Nullable<Text>,
+        created_at -> Text,
+        updated_at -> Text,
+    }
+}
+
+diesel::table! {
+    workflow_binding (account_id) {
+        account_id -> Text,
+        template_id -> Text,
+    }
+}
+
+diesel::table! {
+    workflow_stage (template_id, id) {
+        template_id -> Text,
+        id -> Text,
+        name -> Text,
+        note -> Nullable<Text>,
+        ord -> BigInt,
+        ai_level -> Nullable<Text>,
+        x -> Nullable<BigInt>,
+        y -> Nullable<BigInt>,
+        scripts_json -> Text,
+        script_conds_json -> Text,
+    }
+}
+
+diesel::table! {
+    workflow_rule (id) {
+        id -> Text,
+        name -> Text,
+        from_stages_json -> Text,
+        to_stage -> Text,
+        trigger_keywords_json -> Text,
+        trigger_tags_json -> Text,
+        auto_reply -> Bool,
+        auto_advance -> Bool,
+        reply_script_id -> Nullable<Text>,
+    }
+}
+
+diesel::table! {
+    workflow_script (id) {
+        id -> Text,
         stage -> Nullable<Text>,
+        category_l1 -> Nullable<Text>,
+        category_l2 -> Nullable<Text>,
         trigger_text -> Nullable<Text>,
         description -> Nullable<Text>,
         from_stage -> Nullable<Text>,
         to_stage -> Nullable<Text>,
         tags_json -> Text,
-        body_text -> Text,
-        category_l1 -> Nullable<Text>,
-        category_l2 -> Nullable<Text>,
+        content -> Text,
         needs_boss_input -> Bool,
         boss_input_hint -> Nullable<Text>,
         sort_order -> BigInt,
@@ -294,6 +341,8 @@ diesel::joinable!(mail_message -> mail_account (account_id));
 diesel::joinable!(mail_message -> mail_template (template_id));
 diesel::joinable!(mail_imap_sync_state -> mail_account (account_id));
 diesel::joinable!(mail_pending_send -> mail_account (account_id));
+diesel::joinable!(workflow_binding -> workflow_template (template_id));
+diesel::joinable!(workflow_stage -> workflow_template (template_id));
 diesel::joinable!(wf_rt_node_instance -> wf_rt_instance (instance_id));
 diesel::joinable!(wf_rt_log -> wf_rt_instance (instance_id));
 
@@ -307,11 +356,15 @@ diesel::allow_tables_to_appear_in_same_query!(
     quote_history,
     customer_timeline,
     cooperation_audit,
-    script_snippet,
     llm_setting,
     mail_imap_sync_state,
     mail_pending_send,
     legacy_json_doc,
+    workflow_template,
+    workflow_binding,
+    workflow_stage,
+    workflow_rule,
+    workflow_script,
     wf_rt_instance,
     wf_rt_node_instance,
     wf_rt_log,

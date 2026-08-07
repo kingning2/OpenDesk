@@ -93,7 +93,7 @@ impl Translator {
         }
         let rendered = self
             .zh
-            .format_pattern(&value, Some(&fluent_args), &mut errors)
+            .format_pattern(value, Some(&fluent_args), &mut errors)
             .into_owned();
         for error in errors {
             tracing::warn!(target: "common::i18n", message_id = id, error = %error, "fluent format error");

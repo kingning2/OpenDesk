@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://workflow/dto/workflow_rule/v1",
+  "title": "workflow/dto/workflow_rule",
+  "description": "Workflow routing rule DTO.",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "from_stages_json",
+    "to_stage",
+    "trigger_keywords_json",
+    "trigger_tags_json",
+    "auto_reply",
+    "auto_advance"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "from_stages_json": { "type": "string", "description": "JSON array of from-stage ids." },
+    "to_stage": { "type": "string" },
+    "trigger_keywords_json": { "type": "string", "description": "JSON array of trigger keywords." },
+    "trigger_tags_json": { "type": "string", "description": "JSON array of trigger tags." },
+    "auto_reply": { "type": "boolean" },
+    "auto_advance": { "type": "boolean" },
+    "reply_script_id": { "type": "string" }
+  },
+  "additionalProperties": false
+}

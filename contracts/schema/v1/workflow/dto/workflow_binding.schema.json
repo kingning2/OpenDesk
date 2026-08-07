@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://workflow/dto/workflow_binding/v1",
+  "title": "workflow/dto/workflow_binding",
+  "description": "Workflow account → template binding DTO.",
+  "type": "object",
+  "required": ["account_id", "template_id"],
+  "properties": {
+    "account_id": { "type": "string" },
+    "template_id": { "type": "string" }
+  },
+  "additionalProperties": false
+}

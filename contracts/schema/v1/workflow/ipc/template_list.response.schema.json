@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://workflow/ipc/template_list/response/v1",
+  "title": "workflow/ipc/template_list.response",
+  "description": "Response listing workflow templates with binding counts.",
+  "type": "object",
+  "required": ["templates_json", "total"],
+  "properties": {
+    "templates_json": { "type": "string", "description": "JSON array of workflow_template DTOs (with binding_count)." },
+    "total": { "type": "integer" }
+  },
+  "additionalProperties": false
+}

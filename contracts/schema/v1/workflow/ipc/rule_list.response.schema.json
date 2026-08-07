@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://workflow/ipc/rule_list/response/v1",
+  "title": "workflow/ipc/rule_list.response",
+  "description": "Response listing workflow routing rules.",
+  "type": "object",
+  "required": ["rules_json", "total"],
+  "properties": {
+    "rules_json": { "type": "string", "description": "JSON array of workflow_rule DTOs." },
+    "total": { "type": "integer" }
+  },
+  "additionalProperties": false
+}

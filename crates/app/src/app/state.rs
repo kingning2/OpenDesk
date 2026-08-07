@@ -9,7 +9,7 @@ use adapter::license::UnlockedLicenseGate;
 use adapter::license::{FailClosedLicenseGate, VerifierProcessLicense};
 use agent::embedding::Embedder;
 use agent::skills::SkillRegistry;
-use crawler::CrawlerService;
+use crawler::youtube::CrawlerService;
 use ports::background_job::BackgroundJobStore;
 use ports::chat::{ChatMemoryStore, ChatStore};
 use ports::crawler_channels::CrawlerChannelStore;
@@ -20,7 +20,7 @@ use ports::knowledge::KnowledgeStore;
 use ports::license::LicenseGate;
 use ports::llm_settings::LlmSettingsStore;
 use ports::mail::MailStore;
-use ports::workflow::ScriptSnippetStore;
+use ports::workflow::WorkflowStore;
 use std::process::Child;
 use std::sync::{Arc, Mutex};
 use workflow_runtime::WorkflowRuntimeFacade;
@@ -52,8 +52,8 @@ pub struct AppState {
     pub mail_store: Arc<dyn MailStore>,
     /// Background job queue shared with `opendesk-worker`.
     pub job_store: Arc<dyn BackgroundJobStore>,
-    /// Script snippet library (`script_snippet` table in opendesk.db).
-    pub snippet_store: Arc<dyn ScriptSnippetStore>,
+    /// Workflow definitions (templates, bindings, stages, rules, scripts) in opendesk.db.
+    pub workflow_store: Arc<dyn WorkflowStore>,
     /// Chat sessions + messages (`chat.db`, rusqlite-backed).
     pub chat_store: Arc<dyn ChatStore>,
     /// Long-term memory + vector search (`chat.db` sqlite-vec, shares connection with chat_store).

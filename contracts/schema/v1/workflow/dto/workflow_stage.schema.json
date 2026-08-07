@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://workflow/dto/workflow_stage/v1",
+  "title": "workflow/dto/workflow_stage",
+  "description": "Workflow canvas stage DTO (composite key template_id + id).",
+  "type": "object",
+  "required": [
+    "template_id",
+    "id",
+    "name",
+    "ord",
+    "scripts_json",
+    "script_conds_json"
+  ],
+  "properties": {
+    "template_id": { "type": "string" },
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "note": { "type": "string" },
+    "ord": { "type": "integer" },
+    "ai_level": { "type": "string" },
+    "x": { "type": "integer" },
+    "y": { "type": "integer" },
+    "scripts_json": { "type": "string", "description": "JSON array of script ids." },
+    "script_conds_json": { "type": "string", "description": "JSON array of script condition strings." }
+  },
+  "additionalProperties": false
+}

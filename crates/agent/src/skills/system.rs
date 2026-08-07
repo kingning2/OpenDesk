@@ -68,8 +68,8 @@ pub fn system_pages() -> &'static [SystemPage] {
         SystemPage {
             id: "workflow",
             path: "/features/workflow",
-            label: "话术库",
-            summary: "话术/脚本片段库",
+            label: "工作流",
+            summary: "邮件/WhatsApp 客户旅程流程与话术库",
         },
         SystemPage {
             id: "knowledge",
@@ -237,11 +237,12 @@ fn builtin_guides() -> Vec<GuideSkill> {
     let page_workflow = guide(
         SkillDescriptor {
             id: "system.page.workflow".into(),
-            name: "话术库页操作指引".into(),
-            description: "维护可复用的邮件话术/脚本片段".into(),
+            name: "工作流页操作指引".into(),
+            description: "查看邮件/WhatsApp 客户旅程流程与话术库".into(),
         },
-        "话术库页（路径 /features/workflow，侧栏「话术库」图标）：话术/脚本片段库，写邮件时可套用。\n\
-         用户说「话术库 / 脚本片段 / 邮件模板」时跳转到此页。",
+        "工作流页（路径 /features/workflow，侧栏「工作流」图标）：邮件/WhatsApp 客户旅程。\n\
+         左侧为模板列表（含类型与账号绑定数），右侧可查看阶段流程、路由规则与话术库。\n\
+         用户说「工作流 / 客户旅程 / 阶段流程 / 话术库」时跳转到此页。",
     );
 
     let page_knowledge = guide(

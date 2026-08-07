@@ -9,7 +9,11 @@ use super::schema::mail_imap_sync_state;
 use super::schema::mail_integration_setting;
 use super::schema::mail_message;
 use super::schema::mail_template;
-use super::schema::script_snippet;
+use super::schema::workflow_binding;
+use super::schema::workflow_rule;
+use super::schema::workflow_script;
+use super::schema::workflow_stage;
+use super::schema::workflow_template;
 
 /// Insertable row for `background_job`.
 #[derive(Debug, Insertable)]
@@ -216,25 +220,130 @@ pub struct NewMailMessageRow {
     pub source_ref: Option<String>,
 }
 
-/// Insertable row for `script_snippet`.
-///
-/// 作者：coisini
-/// 创建时间：2026-07-21
+/// Insertable row for `workflow_template`.
 #[derive(Debug, Insertable)]
-#[diesel(table_name = script_snippet)]
-pub struct NewScriptSnippetRow {
+#[diesel(table_name = workflow_template)]
+pub struct NewWorkflowTemplateRow {
     pub id: String,
-    pub source_id: String,
-    pub title: String,
+    pub name: String,
+    pub template_type: String,
+    pub canvas_json: String,
+    pub canvas_version: Option<String>,
+    pub canvas_updated: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+/// Queryable `workflow_template` row.
+#[derive(Debug, Queryable, Selectable, Clone)]
+#[diesel(table_name = workflow_template)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct WorkflowTemplateRow {
+    pub id: String,
+    pub name: String,
+    pub template_type: String,
+    pub canvas_json: String,
+    pub canvas_version: Option<String>,
+    pub canvas_updated: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+/// Insertable row for `workflow_binding`.
+#[derive(Debug, Insertable)]
+#[diesel(table_name = workflow_binding)]
+pub struct NewWorkflowBindingRow {
+    pub account_id: String,
+    pub template_id: String,
+}
+
+/// Queryable `workflow_binding` row.
+#[derive(Debug, Queryable, Selectable, Clone)]
+#[diesel(table_name = workflow_binding)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct WorkflowBindingRow {
+    pub account_id: String,
+    pub template_id: String,
+}
+
+/// Insertable row for `workflow_stage`.
+#[derive(Debug, Insertable)]
+#[diesel(table_name = workflow_stage)]
+pub struct NewWorkflowStageRow {
+    pub template_id: String,
+    pub id: String,
+    pub name: String,
+    pub note: Option<String>,
+    pub ord: i64,
+    pub ai_level: Option<String>,
+    pub x: Option<i64>,
+    pub y: Option<i64>,
+    pub scripts_json: String,
+    pub script_conds_json: String,
+}
+
+/// Queryable `workflow_stage` row.
+#[derive(Debug, Queryable, Selectable, Clone)]
+#[diesel(table_name = workflow_stage)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct WorkflowStageRow {
+    pub template_id: String,
+    pub id: String,
+    pub name: String,
+    pub note: Option<String>,
+    pub ord: i64,
+    pub ai_level: Option<String>,
+    pub x: Option<i64>,
+    pub y: Option<i64>,
+    pub scripts_json: String,
+    pub script_conds_json: String,
+}
+
+/// Insertable row for `workflow_rule`.
+#[derive(Debug, Insertable)]
+#[diesel(table_name = workflow_rule)]
+pub struct NewWorkflowRuleRow {
+    pub id: String,
+    pub name: String,
+    pub from_stages_json: String,
+    pub to_stage: String,
+    pub trigger_keywords_json: String,
+    pub trigger_tags_json: String,
+    pub auto_reply: bool,
+    pub auto_advance: bool,
+    pub reply_script_id: Option<String>,
+}
+
+/// Queryable `workflow_rule` row.
+#[derive(Debug, Queryable, Selectable, Clone)]
+#[diesel(table_name = workflow_rule)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct WorkflowRuleRow {
+    pub id: String,
+    pub name: String,
+    pub from_stages_json: String,
+    pub to_stage: String,
+    pub trigger_keywords_json: String,
+    pub trigger_tags_json: String,
+    pub auto_reply: bool,
+    pub auto_advance: bool,
+    pub reply_script_id: Option<String>,
+}
+
+/// Insertable row for `workflow_script`.
+#[derive(Debug, Insertable)]
+#[diesel(table_name = workflow_script)]
+pub struct NewWorkflowScriptRow {
+    pub id: String,
     pub stage: Option<String>,
+    pub category_l1: Option<String>,
+    pub category_l2: Option<String>,
     pub trigger_text: Option<String>,
     pub description: Option<String>,
     pub from_stage: Option<String>,
     pub to_stage: Option<String>,
     pub tags_json: String,
-    pub body_text: String,
-    pub category_l1: Option<String>,
-    pub category_l2: Option<String>,
+    pub content: String,
     pub needs_boss_input: bool,
     pub boss_input_hint: Option<String>,
     pub sort_order: i64,
@@ -242,26 +351,21 @@ pub struct NewScriptSnippetRow {
     pub updated_at: String,
 }
 
-/// Queryable `script_snippet` row.
-///
-/// 作者：coisini
-/// 创建时间：2026-07-21
+/// Queryable `workflow_script` row.
 #[derive(Debug, Queryable, Selectable, Clone)]
-#[diesel(table_name = script_snippet)]
+#[diesel(table_name = workflow_script)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
-pub struct ScriptSnippetRow {
+pub struct WorkflowScriptRow {
     pub id: String,
-    pub source_id: String,
-    pub title: String,
     pub stage: Option<String>,
+    pub category_l1: Option<String>,
+    pub category_l2: Option<String>,
     pub trigger_text: Option<String>,
     pub description: Option<String>,
     pub from_stage: Option<String>,
     pub to_stage: Option<String>,
     pub tags_json: String,
-    pub body_text: String,
-    pub category_l1: Option<String>,
-    pub category_l2: Option<String>,
+    pub content: String,
     pub needs_boss_input: bool,
     pub boss_input_hint: Option<String>,
     pub sort_order: i64,

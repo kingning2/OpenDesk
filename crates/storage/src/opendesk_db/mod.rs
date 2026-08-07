@@ -17,7 +17,9 @@ use ports::repository::StoreError;
 pub use models::{
     BackgroundJobRow, CustomerRow, MailAccountRow, MailImapSyncStateRow, MailIntegrationSettingRow,
     MailMessageRow, MailTemplateRow, NewBackgroundJob, NewCustomerRow, NewMailAccountRow,
-    NewMailMessageRow, NewMailTemplateRow, NewScriptSnippetRow, ScriptSnippetRow,
+    NewMailMessageRow, NewMailTemplateRow, NewWorkflowBindingRow, NewWorkflowRuleRow,
+    NewWorkflowScriptRow, NewWorkflowStageRow, NewWorkflowTemplateRow, WorkflowBindingRow,
+    WorkflowRuleRow, WorkflowScriptRow, WorkflowStageRow, WorkflowTemplateRow,
 };
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations-opendesk");

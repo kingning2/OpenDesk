@@ -563,7 +563,7 @@ PRAGMA journal_mode = WAL;   -- 允许多进程读；Worker 写时主进程仍�
 |------|-----|
 | Customer | `customer`, `quote_history`, `customer_timeline`, `cooperation_audit` |
 | Mail | `mail_template`, `mail_account`, `mail_message`, `mail_open_event`, `pending_send_queue` |
-| Workflow | `workflow_stage`, `workflow_template`, `workflow_binding`, `workflow_rule`, `script_snippet` |
+| Workflow | `workflow_template`, `workflow_binding`, `workflow_stage`, `workflow_rule`, `workflow_script` |
 | Pricing | `pricing_package`, `pricing_tier`, `pricing_result` |
 | Channel | `channel_account`, `channel_conversation`, `channel_message` |
 | Alert | `alert_keyword` |
@@ -594,8 +594,7 @@ AI（经 ADR-0001）**仅可读**：
 
 | 表 | 领域 | 说明 |
 |----|------|------|
-| `workflow_stage`, `workflow_template`, `workflow_binding`, `workflow_rule` | Workflow | 工作流 |
-| `script_snippet` | Workflow | 话术库 |
+| `workflow_template`, `workflow_binding`, `workflow_stage`, `workflow_rule`, `workflow_script` | Workflow | 工作流（已实施，迁移 `2026-08-07-100000_create_workflow_tables`，取代并 DROP `script_snippet`） |
 | `mail_open_event`, `pending_send_queue` | Mail | 开信、待发人审 |
 | `channel_account` | Channel | Baileys 多账号 |
 | `pricing_result` | Pricing | YT 定价引擎输出 |

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://workflow/ipc/template_get/response/v1",
+  "title": "workflow/ipc/template_get.response",
+  "description": "Response with one serialized workflow template (full canvas_json).",
+  "type": "object",
+  "required": ["template_json"],
+  "properties": {
+    "template_json": { "type": "string", "description": "JSON of one workflow_template DTO." }
+  },
+  "additionalProperties": false
+}

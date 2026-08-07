@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://workflow/ipc/script_list/response/v1",
+  "title": "workflow/ipc/script_list.response",
+  "description": "Response with serialized workflow scripts JSON and total count.",
+  "type": "object",
+  "required": ["scripts_json", "total"],
+  "properties": {
+    "scripts_json": { "type": "string", "description": "JSON array of workflow_script DTOs." },
+    "total": { "type": "integer" }
+  },
+  "additionalProperties": false
+}
