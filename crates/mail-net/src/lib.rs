@@ -101,9 +101,13 @@ pub fn send_smtp(endpoint: &SmtpEndpoint, message: &SmtpOutboundMessage) -> Resu
     };
 
     let mailer = build_transport(endpoint)?;
-    let response = mailer
-        .send(&email)
-        .map_err(|error| sanitize_smtp_error(&error.to_string(), &endpoint.password))?;
+    let response = mailer.send(&email).map_err(|error| {
+        sanitize_secret(
+            &error.to_string(),
+            &endpoint.password,
+            "mail.smtp_send_failed: ",
+        )
+    })?;
 
     Ok(response
         .message()
@@ -154,10 +158,11 @@ fn build_transport(endpoint: &SmtpEndpoint) -> Result<SmtpTransport, String> {
     Ok(builder.build())
 }
 
-fn sanitize_smtp_error(raw: &str, password: &str) -> String {
+/// 脱敏错误信息中的密码，并加前缀。
+pub(crate) fn sanitize_secret(raw: &str, password: &str, prefix: &str) -> String {
     let mut message = raw.to_string();
     if !password.is_empty() {
         message = message.replace(password, "***");
     }
-    format!("mail.smtp_send_failed: {message}")
+    format!("{prefix}{message}")
 }

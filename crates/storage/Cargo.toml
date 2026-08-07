@@ -4,6 +4,7 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+common = { path = "../common" }
 ports = { path = "../ports" }
 diesel = { workspace = true }
 diesel_migrations = { workspace = true }
@@ -16,7 +17,12 @@ keyring = { workspace = true }
 
 [dev-dependencies]
 tempfile = "3"
+serde_json = { workspace = true }
 
 [[example]]
 name = "opendesk_migrate"
 path = "examples/opendesk_migrate.rs"
+
+[[example]]
+name = "opendesk_workflow_import"
+path = "examples/opendesk_workflow_import.rs"

@@ -1,12 +1,6 @@
-//! Best-effort email extraction shared with stage-1 API crawler rules.
-//!
-//! 作者：coisini
-//! 创建时间：2026-07-20
+//! Best-effort email extraction shared by API 采集（youtube）与 RPA 补全（enrich）。
 
 /// Extract the first plausible email token from free text.
-///
-/// 作者：coisini
-/// 创建时间：2026-07-20
 pub fn extract_email(text: &str) -> Option<String> {
     let normalized = text
         .replace("[at]", "@")

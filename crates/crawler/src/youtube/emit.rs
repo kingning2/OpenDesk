@@ -1,6 +1,6 @@
 //! Crawl UI event sink — Tauri / noop implementations live outside this crate.
 //!
-//! Topic names come from [`CrawlerUiEvent`] (`crawler:<entity>/<verb>`).
+//! Topic names come from [`CrawlerUIEvent`] (`crawler:<entity>/<verb>`).
 //! Tauri only allows alphanumeric, `-`, `/`, `:`, `_` (no `.`).
 //!
 //! 作者：coisini
@@ -17,7 +17,7 @@ use std::fmt;
 /// 作者：coisini
 /// 创建时间：2026-07-21
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum CrawlerUiEvent {
+pub enum CrawlerUIEvent {
     /// Job entered running / keywords prepared.
     JobStarted,
     /// Progress snapshot (counts, message, keyword stats).
@@ -34,7 +34,7 @@ pub enum CrawlerUiEvent {
     ChannelEmailEnriched,
 }
 
-impl CrawlerUiEvent {
+impl CrawlerUIEvent {
     /// Tauri event name string (safe charset only).
     ///
     /// 作者：coisini
@@ -55,13 +55,13 @@ impl CrawlerUiEvent {
     }
 }
 
-impl AsRef<str> for CrawlerUiEvent {
+impl AsRef<str> for CrawlerUIEvent {
     fn as_ref(&self) -> &str {
         self.as_str()
     }
 }
 
-impl fmt::Display for CrawlerUiEvent {
+impl fmt::Display for CrawlerUIEvent {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.as_str())
     }
@@ -70,28 +70,28 @@ impl fmt::Display for CrawlerUiEvent {
 /// Push crawl lifecycle events to the desktop UI (replaces status/logs/results polling).
 ///
 /// 实现方：
-/// - [`NoopCrawlerUiEmitter`] — 测试 / 未接线时丢弃
+/// - [`NoopCrawlerUIEmitter`] — 测试 / 未接线时丢弃
 /// - `crates/app` 中的 Tauri `Emitter` 适配器
 ///
 /// 作者：coisini
 /// 创建时间：2026-07-21
-pub trait CrawlerUiEmitter: Send + Sync {
-    /// Emit [`CrawlerUiEvent::JobStarted`].
+pub trait CrawlerUIEmitter: Send + Sync {
+    /// Emit [`CrawlerUIEvent::JobStarted`].
     fn emit_job_started(&self, event: &CrawlerEventJobStarted);
 
-    /// Emit [`CrawlerUiEvent::JobProgress`].
+    /// Emit [`CrawlerUIEvent::JobProgress`].
     fn emit_job_progress(&self, event: &CrawlerEventJobProgress);
 
-    /// Emit [`CrawlerUiEvent::JobLog`].
+    /// Emit [`CrawlerUIEvent::JobLog`].
     fn emit_job_log(&self, event: &CrawlerEventJobLog);
 
-    /// Emit [`CrawlerUiEvent::JobCompleted`].
+    /// Emit [`CrawlerUIEvent::JobCompleted`].
     fn emit_job_completed(&self, event: &CrawlerEventJobCompleted);
 
-    /// Emit [`CrawlerUiEvent::JobFailed`].
+    /// Emit [`CrawlerUIEvent::JobFailed`].
     fn emit_job_failed(&self, event: &CrawlerEventJobFailed);
 
-    /// Emit [`CrawlerUiEvent::ChannelAccepted`].
+    /// Emit [`CrawlerUIEvent::ChannelAccepted`].
     fn emit_channel_accepted(&self, event: &CrawlerEventChannelAccepted);
 }
 
@@ -100,9 +100,9 @@ pub trait CrawlerUiEmitter: Send + Sync {
 /// 作者：coisini
 /// 创建时间：2026-07-21
 #[derive(Debug, Default, Clone, Copy)]
-pub struct NoopCrawlerUiEmitter;
+pub struct NoopCrawlerUIEmitter;
 
-impl CrawlerUiEmitter for NoopCrawlerUiEmitter {
+impl CrawlerUIEmitter for NoopCrawlerUIEmitter {
     fn emit_job_started(&self, _event: &CrawlerEventJobStarted) {}
     fn emit_job_progress(&self, _event: &CrawlerEventJobProgress) {}
     fn emit_job_log(&self, _event: &CrawlerEventJobLog) {}
@@ -113,18 +113,18 @@ impl CrawlerUiEmitter for NoopCrawlerUiEmitter {
 
 #[cfg(test)]
 mod tests {
-    use super::CrawlerUiEvent;
+    use super::CrawlerUIEvent;
 
     #[test]
     fn topic_strings_have_no_dot() {
         for event in [
-            CrawlerUiEvent::JobStarted,
-            CrawlerUiEvent::JobProgress,
-            CrawlerUiEvent::JobLog,
-            CrawlerUiEvent::JobCompleted,
-            CrawlerUiEvent::JobFailed,
-            CrawlerUiEvent::ChannelAccepted,
-            CrawlerUiEvent::ChannelEmailEnriched,
+            CrawlerUIEvent::JobStarted,
+            CrawlerUIEvent::JobProgress,
+            CrawlerUIEvent::JobLog,
+            CrawlerUIEvent::JobCompleted,
+            CrawlerUIEvent::JobFailed,
+            CrawlerUIEvent::ChannelAccepted,
+            CrawlerUIEvent::ChannelEmailEnriched,
         ] {
             assert!(
                 !event.as_str().contains('.'),

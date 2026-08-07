@@ -6,6 +6,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
+use common::tools::time::now_secs_string;
 use mail_net::{watch_inbox_idle, ImapEndpoint};
 use ports::customer::CustomerStore;
 use ports::mail::{MailImapSyncStateRecord, MailStore};
@@ -140,7 +141,7 @@ pub async fn watch_account_idle(
                                 uidvalidity: state.uidvalidity,
                                 highest_modseq: highest_modseq.clone(),
                                 last_uid: cursor_uid,
-                                last_sync_at: Some(now_string()),
+                                last_sync_at: Some(now_secs_string()),
                                 last_error: None,
                                 full_synced: true,
                             })
@@ -231,13 +232,4 @@ async fn prepare_account_watch(
     })
     .await
     .map_err(|error| error.to_string())?
-}
-
-fn now_string() -> String {
-    use std::time::{SystemTime, UNIX_EPOCH};
-
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|value| value.as_secs().to_string())
-        .unwrap_or_else(|_| "0".to_string())
 }

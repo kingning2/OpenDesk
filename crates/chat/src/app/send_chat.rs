@@ -1,14 +1,14 @@
 //! 把用户消息发送给 LLM 并逐个 token 回传 UI 的用例。
 //!
 //! 历史不落库：每次调用由前端传入 `messages_json`，本用例解析后追加本轮
-//! 用户消息，流式产出增量文本。真正的事件发送交给 [`ChatUiEmitter`] 实现方。
+//! 用户消息，流式产出增量文本。真正的事件发送交给 [`ChatUIEmitter`] 实现方。
 //!
 //! 工具调用：传入 [`ChatToolCaller`] 时把工具定义注入请求；LLM 请求调用时逐个
 //! 执行并把结果以 `chat:message/tool` 事件回传，把「assistant 工具调用」+
 //! 「tool 结果」消息追加进消息集后继续下一轮，直到模型不再调用工具。
 
 use std::sync::Arc;
-use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use std::time::Instant;
 
 use agent::embedding::Embedder;
 use agent::llm::{
@@ -16,13 +16,14 @@ use agent::llm::{
 };
 use agent::skills::SkillRegistry;
 use common::contracts::{ChatEventToken, ChatEventTool, ChatIpcSendRequest, ChatIpcSendResponse};
+use common::tools::time::now_secs_string;
 use ports::chat::{ChatMemoryStore, ChatStore, SaveChatMessage};
 use ports::knowledge::KnowledgeStore;
 use serde_json::{json, Value};
 use tokio::task::spawn_blocking;
 use uuid::Uuid;
 
-use crate::emit::ChatUiEmitter;
+use crate::emit::ChatUIEmitter;
 use crate::tool::{ChatTool, ChatToolCaller};
 
 /// 推理内容累积到该长度后冲刷一次 token 事件。reasoning 逐字符流式会产生上万条
@@ -117,7 +118,7 @@ impl SendChat {
     #[allow(clippy::too_many_arguments)]
     pub async fn execute(
         client: &LlmClient,
-        emitter: &dyn ChatUiEmitter,
+        emitter: &dyn ChatUIEmitter,
         request: ChatIpcSendRequest,
         tools: Option<Arc<dyn ChatToolCaller>>,
         skills: Option<Arc<SkillRegistry>>,
@@ -433,7 +434,7 @@ impl SendChat {
                 };
                 emitter.emit_message_tool(&ChatEventTool {
                     event_id: Uuid::new_v4().to_string(),
-                    occurred_at: now_string(),
+                    occurred_at: now_secs_string(),
                     session_id: session_id.clone(),
                     message_id: message_id.clone(),
                     seq: tool_seq,
@@ -529,7 +530,7 @@ impl SendChat {
 
 /// 把累积的推理内容作为一条 token 事件冲刷出去，并把 seq 前进一位。
 fn flush_reasoning(
-    emitter: &dyn ChatUiEmitter,
+    emitter: &dyn ChatUIEmitter,
     session_id: &str,
     message_id: &str,
     seq: &mut i64,
@@ -558,7 +559,7 @@ fn token(
 ) -> ChatEventToken {
     ChatEventToken {
         event_id: Uuid::new_v4().to_string(),
-        occurred_at: now_string(),
+        occurred_at: now_secs_string(),
         session_id: session_id.to_string(),
         message_id: message_id.to_string(),
         seq,
@@ -600,13 +601,6 @@ fn parse_history(messages_json: &str) -> Result<Vec<StreamMessage>, String> {
     Ok(messages)
 }
 
-fn now_string() -> String {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|value| value.as_secs().to_string())
-        .unwrap_or_else(|_| "0".to_string())
-}
-
 #[cfg(test)]
 mod tests {
     use std::io::{Read, Write};
@@ -624,7 +618,7 @@ mod tests {
 
     use super::merge_tool_call;
     use super::parse_history;
-    use crate::emit::{ChatUiEmitter, NoopChatUiEmitter};
+    use crate::emit::{ChatUIEmitter, NoopChatUIEmitter};
     use crate::tool::{ChatTool, ChatToolCaller};
     use crate::SendChat;
     use agent::llm::{LlmClient, StreamMessage, ToolCallDelta};
@@ -745,7 +739,7 @@ mod tests {
         tools: Arc<Mutex<Vec<ChatEventTool>>>,
     }
 
-    impl ChatUiEmitter for RecordingEmitter {
+    impl ChatUIEmitter for RecordingEmitter {
         fn emit_message_token(&self, event: &ChatEventToken) {
             self.tokens.lock().unwrap().push(event.clone());
         }
@@ -918,7 +912,7 @@ mod tests {
 
         SendChat::execute(
             &client,
-            &NoopChatUiEmitter,
+            &NoopChatUIEmitter,
             ChatIpcSendRequest {
                 session_id: "sess-2".to_string(),
                 messages_json: None,
@@ -952,7 +946,7 @@ mod tests {
 
         SendChat::execute(
             &client,
-            &NoopChatUiEmitter,
+            &NoopChatUIEmitter,
             ChatIpcSendRequest {
                 session_id: "sess-3".to_string(),
                 messages_json: None,
@@ -992,7 +986,7 @@ mod tests {
 
         SendChat::execute(
             &client,
-            &NoopChatUiEmitter,
+            &NoopChatUIEmitter,
             ChatIpcSendRequest {
                 session_id: "sess-skills".to_string(),
                 messages_json: None,
@@ -1042,7 +1036,7 @@ mod tests {
 
         SendChat::execute(
             &client,
-            &NoopChatUiEmitter,
+            &NoopChatUIEmitter,
             ChatIpcSendRequest {
                 session_id: "sess-noskill".to_string(),
                 messages_json: None,
@@ -1176,7 +1170,7 @@ mod tests {
 
         SendChat::execute(
             &client,
-            &NoopChatUiEmitter,
+            &NoopChatUIEmitter,
             ChatIpcSendRequest {
                 session_id: "sess-kb".to_string(),
                 messages_json: None,

@@ -1,6 +1,7 @@
 //! YouTube 邮箱补全：OpenCV 模板匹配 + enigo 模拟点击（RPA）。
 //!
-//! 仅由 `opendesk-worker` 依赖；Tauri 主进程不得链接本 crate。
+//! 仅由 `opendesk-worker` 通过 `crawler` 的 `enrich` feature 启用；
+//! Tauri 主进程不得启用该 feature（见 ADR-0002）。
 //!
 //! 流程：打开 Chrome 频道主页 → 截屏匹配 `…more` → 点击 → 匹配
 //! `View email address` → 点击 → 若出现 reCAPTCHA 则等待人工完成 → OCR 读邮箱。

@@ -8,7 +8,7 @@
 | OCR | OCR Contract、Worker handler | [ocr](../domains/ocr/README.md) | planned |
 | Customer | `crates/customer/**`, `features/customer/**` | [customer](../domains/customer/README.md) | active |
 | Mail | `crates/mail/**`, `crates/mail-net/**`, `features/mail/**` | [mail](../domains/mail/README.md) | active |
-| Crawler | `crates/crawler/**`, `crates/crawler-enrich/**`, `features/crawler/**` | [crawler](../domains/crawler/README.md) | active |
+| Crawler | `crates/crawler/**`, `features/crawler/**` | [crawler](../domains/crawler/README.md) | active |
 | Workflow Runtime | `crates/workflow_runtime/**` | [workflow-runtime](../domains/workflow-runtime/README.md) | active |
 | Contracts | `contracts/**`, generated Rust/TS | [contracts](../domains/contracts/README.md) | active |
 | Agent / LLM | `crates/agent/**`, Agent commands/features | [agent](../domains/agent/README.md) | active |

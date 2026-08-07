@@ -1,8 +1,8 @@
 //! Diesel-backed `customer` store.
 
 use std::path::Path;
-use std::time::{SystemTime, UNIX_EPOCH};
 
+use common::tools::time::now_millis_string;
 use diesel::prelude::*;
 use ports::customer::{
     CustomerListQuery, CustomerListResult, CustomerRecord, CustomerStore, CustomerWriteInput,
@@ -12,6 +12,7 @@ use uuid::Uuid;
 
 use crate::opendesk_db::schema::customer::dsl as customer;
 use crate::opendesk_db::{CustomerRow, NewCustomerRow, OpendeskDb};
+use crate::string_utils::normalize_email;
 
 /// SQLite implementation of [`CustomerStore`].
 pub struct SqliteCustomerStore {
@@ -94,7 +95,7 @@ impl CustomerStore for SqliteCustomerStore {
     }
 
     fn create(&self, input: CustomerWriteInput) -> Result<CustomerRecord, StoreError> {
-        let now = now_string();
+        let now = now_millis_string();
         let row = NewCustomerRow {
             id: Uuid::new_v4().to_string(),
             display_name: input.display_name,
@@ -135,7 +136,7 @@ impl CustomerStore for SqliteCustomerStore {
     }
 
     fn update(&self, id: &str, input: CustomerWriteInput) -> Result<CustomerRecord, StoreError> {
-        let now = now_string();
+        let now = now_millis_string();
         self.db.with_conn(|conn| {
             let updated = diesel::update(customer::customer.filter(customer::id.eq(id)))
                 .set((
@@ -218,27 +219,8 @@ impl From<CustomerRow> for CustomerRecord {
     }
 }
 
-fn normalize_email(email: &str) -> String {
-    email.trim().to_ascii_lowercase()
-}
-
-fn now_string() -> String {
-    let millis = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|duration| duration.as_millis())
-        .unwrap_or(0);
-    format!("{millis}")
-}
-
 fn map_diesel_error(error: diesel::result::Error) -> StoreError {
-    match error {
-        diesel::result::Error::NotFound => StoreError::NotFound,
-        diesel::result::Error::DatabaseError(
-            diesel::result::DatabaseErrorKind::UniqueViolation,
-            _,
-        ) => StoreError::Conflict("customer.email_duplicate".to_string()),
-        other => StoreError::Unavailable(other.to_string()),
-    }
+    crate::sql_utils::map_diesel_error(error, Some("customer.email_duplicate"))
 }
 
 #[cfg(test)]

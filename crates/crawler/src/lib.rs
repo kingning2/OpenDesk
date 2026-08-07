@@ -1,13 +1,11 @@
-//! 桌面端进程内 YouTube 采集能力。
+//! 桌面端进程内 YouTube 采集与邮箱补全能力。
+//!
+//! - [`crawler::youtube`](youtube) — YouTube Data API 采集（始终编译，主进程使用）。
+//! - [`crawler::enrich`](enrich) — 邮箱补全 RPA（仅 `enrich` feature 编译，worker 使用）。
 
-mod emit;
-mod job;
-mod keyword_generation;
-mod service;
-mod youtube;
+mod email;
 
-pub use emit::{CrawlerUiEmitter, CrawlerUiEvent, NoopCrawlerUiEmitter};
-pub use keyword_generation::{
-    build_keywords_user_prompt, parse_keyword_list, GenerateCrawlerKeywords, KEYWORDS_SYSTEM_PROMPT,
-};
-pub use service::CrawlerService;
+pub mod youtube;
+
+#[cfg(feature = "enrich")]
+pub mod enrich;

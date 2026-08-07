@@ -4,7 +4,6 @@
 //! 创建时间：2026-07-20
 
 use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use agent::embedding::Embedder;
 use ports::background_job::{
@@ -109,12 +108,4 @@ impl JobRunner {
 
         Ok(true)
     }
-}
-
-/// Unix timestamp string used for enrichment timestamps.
-pub(crate) fn now_string() -> String {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|value| value.as_secs().to_string())
-        .unwrap_or_else(|_| "0".to_string())
 }

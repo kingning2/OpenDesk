@@ -707,9 +707,5 @@ fn now_iso8601() -> String {
 }
 
 fn sanitize_imap_error(raw: &str, password: &str) -> String {
-    let mut message = raw.to_string();
-    if !password.is_empty() {
-        message = message.replace(password, "***");
-    }
-    format!("imap.error: {message}")
+    crate::sanitize_secret(raw, password, "imap.error: ")
 }

@@ -1,8 +1,8 @@
-//! Bridge [`chat::ChatUiEmitter`] to Tauri window events.
+//! Bridge [`chat::ChatUIEmitter`] to Tauri window events.
 //!
 //! 作者：coisini
 
-use chat::{ChatUiEmitter, ChatUiEvent};
+use chat::{ChatUIEmitter, ChatUIEvent};
 use common::contracts::{ChatEventToken, ChatEventTool};
 use tauri::{AppHandle, Emitter};
 
@@ -17,8 +17,8 @@ impl TauriChatEmitter {
         Self { app }
     }
 
-    /// Emit a typed payload on a [`ChatUiEvent`] topic.
-    fn emit_payload<T: serde::Serialize>(&self, event: ChatUiEvent, payload: &T) {
+    /// Emit a typed payload on a [`ChatUIEvent`] topic.
+    fn emit_payload<T: serde::Serialize>(&self, event: ChatUIEvent, payload: &T) {
         let topic = event.as_str();
         if let Err(error) = self.app.emit(topic, payload) {
             tracing::warn!(%topic, %error, "failed to emit chat UI event");
@@ -26,12 +26,12 @@ impl TauriChatEmitter {
     }
 }
 
-impl ChatUiEmitter for TauriChatEmitter {
+impl ChatUIEmitter for TauriChatEmitter {
     fn emit_message_token(&self, event: &ChatEventToken) {
-        self.emit_payload(ChatUiEvent::MessageToken, event);
+        self.emit_payload(ChatUIEvent::MessageToken, event);
     }
 
     fn emit_message_tool(&self, event: &ChatEventTool) {
-        self.emit_payload(ChatUiEvent::MessageTool, event);
+        self.emit_payload(ChatUIEvent::MessageTool, event);
     }
 }

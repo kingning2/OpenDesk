@@ -9,6 +9,7 @@ use common::contracts::{
     CrawlerIpcKeywordsImportResponse,
 };
 use common::i18n::{empty_batch, need_batch, Locale};
+use common::tools::strings::split_csv;
 use ports::crawler_keywords::CrawlerKeywordStore;
 
 use crate::app::commands::llm::stored_llm_client;
@@ -144,13 +145,13 @@ pub async fn crawler_keywords_generate(
     request: CrawlerIpcKeywordsGenerateRequest,
 ) -> Result<CrawlerIpcKeywordsGenerateResponse, String> {
     // 1. 规范化输入并执行 crawler 域内的关键词生成用例。
-    let directions = split_csv(&request.directions);
-    let languages = split_csv(&request.languages);
+    let directions = split_csv(Some(request.directions.as_str()));
+    let languages = split_csv(Some(request.languages.as_str()));
     let count_per_language = usize::try_from(request.count_per_language.max(1))
         .unwrap_or(usize::MAX)
         .min(200);
     let client = stored_llm_client(state.inner()).await?;
-    let (keywords, requested) = crawler::GenerateCrawlerKeywords::execute(
+    let (keywords, requested) = crawler::youtube::GenerateCrawlerKeywords::execute(
         &client,
         &directions,
         &languages,
@@ -181,12 +182,4 @@ pub async fn crawler_keywords_generate(
         trace_id: request.trace_id,
         message: Some("ok".to_string()),
     })
-}
-
-fn split_csv(raw: &str) -> Vec<String> {
-    raw.split(',')
-        .map(str::trim)
-        .filter(|item| !item.is_empty())
-        .map(str::to_string)
-        .collect()
 }

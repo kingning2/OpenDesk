@@ -13,7 +13,6 @@ use ports::workflow_runtime::{
     CheckpointStore, NodeProgressCommit, WfRtInstanceRecord, WfRtLogRecord, WfRtNodeRecord,
 };
 use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
 
 /// 将 StoreError 映射为 WorkflowError。
@@ -27,18 +26,14 @@ pub fn map_store_error(error: StoreError) -> WorkflowError {
     WorkflowError::persistence(error.to_string())
 }
 
-/// 当前时间 RFC3339 简化（Unix ms 字符串不够；用 ISO-ish）。
+/// 当前时间 Unix 毫秒串（命名沿历史保留，实为毫秒串）。
 ///
 /// @author coisini
 /// @created 2026-07-23
 ///
 /// @returns 时间字符串
 pub fn now_rfc3339() -> String {
-    let millis = match SystemTime::now().duration_since(UNIX_EPOCH) {
-        Ok(duration) => duration.as_millis(),
-        Err(_) => 0,
-    };
-    format!("{millis}")
+    common::tools::time::now_millis_string()
 }
 
 /// 当前 Unix 毫秒。
@@ -48,10 +43,7 @@ pub fn now_rfc3339() -> String {
 ///
 /// @returns 毫秒
 pub fn now_ms() -> i64 {
-    match SystemTime::now().duration_since(UNIX_EPOCH) {
-        Ok(duration) => duration.as_millis() as i64,
-        Err(_) => 0,
-    }
+    common::tools::time::now_millis_i64()
 }
 
 /// 检查点读写门面。

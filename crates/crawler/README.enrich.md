@@ -1,8 +1,8 @@
-# crawler-enrich
+# crawler · enrich（邮箱补全 RPA）
 
 YouTube 频道邮箱补全：**屏幕模板匹配**（OpenCV 同款 NCC 算法，`imageproc` 纯 Rust）+ **enigo 模拟点击**。
 
-仅由 `opendesk-worker` 链接。
+仅由 `opendesk-worker` 通过 `crawler` 的 `enrich` feature 启用。
 
 ## 流程
 

@@ -12,8 +12,9 @@ use ports::crawler_channels::ChannelRecord;
 use reqwest::blocking::Client;
 use serde_json::Value;
 
-use crate::job::JobHandle;
-use crate::service::RunConfig;
+use crate::email::extract_email;
+use crate::youtube::job::JobHandle;
+use crate::youtube::service::RunConfig;
 
 const API_BASE: &str = "https://www.googleapis.com/youtube/v3";
 
@@ -465,30 +466,6 @@ fn youtube_channel_record(
         enrich_attempts: 0,
         enrich_error: None,
         enriched_at: None,
-    }
-}
-
-fn extract_email(description: &str) -> Option<String> {
-    let normalized = description
-        .replace("[at]", "@")
-        .replace("(at)", "@")
-        .replace("[dot]", ".")
-        .replace("(dot)", ".");
-    let mut token = String::new();
-    for ch in normalized.chars() {
-        if ch.is_whitespace() {
-            if token.contains('@') && token.contains('.') && token.len() >= 5 {
-                return Some(token);
-            }
-            token.clear();
-        } else {
-            token.push(ch);
-        }
-    }
-    if token.contains('@') && token.contains('.') && token.len() >= 5 {
-        Some(token)
-    } else {
-        None
     }
 }
 

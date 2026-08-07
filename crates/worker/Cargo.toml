@@ -10,7 +10,8 @@ path = "src/main.rs"
 
 [dependencies]
 agent = { path = "../agent" }
-crawler-enrich = { path = "../crawler-enrich" }
+common = { path = "../common" }
+crawler = { path = "../crawler", features = ["enrich"] }
 dirs = { workspace = true }
 fs2 = { workspace = true }
 kernel = { path = "../kernel" }

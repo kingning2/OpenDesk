@@ -11,7 +11,7 @@ React crawler → Tauri IPC → crates/crawler
                              └─ crawler.db
 ```
 
-无邮箱频道可通过 `crates/crawler-enrich` 与 `opendesk-worker` 的 `crawler_email_enrich` handler 补全；结果保留并记录状态。
+无邮箱频道可通过 `crawler::enrich`（`crates/crawler` 的 `enrich` feature，由 `opendesk-worker` 启用）与 `crawler_email_enrich` handler 补全；结果保留并记录状态。
 
 ## 当前事实
 

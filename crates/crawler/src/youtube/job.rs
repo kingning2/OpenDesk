@@ -2,18 +2,18 @@
 
 use std::sync::atomic::{AtomicBool, AtomicI64, Ordering};
 use std::sync::{Arc, Mutex};
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use common::contracts::{
     CrawlerEventChannelAccepted, CrawlerEventJobCompleted, CrawlerEventJobFailed,
     CrawlerEventJobLog, CrawlerEventJobProgress, CrawlerEventJobStarted,
     CrawlerIpcJobStatusResponse,
 };
+use common::tools::time::now_secs_string;
 use ports::crawler_channels::ChannelRecord;
 use serde_json::Value;
 use uuid::Uuid;
 
-use crate::CrawlerUiEmitter;
+use crate::youtube::emit::CrawlerUIEmitter;
 use common::i18n as msg;
 use common::i18n::Locale;
 
@@ -49,7 +49,7 @@ pub(super) struct JobHandle {
     pub(super) cancel_requested: AtomicBool,
     seq: AtomicI64,
     locale: Locale,
-    emitter: Arc<dyn CrawlerUiEmitter>,
+    emitter: Arc<dyn CrawlerUIEmitter>,
 }
 
 impl JobHandle {
@@ -57,7 +57,7 @@ impl JobHandle {
         job_id: String,
         platform: String,
         locale: Locale,
-        emitter: Arc<dyn CrawlerUiEmitter>,
+        emitter: Arc<dyn CrawlerUIEmitter>,
     ) -> Self {
         Self {
             snapshot: Mutex::new(JobSnapshot {
@@ -92,7 +92,7 @@ impl JobHandle {
         };
         self.emitter.emit_job_started(&CrawlerEventJobStarted {
             event_id: Uuid::new_v4().to_string(),
-            occurred_at: now_string(),
+            occurred_at: now_secs_string(),
             job_id,
             platform,
             keywords: Some(keywords.join(",")),
@@ -106,7 +106,7 @@ impl JobHandle {
         };
         self.emitter.emit_job_progress(&CrawlerEventJobProgress {
             event_id: Uuid::new_v4().to_string(),
-            occurred_at: now_string(),
+            occurred_at: now_secs_string(),
             job_id: snapshot.job_id.clone(),
             platform: snapshot.platform.clone(),
             status: Some(snapshot.status.clone()),
@@ -207,7 +207,7 @@ impl JobHandle {
         self.emit_progress_snapshot();
         self.emitter.emit_job_completed(&CrawlerEventJobCompleted {
             event_id: Uuid::new_v4().to_string(),
-            occurred_at: now_string(),
+            occurred_at: now_secs_string(),
             job_id,
             platform,
             stop_reason: stop_reason.to_string(),
@@ -237,7 +237,7 @@ impl JobHandle {
         };
         self.emitter.emit_job_completed(&CrawlerEventJobCompleted {
             event_id: Uuid::new_v4().to_string(),
-            occurred_at: now_string(),
+            occurred_at: now_secs_string(),
             job_id,
             platform,
             stop_reason: "cancelled".to_string(),
@@ -273,7 +273,7 @@ impl JobHandle {
         self.emit_progress_snapshot();
         self.emitter.emit_job_failed(&CrawlerEventJobFailed {
             event_id: Uuid::new_v4().to_string(),
-            occurred_at: now_string(),
+            occurred_at: now_secs_string(),
             job_id,
             platform,
             error_code: "crawl_failed".to_string(),
@@ -298,7 +298,7 @@ impl JobHandle {
             .unwrap_or_default();
         let log = CrawlerEventJobLog {
             event_id: Uuid::new_v4().to_string(),
-            occurred_at: now_string(),
+            occurred_at: now_secs_string(),
             job_id,
             platform: platform.to_string(),
             seq,
@@ -375,7 +375,7 @@ impl JobHandle {
         self.emitter
             .emit_channel_accepted(&CrawlerEventChannelAccepted {
                 event_id: Uuid::new_v4().to_string(),
-                occurred_at: now_string(),
+                occurred_at: now_secs_string(),
                 job_id: record.job_id.clone(),
                 platform: record.platform.clone(),
                 keyword: record.keyword.clone(),
@@ -392,13 +392,6 @@ impl JobHandle {
                 enriched_at: record.enriched_at.clone(),
             });
     }
-}
-
-fn now_string() -> String {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|value| value.as_secs().to_string())
-        .unwrap_or_else(|_| "0".to_string())
 }
 
 fn upsert_keyword_progress(

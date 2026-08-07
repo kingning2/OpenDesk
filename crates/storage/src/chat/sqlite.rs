@@ -7,8 +7,8 @@
 
 use std::path::Path;
 use std::sync::{Arc, Mutex};
-use std::time::{SystemTime, UNIX_EPOCH};
 
+use common::tools::time::now_millis_i64;
 use ports::chat::{
     ChatMemoryStore, ChatMessageRecord, ChatSessionRecord, ChatStore, MemoryHit, MemoryRecord,
     SaveChatMessage,
@@ -170,7 +170,7 @@ impl ChatStore for SqliteChatStore {
     }
 
     fn create_session(&self, id: &str, title: &str) -> Result<ChatSessionRecord, StoreError> {
-        let now = now_millis();
+        let now = now_millis_i64();
         self.with_conn(|conn| {
             conn.execute(
                 "INSERT INTO chat_session (id, title, created_at, updated_at, last_message_at) \
@@ -183,7 +183,7 @@ impl ChatStore for SqliteChatStore {
     }
 
     fn rename_session(&self, id: &str, title: &str) -> Result<ChatSessionRecord, StoreError> {
-        let now = now_millis();
+        let now = now_millis_i64();
         self.with_conn(|conn| {
             let updated = conn
                 .execute(
@@ -246,7 +246,7 @@ impl ChatStore for SqliteChatStore {
     }
 
     fn save_message(&self, input: SaveChatMessage) -> Result<ChatMessageRecord, StoreError> {
-        let now = now_millis();
+        let now = now_millis_i64();
         self.with_conn(|conn| {
             let exists: bool = conn
                 .query_row(
@@ -363,7 +363,7 @@ impl ChatMemoryStore for SqliteChatStore {
             )));
         }
         let id = Uuid::new_v4().to_string();
-        let created_at = now_millis();
+        let created_at = now_millis_i64();
         self.with_conn(|conn| {
             let tx = conn
                 .transaction()
@@ -475,11 +475,4 @@ fn non_empty(value: String) -> Option<String> {
     } else {
         Some(value)
     }
-}
-
-fn now_millis() -> i64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|value| value.as_millis() as i64)
-        .unwrap_or(0)
 }

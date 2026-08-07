@@ -34,10 +34,7 @@ impl SqliteCheckpointStore {
 }
 
 fn map_err(error: diesel::result::Error) -> StoreError {
-    match error {
-        diesel::result::Error::NotFound => StoreError::NotFound,
-        other => StoreError::Unavailable(other.to_string()),
-    }
+    crate::sql_utils::map_diesel_error(error, None)
 }
 
 #[derive(Insertable, AsChangeset)]

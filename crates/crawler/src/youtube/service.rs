@@ -12,16 +12,17 @@ use common::contracts::{
     CrawlerIpcJobStatusRequest, CrawlerIpcJobStatusResponse,
 };
 use common::i18n::Locale;
+use common::tools::strings::split_csv;
 use ports::background_job::BackgroundJobStore;
 use ports::crawler_channels::CrawlerChannelStore;
 use reqwest::blocking::Client;
 use uuid::Uuid;
 
-use crate::job::JobHandle;
-use crate::youtube::{
+use crate::youtube::api::{
     calculate_expected_quota, crawl_keyword, reached_max_total, set_stop_reason, CrawlError,
 };
-use crate::{CrawlerUiEmitter, NoopCrawlerUiEmitter};
+use crate::youtube::emit::{CrawlerUIEmitter, NoopCrawlerUIEmitter};
+use crate::youtube::job::JobHandle;
 
 const USER_AGENT: &str = "OpenDeskCrawler/0.1";
 
@@ -30,7 +31,7 @@ const USER_AGENT: &str = "OpenDeskCrawler/0.1";
 pub struct CrawlerService {
     jobs: Arc<Mutex<HashMap<String, Arc<JobHandle>>>>,
     channels: Arc<dyn CrawlerChannelStore>,
-    emitter: Arc<Mutex<Arc<dyn CrawlerUiEmitter>>>,
+    emitter: Arc<Mutex<Arc<dyn CrawlerUIEmitter>>>,
     jobs_queue: Arc<Mutex<Option<Arc<dyn BackgroundJobStore>>>>,
 }
 
@@ -56,14 +57,14 @@ impl CrawlerService {
             jobs: Arc::new(Mutex::new(HashMap::new())),
             channels,
             emitter: Arc::new(Mutex::new(
-                Arc::new(NoopCrawlerUiEmitter) as Arc<dyn CrawlerUiEmitter>
+                Arc::new(NoopCrawlerUIEmitter) as Arc<dyn CrawlerUIEmitter>
             )),
             jobs_queue: Arc::new(Mutex::new(None)),
         }
     }
 
     /// 设置后续采集任务使用的 UI 事件接收器。
-    pub fn attach_emitter(&self, emitter: Arc<dyn CrawlerUiEmitter>) {
+    pub fn attach_emitter(&self, emitter: Arc<dyn CrawlerUIEmitter>) {
         if let Ok(mut slot) = self.emitter.lock() {
             *slot = emitter;
         }
@@ -76,11 +77,11 @@ impl CrawlerService {
         }
     }
 
-    fn current_emitter(&self) -> Arc<dyn CrawlerUiEmitter> {
+    fn current_emitter(&self) -> Arc<dyn CrawlerUIEmitter> {
         self.emitter
             .lock()
             .map(|slot| slot.clone())
-            .unwrap_or_else(|_| Arc::new(NoopCrawlerUiEmitter) as Arc<dyn CrawlerUiEmitter>)
+            .unwrap_or_else(|_| Arc::new(NoopCrawlerUIEmitter) as Arc<dyn CrawlerUIEmitter>)
     }
 
     fn current_job_store(&self) -> Option<Arc<dyn BackgroundJobStore>> {
@@ -361,14 +362,4 @@ impl CrawlerService {
             }
         }
     }
-}
-
-fn split_csv(value: Option<&str>) -> Vec<String> {
-    value
-        .unwrap_or("")
-        .split(',')
-        .map(str::trim)
-        .filter(|item| !item.is_empty())
-        .map(str::to_string)
-        .collect()
 }

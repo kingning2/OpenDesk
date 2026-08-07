@@ -5,8 +5,8 @@
 
 use std::path::Path;
 use std::sync::{Arc, Mutex};
-use std::time::{SystemTime, UNIX_EPOCH};
 
+use common::tools::time::now_millis_i64;
 use ports::knowledge::{KnowledgeChunkHit, KnowledgeDocumentRecord, KnowledgeStore};
 use ports::repository::StoreError;
 use rusqlite::{params, Connection};
@@ -103,7 +103,7 @@ impl KnowledgeStore for SqliteKnowledgeStore {
         name: &str,
         source_type: &str,
     ) -> Result<KnowledgeDocumentRecord, StoreError> {
-        let now = now_millis();
+        let now = now_millis_i64();
         self.with_conn(|conn| {
             conn.execute(
                 "INSERT INTO knowledge_doc (id, name, source_type, status, chunk_count, created_at, updated_at) \
@@ -148,7 +148,7 @@ impl KnowledgeStore for SqliteKnowledgeStore {
                     doc_id,
                     content,
                     seq,
-                    now_millis()
+                    now_millis_i64()
                 ],
             )
             .map_err(|error| StoreError::Unavailable(error.to_string()))?;
@@ -166,7 +166,7 @@ impl KnowledgeStore for SqliteKnowledgeStore {
     }
 
     fn finish_document(&self, id: &str, chunk_count: i64) -> Result<(), StoreError> {
-        let now = now_millis();
+        let now = now_millis_i64();
         self.with_conn(|conn| {
             conn.execute(
                 "UPDATE knowledge_doc SET status = 'ready', chunk_count = ?1, updated_at = ?2 \
@@ -266,13 +266,6 @@ impl KnowledgeStore for SqliteKnowledgeStore {
                 .map_err(|error| StoreError::Unavailable(error.to_string()))
         })
     }
-}
-
-fn now_millis() -> i64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|value| value.as_millis() as i64)
-        .unwrap_or(0)
 }
 
 #[cfg(test)]

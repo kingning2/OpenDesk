@@ -7,6 +7,7 @@ authors = ["coisini"]
 
 [dependencies]
 async-trait = { workspace = true }
+common = { path = "../common" }
 ports = { path = "../ports" }
 serde = { workspace = true }
 serde_json = { workspace = true }

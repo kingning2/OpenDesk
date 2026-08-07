@@ -1,15 +1,21 @@
-//! 外部解析工具管理：Pandoc / Tesseract / PDFium。
+//! 通用工具：外部解析工具管理 + 时间 / 字符串 / 路径工具。
 //!
-//! 三个工具供知识库文档解析使用：
+//! **外部解析工具**（Pandoc / Tesseract / PDFium）：供知识库文档解析使用。
 //! - **Pandoc** — docx / html 转 Markdown（保真度最高）
 //! - **Tesseract** — PDF 扫描页 OCR（支持中文）
 //! - **PDFium** — pdf2md 文本提取 + 扫描页渲染
 //!
 //! 工具可经前端触发下载到 `{data}/OpenDesk/tools/`，也可已安装在系统 PATH。
 //! 未安装时解析逻辑回退到纯 Rust 实现（docx-rs / pdf-extract）。
+//!
+//! **共享工具**：`time`（Unix 时间戳）、`strings`（CSV 切分）、`paths`
+//! （OpenDesk 数据目录）为各 crate 提供单一实现。
 
 pub mod detect;
 pub mod download;
+pub mod paths;
+pub mod strings;
+pub mod time;
 pub mod urls;
 
 pub use detect::detect_tool;

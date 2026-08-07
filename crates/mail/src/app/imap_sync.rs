@@ -8,6 +8,7 @@ use common::contracts::{
     MailIpcLinkInboundCustomerRequest, MailIpcLinkInboundCustomerResponse, MailIpcSyncNowRequest,
     MailIpcSyncNowResponse, MailIpcSyncStatusRequest, MailIpcSyncStatusResponse,
 };
+use common::tools::time::now_secs_string;
 use mail_net::{fetch_messages_since, ImapEndpoint};
 use ports::background_job::BackgroundJobStore;
 use ports::customer::CustomerStore;
@@ -113,7 +114,7 @@ impl RunImapAccountSync {
                         uidvalidity: state.uidvalidity,
                         highest_modseq: state.highest_modseq,
                         last_uid: cursor_uid,
-                        last_sync_at: Some(now_string()),
+                        last_sync_at: Some(now_secs_string()),
                         last_error: None,
                         full_synced: true,
                     })
@@ -354,13 +355,4 @@ impl ScheduleImapSync {
         )?;
         Ok(())
     }
-}
-
-fn now_string() -> String {
-    use std::time::{SystemTime, UNIX_EPOCH};
-
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|value| value.as_secs().to_string())
-        .unwrap_or_else(|_| "0".to_string())
 }

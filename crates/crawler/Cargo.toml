@@ -11,3 +11,25 @@ reqwest = { workspace = true }
 serde_json = { workspace = true }
 tracing = { workspace = true }
 uuid = { workspace = true }
+
+# —— 邮箱补全（RPA）依赖：仅 worker 通过 `enrich` feature 启用，
+#    Tauri 主进程不得链接（见 ADR-0002）。
+enigo = { workspace = true, optional = true }
+image = { version = "0.25", optional = true }
+imageproc = { workspace = true, optional = true }
+rand = { workspace = true, optional = true }
+screenshots = { workspace = true, optional = true }
+thiserror = { workspace = true, optional = true }
+tokio = { workspace = true, features = ["fs", "macros", "rt-multi-thread", "time"], optional = true }
+
+[features]
+default = []
+enrich = [
+  "dep:enigo",
+  "dep:image",
+  "dep:imageproc",
+  "dep:rand",
+  "dep:screenshots",
+  "dep:thiserror",
+  "dep:tokio",
+]

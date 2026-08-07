@@ -34,11 +34,9 @@ fn beijing_now() -> BeijingTime {
     Utc::now().with_timezone(&FixedOffset::east_opt(8 * 3600).expect("UTC+8"))
 }
 
-/// OpenDesk 数据目录。
+/// OpenDesk 数据目录（统一 `common::tools::paths`）。
 pub fn data_dir() -> PathBuf {
-    let mut path = dirs::data_local_dir().unwrap_or_else(std::env::temp_dir);
-    path.push("OpenDesk");
-    path
+    common::tools::paths::opendesk_data_dir()
 }
 
 /// 日志目录 `{data_dir}/logs`。

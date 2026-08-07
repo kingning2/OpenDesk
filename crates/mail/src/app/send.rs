@@ -4,6 +4,7 @@
 //! 创建时间：2026-07-21
 
 use common::contracts::{MailIpcSendRequest, MailIpcSendResponse};
+use common::tools::time::now_millis_string;
 use mail_net::{send_smtp, SmtpEndpoint, SmtpOutboundMessage};
 use ports::customer::CustomerStore;
 use ports::mail::{MailSendInput, MailStore};
@@ -122,7 +123,7 @@ impl SendMail {
             Ok(_) => (
                 "sent".to_string(),
                 None,
-                Some(now_string()),
+                Some(now_millis_string()),
                 Some(format!("<{}@opendesk.local>", uuid::Uuid::new_v4())),
             ),
             Err(error) => ("failed".to_string(), Some(error), None, None),
@@ -154,14 +155,4 @@ impl SendMail {
             status: record.status,
         })
     }
-}
-
-fn now_string() -> String {
-    use std::time::{SystemTime, UNIX_EPOCH};
-
-    let millis = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|duration| duration.as_millis())
-        .unwrap_or(0);
-    format!("{millis}")
 }

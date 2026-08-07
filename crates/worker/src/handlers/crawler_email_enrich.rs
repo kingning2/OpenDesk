@@ -6,15 +6,14 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use crawler_enrich::{ChannelTarget, EnrichConfig, EnrichError};
+use common::tools::time::now_secs_string;
+use crawler::enrich::{ChannelTarget, EnrichConfig, EnrichError};
 use ports::background_job::{
     BackgroundJobRecord, CrawlerEmailEnrichPayload, EMAIL_STATUS_ENRICH_FAILED,
     EMAIL_STATUS_FOUND_PLAYWRIGHT, EMAIL_STATUS_NOT_FOUND,
 };
 use ports::crawler_channels::{CrawlerChannelStore, EmailEnrichResult};
 use thiserror::Error;
-
-use crate::job_runner::now_string;
 
 #[derive(Debug, Error)]
 pub enum HandlerError {
@@ -47,7 +46,7 @@ pub async fn handle(
 
     throttle_between_jobs().await;
 
-    let enrich_result = match crawler_enrich::fetch_email_about_page(&target, &config).await {
+    let enrich_result = match crawler::enrich::fetch_email_about_page(&target, &config).await {
         Ok(Some(email)) => EmailEnrichResult {
             email: Some(email),
             email_status: EMAIL_STATUS_FOUND_PLAYWRIGHT.to_string(),
@@ -69,7 +68,7 @@ pub async fn handle(
         &payload.crawler_job_id,
         &payload.channel_id,
         &enrich_result,
-        &now_string(),
+        &now_secs_string(),
     )?;
 
     Ok(())

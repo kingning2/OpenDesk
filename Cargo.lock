@@ -1195,25 +1195,18 @@ version = "0.1.0"
 dependencies = [
  "agent",
  "common",
- "ports",
- "reqwest 0.12.28",
- "serde_json",
- "tracing",
- "uuid",
-]
-
-[[package]]
-name = "crawler-enrich"
-version = "0.1.0"
-dependencies = [
  "enigo",
  "image 0.25.10",
  "imageproc",
+ "ports",
  "rand 0.8.7",
+ "reqwest 0.12.28",
  "screenshots",
+ "serde_json",
  "thiserror 2.0.18",
  "tokio",
  "tracing",
+ "uuid",
 ]
 
 [[package]]
@@ -3565,7 +3558,7 @@ name = "kernel"
 version = "0.1.0"
 dependencies = [
  "chrono",
- "dirs 5.0.1",
+ "common",
  "flate2",
  "serde_json",
  "thiserror 2.0.18",
@@ -4802,7 +4795,8 @@ name = "opendesk-worker"
 version = "0.1.0"
 dependencies = [
  "agent",
- "crawler-enrich",
+ "common",
+ "crawler",
  "dirs 5.0.1",
  "fs2",
  "kernel",
@@ -6715,12 +6709,14 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 name = "storage"
 version = "0.1.0"
 dependencies = [
+ "common",
  "diesel",
  "diesel_migrations",
  "keyring",
  "libsqlite3-sys",
  "ports",
  "rusqlite",
+ "serde_json",
  "sqlite-vec",
  "tempfile",
  "uuid",
@@ -9169,6 +9165,7 @@ name = "workflow_runtime"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "common",
  "ports",
  "serde",
  "serde_json",

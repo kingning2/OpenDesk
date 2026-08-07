@@ -14,6 +14,9 @@ use ports::mail::{
 use ports::repository::StoreError;
 use uuid::Uuid;
 
+use crate::string_utils::normalize_email;
+use common::tools::time::now_millis_string;
+
 use crate::opendesk_db::schema::customer_timeline::dsl as timeline;
 use crate::opendesk_db::schema::mail_account::dsl as account;
 use crate::opendesk_db::schema::mail_imap_sync_state::dsl as imap_state;
@@ -110,7 +113,7 @@ impl MailStore for SqliteMailStore {
         &self,
         input: MailTemplateWriteInput,
     ) -> Result<MailTemplateRecord, StoreError> {
-        let now = now_string();
+        let now = now_millis_string();
         let id = input
             .id
             .clone()
@@ -200,7 +203,7 @@ impl MailStore for SqliteMailStore {
             .id
             .clone()
             .unwrap_or_else(|| Uuid::new_v4().to_string());
-        let now = now_string();
+        let now = now_millis_string();
         let is_update = input.id.is_some();
         let password = input.password.trim();
 
@@ -330,7 +333,7 @@ impl MailStore for SqliteMailStore {
         &self,
         input: MailSendInput,
     ) -> Result<MailMessageRecord, StoreError> {
-        let now = now_string();
+        let now = now_millis_string();
         let row = NewMailMessageRow {
             id: Uuid::new_v4().to_string(),
             customer_id: input.customer_id.clone(),
@@ -396,7 +399,7 @@ impl MailStore for SqliteMailStore {
         &self,
         input: MailInboundWriteInput,
     ) -> Result<MailMessageRecord, StoreError> {
-        let now = now_string();
+        let now = now_millis_string();
         let row = NewMailMessageRow {
             id: Uuid::new_v4().to_string(),
             customer_id: Some(input.customer_id.clone()),
@@ -628,7 +631,7 @@ impl MailStore for SqliteMailStore {
             }
         }
 
-        let now = now_string();
+        let now = now_millis_string();
         let row = NewMailMessageRow {
             id: Uuid::new_v4().to_string(),
             customer_id: input.customer_id.clone(),
@@ -753,7 +756,7 @@ impl MailStore for SqliteMailStore {
             diesel::update(message::mail_message.filter(message::id.eq(message_id)))
                 .set((
                     message::customer_id.eq(Some(customer_id.to_string())),
-                    message::updated_at.eq(now_string()),
+                    message::updated_at.eq(now_millis_string()),
                 ))
                 .execute(conn)
                 .map_err(map_diesel_error)?;
@@ -780,7 +783,7 @@ impl MailStore for SqliteMailStore {
             diesel::update(message::mail_message.filter(message::id.eq(message_id)))
                 .set((
                     message::is_read.eq(true),
-                    message::updated_at.eq(now_string()),
+                    message::updated_at.eq(now_millis_string()),
                 ))
                 .execute(conn)
                 .map_err(map_diesel_error)?;
@@ -805,7 +808,7 @@ impl MailStore for SqliteMailStore {
                 .set((
                     message::opened_at.eq(opened_at),
                     message::open_count.eq(open_count),
-                    message::updated_at.eq(now_string()),
+                    message::updated_at.eq(now_millis_string()),
                 ))
                 .execute(conn)
                 .map_err(map_diesel_error)?;
@@ -878,7 +881,7 @@ impl MailStore for SqliteMailStore {
                 "mail.integration.api_base_required".to_string(),
             ));
         }
-        let updated_at = now_string();
+        let updated_at = now_millis_string();
         let parse_script = config.parse_script.trim().to_string();
         self.db.with_conn(|conn| {
             diesel::replace_into(integration_setting::mail_integration_setting)
@@ -920,7 +923,7 @@ fn insert_timeline_entry(
             timeline::ref_id.eq(Some(ref_id.to_string())),
             timeline::summary.eq(summary.to_string()),
             timeline::metadata_json.eq::<Option<String>>(None),
-            timeline::created_at.eq(now_string()),
+            timeline::created_at.eq(now_millis_string()),
         ))
         .execute(conn)
         .map(|_| ())
@@ -1029,27 +1032,6 @@ impl From<MailImapSyncStateRow> for MailImapSyncStateRecord {
     }
 }
 
-fn normalize_email(email: &str) -> String {
-    email.trim().to_ascii_lowercase()
-}
-
-fn now_string() -> String {
-    use std::time::{SystemTime, UNIX_EPOCH};
-
-    let millis = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|duration| duration.as_millis())
-        .unwrap_or(0);
-    format!("{millis}")
-}
-
 fn map_diesel_error(error: diesel::result::Error) -> StoreError {
-    match error {
-        diesel::result::Error::NotFound => StoreError::NotFound,
-        diesel::result::Error::DatabaseError(
-            diesel::result::DatabaseErrorKind::UniqueViolation,
-            _,
-        ) => StoreError::Conflict("mail.message_duplicate".to_string()),
-        other => StoreError::Unavailable(other.to_string()),
-    }
+    crate::sql_utils::map_diesel_error(error, Some("mail.message_duplicate"))
 }

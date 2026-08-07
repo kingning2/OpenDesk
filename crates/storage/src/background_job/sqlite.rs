@@ -1,8 +1,8 @@
 //! Diesel-backed `background_job` store.
 
 use std::path::Path;
-use std::time::{SystemTime, UNIX_EPOCH};
 
+use common::tools::time::now_secs_string;
 use diesel::prelude::*;
 use ports::background_job::{BackgroundJobRecord, BackgroundJobStore, JOB_STATUS_QUEUED};
 use ports::repository::StoreError;
@@ -43,7 +43,7 @@ impl BackgroundJobStore for SqliteBackgroundJobStore {
             progress: 0.0,
             error_message: None,
             worker_pid: None,
-            created_at: now_string(),
+            created_at: now_secs_string(),
             started_at: None,
             completed_at: None,
         };
@@ -62,7 +62,7 @@ impl BackgroundJobStore for SqliteBackgroundJobStore {
         job_type: Option<&str>,
     ) -> Result<Option<BackgroundJobRecord>, StoreError> {
         let worker_pid = std::process::id() as i32;
-        let started_at = now_string();
+        let started_at = now_secs_string();
 
         self.db.with_conn(|conn| {
             let mut query = background_job::table
@@ -117,7 +117,7 @@ impl BackgroundJobStore for SqliteBackgroundJobStore {
                 .set((
                     background_job::status.eq(ports::background_job::JOB_STATUS_COMPLETED),
                     background_job::progress.eq(1.0_f32),
-                    background_job::completed_at.eq(Some(now_string())),
+                    background_job::completed_at.eq(Some(now_secs_string())),
                 ))
                 .execute(conn)
                 .map_err(|error| StoreError::Unavailable(error.to_string()))?;
@@ -131,7 +131,7 @@ impl BackgroundJobStore for SqliteBackgroundJobStore {
                 .set((
                     background_job::status.eq(ports::background_job::JOB_STATUS_FAILED),
                     background_job::error_message.eq(Some(error_message.to_string())),
-                    background_job::completed_at.eq(Some(now_string())),
+                    background_job::completed_at.eq(Some(now_secs_string())),
                 ))
                 .execute(conn)
                 .map_err(|error| StoreError::Unavailable(error.to_string()))?;
@@ -156,13 +156,6 @@ impl BackgroundJobStore for SqliteBackgroundJobStore {
             Ok(count > 0)
         })
     }
-}
-
-fn now_string() -> String {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|value| value.as_secs().to_string())
-        .unwrap_or_else(|_| "0".to_string())
 }
 
 impl From<BackgroundJobRow> for BackgroundJobRecord {
