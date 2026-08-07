@@ -4,20 +4,20 @@
 
 import { invokeIpc } from "./invoke";
 
-export interface CrawlerYoutubeApiKeyResponse {
+export interface CrawlerYoutubeAPIKeyResponse {
   api_key: string;
 }
 
 /** Read persisted YouTube Data API key. */
-export async function crawlerYoutubeApiKeyGet(): Promise<CrawlerYoutubeApiKeyResponse> {
-  return invokeIpc<CrawlerYoutubeApiKeyResponse>("crawler_youtube_api_key_get");
+export async function crawlerYoutubeAPIKeyGet(): Promise<CrawlerYoutubeAPIKeyResponse> {
+  return invokeIpc<CrawlerYoutubeAPIKeyResponse>("crawler_youtube_api_key_get");
 }
 
 /** Persist YouTube Data API key. */
-export async function crawlerYoutubeApiKeySet(
+export async function crawlerYoutubeAPIKeySet(
   apiKey: string,
-): Promise<CrawlerYoutubeApiKeyResponse> {
-  return invokeIpc<CrawlerYoutubeApiKeyResponse>("crawler_youtube_api_key_set", {
+): Promise<CrawlerYoutubeAPIKeyResponse> {
+  return invokeIpc<CrawlerYoutubeAPIKeyResponse>("crawler_youtube_api_key_set", {
     request: { api_key: apiKey },
   });
 }

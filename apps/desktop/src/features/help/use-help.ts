@@ -13,6 +13,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { ChatEventToken, ChatEventTool } from "@desk/contracts";
 import { listenChatEvents } from "@desk/platform/ipc/chat-events";
 import { helpAsk } from "@desk/platform/ipc/help";
+import { uuid } from "@desk/utils";
 
 import { deriveAction, type ToolStep } from "../chat/chat-tool-utils";
 
@@ -150,7 +151,7 @@ export function useHelp() {
       if (!trimmed || sending) {
         return;
       }
-      const messageId = crypto.randomUUID();
+      const messageId = uuid();
       const entry: HelpReply = {
         question: trimmed,
         content: "",

@@ -27,6 +27,8 @@
       "@desk/i18n/*": ["packages/i18n/src/*"],
       "@desk/contracts": ["packages/contracts/src"],
       "@desk/contracts/*": ["packages/contracts/src/*"],
+      "@desk/utils": ["packages/utils/src"],
+      "@desk/utils/*": ["packages/utils/src/*"],
       "@feature/*": ["apps/desktop/src/features/*"]
     }
   },

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { agentPing } from "@desk/platform/ipc/agent";
+import { uuid } from "@desk/utils";
 
 export function useAgentPing() {
   const [status, setStatus] = useState("Ready.");
@@ -8,7 +9,7 @@ export function useAgentPing() {
   async function ping() {
     setLoading(true);
     try {
-      const result = await agentPing({ trace_id: crypto.randomUUID() });
+      const result = await agentPing({ trace_id: uuid() });
       setStatus(result.ok ? `LLM ok (${result.trace_id ?? "no trace"})` : "LLM connection failed");
     } catch (error) {
       const message = error instanceof Error ? error.message : "LLM unavailable";

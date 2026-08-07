@@ -19,7 +19,7 @@ import {
   SelectValue,
   cn,
 } from "@desk/ui";
-import { useT } from "../../i18n";
+import { useT } from "../../../i18n";
 import { createCrawlerResultsColumns } from "./crawler-results-columns";
 import {
   EMAIL_STATUS_OPTIONS,

@@ -8,6 +8,7 @@
 import { useEffect, useState } from "react";
 import { cn } from "@desk/ui";
 import { Lock } from "@desk/ui/icons";
+import { unixSeconds } from "@desk/utils";
 import {
   formatLicenseRemaining,
   formatLicenseRemainingShort,
@@ -31,11 +32,11 @@ const TICK_MS = 60_000;
 export function LicensePlanBadge() {
   const { status, loading, gateBlocks } = useLicenseGateContext();
   const [open, setOpen] = useState(false);
-  const [nowSec, setNowSec] = useState(() => Math.floor(Date.now() / 1000));
+  const [nowSec, setNowSec] = useState(() => unixSeconds());
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      setNowSec(Math.floor(Date.now() / 1000));
+      setNowSec(unixSeconds());
     }, TICK_MS);
     return () => window.clearInterval(timer);
   }, []);

@@ -11,7 +11,7 @@ import { Home } from "@desk/ui/icons";
 import { agentFeature } from "@feature/agent";
 import { chatFeature } from "@feature/chat";
 import { crawlerFeature } from "@feature/crawler";
-import { crawlerResultsFeature } from "@feature/crawler-results";
+import { crawlerResultsFeature } from "@feature/crawler/results";
 import { customerFeature } from "@feature/customer";
 import { helpFeature } from "@feature/help";
 import { knowledgeFeature } from "@feature/knowledge";

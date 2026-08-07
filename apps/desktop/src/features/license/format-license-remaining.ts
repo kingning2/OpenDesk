@@ -5,6 +5,8 @@
  * @created 2026-07-16
  */
 
+import { unixSeconds } from "@desk/utils";
+
 /**
  * 剩余时长展示结果。
  *
@@ -32,7 +34,7 @@ export interface LicenseRemainingLabel {
  */
 export function formatLicenseRemaining(
   expiresAt: number,
-  nowSec = Math.floor(Date.now() / 1000),
+  nowSec = unixSeconds(),
 ): LicenseRemainingLabel | null {
   if (!Number.isFinite(expiresAt) || expiresAt <= 0) {
     return null;
@@ -88,7 +90,7 @@ export function formatLicenseRemaining(
  */
 export function formatLicenseRemainingShort(
   expiresAt: number,
-  nowSec = Math.floor(Date.now() / 1000),
+  nowSec = unixSeconds(),
 ): string {
   const remaining = formatLicenseRemaining(expiresAt, nowSec);
   if (!remaining) return "—";
@@ -117,7 +119,7 @@ export function formatLicenseRemainingShort(
  */
 export function formatLicenseRemainingDetailed(
   expiresAt: number,
-  nowSec = Math.floor(Date.now() / 1000),
+  nowSec = unixSeconds(),
 ): string {
   const remaining = formatLicenseRemaining(expiresAt, nowSec);
   if (!remaining) return "未知";

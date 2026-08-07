@@ -20,6 +20,7 @@ import {
   formatLicenseRemainingDetailed,
   type LicenseRemainingLabel,
 } from "./format-license-remaining";
+import { copyToClipboard } from "@desk/utils";
 
 /**
  * 套餐详情弹窗属性。
@@ -94,7 +95,7 @@ export function LicensePlanDialog({
   async function copyMachineCode() {
     if (!status.machineCode?.trim()) return;
     try {
-      await navigator.clipboard.writeText(status.machineCode.trim());
+      await copyToClipboard(status.machineCode.trim());
     } catch {
       // 复制失败时静默；用户仍可手动选择
     }

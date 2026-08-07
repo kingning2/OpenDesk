@@ -15,6 +15,7 @@ import {
   licenseMachineCode,
   type LicenseStatus,
 } from "@desk/platform/ipc/license";
+import { copyToClipboard } from "@desk/utils";
 
 /**
  * 激活操作结果。
@@ -88,7 +89,7 @@ export class LicenseActivationService {
       return "设备码尚未加载";
     }
     try {
-      await navigator.clipboard.writeText(this.machineCodeValue);
+      await copyToClipboard(this.machineCodeValue);
       return "设备码已复制";
     } catch (error: unknown) {
       console.error("复制设备码失败", {

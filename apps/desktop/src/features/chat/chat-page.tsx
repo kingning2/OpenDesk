@@ -45,6 +45,7 @@ import {
   Trash2,
 } from "@desk/ui/icons";
 import type { ChatSession } from "@desk/platform/ipc/chat";
+import { formatSessionTime } from "@desk/utils";
 
 import { useT } from "../../i18n";
 import { MarkdownContent } from "./markdown";
@@ -275,29 +276,6 @@ function SessionRow({
       </div>
     </div>
   );
-}
-
-/** 会话列表行时间：今天显示时分，往年显示完整日期。 */
-function formatSessionTime(timestamp: number): string {
-  const date = new Date(timestamp);
-  const now = new Date();
-  if (date.toDateString() === now.toDateString()) {
-    return new Intl.DateTimeFormat(undefined, {
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(date);
-  }
-  if (date.getFullYear() === now.getFullYear()) {
-    return new Intl.DateTimeFormat(undefined, {
-      month: "2-digit",
-      day: "2-digit",
-    }).format(date);
-  }
-  return new Intl.DateTimeFormat(undefined, {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
 }
 
 /**

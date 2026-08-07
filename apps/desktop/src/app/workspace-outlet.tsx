@@ -23,7 +23,7 @@ const PAGE_LOADERS: Record<string, PageLoader> = {
     return CrawlerPage;
   },
   "/features/crawler-results": async () => {
-    const { CrawlerResultsPage } = await import("@feature/crawler-results/crawler-results-page");
+    const { CrawlerResultsPage } = await import("@feature/crawler/results/crawler-results-page");
     return CrawlerResultsPage;
   },
   "/features/customer": async () => {

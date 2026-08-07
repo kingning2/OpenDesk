@@ -15,7 +15,7 @@ import {
   type KeywordBatchRow,
 } from "@desk/platform/ipc/crawler";
 import { listenCrawlerEvents } from "@desk/platform/ipc/crawler-events";
-import { crawlerYoutubeApiKeyGet } from "@desk/platform/ipc/crawler-settings";
+import { crawlerYoutubeAPIKeyGet } from "@desk/platform/ipc/crawler-settings";
 import type {
   CrawlerEventChannelAccepted,
   CrawlerEventJobCompleted,
@@ -23,6 +23,7 @@ import type {
   CrawlerEventJobLog,
   CrawlerEventJobProgress,
 } from "@desk/contracts";
+import { uuid } from "@desk/utils";
 
 import { useI18n, useT } from "../../i18n";
 
@@ -260,7 +261,7 @@ export function useCrawlerJob() {
   const refreshApiKey = useCallback(async () => {
     setApiKeyLoading(true);
     try {
-      const response = await crawlerYoutubeApiKeyGet();
+      const response = await crawlerYoutubeAPIKeyGet();
       setApiKey(response.api_key ?? "");
     } catch (err) {
       setError(toDisplayError(err));
@@ -316,7 +317,7 @@ export function useCrawlerJob() {
         directions: directions.trim(),
         languages: languages.trim(),
         count_per_language: countPerLanguage,
-        trace_id: crypto.randomUUID(),
+        trace_id: uuid(),
       });
       if (!result.ok || !result.batch_id) {
         setGeneratePhase("error");
@@ -389,7 +390,7 @@ export function useCrawlerJob() {
           api_key: apiKey,
           rate_limit_ms: 400,
           locale,
-          trace_id: crypto.randomUUID(),
+          trace_id: uuid(),
         });
         if (!result.ok || !result.job_id) {
           setBusy(false);
@@ -616,7 +617,7 @@ export function useCrawlerJob() {
       const csvContent = await file.text();
       const result = await crawlerKeywordsImport({
         csv_content: csvContent,
-        trace_id: crypto.randomUUID(),
+        trace_id: uuid(),
       });
       if (!result.ok) {
         setError(t("crawler.importFailed"));

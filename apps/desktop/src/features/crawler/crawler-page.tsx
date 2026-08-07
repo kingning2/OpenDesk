@@ -39,6 +39,7 @@ import {
 } from "@desk/ui";
 import { useSettingsDialog } from "@feature/setting";
 import type { KeywordBatchRow } from "@desk/platform/ipc/crawler";
+import { formatLogTime, uuid } from "@desk/utils";
 import { useI18n, useT } from "../../i18n";
 import {
   useCrawlerJob,
@@ -65,22 +66,6 @@ type Translate = (key: string, params?: Record<string, string | number>) => stri
 interface CrawlerNodeData extends WorkflowStepNodeData {
   /** 采集步骤类型（配置 / 日志按此分流）。 */
   kind: FlowStage;
-}
-
-/**
- * 将 i18n locale 映射为 `toLocaleTimeString` 可用的 BCP 47 标签。
- *
- * @author coisini
- * @created 2026-07-23
- *
- * @param locale - 应用内 locale（如 `zh-CN`）
- * @returns `zh-CN` 或 `en-US`
- */
-function localeTag(locale: string): string {
-  if (locale === "zh-CN") {
-    return "zh-CN";
-  }
-  return "en-US";
 }
 
 /**
@@ -401,28 +386,6 @@ function batchLabel(row: KeywordBatchRow, index: number, t: Translate): string {
   return t("crawler.batchLabel", {
     index: index + 1,
     count: row.keyword_count.toLocaleString(),
-  });
-}
-
-/**
- * 格式化日志时间。
- *
- * @author coisini
- * @created 2026-07-23
- *
- * @param iso - ISO 时间串
- * @param locale - 应用 locale
- * @returns 本地时分秒；无效则空串
- */
-function formatLogTime(iso: string, locale: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-  return date.toLocaleTimeString(localeTag(locale), {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
   });
 }
 
@@ -1732,7 +1695,7 @@ export function CrawlerPage() {
    */
   const handleAddNode = useCallback((item: WorkflowPaletteItem, position: XYPosition) => {
     const kind = (item.defaultData.kind ?? item.id) as FlowStage;
-    const id = `${kind}-${crypto.randomUUID().slice(0, 8)}`;
+    const id = `${kind}-${uuid().slice(0, 8)}`;
     setNodes((current) => [
       ...current,
       {

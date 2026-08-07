@@ -95,6 +95,7 @@ export default defineConfig(async () => ({
       "@desk/store": path.resolve(__dirname, "../../packages/store/src"),
       "@desk/i18n": path.resolve(__dirname, "../../packages/i18n/src"),
       "@desk/contracts": path.resolve(__dirname, "../../packages/contracts/src"),
+      "@desk/utils": path.resolve(__dirname, "../../packages/utils/src"),
       "@feature": path.resolve(__dirname, "./src/features"),
     },
   },

@@ -21,6 +21,7 @@ import {
 } from "@desk/platform/ipc/chat";
 import { listenChatEvents } from "@desk/platform/ipc/chat-events";
 import type { ChatEventToken, ChatEventTool } from "@desk/contracts";
+import { uuid } from "@desk/utils";
 
 import { deriveAction, type ToolStep } from "./chat-tool-utils";
 
@@ -420,13 +421,13 @@ export function useChat() {
       setError("");
 
       const userMessage: ChatMessageView = {
-        id: crypto.randomUUID(),
+        id: uuid(),
         role: "user",
         content: trimmed,
       };
       // 立即追加 assistant 占位消息，首个 token 前的空窗也有「思考中」反馈；
       // id 随请求传给后端，使 token 事件落到这条占位上。
-      const assistantId = crypto.randomUUID();
+      const assistantId = uuid();
       const assistantPlaceholder: ChatMessageView = {
         id: assistantId,
         role: "assistant",

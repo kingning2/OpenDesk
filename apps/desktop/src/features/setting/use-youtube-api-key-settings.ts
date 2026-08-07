@@ -7,8 +7,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
-  crawlerYoutubeApiKeyGet,
-  crawlerYoutubeApiKeySet,
+  crawlerYoutubeAPIKeyGet,
+  crawlerYoutubeAPIKeySet,
 } from "@desk/platform/ipc/crawler-settings";
 
 /**
@@ -31,7 +31,7 @@ export function useYoutubeApiKeySettings() {
     setError("");
     setLoading(true);
     try {
-      const response = await crawlerYoutubeApiKeyGet();
+      const response = await crawlerYoutubeAPIKeyGet();
       const next = response.api_key ?? "";
       setApiKey(next);
       setBaseline(next);
@@ -56,7 +56,7 @@ export function useYoutubeApiKeySettings() {
     setSavedMessage("");
     setSaving(true);
     try {
-      const response = await crawlerYoutubeApiKeySet(apiKey);
+      const response = await crawlerYoutubeAPIKeySet(apiKey);
       const next = response.api_key ?? "";
       setApiKey(next);
       setBaseline(next);
