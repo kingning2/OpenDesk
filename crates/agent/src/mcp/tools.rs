@@ -21,14 +21,6 @@ const DEFAULT_LIMIT: usize = 100;
 /// 查询行数硬上限。
 const MAX_LIMIT: usize = 500;
 
-/// AI 可访问的表白名单（硬编码，默认只开放 `customer`）。
-///
-/// 需要放开更多表时，直接把表名追加到这个数组末尾即可；对 `opendesk` 与
-/// `crawler` 两个库同时生效，Claude Code 与内置 chat 共用同一套白名单。
-/// `list_tables` 只返回白名单内的表；`table_schema` 与 `run_query` 访问
-/// 白名单外的表会被拒绝。
-const ALLOWED_TABLES: &[&str] = &["customer"];
-
 /// MCP 工具参数中的数据库标识。
 #[derive(Debug, Clone, Deserialize, JsonSchema)]
 #[serde(rename_all = "lowercase")]
@@ -79,17 +71,21 @@ pub struct RunQueryInput {
     pub limit: Option<usize>,
 }
 
-/// MCP server：持有数据目录，工具方法按需打开只读连接。
+/// MCP server：持有数据目录与 AI 可访问表白名单，工具方法按需打开只读连接。
 pub struct OpendeskMcp {
     data_dir: PathBuf,
+    /// AI 可访问的表白名单；`list_tables` 只返回白名单内表，`table_schema` 与
+    /// `run_query` 访问白名单外表会被拒绝。
+    allowed_tables: Vec<String>,
     tool_router: ToolRouter<Self>,
 }
 
 impl OpendeskMcp {
-    /// 以指定数据目录创建 server。
-    pub fn new(data_dir: PathBuf) -> Self {
+    /// 以指定数据目录与表白名单创建 server。
+    pub fn new(data_dir: PathBuf, allowed_tables: Vec<String>) -> Self {
         Self {
             data_dir,
+            allowed_tables,
             tool_router: Self::tool_router(),
         }
     }
@@ -153,7 +149,7 @@ impl OpendeskMcp {
             .map_err(|error| format!("查询表列表失败: {error}"))?;
         let visible: Vec<String> = tables
             .into_iter()
-            .filter(|table| ALLOWED_TABLES.contains(&table.as_str()))
+            .filter(|table| self.allowed_tables.iter().any(|allowed| allowed == table))
             .collect();
         Ok(json!({
             "db": input.db.name(),
@@ -170,7 +166,11 @@ impl OpendeskMcp {
         &self,
         Parameters(input): Parameters<TableSchemaInput>,
     ) -> Result<String, String> {
-        if !ALLOWED_TABLES.contains(&input.table.as_str()) {
+        if !self
+            .allowed_tables
+            .iter()
+            .any(|allowed| allowed == &input.table)
+        {
             return Err(format!("不允许查看表 {}（白名单外）", input.table));
         }
         let conn = open_readonly(input.db.as_db(), &self.data_dir)?;
@@ -194,8 +194,9 @@ impl OpendeskMcp {
     ) -> Result<String, String> {
         let limit = input.limit.unwrap_or(DEFAULT_LIMIT).clamp(1, MAX_LIMIT);
         let conn = open_readonly(input.db.as_db(), &self.data_dir)?;
+        let allowed: Vec<&str> = self.allowed_tables.iter().map(String::as_str).collect();
         let (columns, mut rows) = conn
-            .query_rows_if_allowed(&input.sql, limit, ALLOWED_TABLES)
+            .query_rows_if_allowed(&input.sql, limit, &allowed)
             .map_err(|error| format!("查询失败（{}）: {error}", input.sql))?;
 
         for row in &mut rows {
@@ -277,7 +278,7 @@ mod tests {
     async fn run_query_reads_real_db_and_redacts() {
         let dir = tempfile::tempdir().expect("tempdir");
         seed_db(dir.path());
-        let server = OpendeskMcp::new(dir.path().to_path_buf());
+        let server = OpendeskMcp::new(dir.path().to_path_buf(), vec!["customer".to_string()]);
         let out = server
             .run_query(Parameters(RunQueryInput {
                 db: DbName::Opendesk,
@@ -297,7 +298,7 @@ mod tests {
     async fn run_query_honors_limit() {
         let dir = tempfile::tempdir().expect("tempdir");
         seed_db(dir.path());
-        let server = OpendeskMcp::new(dir.path().to_path_buf());
+        let server = OpendeskMcp::new(dir.path().to_path_buf(), vec!["customer".to_string()]);
         let out = server
             .run_query(Parameters(RunQueryInput {
                 db: DbName::Opendesk,
@@ -315,7 +316,7 @@ mod tests {
     async fn run_query_rejects_write_sql() {
         let dir = tempfile::tempdir().expect("tempdir");
         seed_db(dir.path());
-        let server = OpendeskMcp::new(dir.path().to_path_buf());
+        let server = OpendeskMcp::new(dir.path().to_path_buf(), vec!["customer".to_string()]);
         let err = server
             .run_query(Parameters(RunQueryInput {
                 db: DbName::Opendesk,
@@ -334,7 +335,7 @@ mod tests {
     async fn list_tables_and_schema_tools() {
         let dir = tempfile::tempdir().expect("tempdir");
         seed_db(dir.path());
-        let server = OpendeskMcp::new(dir.path().to_path_buf());
+        let server = OpendeskMcp::new(dir.path().to_path_buf(), vec!["customer".to_string()]);
         let tables = server
             .list_tables(Parameters(ListTablesInput {
                 db: DbName::Opendesk,
@@ -356,7 +357,7 @@ mod tests {
     #[tokio::test]
     async fn missing_database_reports_friendly_error() {
         let dir = tempfile::tempdir().expect("tempdir");
-        let server = OpendeskMcp::new(dir.path().to_path_buf());
+        let server = OpendeskMcp::new(dir.path().to_path_buf(), vec!["customer".to_string()]);
         let err = server
             .list_tables(Parameters(ListTablesInput {
                 db: DbName::Opendesk,
@@ -381,7 +382,7 @@ mod tests {
     async fn list_tables_filters_to_allowlist() {
         let dir = tempfile::tempdir().expect("tempdir");
         seed_db_with_hidden(dir.path());
-        let server = OpendeskMcp::new(dir.path().to_path_buf());
+        let server = OpendeskMcp::new(dir.path().to_path_buf(), vec!["customer".to_string()]);
         let out = server
             .list_tables(Parameters(ListTablesInput {
                 db: DbName::Opendesk,
@@ -396,7 +397,7 @@ mod tests {
     async fn table_schema_rejects_hidden_table() {
         let dir = tempfile::tempdir().expect("tempdir");
         seed_db_with_hidden(dir.path());
-        let server = OpendeskMcp::new(dir.path().to_path_buf());
+        let server = OpendeskMcp::new(dir.path().to_path_buf(), vec!["customer".to_string()]);
         let err = server
             .table_schema(Parameters(TableSchemaInput {
                 db: DbName::Opendesk,
@@ -411,7 +412,7 @@ mod tests {
     async fn run_query_rejects_hidden_table() {
         let dir = tempfile::tempdir().expect("tempdir");
         seed_db_with_hidden(dir.path());
-        let server = OpendeskMcp::new(dir.path().to_path_buf());
+        let server = OpendeskMcp::new(dir.path().to_path_buf(), vec!["customer".to_string()]);
         let err = server
             .run_query(Parameters(RunQueryInput {
                 db: DbName::Opendesk,
@@ -427,7 +428,7 @@ mod tests {
     async fn run_query_rejects_subquery_referencing_hidden_table() {
         let dir = tempfile::tempdir().expect("tempdir");
         seed_db_with_hidden(dir.path());
-        let server = OpendeskMcp::new(dir.path().to_path_buf());
+        let server = OpendeskMcp::new(dir.path().to_path_buf(), vec!["customer".to_string()]);
         let err = server
             .run_query(Parameters(RunQueryInput {
                 db: DbName::Opendesk,
@@ -443,7 +444,7 @@ mod tests {
     async fn run_query_allows_whitelisted_table() {
         let dir = tempfile::tempdir().expect("tempdir");
         seed_db_with_hidden(dir.path());
-        let server = OpendeskMcp::new(dir.path().to_path_buf());
+        let server = OpendeskMcp::new(dir.path().to_path_buf(), vec!["customer".to_string()]);
         let out = server
             .run_query(Parameters(RunQueryInput {
                 db: DbName::Opendesk,

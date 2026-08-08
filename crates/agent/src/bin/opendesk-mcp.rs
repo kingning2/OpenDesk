@@ -18,6 +18,10 @@ opendesk-mcp — OpenDesk 只读数据库 MCP Server
   --data-dir <path>  指定 OpenDesk 数据目录（默认 %LOCALAPPDATA%\\OpenDesk，
                      或环境变量 OPENDESK_DATA_DIR 覆盖）
   -h, --help         显示帮助
+
+表白名单:
+  通过环境变量 OPENDESK_MCP_ALLOWED_TABLES（逗号分隔）指定 AI 可访问的表；
+  未设置时默认只开放 customer。
 ";
 
 #[tokio::main]
@@ -27,7 +31,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let dir = data_dir(data_dir_override.as_deref());
     eprintln!("[opendesk-mcp] 数据目录: {}", dir.display());
 
-    let server = OpendeskMcp::new(dir);
+    let allowed_tables = std::env::var("OPENDESK_MCP_ALLOWED_TABLES")
+        .ok()
+        .map(|value| {
+            value
+                .split(',')
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(str::to_string)
+                .collect::<Vec<_>>()
+        })
+        .filter(|tables| !tables.is_empty())
+        .unwrap_or_else(|| vec!["customer".to_string()]);
+
+    let server = OpendeskMcp::new(dir, allowed_tables);
     let service = serve_server(server, rmcp::transport::stdio()).await?;
     // 保持服务运行，直到客户端关闭 stdin（QuitReason::Closed）。
     service.waiting().await?;
