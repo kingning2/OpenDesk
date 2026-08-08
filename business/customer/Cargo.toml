@@ -1,0 +1,10 @@
+[package]
+name = "customer"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+common = { path = "../../crates/common" }
+ports = { path = "../../crates/ports" }
+serde = { workspace = true }
+serde_json = { workspace = true }

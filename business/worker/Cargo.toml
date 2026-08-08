@@ -1,0 +1,27 @@
+[package]
+name = "opendesk-worker"
+version.workspace = true
+edition.workspace = true
+description = "Background job worker for OCR and crawler enrichment"
+
+[[bin]]
+name = "opendesk-worker"
+path = "src/main.rs"
+
+[dependencies]
+agent = { path = "../../crates/agent" }
+common = { path = "../../crates/common" }
+crawler = { path = "../../business/crawler", features = ["enrich"] }
+dirs = { workspace = true }
+fs2 = { workspace = true }
+kernel = { path = "../../crates/kernel" }
+knowledge = { path = "../../business/knowledge" }
+mail = { path = "../../business/mail" }
+mail-net = { path = "../../crates/mail-net" }
+ports = { path = "../../crates/ports" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+storage = { path = "../../crates/storage" }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "signal", "time"] }
+tracing = { workspace = true }
+thiserror = "2"

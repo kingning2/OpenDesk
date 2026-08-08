@@ -1,0 +1,7 @@
+[package]
+name = "opendesk-skills"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+agent = { path = "../../crates/agent" }

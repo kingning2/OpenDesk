@@ -1,0 +1,38 @@
+[package]
+name = "app"
+version.workspace = true
+edition.workspace = true
+
+[features]
+default = []
+license-lock = ["app-core/license-lock"]
+
+[dependencies]
+async-trait = { workspace = true }
+tauri = { workspace = true }
+tauri-plugin-dialog = "2"
+tauri-plugin-opener = { workspace = true }
+common = { path = "../../../../../crates/common" }
+adapter = { path = "../../../../../crates/adapter" }
+crawler = { path = "../../../../../business/crawler" }
+chat = { path = "../../../../../business/chat" }
+customer = { path = "../../../../../business/customer" }
+app-core = { path = "../../../../../business/app-core" }
+knowledge = { path = "../../../../../business/knowledge" }
+kernel = { path = "../../../../../crates/kernel" }
+mail = { path = "../../../../../business/mail" }
+ports = { path = "../../../../../crates/ports" }
+storage = { path = "../../../../../crates/storage" }
+agent = { path = "../../../../../crates/agent" }
+opendesk-skills = { path = "../../../../../business/opendesk-skills" }
+base64 = { workspace = true }
+rmcp = { version = "0", features = ["client", "server", "transport-io", "schemars"] }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+reqwest = { workspace = true }
+tokio = { workspace = true, features = ["time"] }
+workflow_runtime = { path = "../../../../../business/workflow_runtime" }
+dirs = { workspace = true }
+uuid = { workspace = true }

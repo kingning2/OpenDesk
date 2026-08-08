@@ -223,6 +223,7 @@ dependencies = [
  "kernel",
  "knowledge",
  "mail",
+ "opendesk-skills",
  "ports",
  "reqwest 0.12.28",
  "rmcp",
@@ -248,6 +249,7 @@ dependencies = [
  "common",
  "crawler",
  "dirs 5.0.1",
+ "opendesk-skills",
  "ports",
  "storage",
  "tokio",
@@ -939,6 +941,7 @@ dependencies = [
  "agent",
  "async-trait",
  "common",
+ "opendesk-skills",
  "ports",
  "serde",
  "serde_json",
@@ -4910,6 +4913,13 @@ dependencies = [
  "tracing-subscriber",
  "uuid",
  "workflow_runtime",
+]
+
+[[package]]
+name = "opendesk-skills"
+version = "0.1.0"
+dependencies = [
+ "agent",
 ]
 
 [[package]]

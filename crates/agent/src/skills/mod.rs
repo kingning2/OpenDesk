@@ -2,8 +2,6 @@
 //!
 //! 不放业务实现；具体 Skill 由 Feature 或后续模块注册。
 
-pub mod system;
-
 use std::collections::HashMap;
 use std::sync::Arc;
 

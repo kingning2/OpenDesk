@@ -1,0 +1,21 @@
+[package]
+name = "app-core"
+version.workspace = true
+edition.workspace = true
+
+[features]
+default = []
+license-lock = []
+
+[dependencies]
+common = { path = "../../crates/common" }
+ports = { path = "../../crates/ports" }
+storage = { path = "../../crates/storage" }
+adapter = { path = "../../crates/adapter" }
+crawler = { path = "../../business/crawler" }
+agent = { path = "../../crates/agent" }
+workflow_runtime = { path = "../../business/workflow_runtime" }
+opendesk-skills = { path = "../../business/opendesk-skills" }
+tokio = { workspace = true }
+tracing = { workspace = true }
+dirs = { workspace = true }

@@ -1,0 +1,20 @@
+[package]
+name = "workflow_runtime"
+version.workspace = true
+edition.workspace = true
+description = "OpenDesk Workflow Runtime — DAG scheduler, checkpoint, executor registry"
+authors = ["coisini"]
+
+[dependencies]
+async-trait = { workspace = true }
+common = { path = "../../crates/common" }
+ports = { path = "../../crates/ports" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = "2"
+tokio = { workspace = true, features = ["time", "sync", "rt", "macros"] }
+tracing = { workspace = true }
+uuid = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time"] }

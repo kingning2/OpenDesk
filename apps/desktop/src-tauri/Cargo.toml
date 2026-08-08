@@ -15,7 +15,7 @@ license-lock = ["app/license-lock"]
 tauri-build = { workspace = true }
 
 [dependencies]
-app = { path = "../../../crates/app" }
+app = { path = "crates/app" }
 tauri = { workspace = true }
 tauri-plugin-dialog = "2"
 tauri-plugin-opener = { workspace = true }
