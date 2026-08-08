@@ -1,29 +1,38 @@
 {
   "name": "opendesk",
-  "private": true,
   "version": "0.1.0",
+  "description": "本地优先的 AI 商务桌面：桌面端（Tauri）与 Web 端（axum + React）共享同一套 Rust 业务层。",
+  "private": true,
   "type": "module",
+  "license": "MIT",
+  "author": "OpenDesk Team",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kingning2/OpenDesk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kingning2/OpenDesk/issues"
+  },
+  "homepage": "https://github.com/kingning2/OpenDesk#readme",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "packageManager": "pnpm@10.18.1",
   "scripts": {
-    "dev": "pnpm --filter @desk/desktop dev",
-    "dev:web": "pnpm --filter @desk/web dev",
-    "dev:server": "cargo run -p opendesk-server",
-    "build": "pnpm --filter @desk/desktop build",
+    "prepare": "husky",
+    "web": "node tooling/scripts/web.mjs",
+    "web:dev:locked": "node tooling/scripts/web.mjs dev --locked",
+    "web:build:locked": "node tooling/scripts/web.mjs build --locked",
+    "tauri": "node tooling/scripts/tauri.mjs",
+    "tauri:dev:locked": "node tooling/scripts/tauri-dev-locked.mjs",
+    "tauri:build:locked": "node tooling/scripts/tauri-build-locked.mjs",
     "build:license-verifier": "node tooling/scripts/build-license-verifier.mjs",
     "build:worker": "node tooling/scripts/build-worker.mjs",
-    "build:worker:release": "node tooling/scripts/build-worker.mjs --release",
-    "activation-gen:gui": "node tooling/scripts/run-activation-gen-gui.mjs",
-    "preview": "pnpm --filter @desk/desktop preview",
-    "tauri": "node tooling/scripts/tauri.mjs",
-    "tauri:build:locked": "node tooling/scripts/tauri-build-locked.mjs",
-    "tauri:dev:locked": "node tooling/scripts/tauri-dev-locked.mjs",
-    "prepare": "husky",
     "lint": "pnpm lint:frontend && pnpm lint:rust",
-    "lint:fix": "pnpm lint:frontend:fix && pnpm lint:rust:fix",
     "lint:frontend": "eslint . && pnpm lint:types",
-    "lint:frontend:fix": "eslint . --fix",
     "lint:types": "tsc -p tsconfig.lint.json --noEmit",
     "lint:rust": "node tooling/scripts/lint-rust.mjs",
-    "lint:rust:fix": "node tooling/scripts/lint-rust-fix.mjs",
     "check:architecture": "node skills/opendesk/scripts/check-architecture.mjs",
     "contracts:sync": "node skills/opendesk/scripts/sync-contracts.mjs",
     "contracts:check": "node skills/opendesk/scripts/sync-contracts.mjs --check",
@@ -32,14 +41,14 @@
     "branch:sync": "node skills/opendesk/scripts/branch-tools.mjs sync"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
-    "@tauri-apps/cli": "^2",
-    "eslint": "^9.39.1",
-    "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-react-refresh": "^0.4.24",
-    "globals": "^16.5.0",
-    "husky": "^9.1.7",
-    "typescript": "~5.8.3",
-    "typescript-eslint": "^8.48.0"
+    "@eslint/js": "9.39.4",
+    "@tauri-apps/cli": "2.11.4",
+    "eslint": "9.39.4",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-react-refresh": "0.4.26",
+    "globals": "16.5.0",
+    "husky": "9.1.7",
+    "typescript": "5.8.3",
+    "typescript-eslint": "8.63.0"
   }
 }

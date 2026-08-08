@@ -126,6 +126,85 @@ function sha256File(filePath) {
   return hash.digest("hex");
 }
 
+/**
+ * Strawberry Perl portable 下载源（Windows 编 vendored OpenSSL 所需）。
+ *
+ * 与 `tooling/README-openssl-windows.md` 记录的版本一致；目录 gitignored。
+ */
+const STRAWBERRY_PERL_URL =
+  "https://github.com/StrawberryPerl/Perl-Dist-Strawberry/releases/download/SP_54221_64bit/strawberry-perl-5.42.2.1-64bit-portable.zip";
+const STRAWBERRY_PERL_DIR = join(root, "tooling", "strawberry-perl");
+
+/**
+ * 确保 Windows 下可用的 perl：优先用 `tooling/strawberry-perl/`（gitignored 缓存），
+ * 缺失时自动下载 portable Strawberry Perl 并解压到该目录，然后加入 PATH。
+ *
+ * 注意：不能依赖系统 perl——Git Bash / MSYS 自带的 perl 是 Unix 语义，无法编译
+ * MSVC 的 vendored OpenSSL。因此这里只认 vendored Strawberry Perl。
+ *
+ * @param {Record<string, string>} env - 将被修改的环境变量
+ */
+function ensureWindowsPerl(env) {
+  const perlBin = join(STRAWBERRY_PERL_DIR, "perl", "bin");
+  const mingwBin = join(STRAWBERRY_PERL_DIR, "c", "bin");
+
+  if (!existsSync(join(perlBin, "perl.exe"))) {
+    console.log(
+      "tooling/strawberry-perl not found; downloading portable Strawberry Perl…",
+    );
+    const zipPath = join(STRAWBERRY_PERL_DIR, "strawberry-perl.zip");
+    mkdirSync(STRAWBERRY_PERL_DIR, { recursive: true });
+
+    const download = spawnSync(
+      "curl",
+      ["-L", "--fail", "--retry", "3", "-o", zipPath, STRAWBERRY_PERL_URL],
+      { stdio: "inherit", shell: true },
+    );
+    if (download.status !== 0) {
+      console.error(
+        "failed to download Strawberry Perl; set it up manually per tooling/README-openssl-windows.md",
+      );
+      process.exit(download.status ?? 1);
+    }
+
+    const extract = spawnSync(
+      "tar",
+      ["--force-local", "-xf", zipPath, "-C", STRAWBERRY_PERL_DIR],
+      { stdio: "inherit", shell: true },
+    );
+    if (extract.status !== 0) {
+      // Git Bash tar 对 Windows 路径需要 --force-local；若仍失败则尝试 PowerShell。
+      console.log("tar extraction failed; retrying with PowerShell Expand-Archive…");
+      const ps = spawnSync(
+        "powershell",
+        [
+          "-NoProfile",
+          "-Command",
+          `Expand-Archive -Path '${zipPath}' -DestinationPath '${STRAWBERRY_PERL_DIR}' -Force`,
+        ],
+        { stdio: "inherit", shell: true },
+      );
+      if (ps.status !== 0) {
+        console.error("failed to extract Strawberry Perl");
+        process.exit(ps.status ?? 1);
+      }
+    }
+    try {
+      unlinkSync(zipPath);
+    } catch {
+      // zip 删除失败不阻塞
+    }
+  }
+
+  if (!existsSync(join(perlBin, "perl.exe"))) {
+    console.error(`Strawberry Perl perl.exe missing at ${perlBin}`);
+    process.exit(1);
+  }
+  env.Path = `${perlBin};${mingwBin};${env.Path ?? env.PATH ?? ""}`;
+  env.PATH = env.Path;
+  console.log("Strawberry Perl ready:", perlBin);
+}
+
 const { target: targetArg } = parseArgs(process.argv.slice(2));
 
 const env = { ...process.env };
@@ -133,17 +212,7 @@ if (platform() === "win32") {
   // 宿主编译器固定 MSVC；交叉目标（如 i686）靠 --target，不要改成 gnu。
   env.RUSTUP_TOOLCHAIN =
     env.RUSTUP_TOOLCHAIN ?? "stable-x86_64-pc-windows-msvc";
-  const perlRoot = join(root, "tooling", "strawberry-perl");
-  const perlBin = join(perlRoot, "perl", "bin");
-  const mingwBin = join(perlRoot, "c", "bin");
-  if (existsSync(join(perlBin, "perl.exe"))) {
-    env.Path = `${perlBin};${mingwBin};${env.Path ?? env.PATH ?? ""}`;
-    env.PATH = env.Path;
-  } else {
-    console.warn(
-      "WARNING: tooling/strawberry-perl not found; ensure perl is on PATH for vendored OpenSSL",
-    );
-  }
+  ensureWindowsPerl(env);
 }
 
 const buildTriple = resolveBuildTriple(targetArg);
