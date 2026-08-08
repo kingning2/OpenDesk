@@ -32,10 +32,12 @@
       "branch_prefix": "frontend",
       "allowed_globs": [
         "apps/desktop/**",
+        "apps/web/**",
         "packages/ui/**",
         "packages/platform/**",
         "packages/contracts/**",
-        "crates/**"
+        "crates/**",
+        "business/**"
       ],
       "optional_globs": ["contracts/**"],
       "forbidden_globs": [],
