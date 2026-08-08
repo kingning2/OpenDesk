@@ -1,11 +1,11 @@
 /**
- * Tauri IPC：调用封装、错误归一化、日志落盘、前端错误上报。
+ * Tauri IPC / HTTP RPC：调用封装、错误归一化、日志落盘、前端错误上报。
+ *
+ * 桌面壳走 Tauri `invoke`；浏览器 / web 端走 `POST /api/rpc`。
  *
  * @author coisini
  * @created 2026-08-01
  */
-
-import { invoke } from "@tauri-apps/api/core";
 
 /** 写日志用的内部 command，自身不再记 IPC 日志。 */
 export const DIAGNOSTICS_LOG_COMMAND = "diagnostics_log";
@@ -93,14 +93,18 @@ function parseStackLocation(stack?: string): Pick<FrontendErrorReport, "source" 
   return {};
 }
 
-/** 写一行日志到 Rust 本地文件，失败时静默。 */
+/** 写一行日志到 Rust 本地文件，失败时静默；浏览器（web）端忽略。 */
 export function writeDiagnosticsLog(
   level: string,
   event: string,
   input: unknown,
   output: unknown,
 ): void {
-  void invoke(DIAGNOSTICS_LOG_COMMAND, {
+  if (!isTauriRuntime()) {
+    return;
+  }
+  // 直接走 Tauri invoke 并静默吞错：诊断日志失败不应触发错误 toast / 干扰主流程。
+  void invokeTauri(DIAGNOSTICS_LOG_COMMAND, {
     request: { level, event, input: toJson(input), output: toJson(output) },
   }).catch(() => {});
 }
@@ -138,11 +142,13 @@ function logIpc(level: "INFO" | "ERROR", command: string, input: string, output:
   }
 }
 
-/** 调用 Tauri command，并写入 `北京时间【LEVEL】【事件】【入参】【出参】` 日志。 */
+/** 调用 Tauri command 或 HTTP RPC，并写入 `北京时间【LEVEL】【事件】【入参】【出参】` 日志。 */
 export async function invokeIpc<T>(command: string, args?: Record<string, unknown>): Promise<T> {
   const input = toJson(args ?? {});
   try {
-    const result = await invoke<T>(command, args);
+    const result = isTauriRuntime()
+      ? await invokeTauri<T>(command, args)
+      : await invokeHttp<T>(command, args);
     logIpc("INFO", command, input, toJson(result));
     return result;
   } catch (error) {
@@ -152,6 +158,32 @@ export async function invokeIpc<T>(command: string, args?: Record<string, unknow
     invokeErrorReporter?.(invokeError.command, invokeError.message, invokeError);
     throw invokeError;
   }
+}
+
+/** 是否运行在 Tauri 桌面壳内（浏览器预览 / web 端为 false）。 */
+export function isTauriRuntime(): boolean {
+  return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+}
+
+/** Tauri 进程内调用。 */
+async function invokeTauri<T>(command: string, args?: Record<string, unknown>): Promise<T> {
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke<T>(command, args);
+}
+
+/** HTTP RPC：POST `/api/rpc`，返回与桌面命令一致的响应结构。 */
+async function invokeHttp<T>(command: string, args?: Record<string, unknown>): Promise<T> {
+  const base = (typeof window !== "undefined" && (window as { __OPENDESK_SERVER__?: string }).__OPENDESK_SERVER__) || "";
+  const response = await fetch(`${base}/api/rpc`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ command, args: args ?? {} }),
+  });
+  const body = (await response.json()) as { ok: boolean; data?: T; error?: string };
+  if (!response.ok || body.ok !== true) {
+    throw new Error(body.error ?? `HTTP ${response.status}`);
+  }
+  return body.data as T;
 }
 
 /** 安装 IPC 失败 toast（相同 command+message 只弹一次）。 */

@@ -1,0 +1,20 @@
+[package]
+name = "app-core"
+version.workspace = true
+edition.workspace = true
+
+[features]
+default = []
+license-lock = []
+
+[dependencies]
+common = { path = "../common" }
+ports = { path = "../ports" }
+storage = { path = "../storage" }
+adapter = { path = "../adapter" }
+crawler = { path = "../crawler" }
+agent = { path = "../agent" }
+workflow_runtime = { path = "../workflow_runtime" }
+tokio = { workspace = true }
+tracing = { workspace = true }
+dirs = { workspace = true }

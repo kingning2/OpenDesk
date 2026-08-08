@@ -87,6 +87,28 @@ pub struct ChannelListResult {
     pub total: i64,
 }
 
+/// One `GROUP BY <column>` bucket for the dashboard stats.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CountBucket {
+    pub key: String,
+    pub count: i64,
+}
+
+/// Aggregate crawler-channel stats for the home dashboard.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ChannelStats {
+    /// All persisted `crawler_channel` rows.
+    pub total_channels: i64,
+    /// Rows with a non-empty `email` column.
+    pub total_emails: i64,
+    /// Rows with a non-null `verified_email` column.
+    pub total_verified_emails: i64,
+    /// Distribution by `platform` column.
+    pub by_platform: Vec<CountBucket>,
+    /// Distribution by `email_status` column.
+    pub by_email_status: Vec<CountBucket>,
+}
+
 /// Accepted crawl results — Rust owns SQLite; survives job memory cleanup.
 pub trait CrawlerChannelStore: Send + Sync {
     fn insert_accepted(&self, record: &ChannelRecord) -> Result<(), StoreError>;
@@ -95,6 +117,9 @@ pub trait CrawlerChannelStore: Send + Sync {
 
     /// List persisted channels with optional filters and pagination.
     fn list(&self, query: ChannelListQuery) -> Result<ChannelListResult, StoreError>;
+
+    /// Aggregate channel/email stats for the home dashboard.
+    fn stats(&self) -> Result<ChannelStats, StoreError>;
 
     /// Mark a channel as actively being enriched by Worker.
     fn mark_enriching(&self, job_id: &str, channel_id: &str) -> Result<(), StoreError>;

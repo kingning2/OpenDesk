@@ -2,11 +2,12 @@
 
 use std::path::Path;
 
+use diesel::dsl::count_star;
 use diesel::prelude::*;
 use ports::background_job::{EMAIL_STATUS_ENRICHING, EMAIL_STATUS_VERIFIED_MANUAL};
 use ports::crawler_channels::{
-    ChannelListQuery, ChannelListRecord, ChannelListResult, ChannelRecord, CrawlerChannelStore,
-    EmailEnrichResult,
+    ChannelListQuery, ChannelListRecord, ChannelListResult, ChannelRecord, ChannelStats,
+    CountBucket, CrawlerChannelStore, EmailEnrichResult,
 };
 use ports::repository::StoreError;
 
@@ -162,6 +163,57 @@ impl CrawlerChannelStore for SqliteCrawlerChannelStore {
         })
     }
 
+    fn stats(&self) -> Result<ChannelStats, StoreError> {
+        self.db.with_conn(|conn| {
+            let total_channels = crawler_channel::table
+                .count()
+                .get_result::<i64>(conn)
+                .map_err(|error| StoreError::Unavailable(error.to_string()))?;
+            let total_emails = crawler_channel::table
+                .filter(
+                    crawler_channel::email
+                        .is_not_null()
+                        .and(crawler_channel::email.ne("")),
+                )
+                .count()
+                .get_result::<i64>(conn)
+                .map_err(|error| StoreError::Unavailable(error.to_string()))?;
+            let total_verified_emails = crawler_channel::table
+                .filter(crawler_channel::verified_email.is_not_null())
+                .count()
+                .get_result::<i64>(conn)
+                .map_err(|error| StoreError::Unavailable(error.to_string()))?;
+
+            let by_platform = crawler_channel::table
+                .group_by(crawler_channel::platform)
+                .select((crawler_channel::platform, count_star()))
+                .order(crawler_channel::platform.asc())
+                .load::<(String, i64)>(conn)
+                .map_err(|error| StoreError::Unavailable(error.to_string()))?
+                .into_iter()
+                .map(|(key, count)| CountBucket { key, count })
+                .collect();
+
+            let by_email_status = crawler_channel::table
+                .group_by(crawler_channel::email_status)
+                .select((crawler_channel::email_status, count_star()))
+                .order(crawler_channel::email_status.asc())
+                .load::<(String, i64)>(conn)
+                .map_err(|error| StoreError::Unavailable(error.to_string()))?
+                .into_iter()
+                .map(|(key, count)| CountBucket { key, count })
+                .collect();
+
+            Ok(ChannelStats {
+                total_channels,
+                total_emails,
+                total_verified_emails,
+                by_platform,
+                by_email_status,
+            })
+        })
+    }
+
     fn mark_enriching(&self, job_id: &str, channel_id: &str) -> Result<(), StoreError> {
         self.db.with_conn(|conn| {
             diesel::update(
@@ -292,7 +344,10 @@ impl From<CrawlerChannelRow> for ChannelRecord {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ports::background_job::{EMAIL_STATUS_FOUND_PLAYWRIGHT, EMAIL_STATUS_PENDING_ENRICH};
+    use ports::background_job::{
+        EMAIL_STATUS_FOUND_API, EMAIL_STATUS_FOUND_PLAYWRIGHT, EMAIL_STATUS_PENDING_ENRICH,
+        EMAIL_STATUS_VERIFIED_MANUAL,
+    };
     use uuid::Uuid;
 
     fn sample_record() -> ChannelRecord {
@@ -313,6 +368,54 @@ mod tests {
             enrich_error: None,
             enriched_at: None,
         }
+    }
+
+    #[test]
+    fn stats_aggregates_counts_and_buckets() {
+        let dir = std::env::temp_dir().join(format!("crawler_ch_test_{}", Uuid::new_v4()));
+        let path = dir.join("test.db");
+        let store = SqliteCrawlerChannelStore::open(&path).expect("open");
+        store.insert_accepted(&sample_record()).expect("insert");
+
+        let mut verified = sample_record();
+        verified.channel_id = "UC456".to_string();
+        verified.title = "Verified Channel".to_string();
+        verified.platform = "youtube".to_string();
+        verified.verified_email = Some("v@b.com".to_string());
+        verified.email_status = EMAIL_STATUS_VERIFIED_MANUAL.to_string();
+        store.insert_accepted(&verified).expect("insert");
+
+        let mut no_email = sample_record();
+        no_email.channel_id = "UC789".to_string();
+        no_email.title = "No Email Channel".to_string();
+        no_email.email = None;
+        no_email.email_status = EMAIL_STATUS_PENDING_ENRICH.to_string();
+        store.insert_accepted(&no_email).expect("insert");
+
+        let stats = store.stats().expect("stats");
+        assert_eq!(stats.total_channels, 3);
+        assert_eq!(stats.total_emails, 2);
+        assert_eq!(stats.total_verified_emails, 1);
+        let platform = stats
+            .by_platform
+            .iter()
+            .find(|b| b.key == "youtube")
+            .unwrap();
+        assert_eq!(platform.count, 3);
+        let api = stats
+            .by_email_status
+            .iter()
+            .find(|b| b.key == EMAIL_STATUS_FOUND_API)
+            .unwrap();
+        assert_eq!(api.count, 1);
+        let pending = stats
+            .by_email_status
+            .iter()
+            .find(|b| b.key == EMAIL_STATUS_PENDING_ENRICH)
+            .unwrap();
+        assert_eq!(pending.count, 1);
+
+        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]

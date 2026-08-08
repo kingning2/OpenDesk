@@ -54,6 +54,8 @@ export type { CustomerIpcListRequest } from "./customer_ipc_list_request";
 export type { CustomerIpcListResponse } from "./customer_ipc_list_response";
 export type { CustomerIpcUpdateRequest } from "./customer_ipc_update_request";
 export type { CustomerIpcUpdateResponse } from "./customer_ipc_update_response";
+export type { DashboardIpcStatsRequest } from "./dashboard_ipc_stats_request";
+export type { DashboardIpcStatsResponse } from "./dashboard_ipc_stats_response";
 export type { HelpIpcAskRequest } from "./help_ipc_ask_request";
 export type { HelpIpcAskResponse } from "./help_ipc_ask_response";
 export type { KnowledgeDtoDocument } from "./knowledge_dto_document";

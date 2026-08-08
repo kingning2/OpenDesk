@@ -1,0 +1,37 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@desk/ui": ["../../packages/ui/src"],
+      "@desk/ui/*": ["../../packages/ui/src/*"],
+      "@desk/platform": ["../../packages/platform/src"],
+      "@desk/platform/*": ["../../packages/platform/src/*"],
+      "@desk/store": ["../../packages/store/src"],
+      "@desk/store/*": ["../../packages/store/src/*"],
+      "@desk/i18n": ["../../packages/i18n/src"],
+      "@desk/i18n/*": ["../../packages/i18n/src/*"],
+      "@desk/contracts": ["../../packages/contracts/src"],
+      "@desk/contracts/*": ["../../packages/contracts/src/*"],
+      "@desk/utils": ["../../packages/utils/src"],
+      "@desk/utils/*": ["../../packages/utils/src/*"],
+      "@feature/*": ["../desktop/src/features/*"]
+    }
+  },
+  "include": ["src", "../desktop/src/features", "../../packages/platform/src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}

@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter @desk/desktop dev",
+    "dev:web": "pnpm --filter @desk/web dev",
+    "dev:server": "cargo run -p opendesk-server",
     "build": "pnpm --filter @desk/desktop build",
     "build:license-verifier": "node tooling/scripts/build-license-verifier.mjs",
     "build:worker": "node tooling/scripts/build-worker.mjs",

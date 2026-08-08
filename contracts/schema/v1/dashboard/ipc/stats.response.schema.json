@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://dashboard/ipc/stats.response/v1",
+  "title": "dashboard/stats.response",
+  "description": "Tauri IPC: home dashboard aggregate stats response. stats_json holds the full dashboard object.",
+  "type": "object",
+  "required": ["ok", "stats_json"],
+  "properties": {
+    "ok": { "type": "boolean" },
+    "stats_json": { "type": "string" },
+    "trace_id": { "type": "string" }
+  },
+  "additionalProperties": false
+}

@@ -11,6 +11,7 @@ pub mod agent;
 pub mod chat;
 pub mod crawler;
 pub mod customer;
+pub mod dashboard;
 pub mod help;
 pub mod knowledge;
 pub mod license;

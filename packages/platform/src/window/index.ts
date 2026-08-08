@@ -10,8 +10,7 @@
  * @created 2026-07-20
  */
 
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { isTauriRuntime } from "../ipc/invoke";
 
 /** 桌面 OS 平台标签（与 Rust `desktop_platform_label` 对齐）。 */
 export type DesktopPlatform = "macos" | "windows" | "linux";
@@ -48,7 +47,7 @@ export function getPlatform(): DesktopPlatform {
 }
 
 /**
- * 当前窗口是否已最大化。
+ * 当前窗口是否已最大化；浏览器（web）端恒为 `false`。
  *
  * @author coisini
  * @created 2026-07-21
@@ -56,11 +55,15 @@ export function getPlatform(): DesktopPlatform {
  * @returns 最大化为 `true`
  */
 export async function isWindowMaximized(): Promise<boolean> {
+  if (!isTauriRuntime()) {
+    return false;
+  }
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
   return getCurrentWindow().isMaximized();
 }
 
 /**
- * 订阅窗口最大化状态变化（含初始快照）；返回取消订阅函数。
+ * 订阅窗口最大化状态变化（含初始快照）；浏览器（web）端为 no-op。
  *
  * @author coisini
  * @created 2026-07-21
@@ -71,6 +74,11 @@ export async function isWindowMaximized(): Promise<boolean> {
 export async function subscribeWindowMaximized(
   onChange: (maximized: boolean) => void,
 ): Promise<() => void> {
+  if (!isTauriRuntime()) {
+    onChange(false);
+    return () => {};
+  }
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
   const window = getCurrentWindow();
   onChange(await window.isMaximized());
   return window.onResized(async () => {
@@ -79,7 +87,7 @@ export async function subscribeWindowMaximized(
 }
 
 /**
- * 最小化当前窗口。
+ * 最小化当前窗口；浏览器（web）端为 no-op。
  *
  * @author coisini
  * @created 2026-07-20
@@ -87,11 +95,15 @@ export async function subscribeWindowMaximized(
  * @returns 完成后无返回值
  */
 export async function minimizeWindow(): Promise<void> {
+  if (!isTauriRuntime()) {
+    return;
+  }
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
   await getCurrentWindow().minimize();
 }
 
 /**
- * 切换当前窗口最大化 / 还原。
+ * 切换当前窗口最大化 / 还原；浏览器（web）端为 no-op。
  *
  * @author coisini
  * @created 2026-07-20
@@ -99,6 +111,10 @@ export async function minimizeWindow(): Promise<void> {
  * @returns 完成后无返回值
  */
 export async function toggleMaximizeWindow(): Promise<void> {
+  if (!isTauriRuntime()) {
+    return;
+  }
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
   const window = getCurrentWindow();
   if (await window.isMaximized()) {
     await window.unmaximize();
@@ -108,7 +124,7 @@ export async function toggleMaximizeWindow(): Promise<void> {
 }
 
 /**
- * 关闭当前窗口。
+ * 关闭当前窗口；浏览器（web）端为 no-op。
  *
  * @author coisini
  * @created 2026-07-20
@@ -116,11 +132,15 @@ export async function toggleMaximizeWindow(): Promise<void> {
  * @returns 完成后无返回值
  */
 export async function closeWindow(): Promise<void> {
+  if (!isTauriRuntime()) {
+    return;
+  }
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
   await getCurrentWindow().close();
 }
 
 /**
- * 开始拖拽当前窗口。
+ * 开始拖拽当前窗口；浏览器（web）端为 no-op。
  *
  * @author coisini
  * @created 2026-07-20
@@ -128,6 +148,10 @@ export async function closeWindow(): Promise<void> {
  * @returns 完成后无返回值
  */
 export async function startWindowDrag(): Promise<void> {
+  if (!isTauriRuntime()) {
+    return;
+  }
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
   await getCurrentWindow().startDragging();
 }
 
@@ -141,11 +165,16 @@ export async function startWindowDrag(): Promise<void> {
  * @returns 完成后无返回值
  */
 export async function openExternalUrl(url: string): Promise<void> {
-  try {
-    await openUrl(url);
-  } catch {
-    if (typeof window !== "undefined") {
-      window.open(url, "_blank", "noopener,noreferrer");
+  if (isTauriRuntime()) {
+    try {
+      const { openUrl } = await import("@tauri-apps/plugin-opener");
+      await openUrl(url);
+      return;
+    } catch {
+      // fall through to window.open
     }
+  }
+  if (typeof window !== "undefined") {
+    window.open(url, "_blank", "noopener,noreferrer");
   }
 }

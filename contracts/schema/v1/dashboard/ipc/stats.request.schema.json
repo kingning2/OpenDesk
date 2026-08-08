@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://dashboard/ipc/stats.request/v1",
+  "title": "dashboard/stats.request",
+  "description": "Tauri IPC: home dashboard aggregate stats request.",
+  "type": "object",
+  "properties": {
+    "trace_id": { "type": "string" }
+  },
+  "additionalProperties": false
+}

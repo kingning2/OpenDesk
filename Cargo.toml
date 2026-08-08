@@ -9,6 +9,7 @@ members = [
   "crates/common",
   "crates/ports",
   "crates/adapter",
+  "crates/app-core",
   "crates/agent",
   "crates/chat",
   "crates/mail",
@@ -17,6 +18,7 @@ members = [
   "crates/storage",
   "crates/mail-net",
   "crates/worker",
+  "apps/web/src-tauri",
 ]
 exclude = ["subscription"]
 
@@ -46,6 +48,8 @@ diesel_migrations = "2.2"
 libsqlite3-sys = { version = "0.30", features = ["bundled"] }
 uuid = { version = "1", features = ["v4"] }
 tokio-stream = "0.1"
+axum = { version = "0.8", features = ["multipart"] }
+tower-http = { version = "0.6", features = ["fs", "cors"] }
 dirs = "5"
 keyring = { version = "3", default-features = false, features = [
   "apple-native",

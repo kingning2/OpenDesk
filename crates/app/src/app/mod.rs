@@ -11,46 +11,18 @@ mod chat_tools;
 mod commands;
 mod crawler_emit;
 mod logging;
-mod paths;
 mod platform;
 mod state;
 mod workflow_runtime_emit;
 
-use crawler::youtube::{CrawlerService, CrawlerUIEmitter};
+use crawler::youtube::CrawlerUIEmitter;
 use crawler_emit::TauriCrawlerEmitter;
 use logging::init_tracing;
 use mail::app::ScheduleImapSync;
-use paths::{
-    chat_db_path, crawler_db_path, embedding_cache_dir, knowledge_db_path, opendesk_db_path,
-};
 use ports::background_job::BackgroundJobStore;
-use ports::chat::{ChatMemoryStore, ChatStore};
-use ports::crawler_channels::CrawlerChannelStore;
-use ports::crawler_keywords::CrawlerKeywordStore;
-use ports::crawler_settings::CrawlerSettingsStore;
-use ports::customer::CustomerStore;
-use ports::knowledge::KnowledgeStore;
-use ports::workflow_runtime::CheckpointStore;
-use state::{build_license_gate, AppState};
-use std::sync::{Arc, Mutex};
-use storage::background_job::SqliteBackgroundJobStore;
-use storage::chat::SqliteChatStore;
-use storage::crawler_channels::SqliteCrawlerChannelStore;
-use storage::crawler_db::CrawlerDb;
-use storage::crawler_keywords::SqliteCrawlerKeywordStore;
-use storage::crawler_settings::SqliteCrawlerSettingsStore;
-use storage::customer::SqliteCustomerStore;
-use storage::knowledge::SqliteKnowledgeStore;
-use storage::llm_settings::SqliteLlmSettingsStore;
-use storage::mail::SqliteMailStore;
-use storage::opendesk_db::OpendeskDb;
-use storage::workflow::SqliteWorkflowStore;
-use storage::workflow_runtime::SqliteCheckpointStore;
+use state::AppState;
+use std::sync::Arc;
 use tauri::{Emitter, Manager};
-use workflow_runtime::{
-    register_builtin_executors, ExecutorRegistry, InMemoryEventBus, SchedulerConfig,
-    WorkflowRuntimeFacade,
-};
 use workflow_runtime_emit::TauriWorkflowRuntimeEmitter;
 
 /// 启动桌面应用：打开数据库、挂载 crawler emitter、注册 IPC、运行事件循环。
@@ -66,68 +38,7 @@ use workflow_runtime_emit::TauriWorkflowRuntimeEmitter;
 pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
     init_tracing();
 
-    let license = build_license_gate();
-    let db_path = crawler_db_path();
-    let opendesk_db = OpendeskDb::open(opendesk_db_path()).expect("open opendesk database");
-    let job_store =
-        Arc::new(SqliteBackgroundJobStore::new(opendesk_db.clone())) as Arc<dyn BackgroundJobStore>;
-    let crawler_db = CrawlerDb::open(&db_path).expect("open crawler database");
-    let channels_store = Arc::new(SqliteCrawlerChannelStore::new(crawler_db.clone()))
-        as Arc<dyn CrawlerChannelStore>;
-    let settings_store = Arc::new(SqliteCrawlerSettingsStore::new(crawler_db.clone()))
-        as Arc<dyn CrawlerSettingsStore>;
-    let llm_settings_store = Arc::new(SqliteLlmSettingsStore::new(opendesk_db.clone()))
-        as Arc<dyn ports::llm_settings::LlmSettingsStore>;
-    let crawler = Arc::new(CrawlerService::new(channels_store.clone()));
-    crawler.attach_job_store(job_store.clone());
-    let keywords_store =
-        Arc::new(SqliteCrawlerKeywordStore::new(crawler_db)) as Arc<dyn CrawlerKeywordStore>;
-    let customer_store =
-        Arc::new(SqliteCustomerStore::new(opendesk_db.clone())) as Arc<dyn CustomerStore>;
-    let mail_store =
-        Arc::new(SqliteMailStore::new(opendesk_db.clone())) as Arc<dyn ports::mail::MailStore>;
-    let workflow_store = Arc::new(SqliteWorkflowStore::new(opendesk_db.clone()))
-        as Arc<dyn ports::workflow::WorkflowStore>;
-    let chat = Arc::new(SqliteChatStore::open(chat_db_path()).expect("open chat database"));
-    let chat_store = Arc::clone(&chat) as Arc<dyn ChatStore>;
-    let chat_memory_store = Arc::clone(&chat) as Arc<dyn ChatMemoryStore>;
-    let knowledge_store =
-        Arc::new(SqliteKnowledgeStore::open(knowledge_db_path()).expect("open knowledge database"))
-            as Arc<dyn KnowledgeStore>;
-    let embedder = Arc::new(agent::embedding::EmbeddingService::new(Some(
-        embedding_cache_dir(),
-    ))) as Arc<dyn agent::embedding::Embedder>;
-    let skill_registry = Arc::new(agent::skills::system::system_registry());
-    let mut workflow_registry = ExecutorRegistry::new();
-    register_builtin_executors(&mut workflow_registry).expect("register workflow executors");
-    let workflow_checkpoint =
-        Arc::new(SqliteCheckpointStore::new(opendesk_db.clone())) as Arc<dyn CheckpointStore>;
-    let workflow_event_bus = Arc::new(InMemoryEventBus::new());
-    let workflow_runtime = Arc::new(WorkflowRuntimeFacade::new(
-        workflow_registry,
-        workflow_checkpoint,
-        workflow_event_bus.clone(),
-        SchedulerConfig::default(),
-    ));
-    let app_state = AppState {
-        license,
-        crawler: crawler.clone(),
-        keywords_store,
-        channels_store,
-        settings_store,
-        llm_settings_store,
-        customer_store,
-        mail_store,
-        job_store: job_store.clone(),
-        workflow_store,
-        chat_store,
-        chat_memory_store,
-        knowledge_store,
-        embedder,
-        skill_registry,
-        workflow_runtime,
-        worker: Arc::new(Mutex::new(None)),
-    };
+    let (app_state, workflow_event_bus, crawler) = app_core::build_app_state();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
@@ -283,6 +194,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             commands::customer::customer_get,
             commands::customer::customer_create,
             commands::customer::customer_update,
+            commands::dashboard::dashboard_stats,
             commands::mail::mail_template_list,
             commands::mail::mail_template_save,
             commands::mail::mail_template_apply,

@@ -5,7 +5,7 @@ edition.workspace = true
 
 [features]
 default = []
-license-lock = []
+license-lock = ["app-core/license-lock"]
 
 [dependencies]
 async-trait = { workspace = true }
@@ -17,6 +17,7 @@ adapter = { path = "../adapter" }
 crawler = { path = "../crawler" }
 chat = { path = "../chat" }
 customer = { path = "../customer" }
+app-core = { path = "../app-core" }
 knowledge = { path = "../knowledge" }
 kernel = { path = "../kernel" }
 mail = { path = "../mail" }

@@ -10,6 +10,12 @@
     {
       "name": "opendesk-running",
       "url": "http://localhost:1420"
+    },
+    {
+      "name": "opendesk-web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@desk/web", "dev"],
+      "port": 1422
     }
   ]
 }
