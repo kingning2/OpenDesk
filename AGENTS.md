@@ -8,6 +8,7 @@ React（展示） → Tauri IPC → Rust（业务、存储、任务与 AI）
 
 - React 只通过 `@desk/platform/ipc` 调用 Rust。
 - Rust 是唯一协调者与运行时；AI 基建位于 `crates/agent`（`llm/`、`prompt/`、`skills/`），业务 Prompt 留在所属 Feature。
+- 分层：`crates/` 只放基建（`common`/`ports`/`storage`/`kernel`/`adapter`/`agent`/`mail-net`）；业务代码（`chat`/`customer`/`mail`/`crawler`/`knowledge`/`workflow_runtime`/`worker`/`app-core`/`opendesk-skills`）位于 `business/`，桌面（`apps/desktop/src-tauri/crates/app`）与 web（`apps/web/src-axum`）共用。
 - `contracts/` 是跨端唯一真相源，顺序固定为 **Contract → codegen → Rust → React**。
 - Feature 间禁止直接依赖；只使用 Contract、Event 或 Query Port。
 
