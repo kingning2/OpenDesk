@@ -6,9 +6,16 @@
  * - 最小化 / 最大化 / 关闭 / 拖拽
  * - 订阅窗口最大化状态
  *
+ * `@tauri-apps/api/window` 顶层 import 是安全的：模块只导入依赖、不访问
+ * `window.__TAURI_INTERNALS__`，调用时才解析。桌面端窗口控制（尤其是
+ * `startDragging`，必须在 mousedown 同步调用栈内执行）依赖静态 import 以保持
+ * 同步调用链；浏览器 / web 端不会调用这些函数。
+ *
  * @author coisini
  * @created 2026-07-20
  */
+
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import { isTauriRuntime } from "../ipc/invoke";
 
@@ -58,7 +65,6 @@ export async function isWindowMaximized(): Promise<boolean> {
   if (!isTauriRuntime()) {
     return false;
   }
-  const { getCurrentWindow } = await import("@tauri-apps/api/window");
   return getCurrentWindow().isMaximized();
 }
 
@@ -78,7 +84,6 @@ export async function subscribeWindowMaximized(
     onChange(false);
     return () => {};
   }
-  const { getCurrentWindow } = await import("@tauri-apps/api/window");
   const window = getCurrentWindow();
   onChange(await window.isMaximized());
   return window.onResized(async () => {
@@ -98,7 +103,6 @@ export async function minimizeWindow(): Promise<void> {
   if (!isTauriRuntime()) {
     return;
   }
-  const { getCurrentWindow } = await import("@tauri-apps/api/window");
   await getCurrentWindow().minimize();
 }
 
@@ -114,7 +118,6 @@ export async function toggleMaximizeWindow(): Promise<void> {
   if (!isTauriRuntime()) {
     return;
   }
-  const { getCurrentWindow } = await import("@tauri-apps/api/window");
   const window = getCurrentWindow();
   if (await window.isMaximized()) {
     await window.unmaximize();
@@ -135,7 +138,6 @@ export async function closeWindow(): Promise<void> {
   if (!isTauriRuntime()) {
     return;
   }
-  const { getCurrentWindow } = await import("@tauri-apps/api/window");
   await getCurrentWindow().close();
 }
 
@@ -151,7 +153,6 @@ export async function startWindowDrag(): Promise<void> {
   if (!isTauriRuntime()) {
     return;
   }
-  const { getCurrentWindow } = await import("@tauri-apps/api/window");
   await getCurrentWindow().startDragging();
 }
 
