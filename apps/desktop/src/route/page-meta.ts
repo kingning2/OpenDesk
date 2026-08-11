@@ -1,5 +1,5 @@
 /**
- * 路由 → 页面元信息（标题 / 描述使用 i18n key）。
+ * 路由 → 页面元信息（中文标题 / 描述）。
  *
  * @author coisini
  * @created 2026-07-20
@@ -12,28 +12,32 @@
  * @created 2026-07-20
  */
 export interface PageMeta {
-  /** 标题 i18n key。 */
-  titleKey: string;
-  /** 描述 i18n key。 */
-  descriptionKey?: string;
+  /** 页面标题。 */
+  title: string;
+  /** 页面描述。 */
+  description?: string;
 }
 
 const pageMetaByPath: Record<string, PageMeta> = {
   "/": {
-    titleKey: "meta.home",
-    descriptionKey: "meta.homeDescription",
+    title: "首页",
+    description: "OpenDesk 架构脚手架",
   },
   "/features/agent": {
-    titleKey: "meta.agent",
-    descriptionKey: "meta.agentDescription",
+    title: "Agent",
+    description: "Sidecar 连通性垂直切片",
   },
   "/features/chat": {
-    titleKey: "meta.chat",
-    descriptionKey: "meta.chatDescription",
+    title: "Chat",
+    description: "客户会话工作区",
+  },
+  "/features/channel": {
+    title: "客服",
+    description: "多渠道智能客服工作区",
   },
   "/features/knowledge": {
-    titleKey: "meta.knowledge",
-    descriptionKey: "meta.knowledgeDescription",
+    title: "Knowledge",
+    description: "知识库与检索",
   },
 };
 
@@ -47,5 +51,11 @@ const pageMetaByPath: Record<string, PageMeta> = {
  * @returns 元信息；未知路径回退到应用名
  */
 export function getPageMeta(pathname: string): PageMeta {
-  return pageMetaByPath[pathname] ?? { titleKey: "app.name" };
+  if (pathname.startsWith("/features/channel/")) {
+    return {
+      title: "客服工作区",
+      description: "多渠道智能客服工作区",
+    };
+  }
+  return pageMetaByPath[pathname] ?? { title: "OpenDesk" };
 }

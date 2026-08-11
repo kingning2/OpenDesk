@@ -6,14 +6,10 @@
  */
 
 import type { LucideIcon } from "@desk/ui/icons";
-import { Home } from "@desk/ui/icons";
-
-import { agentFeature } from "@feature/agent";
-import { chatFeature } from "@feature/chat";
-import { knowledgeFeature } from "@feature/knowledge";
+import { Home, MessageSquare } from "@desk/ui/icons";
 
 /**
- * 导航项（文案用 `labelKey` 走 i18n）。
+ * 导航项（文案为中文直接文本）。
  *
  * @author coisini
  * @created 2026-07-20
@@ -21,8 +17,8 @@ import { knowledgeFeature } from "@feature/knowledge";
 export interface NavItem {
   id: string;
   path: string;
-  /** i18n 点分 key，如 `nav.home`。 */
-  labelKey: string;
+  /** 导航显示文本。 */
+  label: string;
   end?: boolean;
   icon?: LucideIcon;
 }
@@ -34,8 +30,11 @@ export interface NavItem {
  * @created 2026-07-20
  */
 export const navItems: NavItem[] = [
-  { id: "home", path: "/", labelKey: "nav.home", end: true, icon: Home },
-  agentFeature.navItem,
-  chatFeature.navItem,
-  knowledgeFeature.navItem,
+  { id: "home", path: "/", label: "首页", end: true, icon: Home },
+  {
+    id: "channel",
+    path: "/features/channel",
+    label: "客服",
+    icon: MessageSquare,
+  },
 ];

@@ -21,11 +21,26 @@ const PAGE_LOADERS: Record<string, PageLoader> = {
     const { ChatPage } = await import("@feature/chat/chat-page");
     return ChatPage;
   },
+  "/features/channel": async () => {
+    const { ChannelPage } = await import("@feature/channel/channel-page");
+    return ChannelPage;
+  },
   "/features/knowledge": async () => {
     const { KnowledgePage } = await import("@feature/knowledge/knowledge-page");
     return KnowledgePage;
   },
 };
+
+/** 动态路径加载器（带 `:platform` 参数的路由）。 */
+const DYNAMIC_PAGE_LOADERS: { match: RegExp; load: PageLoader }[] = [
+  {
+    match: /^\/features\/channel\/[^/]+$/,
+    load: async () => {
+      const { ChannelWorkbench } = await import("@feature/channel/channel-workbench");
+      return ChannelWorkbench;
+    },
+  },
+];
 
 const pageCache = new Map<string, ComponentType>();
 
@@ -43,7 +58,7 @@ async function loadWorkspacePage(path: string): Promise<ComponentType | null> {
   if (cached) {
     return cached;
   }
-  const loader = PAGE_LOADERS[path];
+  const loader = PAGE_LOADERS[path] ?? DYNAMIC_PAGE_LOADERS.find((entry) => entry.match.test(path))?.load;
   if (!loader) {
     return null;
   }

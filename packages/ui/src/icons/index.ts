@@ -16,6 +16,7 @@ export {
   Settings,
   Square,
   SquaresUnite,
+  Store,
   Sun,
   Trash2,
   Users,
