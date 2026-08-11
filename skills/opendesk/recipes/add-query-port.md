@@ -6,7 +6,7 @@
 2. `crates/ports/src/<name>.rs` — trait 定义
 3. `crates/ports/src/lib.rs` — `pub mod`
 4. 实现 crate（如 `chat`）在 infra 层实现 trait（骨架 `todo!` 或空返回）
-5. `crates/app` 组装时注入
+5. `apps/desktop/src-tauri` 组装时注入
 
 ## 禁止
 

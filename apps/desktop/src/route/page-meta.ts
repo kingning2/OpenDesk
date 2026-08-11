@@ -27,21 +27,9 @@ const pageMetaByPath: Record<string, PageMeta> = {
     titleKey: "meta.agent",
     descriptionKey: "meta.agentDescription",
   },
-  "/features/crawler": {
-    titleKey: "meta.crawler",
-    descriptionKey: "meta.crawlerDescription",
-  },
   "/features/chat": {
     titleKey: "meta.chat",
     descriptionKey: "meta.chatDescription",
-  },
-  "/features/mail": {
-    titleKey: "meta.mail",
-    descriptionKey: "meta.mailDescription",
-  },
-  "/features/customer": {
-    titleKey: "meta.customer",
-    descriptionKey: "meta.customerDescription",
   },
   "/features/knowledge": {
     titleKey: "meta.knowledge",

@@ -135,7 +135,7 @@ python skills/opendesk/scripts/generate_tree.py
 
 ## Feature 列表
 
-`chat` · `mail` · `agent` · `workflow` · `knowledge` · `browser` · `ocr` · `mcp` · `plugin` · `tenant` · `user` · `channel`
+`chat` · `agent` · `knowledge` · `workflow` · `browser` · `ocr` · `mcp` · `plugin` · `tenant` · `user` · `channel`
 
 ---
 

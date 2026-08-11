@@ -10,10 +10,7 @@ import { Home } from "@desk/ui/icons";
 
 import { agentFeature } from "@feature/agent";
 import { chatFeature } from "@feature/chat";
-import { crawlerFeature } from "@feature/crawler";
-import { customerFeature } from "@feature/customer";
 import { knowledgeFeature } from "@feature/knowledge";
-import { mailFeature } from "@feature/mail";
 
 /**
  * 导航项（文案用 `labelKey` 走 i18n）。
@@ -39,9 +36,6 @@ export interface NavItem {
 export const navItems: NavItem[] = [
   { id: "home", path: "/", labelKey: "nav.home", end: true, icon: Home },
   agentFeature.navItem,
-  crawlerFeature.navItem,
-  customerFeature.navItem,
   chatFeature.navItem,
-  mailFeature.navItem,
   knowledgeFeature.navItem,
 ];

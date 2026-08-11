@@ -19,7 +19,7 @@ pub async fn run_agent(ctx: &AppCtx, trace_id: &str, task_id: &str) -> Result<()
 |------|------|
 | `trace_id` | 端到端请求链 |
 | `task_id` | 异步任务 |
-| `feature` | chat / mail / agent |
+| `feature` | chat / agent / knowledge |
 | `tenant_id` | 多租户（若适用） |
 
 ## Python

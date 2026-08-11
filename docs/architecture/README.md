@@ -13,16 +13,26 @@ OpenDesk 架构文档与 ADR 存放目录。
                    │ Tauri IPC（@desk/platform/ipc）
 ┌──────────────────▼──────────────────────┐
 │  Rust Application Core（唯一协调者）      │
-│  Storage · Event Bus · Task · Sidecar   │
+│  Agent · License · Sidecar · Event Bus  │
 │  禁止：unwrap · Feature 直调 · 阻塞 UI    │
 └──────────────────┬──────────────────────┘
                    │ 本机 IPC（contracts 定义）
 ┌──────────────────▼──────────────────────┐
-│  Python AI Runtime                      │
-│  LLM · Agent（只读 Query）· 邮件/WA 草稿   │
+│  Python Sidecar                         │
+│  LLM · Agent（只读 Query）               │
 │  禁止：GUI · SQLite · 写库 · 自动发信      │
 └─────────────────────────────────────────┘
 ```
+
+## 代码布局
+
+- `crates/` — 只放**基建代码**（与业务无关的基础设施）：`adapter` · `common` · `kernel` · `ports` · `runtime` · `storage`
+- `apps/desktop/src-tauri/` — 业务代码与 Tauri 组装：`agent` · `license` · `commands` · `state` · `platform` · `logging`
+- `apps/desktop/src/` — React 前端（`features/` + `route/` + `i18n/`）
+- `python/` — Python sidecar 与契约包
+- `contracts/` — 跨端契约生成源
+
+业务代码直接放在 `src-tauri`，不放入 `crates/`。
 
 ## 设计原则
 
@@ -37,7 +47,7 @@ OpenDesk 架构文档与 ADR 存放目录。
 
 ## Feature 列表（互相独立）
 
-`chat` · `mail` · `agent` · `workflow` · `knowledge` · `browser` · `ocr` · `mcp` · `plugin` · `tenant` · `user` · `channel` · `crawler`
+`chat` · `agent` · `knowledge`
 
 跨 Feature 通信只允许：
 
@@ -65,11 +75,6 @@ contracts/  →  codegen  →  Rust  →  Python  →  React
 
 | 文档 | 说明 |
 |------|------|
-| [`database-schema.md`](database-schema.md) | **SQLite 双库**、全表 DDL、ER 图 |
-| [`process-model.md`](process-model.md) | **三进程模型**（UI / Worker / Sidecar）；OCR 不得阻塞 UI |
-| [`product-architecture.md`](product-architecture.md) | **商务工作台**产品架构（获客·邮件·WA 辅助） |
-| [`whatsapp-webhook-deployment.md`](whatsapp-webhook-deployment.md) | **WA webhook** 开发隧道与部署手册（MVP M5） |
-| [`python-ai-runtime-architecture.md`](python-ai-runtime-architecture.md) | Python AI Runtime 工程架构 |
-| [`../managed/MVP_REVIEW.md`](../managed/MVP_REVIEW.md) | **MVP 团队评审入口**（路线图与子任务） |
+| [`whatsapp-webhook-deployment.md`](whatsapp-webhook-deployment.md) | **WA webhook** 部署手册（**历史参考**，已被 ADR-0006 Baileys 方案取代） |
 | [`.cursor/rules/master.md`](../../.cursor/rules/master.md) | 完整约束与 lint 规范 |
 | [`contracts/README.md`](../../contracts/README.md) | 契约层说明 |

@@ -14,23 +14,21 @@
 ┌────────────────────────────▼─────────────────────────────┐
 │ Layer 2: Rust（Application Core）                         │
 │                                                          │
-│  apps/desktop/src-tauri/    Tauri commands · 事件转发      │
-│  crates/app/                应用组装与启动                 │
+│  apps/desktop/src-tauri/    Tauri commands · 业务 · 事件转发 │
+│  crates/adapter/            基础设施适配器（sidecar gateway）│
 │  crates/kernel/             event bus · task scheduler    │
 │  crates/ports/              共享 Port trait               │
-│  crates/<feature>/          Feature 业务（app + domain）   │
 │  crates/storage/            SQLite 实现                   │
 │  crates/runtime/            Python sidecar 生命周期        │
 └────────────────────────────┬─────────────────────────────┘
                              │ 本机 IPC（contracts/openapi）
 ┌────────────────────────────▼─────────────────────────────┐
-│ Layer 3: Python（AI Runtime）                             │
+│ Layer 3: Python（AI Sidecar）                             │
 │                                                          │
 │  python/sidecar/            进程入口 · 管理面 API          │
-│  python/packages/gateway/   请求路由                      │
-│  python/packages/worker/    异步任务                      │
-│  python/packages/llm/       模型调用                      │
-│  python/packages/rag/       检索增强                      │
+│  python/packages/gateway/   请求路由（agent_ping）        │
+│  python/packages/contracts/ 契约实现                      │
+│  python/packages/shared/    共享工具                      │
 └──────────────────────────────────────────────────────────┘
 ```
 

@@ -16,12 +16,9 @@ Domain 文档描述某个领域的当前事实，不记录逐次开发过程。
 
 | 领域 | 文档 | 状态 |
 |------|------|------|
-| Customer | [customer/README.md](customer/README.md) | planned |
-| Mail | [mail/README.md](mail/README.md) | planned |
 | Workflow | [workflow/README.md](workflow/README.md) | planned |
 | Channel (WA) | [channel/README.md](channel/README.md) | planned（Baileys，ADR-0006） |
 | Pricing | [pricing/README.md](pricing/README.md) | planned |
-| Crawler | [crawler/README.md](crawler/README.md) | 部分已实现 |
 | Analytics | [analytics/README.md](analytics/README.md) | planned |
 | Schedule | [schedule/README.md](schedule/README.md) | planned |
 | Alert | [alert/README.md](alert/README.md) | planned |
@@ -31,5 +28,3 @@ Domain 文档描述某个领域的当前事实，不记录逐次开发过程。
 | Storage | [storage/README.md](storage/README.md) | planned |
 | OCR | [ocr/README.md](ocr/README.md) | planned |
 | Contracts | [contracts/README.md](contracts/README.md) | — |
-
-**email-agent 迁入：** [EPIC-20260721-001](../changes/2026/07/epic-20260721-001-email-agent-port.md) · [分支手册](../roadmaps/email-agent-port-branches.md)

@@ -5,16 +5,7 @@
 ## 目录结构
 
 ```
-crates/<feature>/
-├── Cargo.toml
-├── src/
-│   ├── lib.rs
-│   ├── app/
-│   │   └── mod.rs
-│   └── domain/
-│       └── mod.rs
-└── tests/
-    └── scaffold_test.rs
+apps/desktop/src-tauri/src/<feature>.rs    # 业务 UseCase（不放 crates/）
 
 apps/desktop/src/features/<feature>/
 ├── index.ts
@@ -32,8 +23,7 @@ contracts/schema/v1/<feature>/
 ## TODO
 
 - [ ] 定义 contract schema
-- [ ] 注册 workspace member
-- [ ] 注册 Tauri commands（空实现）
+- [ ] 实现 UseCase 并注册 Tauri commands
 - [ ] 添加 platform IPC wrapper
 - [ ] 注册 sidebar / route 元数据
 
@@ -48,3 +38,4 @@ python skills/opendesk/scripts/create_feature.py --name <feature>
 - 跨 feature import
 - Feature UI 使用 @tauri-apps/api
 - 在骨架阶段写业务逻辑
+- 在 `crates/` 创建业务 feature crate

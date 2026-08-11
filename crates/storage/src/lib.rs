@@ -1,10 +1,3 @@
-//! storage crate scaffold.
+//! storage crate — 通用 SQLite 记录存储实现。
 
-pub mod background_job;
-pub mod crawler_channels;
-pub mod crawler_db;
-pub mod crawler_keywords;
-pub mod crawler_settings;
-pub mod customer;
-pub mod opendesk_db;
 pub mod repository;

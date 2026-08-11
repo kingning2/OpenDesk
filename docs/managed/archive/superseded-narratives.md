@@ -4,9 +4,7 @@
 
 | 废弃内容 | 替代文档 |
 |----------|----------|
-| WhatsApp AI 自动客服 Desktop Agent | [product-architecture.md](../../architecture/product-architecture.md) |
-| 阶段 1 = WhatsApp 自动回复 MVP | [mvp-sales-workbench.md](../roadmaps/mvp-sales-workbench.md) |
-| 统一 AI 智能客服平台（PROJECT_ANALYSIS 旧版） | [MVP_REVIEW.md](../MVP_REVIEW.md) |
-| CHG-20260715-001 引入的目标产品描述 | 同上；该 Change 记录保留作历史 |
+| WhatsApp AI 自动客服 Desktop Agent | 已回退：当前产品即为纯正 AI Agent 智能客服 |
+| 统一 AI 智能客服平台（PROJECT_ANALYSIS 旧版） | 已回退：当前产品即为纯正 AI Agent 智能客服 |
 
 历史 Change Record（如 `chg-20260715-001-whatsapp-architecture-docs.md`）**不删除、不篡改**，仅通过本索引标明已 supersede。

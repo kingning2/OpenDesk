@@ -55,29 +55,102 @@ def _load_schema(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _emit_ts(name: str, schema: dict) -> str:
+def _resolve_ref(ref: str, current_rel: Path, schema_root: Path) -> tuple[str, str]:
+    """Resolve a relative $ref to the referenced schema's (PascalCase name, snake file)."""
+    if ref.startswith("#/"):
+        raise ValueError(f"JSON-pointer refs not supported: {ref}")
+    current_dir = (schema_root / current_rel).parent
+    target = (current_dir / ref).resolve()
+    try:
+        rel = target.relative_to(schema_root.resolve())
+    except ValueError as error:
+        raise ValueError(f"ref outside schema root: {ref}") from error
+    return _schema_names(rel)
+
+
+def _collect_refs(
+    spec: dict,
+    current_rel: Path,
+    schema_root: Path,
+) -> list[tuple[str, str]]:
+    """Collect (pascal, snake) names of every type a property spec references."""
+    refs: list[tuple[str, str]] = []
+    if "$ref" in spec:
+        refs.append(_resolve_ref(spec["$ref"], current_rel, schema_root))
+    if spec.get("type") == "array":
+        refs.extend(_collect_refs(spec.get("items", {}), current_rel, schema_root))
+    return refs
+
+
+def _prop_type_ts(spec: dict, current_rel: Path, schema_root: Path) -> str:
+    if "$ref" in spec:
+        return _resolve_ref(spec["$ref"], current_rel, schema_root)[0]
+    stype = spec.get("type", "string")
+    if stype == "array":
+        items = spec.get("items", {})
+        return f"{_prop_type_ts(items, current_rel, schema_root)}[]"
+    return TYPE_MAP_TS.get(stype, "unknown")
+
+
+def _prop_type_rs(spec: dict, current_rel: Path, schema_root: Path) -> str:
+    if "$ref" in spec:
+        return _resolve_ref(spec["$ref"], current_rel, schema_root)[0]
+    stype = spec.get("type", "string")
+    if stype == "array":
+        items = spec.get("items", {})
+        return f"Vec<{_prop_type_rs(items, current_rel, schema_root)}>"
+    return TYPE_MAP_RS.get(stype, "String")
+
+
+def _prop_type_py(spec: dict, current_rel: Path, schema_root: Path) -> str:
+    if "$ref" in spec:
+        return _resolve_ref(spec["$ref"], current_rel, schema_root)[0]
+    stype = spec.get("type", "string")
+    if stype == "array":
+        items = spec.get("items", {})
+        return f"list[{_prop_type_py(items, current_rel, schema_root)}]"
+    return TYPE_MAP_PY.get(stype, "str")
+
+
+def _schema_refs(schema: dict, rel: Path, schema_root: Path) -> list[tuple[str, str]]:
+    refs: list[tuple[str, str]] = []
+    for spec in schema.get("properties", {}).values():
+        refs.extend(_collect_refs(spec, rel, schema_root))
+    return sorted(set(refs))
+
+
+def _emit_ts(name: str, schema: dict, rel: Path, schema_root: Path) -> str:
     required = set(schema.get("required", []))
     props = schema.get("properties", {})
-    lines = [f"export interface {name} {{"]
+    lines = []
+    for pascal, snake in _schema_refs(schema, rel, schema_root):
+        lines.append(f'import type {{ {pascal} }} from "./{snake}";')
+    if lines:
+        lines.append("")
+    lines.append(f"export interface {name} {{")
     for prop, spec in props.items():
-        ts_type = TYPE_MAP_TS.get(spec.get("type", "string"), "unknown")
+        ts_type = _prop_type_ts(spec, rel, schema_root)
         optional = "" if prop in required else "?"
         lines.append(f"  {prop}{optional}: {ts_type};")
     lines.append("}")
     return "\n".join(lines) + "\n"
 
 
-def _emit_rs(name: str, schema: dict) -> str:
+def _emit_rs(name: str, schema: dict, rel: Path, schema_root: Path) -> str:
     required = set(schema.get("required", []))
     props = schema.get("properties", {})
-    lines = [
-        "use serde::{Deserialize, Serialize};",
-        "",
-        "#[derive(Debug, Clone, Serialize, Deserialize)]",
-        f"pub struct {name} {{",
-    ]
+    refs = _schema_refs(schema, rel, schema_root)
+    lines = ["use serde::{Deserialize, Serialize};"]
+    if len(refs) == 1:
+        lines.append(f"use crate::contracts::{refs[0][0]};")
+    elif len(refs) > 1:
+        joined = ", ".join(pascal for pascal, _ in refs)
+        lines.append(f"use crate::contracts::{{{joined}}};")
+    lines.append("")
+    lines.append("#[derive(Debug, Clone, Serialize, Deserialize)]")
+    lines.append(f"pub struct {name} {{")
     for prop, spec in props.items():
-        rs_type = TYPE_MAP_RS.get(spec.get("type", "string"), "String")
+        rs_type = _prop_type_rs(spec, rel, schema_root)
         if prop not in required:
             rs_type = f"Option<{rs_type}>"
         lines.append(f"    pub {prop}: {rs_type},")
@@ -86,16 +159,18 @@ def _emit_rs(name: str, schema: dict) -> str:
     return "\n".join(lines)
 
 
-def _emit_py(name: str, schema: dict) -> str:
+def _emit_py(name: str, schema: dict, rel: Path, schema_root: Path) -> str:
     required = set(schema.get("required", []))
     props = schema.get("properties", {})
     lines = [
         '"""Auto-generated from contracts/schema."""',
         "",
         "from typing import TypedDict",
-        "",
-        "",
     ]
+    for pascal, snake in _schema_refs(schema, rel, schema_root):
+        lines.append(f"from .{snake} import {pascal}")
+    lines.append("")
+    lines.append("")
     if required == set(props):
         lines.append(f"class {name}(TypedDict):")
     else:
@@ -104,7 +179,7 @@ def _emit_py(name: str, schema: dict) -> str:
         lines.append("    pass")
     else:
         for prop, spec in props.items():
-            py_type = TYPE_MAP_PY.get(spec.get("type", "string"), "str")
+            py_type = _prop_type_py(spec, rel, schema_root)
             lines.append(f"    {prop}: {py_type}")
     return "\n".join(lines) + "\n"
 
@@ -137,9 +212,9 @@ def main() -> int:
         py_file = PY_OUT / f"{snake}.py"
         rs_file = RS_OUT / f"{snake}.rs"
 
-        write_text(ts_file, _emit_ts(pascal, schema), dry_run=args.dry_run)
-        write_text(py_file, _emit_py(pascal, schema), dry_run=args.dry_run)
-        write_text(rs_file, _emit_rs(pascal, schema), dry_run=args.dry_run)
+        write_text(ts_file, _emit_ts(pascal, schema, rel, schema_root), dry_run=args.dry_run)
+        write_text(py_file, _emit_py(pascal, schema, rel, schema_root), dry_run=args.dry_run)
+        write_text(rs_file, _emit_rs(pascal, schema, rel, schema_root), dry_run=args.dry_run)
 
         ts_exports.append(f'export type {{ {pascal} }} from "./{snake}";')
         py_exports.append(f"from .{snake} import {pascal}")

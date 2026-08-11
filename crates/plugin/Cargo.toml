@@ -1,4 +1,0 @@
-﻿[package]
-name = "plugin"
-version.workspace = true
-edition.workspace = true

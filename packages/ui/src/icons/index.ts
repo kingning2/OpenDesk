@@ -3,7 +3,6 @@ export {
   Bot,
   Home,
   Languages,
-  Mail,
   MessageSquare,
   Minus,
   Monitor,
@@ -17,6 +16,5 @@ export {
   Sun,
   Users,
   X,
-  Youtube,
 } from "lucide-react";
 export type { LucideIcon } from "lucide-react";

@@ -1,1 +1,0 @@
-//! mail-net crate scaffold.

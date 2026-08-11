@@ -12,14 +12,18 @@ React  →  platform  →  (Tauri IPC)  →  Rust  →  ports  ←  infrastructu
 
 ## Rust Workspace 依赖矩阵
 
+业务代码（UseCase / Tauri commands）放在 `apps/desktop/src-tauri`；`crates/` 仅放基础设施，基础设施禁止依赖业务代码。
+
 | Crate 类型 | 可依赖 | 禁止依赖 |
 |------------|--------|----------|
-| `kernel` | `common` | feature crates, `storage` 实现 |
-| `ports` | `common` | feature crates, `storage`, `runtime` |
-| `<feature>` | `common`, `kernel`, `ports` | 其他 `<feature>` |
-| `storage` | `common`, `ports` | feature crates |
-| `runtime` | `common`, `ports` | feature crates（除 adapter） |
-| `app` | 所有注册 feature | — |
+| `common` | — | 业务代码（src-tauri） |
+| `kernel` | — | 业务代码 |
+| `ports` | `common` | 业务代码, `storage`, `runtime`, `adapter` |
+| `adapter` | `common`, `ports`, `runtime` | 业务代码 |
+| `storage` | `common`, `ports` | 业务代码 |
+| `runtime` | `common`, `ports` | 业务代码 |
+
+`src-tauri`（业务层）可依赖：`common` · `kernel` · `ports` · `adapter` · `storage` · `runtime`。
 
 ## React 依赖矩阵
 
@@ -35,9 +39,9 @@ React  →  platform  →  (Tauri IPC)  →  Rust  →  ports  ←  infrastructu
 | 包 | 可依赖 | 禁止依赖 |
 |----|--------|----------|
 | `contracts` | pydantic / typing | sqlalchemy, sqlite3 |
-| `gateway` | contracts, shared | tauri, react |
-| `worker` | queue, contracts | 业务持久化 |
-| `sidecar` | gateway, 各 AI 包 | GUI 框架 |
+| `shared` | — | tauri, react |
+| `gateway` | contracts, shared | tauri, react, SQLite |
+| `sidecar` | gateway, contracts, shared | GUI 框架 |
 
 ## 循环依赖检测
 

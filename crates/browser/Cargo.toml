@@ -1,4 +1,0 @@
-﻿[package]
-name = "browser"
-version.workspace = true
-edition.workspace = true

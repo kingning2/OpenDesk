@@ -2,17 +2,15 @@
 
 ## 项目是什么
 
-OpenDesk 是 **本地优先的 AI 商务桌面**：从 YouTube 获取潜客邮箱，用 **自有 SMTP** 邮件谈价，WhatsApp Business 在桌面辅助翻译与回复建议（**人工发送**）。系统记住每位客户的来源、报价与合作状态；AI 通过 **只读查询** 获取上下文，**不能改库、不能自动发信**。
+OpenDesk 是 **本地优先的 AI Agent 智能客服** 桌面应用：AI 提供客服场景的回复建议与交互，核心能力经 Rust 唯一协调者编排，Python Sidecar 承担 AI 推理。
 
-> 当前处于 **Architecture Skeleton + 部分切片** 阶段。YouTube 爬虫、UI Shell、Sidecar 等已有；客户档案、邮件发信、价目表、AI 商务能力等 **按 MVP 规划待实现**。
+> 当前处于 **Architecture Skeleton + 基础切片** 阶段。UI Shell、Rust Agent 组装、Python Sidecar ping 已有。
 
-## 详细规划文档（团队评审入口）
+## 文档入口
 
 **请从这里开始：**
 
-👉 [`docs/managed/MVP_REVIEW.md`](managed/MVP_REVIEW.md)
-
-包含：路线图、Epic、8 个子任务 Change Record（含精确改动范围）、ADR、领域边界。
+👉 [`docs/managed/`](managed/) — 领域文档、Change Record、ADR。
 
 ## 技术架构（不变）
 
@@ -31,11 +29,11 @@ React  →  Rust  →  Python
 | 路径 | 说明 |
 |------|------|
 | `apps/desktop` | Tauri + React |
-| `crates` | Rust Workspace |
-| `python` | AI Runtime（Sidecar） |
+| `crates` | Rust Workspace（仅基建） |
+| `python` | AI Sidecar |
 | `contracts` | 三端共享契约 |
-| `docs/managed/` | **MVP 规划与变更协议** |
-| `docs/architecture/` | 产品与运行时架构 |
+| `docs/managed/` | **领域文档与变更协议** |
+| `docs/architecture/` | 架构文档与 ADR |
 
 ## 开发
 
@@ -49,7 +47,7 @@ python skills/opendesk/scripts/check_architecture.py
 ## 其他文档
 
 - [`README.md`](../README.md) — 工程入口
-- [`docs/architecture/product-architecture.md`](architecture/product-architecture.md) — 产品架构
+- [`docs/architecture/`](architecture/) — 架构文档与 ADR
 - [`skills/opendesk/`](../skills/opendesk/) — AI 开发知识库
 
 ---

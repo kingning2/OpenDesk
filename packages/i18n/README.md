@@ -21,14 +21,14 @@ apps/desktop/src/i18n/locales/
   home/
     zh-cn.json
     en-us.json
-  crawler/
+  agent/
     zh-cn.json
     en-us.json
 ```
 
 - 目录名 = i18next **namespace**（通常对应路由 / Feature）
 - 文件名 = 语言标签：`zh-cn.json` / `en-us.json`
-- 调用：`t("crawler.status.idle")` → namespace=`crawler`，key=`status.idle`
+- 调用：`t("agent.status.idle")` → namespace=`agent`，key=`status.idle`
 - 未知首段回落到 `common`（如 `nav.home`、`shell.settings`）
 
 ## 使用

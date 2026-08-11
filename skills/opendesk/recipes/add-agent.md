@@ -3,8 +3,8 @@
 ## 修改顺序
 
 1. Contract: agent IPC + event schema
-2. `crates/agent/` UseCase 骨架
-3. `python/packages/agent/` 包骨架
+2. `apps/desktop/src-tauri/src/agent.rs` — UseCase 骨架
+3. `python/packages/gateway/handlers/` — sidecar handler（骨架）
 4. `runtime` 注册 sidecar 路由（骨架）
 5. 流式：Rust Event 转发占位
 

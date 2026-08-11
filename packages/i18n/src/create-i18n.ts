@@ -1,8 +1,8 @@
 /**
  * `createI18n`：基于 i18next / react-i18next 的多语言工厂。
  *
- * 支持按路由（namespace）拆分资源；`t("crawler.status.idle")` 会解析为
- * namespace=`crawler`、key=`status.idle`。未知首段回落到 `defaultNS`（通常为 `common`）。
+ * 支持按路由（namespace）拆分资源；`t("agent.status.idle")` 会解析为
+ * namespace=`agent`、key=`status.idle`。未知首段回落到 `defaultNS`（通常为 `common`）。
  *
  * @author coisini
  * @created 2026-07-20
@@ -127,7 +127,7 @@ function readPersistedLocale<Locale extends string>(
 }
 
 /**
- * 将 `crawler.status.idle` 拆成 namespace + 剩余 key。
+ * 将 `agent.status.idle` 拆成 namespace + 剩余 key。
  *
  * @author coisini
  * @created 2026-07-20

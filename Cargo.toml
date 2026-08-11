@@ -2,32 +2,12 @@
 resolver = "2"
 members = [
   "apps/desktop/src-tauri",
-  "crates/app",
-  "crates/customer",
-  "crates/crawler",
-  "crates/crawler-enrich",
   "crates/kernel",
   "crates/common",
   "crates/ports",
   "crates/adapter",
   "crates/runtime",
-  "crates/chat",
-  "crates/mail",
-  "crates/agent",
-  "crates/workflow",
-  "crates/knowledge",
-  "crates/browser",
-  "crates/ocr",
-  "crates/mcp",
-  "crates/plugin",
-  "crates/tenant",
-  "crates/user",
-  "crates/channel",
   "crates/storage",
-  "crates/vector",
-  "crates/file",
-  "crates/mail-net",
-  "crates/worker",
 ]
 exclude = ["subscription"]
 

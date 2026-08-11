@@ -11,7 +11,7 @@
 ## Rust
 
 ```
-crates/<feature>/tests/
+apps/desktop/src-tauri/tests/
 └── <usecase>_test.rs    # 使用 mockall 或手写 Mock Port
 ```
 

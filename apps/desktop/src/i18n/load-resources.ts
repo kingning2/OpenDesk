@@ -10,7 +10,7 @@ import type { LocaleNamespaces, Messages } from "@desk/i18n";
 /**
  * Vite 预加载：`locales/<route>/<locale-file>.json`
  *
- * 例：`locales/crawler/zh-cn.json` → namespace=`crawler`，语言文件=`zh-cn`
+ * 例：`locales/settings/zh-cn.json` → namespace=`settings`，语言文件=`zh-cn`
  */
 const localeModules = import.meta.glob<{ default: Messages }>(
   "./locales/*/*.json",
@@ -44,7 +44,7 @@ function buildLocaleResources(locale: AppLocale): LocaleNamespaces {
     if (!path.endsWith(suffix)) {
       continue;
     }
-    // ./locales/crawler/zh-cn.json → crawler
+    // ./locales/settings/zh-cn.json → settings
     const match = path.match(/\/locales\/([^/]+)\/[^/]+\.json$/);
     if (!match) {
       continue;

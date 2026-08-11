@@ -2,73 +2,46 @@
 
 ## 职责
 
-Agent 领域负责 AI 规划、模型交互、结构化工具请求和任务执行状态，不负责业务持久化或绕过 Rust 执行高权限操作。
+Agent 领域负责 AI 规划、模型交互与任务执行，是当前桌面应用的**核心业务**。Rust 侧通过 Sidecar Gateway 与 Python sidecar 通信，Python 承担 AI 推理。
 
-MVP 增量能力：
+当前实现（骨架）：
 
-- **LLM Provider 配置**（设置页 API Key / 模型，见 [CHG-027](../../changes/2026/07/chg-20260720-027-llm-provider-settings.md)）
-- **只读 Query 工具**（customer.* / pricing.* / quote.history / ocr.get_text）— 见 ADR-0001
-- **Correction Memory**（人工纠错规则，Rust 注入下次任务，见 [ADR-0005](../../decisions/agent/adr-0005-ai-correction-memory.md)、[CHG-030](../../changes/2026/07/chg-20260720-030-ai-correction-feedback.md)）
-- **邮件润色**（`mail_draft`）— 在 **Mail 模板已填充** 的正文上个性化，人审后发
-- **WhatsApp 翻译与回复建议**（wa_translate / wa_suggest）— 人发
+- **PingAgent**：通过 `AgentSidecarGateway.ping()` 探活 Python sidecar（见 [`src-tauri/src/agent.rs`](../../../../../apps/desktop/src-tauri/src/agent.rs)）
+- **License 门禁**：授权校验在应用入口处（见 `state.rs` 的 `build_license_gate`）
 
 ## 非职责
 
-- 直接修改客户、报价、合作状态（**禁止写库工具**）
-- **AI 自动写入纠错规则**（仅人通过 UI → Rust IPC）
-- 触发 SMTP 或 WhatsApp 发送
+- 直接修改业务持久化（禁止写库工具；写操作仅 UI 人工操作 → Rust IPC）
+- AI 自动发送消息
 - Python 直连 SQLite
-- 业务持久化（`ai_correction` 由 Rust 写入）
-
-## Correction Memory 摘要
-
-```text
-用户标记 AI 错误 → UI → Rust 存 ai_correction
-下次 mail_draft / wa_suggest → Rust context_loader 注入 corrections[]
-→ Python 渲染 MUST FOLLOW 区块 → 生成（人审）
-```
-
-| 作用域 | 说明 |
-|--------|------|
-| `customer` | 仅该客户任务生效 |
-| `global` | 同 task_type 全部生效 |
-
-限额：最多 15 条 / 3000 字符（见 ADR-0005）。
-
-## 目标边界
-
-- Python 产生结构化 `ToolCall`（**仅只读白名单**）；
-- Rust 负责审批、授权和工具执行；
-- Python 接收 `ToolResult` 后恢复任务；
-- 长任务使用 `task_id`，支持暂停、恢复、取消和超时；
-- 生成邮件/WA 建议前 **必须** 经 `context_loader` 拉取客户上下文 **与纠错规则**。
+- 绕过 Rust 直接执行高权限操作
 
 ## 稳定边界
 
 ```text
-React → Rust agent IPC → Python sidecar task
-         ↑ correction_save（人写）
-         ↑ context_loader（customer + pricing + corrections）
-                              ↓ ToolCall（只读）
-                         Rust Query Port → SQLite
-                              ↓ ToolResult
-                         Python 生成 → Rust → React
+React → Rust agent IPC（src-tauri/src/commands/agent.rs）
+         ↓ PingAgent
+    AgentSidecarGateway（ports::sidecar）
+         ↓ sidecar_request
+    Python gateway（agent_ping handler）
 ```
 
-**有效 ADR：**
+## 有效 ADR
 
 - [ADR-0001-ai-readonly-query-port](../../decisions/customer/adr-0001-ai-readonly-query-port.md)
 - [ADR-0005-ai-correction-memory](../../decisions/agent/adr-0005-ai-correction-memory.md)
 
 ## 入口
 
-- Rust：`crates/agent/`
-- Python：`python/packages/agent/`
-- Contract：`contracts/schema/v1/agent/`
-- Epic：[EPIC-20260720-001-mvp-sales-workbench](../../changes/2026/07/epic-20260720-001-mvp-sales-workbench.md)
+| 类型 | 路径 |
+|------|------|
+| Rust（业务） | `apps/desktop/src-tauri/src/agent.rs`、`commands/agent.rs` |
+| Gateway trait | `crates/ports/src/sidecar.rs` |
+| Adapter | `crates/adapter/`（`RuntimeAgentSidecar`） |
+| Runtime | `crates/runtime/`（`SidecarLifecycle`） |
+| Python | `python/packages/gateway/`（`agent_ping` handler） |
+| Contract | `contracts/`（`agent_ipc_ping_*` / `agent_sidecar_ping_*`） |
 
 ## 当前状态
 
-目前只有包和示例 Handler 骨架（如 Ping）。MVP Agent 能力见 CHG-027、CHG-017、CHG-018、CHG-020、**CHG-030**。
-
-新的 Agent 内核设计应先创建 Change Record；形成长期技术选择时再建立 ADR（只读查库 ADR-0001；纠错记忆 ADR-0005）。
+PingAgent 骨架已实现，应用可通过 IPC 探活 Python sidecar。后续 AI 能力（LLM 推理、只读 Query 工具、纠错记忆等）按新 Change 逐项实施。

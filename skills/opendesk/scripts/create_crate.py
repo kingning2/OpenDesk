@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Scaffold a Rust crate and register it in the workspace."""
+"""Scaffold an infrastructure Rust crate and register it in the workspace.
+
+业务代码直接放在 apps/desktop/src-tauri，不创建业务 feature crate。
+"""
 
 from __future__ import annotations
 
@@ -12,7 +15,6 @@ from _common import CRATES, ensure_workspace_member, setup_logging, validate_nam
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--name", required=True)
-    parser.add_argument("--kind", choices=("feature", "infra"), default="feature")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args()
@@ -29,15 +31,6 @@ def main() -> int:
 serde = { workspace = true }
 """
     lib_body = f"//! {name} crate scaffold.\n"
-    if args.kind == "feature":
-        deps += """kernel = { path = "../kernel" }
-ports = { path = "../ports" }
-thiserror = "2"
-tracing = "0.1"
-"""
-        lib_body += "\npub mod app;\npub mod domain;\n"
-        write_text(crate_dir / "src" / "app" / "mod.rs", "", dry_run=args.dry_run)
-        write_text(crate_dir / "src" / "domain" / "mod.rs", "", dry_run=args.dry_run)
 
     write_text(
         crate_dir / "Cargo.toml",
@@ -57,7 +50,7 @@ edition.workspace = true
         dry_run=args.dry_run,
     )
     ensure_workspace_member(name, dry_run=args.dry_run)
-    logging.info("crate %r (%s) created", name, args.kind)
+    logging.info("crate %r created", name)
     return 0
 
 

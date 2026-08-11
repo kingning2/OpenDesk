@@ -14,7 +14,7 @@
 
 ## 非职责
 
-- YouTube **获客爬虫**（Crawler 领域 — 抽邮箱导入 Customer，已独立推进）
+- YouTube **获客爬虫**（Crawler 板块已移除；若恢复按新 Change 重新引入）
 - 邮件/WhatsApp 主链路
 - 本期任何 Gbyte HTTP 调用
 
@@ -46,7 +46,7 @@ React（KOL 频道 Tab — 当前 Coming Soon）
 
 ## 与 Customer 关系
 
-- 获客阶段：`customer.source_meta` 可存 YouTube 频道 JSON（Crawler 写入）
+- Customer 板块已移除；若恢复，`customer.source_meta` 可存 YouTube 频道 JSON（重新引入时定）
 - KOL 迁入后：可选 `kol_channel_id` 外键或同步任务，实施时定
 
 ## 当前约束
@@ -56,5 +56,4 @@ React（KOL 频道 Tab — 当前 Coming Soon）
 
 ## 相关
 
-- [EPIC-20260721-001](../../changes/2026/07/epic-20260721-001-email-agent-port.md) — Phase 7
-- [Crawler 领域](../crawler/README.md) — 获客，非 KOL 平台
+- Phase 7 启动前须评审本 README 并新建独立 Epic

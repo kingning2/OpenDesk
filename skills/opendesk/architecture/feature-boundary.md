@@ -5,7 +5,7 @@ Feature 是 OpenDesk 的最小业务垂直单元。每个 Feature 在 Rust、Rea
 ## Feature 列表
 
 ```
-chat · mail · agent · workflow · knowledge · browser · ocr · mcp · plugin · tenant · user · channel
+chat · agent · knowledge · workflow · browser · ocr · mcp · plugin · tenant · user · channel
 ```
 
 ## 隔离模型
@@ -17,9 +17,9 @@ flowchart LR
         C_DOM[domain]
     end
 
-    subgraph mail_crate["crates/mail"]
-        M_APP[app]
-        M_DOM[domain]
+    subgraph knowledge_crate["crates/knowledge"]
+        K_APP[app]
+        K_DOM[domain]
     end
 
     subgraph kernel["crates/kernel"]
@@ -31,33 +31,33 @@ flowchart LR
     end
 
     chat_crate -->|publish| EB
-    mail_crate -->|subscribe| EB
+    knowledge_crate -->|subscribe| EB
     chat_crate -.->|read-only| QP
-    mail_crate -.->|implements| QP
+    knowledge_crate -.->|implements| QP
 ```
 
 ## 允许 vs 禁止
 
 | ✅ 允许 | ❌ 禁止 |
 |---------|---------|
-| Feature → `kernel::event`（发布/订阅） | `use mail::` inside `chat` |
-| Feature → `ports` trait（Query Port） | `chat` crate 依赖 `mail` crate |
+| Feature → `kernel::event`（发布/订阅） | `use knowledge::` inside `chat` |
+| Feature → `ports` trait（Query Port） | `chat` crate 依赖 `knowledge` crate |
 | Feature → `contracts` DTO | Feature UI import 另一 Feature 内部模块 |
 | Feature → `common` / `kernel` | 共享可变全局状态 |
 
 ## 每个 Feature 的标准结构
 
-### Rust (`crates/<feature>/`)
+### Rust（`apps/desktop/src-tauri/`）
+
+业务 UseCase 与 Tauri commands 放在 `src-tauri`；`crates/` 仅放基础设施。
 
 ```
-crates/<feature>/
-├── Cargo.toml
-└── src/
-    ├── lib.rs
-    ├── app/          # UseCase / Application Service
-    │   └── mod.rs
-    └── domain/       # Entity / Value Object / Domain Error
-        └── mod.rs
+apps/desktop/src-tauri/src/
+├── agent.rs          # Agent UseCase
+├── license.rs        # License UseCase
+├── commands/         # Tauri commands
+├── state.rs          # AppState 组装
+└── lib.rs            # builder / invoke_handler
 ```
 
 ### React (`apps/desktop/src/features/<feature>/`)

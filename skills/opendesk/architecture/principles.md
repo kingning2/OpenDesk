@@ -10,7 +10,7 @@ OpenDesk 所有设计必须遵守以下原则。违反即视为架构错误。
 
 ### 2. Feature First
 
-系统按 Feature 垂直切分（`chat`、`mail`、`agent` 等）。每个 Feature 拥有独立的 crate、前端模块、契约命名空间。Feature 之间禁止直接依赖。
+系统按 Feature 垂直切分（`chat`、`agent`、`knowledge` 等）。每个 Feature 拥有独立的 crate、前端模块、契约命名空间。Feature 之间禁止直接依赖。
 
 ### 3. Dependency Inward
 

@@ -24,7 +24,7 @@
 <feature>.<entity>.<verb-past-tense>
 
 chat.message.sent
-mail.sync.completed
+runtime.sidecar.restarted
 ```
 
 ## 幂等性

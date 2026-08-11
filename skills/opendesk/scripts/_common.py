@@ -11,16 +11,28 @@ ROOT = Path(__file__).resolve().parents[3]
 CRATES = ROOT / "crates"
 CONTRACTS = ROOT / "contracts"
 DESKTOP_FEATURES = ROOT / "apps" / "desktop" / "src" / "features"
+SRC_TAURI = ROOT / "apps" / "desktop" / "src-tauri" / "src"
 PYTHON_PACKAGES = ROOT / "python" / "packages"
 PYTHON_SIDECAR = ROOT / "python" / "sidecar"
 CARGO_TOML = ROOT / "Cargo.toml"
 PYPROJECT_TOML = ROOT / "pyproject.toml"
 
 FORBIDDEN_SUFFIXES = ("Manager", "Service", "System", "Engine", "Processor", "Helper", "Util")
-FEATURES = frozenset({
-    "chat", "mail", "agent", "workflow", "knowledge", "browser",
-    "ocr", "mcp", "plugin", "tenant", "user", "channel",
-})
+FEATURES = frozenset(
+    {
+        "chat",
+        "agent",
+        "workflow",
+        "knowledge",
+        "browser",
+        "ocr",
+        "mcp",
+        "plugin",
+        "tenant",
+        "user",
+        "channel",
+    }
+)
 
 
 def setup_logging(verbose: bool = False) -> None:
@@ -61,7 +73,7 @@ def ensure_workspace_member(crate_name: str, *, dry_run: bool = False) -> None:
     if entry in content:
         logging.debug("workspace already contains %s", crate_name)
         return
-    marker = "[workspace]\nresolver = \"2\"\nmembers = [\n"
+    marker = '[workspace]\nresolver = "2"\nmembers = [\n'
     if marker not in content:
         raise RuntimeError("could not parse root Cargo.toml workspace.members")
     content = content.replace(marker, marker + entry + "\n")

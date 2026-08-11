@@ -13,31 +13,25 @@ flowchart TB
     end
 
     subgraph Core["Rust Application Core"]
-        Tauri[apps/desktop/src-tauri]
+        Tauri[apps/desktop/src-tauri\n业务 UseCase + 组装]
         Kernel[kernel - event / task]
         Ports[ports - traits]
-        Features_R[feature crates]
-        Infra[storage / vector / file / runtime]
+        Infra[adapter / storage / runtime]
     end
 
-    subgraph Runtime["Python AI Runtime"]
+    subgraph Runtime["Python AI Sidecar"]
         Sidecar[python/sidecar]
-        Gateway[gateway]
-        Worker[worker / queue]
-        AI[llm / rag / agent / ocr]
+        Gateway[gateway - agent_ping]
     end
 
     Contracts[(contracts/)]
 
     Features --> Platform
     Platform -->|Tauri IPC| Tauri
-    Tauri --> Features_R
-    Features_R --> Ports
+    Tauri --> Ports
     Ports --> Infra
     Tauri -->|lifecycle + IPC| Sidecar
     Sidecar --> Gateway
-    Gateway --> Worker
-    Worker --> AI
     Tauri -->|Tauri Events| Platform
     Contracts -.->|codegen| Frontend
     Contracts -.->|codegen| Core
@@ -51,7 +45,7 @@ flowchart TB
 | 桌面壳 | Tauri 2 |
 | 前端 | React · TypeScript · Vite · pnpm workspace |
 | 核心 | Rust Workspace · SQLite（经 storage 抽象） |
-| AI | Python · sidecar · gateway · queue · worker |
+| AI | Python · sidecar · gateway |
 | 契约 | JSON Schema · OpenAPI · codegen |
 
 ## 当前阶段
@@ -66,8 +60,8 @@ flowchart TB
 | `packages/ui` | 纯 UI 组件（无 IPC/业务） |
 | `packages/platform` | IPC · OS API · 窗口 |
 | `packages/contracts` | 前端契约类型（codegen） |
-| `crates/` | Rust 业务与基础设施 |
-| `python/` | AI Runtime |
+| `crates/` | Rust 基础设施（业务代码在 src-tauri） |
+| `python/` | AI Sidecar |
 | `contracts/` | 三端共享契约（唯一真相源） |
 
 ## 数据流（流式 AI 输出）

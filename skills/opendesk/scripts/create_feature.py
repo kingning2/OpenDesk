@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
-"""Scaffold a full OpenDesk feature (contract + crate + frontend)."""
+"""Scaffold a full OpenDesk feature (contract + src-tauri UseCase + frontend)."""
 
 from __future__ import annotations
 
 import argparse
 import logging
-import sys
 
 from _common import (
     CONTRACTS,
-    CRATES,
     DESKTOP_FEATURES,
-    ensure_workspace_member,
+    SRC_TAURI,
     setup_logging,
     validate_name,
     write_text,
@@ -35,37 +33,15 @@ def main() -> int:
     for sub in ("dto", "ipc", "event", "error"):
         write_text(CONTRACTS / "schema" / "v1" / name / sub / ".gitkeep", "", dry_run=args.dry_run)
 
-    crate_dir = CRATES / name
+    usecase = SRC_TAURI / f"{name}.rs"
     write_text(
-        crate_dir / "Cargo.toml",
-        f"""[package]
-name = "{name}"
-version.workspace = true
-edition.workspace = true
+        usecase,
+        f"""//! {name} UseCase 骨架（业务代码放在 src-tauri，不放 crates/）。
 
-[dependencies]
-common = {{ path = "../common" }}
-kernel = {{ path = "../kernel" }}
-ports = {{ path = "../ports" }}
-serde = {{ workspace = true }}
-thiserror = "2"
-tracing = "0.1"
+// TODO: 实现 UseCase 并注册 Tauri command。
 """,
         dry_run=args.dry_run,
     )
-    write_text(
-        crate_dir / "src" / "lib.rs",
-        f"//! {name} crate scaffold.\n\npub mod app;\npub mod domain;\n",
-        dry_run=args.dry_run,
-    )
-    write_text(crate_dir / "src" / "app" / "mod.rs", "", dry_run=args.dry_run)
-    write_text(crate_dir / "src" / "domain" / "mod.rs", "", dry_run=args.dry_run)
-    write_text(
-        crate_dir / "tests" / "scaffold_test.rs",
-        "#[test]\nfn crate_links() {\n    assert!(true);\n}\n",
-        dry_run=args.dry_run,
-    )
-    ensure_workspace_member(name, dry_run=args.dry_run)
 
     fe_dir = DESKTOP_FEATURES / name
     write_text(

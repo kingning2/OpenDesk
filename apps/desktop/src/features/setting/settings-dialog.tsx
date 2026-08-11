@@ -6,7 +6,6 @@
  */
 
 import { useState } from "react";
-import { useNavigate } from "react-router";
 import {
   Button,
   Dialog,
@@ -14,7 +13,6 @@ import {
   DialogDescription,
   DialogTitle,
   IconButton,
-  Input,
   Select,
   SelectContent,
   SelectItem,
@@ -22,13 +20,12 @@ import {
   SelectValue,
   cn,
 } from "@desk/ui";
-import { Languages, X, Youtube, type LucideIcon } from "@desk/ui/icons";
+import { Languages, X, type LucideIcon } from "@desk/ui/icons";
 import { useI18n } from "../../i18n";
 import type { AppLocale } from "../../i18n";
-import { useYoutubeApiKeySettings } from "./use-youtube-api-key-settings";
 
 /** 设置侧栏分区 id。 */
-type SettingsSectionId = "language" | "youtube";
+type SettingsSectionId = "language";
 
 /**
  * `SettingsDialog` 属性。
@@ -71,10 +68,6 @@ const NAV_GROUPS: NavGroup[] = [
     labelKey: "settings.navPreferences",
     items: [{ id: "language", labelKey: "settings.navLanguage", icon: Languages }],
   },
-  {
-    labelKey: "settings.navIntegrations",
-    items: [{ id: "youtube", labelKey: "settings.navYoutube", icon: Youtube }],
-  },
 ];
 
 /**
@@ -87,27 +80,11 @@ const NAV_GROUPS: NavGroup[] = [
  * @returns 设置 Dialog 节点
  */
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
-  const navigate = useNavigate();
   const { t, locale, setLocale, locales, localeLabels } = useI18n();
-  const {
-    apiKey,
-    setApiKey,
-    loading,
-    saving,
-    savedMessage,
-    error,
-    save,
-    discard,
-    dirty: youtubeDirty,
-    configured,
-  } = useYoutubeApiKeySettings();
   const [section, setSection] = useState<SettingsSectionId>("language");
   const [draftLocale, setDraftLocale] = useState<AppLocale>(locale);
   const [localeSavedMessage, setLocaleSavedMessage] = useState("");
   const [confirmExit, setConfirmExit] = useState(false);
-  const [exitPendingAction, setExitPendingAction] = useState<"close" | "crawler" | null>(
-    null,
-  );
   const [wasOpen, setWasOpen] = useState(open);
 
   if (open !== wasOpen) {
@@ -116,14 +93,13 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       setDraftLocale(locale);
       setLocaleSavedMessage("");
       setConfirmExit(false);
-      setExitPendingAction(null);
     }
   }
 
   const localeDirty = draftLocale !== locale;
-  const isDirty = localeDirty || youtubeDirty;
+  const isDirty = localeDirty;
   /**
-   * 保存当前脏字段（语言草稿 + YouTube 密钥）。
+   * 保存当前脏字段（语言草稿）。
    *
    * @author coisini
    * @created 2026-07-21
@@ -135,9 +111,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       if (localeDirty) {
         setLocale(draftLocale);
         setLocaleSavedMessage(t("settings.saved"));
-      }
-      if (youtubeDirty) {
-        await save();
       }
       return true;
     } catch {
@@ -154,41 +127,31 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   function discardAll() {
     setDraftLocale(locale);
     setLocaleSavedMessage("");
-    discard();
   }
 
   /**
-   * 真正关闭弹窗（或跳转采集），并清理确认态。
+   * 真正关闭弹窗，并清理确认态。
    *
    * @author coisini
    * @created 2026-07-21
-   *
-   * @param action - 关闭目标
    */
-  function finishExit(action: "close" | "crawler") {
+  function finishExit() {
     setConfirmExit(false);
-    setExitPendingAction(null);
     onOpenChange(false);
-    if (action === "crawler") {
-      navigate("/features/crawler");
-    }
   }
 
   /**
-   * 请求退出；有未保存更改时弹出确认。
+   * 请求关闭；有未保存更改时弹出确认。
    *
    * @author coisini
    * @created 2026-07-21
-   *
-   * @param action - 关闭或去采集页
    */
-  function requestExit(action: "close" | "crawler") {
+  function requestExit() {
     if (isDirty) {
-      setExitPendingAction(action);
       setConfirmExit(true);
       return;
     }
-    finishExit(action);
+    finishExit();
   }
 
   /**
@@ -204,11 +167,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
       onOpenChange(true);
       return;
     }
-    requestExit("close");
+    requestExit();
   }
 
-  const sectionTitle =
-    section === "language" ? t("settings.language") : t("settings.youtubeTitle");
+  const sectionTitle = t("settings.language");
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -219,7 +181,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         showClose={false}
         onEscapeKeyDown={(event) => {
           event.preventDefault();
-          requestExit("close");
+          requestExit();
         }}
       >
         <DialogTitle className="sr-only">{t("settings.title")}</DialogTitle>
@@ -228,7 +190,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         <IconButton
           label={t("settings.close")}
           className="absolute right-3 top-3 z-20"
-          onClick={() => requestExit("close")}
+          onClick={() => requestExit()}
         >
           <X className="size-3.5" aria-hidden />
         </IconButton>
@@ -282,119 +244,54 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </header>
 
             <div className="min-h-0 flex-1 overflow-y-auto px-8 py-7">
-              {section === "language" ? (
-                <section className="flex max-w-md flex-col gap-6">
-                  <p className="text-[length:var(--text-sm)] leading-relaxed text-muted-foreground">
-                    {t("settings.languageHint")}
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    <label
-                      htmlFor="settings-locale"
-                      className="text-[length:var(--text-sm)] font-medium text-foreground"
-                    >
-                      {t("settings.language")}
-                    </label>
-                    <Select
-                      value={draftLocale}
-                      onValueChange={(value) => {
-                        setDraftLocale(value as AppLocale);
-                        setLocaleSavedMessage("");
-                      }}
-                    >
-                      <SelectTrigger id="settings-locale" className="w-full max-w-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {locales.map((code) => (
-                          <SelectItem key={code} value={code}>
-                            {localeLabels[code] ?? code}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Button
-                      type="button"
-                      disabled={!localeDirty}
-                      onClick={() => {
-                        setLocale(draftLocale);
-                        setLocaleSavedMessage(t("settings.saved"));
-                      }}
-                    >
-                      {t("settings.save")}
-                    </Button>
-                    {localeSavedMessage ? (
-                      <span className="text-[length:var(--text-sm)] text-emerald-600 dark:text-emerald-400">
-                        {localeSavedMessage}
-                      </span>
-                    ) : null}
-                  </div>
-                </section>
-              ) : (
-                <section className="flex max-w-lg flex-col gap-8">
-                  <p className="text-[length:var(--text-sm)] leading-relaxed text-muted-foreground">
-                    {t("settings.youtubeDescription")}
-                  </p>
-
-                  <div className="flex flex-col gap-2">
-                    <label
-                      htmlFor="settings-youtube-key"
-                      className="text-[length:var(--text-sm)] font-medium text-foreground"
-                    >
-                      {t("settings.apiKey")}
-                    </label>
-                    <Input
-                      id="settings-youtube-key"
-                      type="password"
-                      autoComplete="off"
-                      disabled={loading || saving}
-                      value={apiKey}
-                      onChange={(event) => setApiKey(event.target.value)}
-                      placeholder={t("settings.apiKeyPlaceholder")}
-                      className="max-w-md"
-                    />
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Button
-                      type="button"
-                      disabled={loading || saving || !youtubeDirty}
-                      onClick={() => void save()}
-                    >
-                      {saving ? t("settings.saving") : t("settings.save")}
-                    </Button>
-                    {savedMessage ? (
-                      <span className="text-[length:var(--text-sm)] text-emerald-600 dark:text-emerald-400">
-                        {t("settings.saved")}
-                      </span>
-                    ) : null}
-                    {!loading && configured ? (
-                      <span className="text-[length:var(--text-sm)] text-muted-foreground">
-                        {t("settings.configured")}
-                      </span>
-                    ) : null}
-                  </div>
-
-                  {error ? (
-                    <p className="text-[length:var(--text-sm)] text-red-500">{error}</p>
+              <section className="flex max-w-md flex-col gap-6">
+                <p className="text-[length:var(--text-sm)] leading-relaxed text-muted-foreground">
+                  {t("settings.languageHint")}
+                </p>
+                <div className="flex flex-col gap-2">
+                  <label
+                    htmlFor="settings-locale"
+                    className="text-[length:var(--text-sm)] font-medium text-foreground"
+                  >
+                    {t("settings.language")}
+                  </label>
+                  <Select
+                    value={draftLocale}
+                    onValueChange={(value) => {
+                      setDraftLocale(value as AppLocale);
+                      setLocaleSavedMessage("");
+                    }}
+                  >
+                    <SelectTrigger id="settings-locale" className="w-full max-w-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {locales.map((code) => (
+                        <SelectItem key={code} value={code}>
+                          {localeLabels[code] ?? code}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button
+                    type="button"
+                    disabled={!localeDirty}
+                    onClick={() => {
+                      setLocale(draftLocale);
+                      setLocaleSavedMessage(t("settings.saved"));
+                    }}
+                  >
+                    {t("settings.save")}
+                  </Button>
+                  {localeSavedMessage ? (
+                    <span className="text-[length:var(--text-sm)] text-emerald-600 dark:text-emerald-400">
+                      {localeSavedMessage}
+                    </span>
                   ) : null}
-
-                  <div className="border-t border-border/70 pt-6">
-                    <p className="text-[length:var(--text-sm)] leading-relaxed text-muted-foreground">
-                      {t("settings.afterConfig")}{" "}
-                      <button
-                        type="button"
-                        className="cursor-pointer font-medium text-primary underline-offset-4 transition-colors duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] [@media(hover:hover)_and_(pointer:fine)]:hover:underline"
-                        onClick={() => requestExit("crawler")}
-                      >
-                        {t("settings.crawlerLink")}
-                      </button>{" "}
-                      {t("settings.afterConfigSuffix")}
-                    </p>
-                  </div>
-                </section>
-              )}
+                </div>
+              </section>
             </div>
           </div>
 
@@ -428,7 +325,6 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     variant="ghost"
                     onClick={() => {
                       setConfirmExit(false);
-                      setExitPendingAction(null);
                     }}
                   >
                     {t("settings.unsavedCancel")}
@@ -438,24 +334,23 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                     variant="outline"
                     onClick={() => {
                       discardAll();
-                      finishExit(exitPendingAction ?? "close");
+                      finishExit();
                     }}
                   >
                     {t("settings.unsavedDiscard")}
                   </Button>
                   <Button
                     type="button"
-                    disabled={saving}
                     onClick={() => {
                       void (async () => {
                         const ok = await saveAll();
                         if (ok) {
-                          finishExit(exitPendingAction ?? "close");
+                          finishExit();
                         }
                       })();
                     }}
                   >
-                    {saving ? t("settings.saving") : t("settings.unsavedSave")}
+                    {t("settings.unsavedSave")}
                   </Button>
                 </div>
               </div>

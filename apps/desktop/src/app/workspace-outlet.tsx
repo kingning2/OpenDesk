@@ -17,21 +17,9 @@ const PAGE_LOADERS: Record<string, PageLoader> = {
     const { AgentPage } = await import("@feature/agent/agent-page");
     return AgentPage;
   },
-  "/features/crawler": async () => {
-    const { CrawlerPage } = await import("@feature/crawler/crawler-page");
-    return CrawlerPage;
-  },
-  "/features/customer": async () => {
-    const { CustomerPage } = await import("@feature/customer/customer-page");
-    return CustomerPage;
-  },
   "/features/chat": async () => {
     const { ChatPage } = await import("@feature/chat/chat-page");
     return ChatPage;
-  },
-  "/features/mail": async () => {
-    const { MailPage } = await import("@feature/mail/mail-page");
-    return MailPage;
   },
   "/features/knowledge": async () => {
     const { KnowledgePage } = await import("@feature/knowledge/knowledge-page");
@@ -124,7 +112,7 @@ function WorkspaceTab({ path, active }: { path: string; active: boolean }) {
 }
 
 /**
- * Tab keep-alive：已打开标签保持挂载（隐藏），长任务（如爬虫轮询）切换标签不中断。
+ * Tab keep-alive：已打开标签保持挂载（隐藏），长任务切换标签不中断。
  *
  * @author coisini
  * @created 2026-07-20

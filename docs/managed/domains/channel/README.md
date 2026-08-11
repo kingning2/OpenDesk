@@ -34,19 +34,18 @@ React 发送
   → Worker 发信（非自动队列直发）
 ```
 
-**与产品架构文档一致：** 见 [`docs/architecture/product-architecture.md`](../../../architecture/product-architecture.md)。
+**当前为规划中领域，未实现；实施时按架构约束（`docs/architecture/`）落地。**
 
 ## 入口
 
 | 类型 | 路径 |
 |------|------|
 | Rust | `crates/channel/`（骨架） |
-| Worker | `crates/worker` — `wa_protocol_bridge` job（待建） |
+| Worker | 规划（`opendesk-worker` 已移除，重新引入时实现 `wa_protocol_bridge` job） |
 | Contract | `contracts/schema/v1/channel/`（待建） |
 | React | `apps/desktop/src/features/channel/`（骨架） |
 | Epic 子任务 | [CHG-020](../../changes/2026/07/chg-20260720-020-whatsapp-business-assist.md) |
 | ADR | [ADR-0006](../../decisions/channel/adr-0006-whatsapp-baileys-worker.md) |
-| 分支手册 | [email-agent-port-branches.md](../../roadmaps/email-agent-port-branches.md) |
 
 ## 数据模型（MVP 目标）
 
@@ -85,7 +84,7 @@ React 发送
 
 ## 当前状态
 
-**尚未实现。** `crates/channel` 与 `features/channel` 为骨架；无 Channel Contract。ADR-0006 已接受，替代 Business API 方案。
+**尚未实现。** Channel 契约、`crates/channel`、`features/channel` 均为规划。ADR-0006 已接受，替代 Business API 方案。
 
 ## 当前约束
 

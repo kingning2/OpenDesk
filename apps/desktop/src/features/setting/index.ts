@@ -14,4 +14,3 @@ export type { SettingsDialogProps } from "./settings-dialog";
 export { SettingsDialogProvider } from "./settings-dialog-provider";
 export { useSettingsDialog } from "./settings-dialog-store";
 export type { SettingsDialogContextValue } from "./settings-dialog-store";
-export { useYoutubeApiKeySettings } from "./use-youtube-api-key-settings";

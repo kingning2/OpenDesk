@@ -13,15 +13,13 @@ Rust 是**唯一业务核心**与**唯一协调者**。
 | Permission · Cache · Logging | 阻塞 UI 线程 |
 | Tauri IPC 与事件转发 | 无限循环线程 |
 
-## Crate 结构
+## 代码布局
 
 ```
-crates/<feature>/
-├── Cargo.toml
+apps/desktop/src-tauri/src/   # 业务 UseCase · Tauri commands · 组装
+crates/<infra>/               # 基建（kernel · common · ports · adapter · storage · runtime）
 └── src/
-    ├── lib.rs
-    ├── app/       # UseCase — 无 IO
-    └── domain/    # 纯领域类型
+    └── lib.rs                # 单一职责模块（无 app / domain 分层）
 ```
 
 ## 错误处理

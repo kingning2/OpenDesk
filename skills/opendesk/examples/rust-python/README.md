@@ -11,7 +11,7 @@ React
 apps/desktop/src-tauri/commands
   │
   ▼
-crates/<feature>/app（UseCase）
+apps/desktop/src-tauri/src/<feature>.rs（UseCase）
   │
   ▼
 crates/runtime/src/sidecar（HTTP client）

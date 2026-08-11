@@ -70,11 +70,10 @@ flowchart TB
 | 类型 | 路径（规划） |
 |------|--------------|
 | Rust Feature | `crates/ocr/` |
-| OCR 引擎 | `crates/ocr-engine/`（**仅 Worker 依赖**，Tesseract 绑定） |
-| Worker | `crates/worker/src/handlers/ocr.rs` |
+| OCR 引擎 | `crates/ocr-engine/`（规划） |
+| Worker | 规划（`opendesk-worker` 已移除，重新引入时实现） |
 | Contract | `contracts/schema/v1/ocr/` |
 | React | `apps/desktop/src/features/ocr/` |
-| DB | [database-schema.md §5.5](../../../architecture/database-schema.md) |
 | ADR | [ADR-0002 Worker](../../decisions/runtime/adr-0002-heavy-work-worker-process.md) · [ADR-0003 Tesseract 本地下载](../../decisions/ocr/adr-0003-tesseract-local-model-on-demand-download.md) |
 | Change | [CHG-025 语言包下载](../../changes/2026/07/chg-20260720-025-ocr-tesseract-model-download.md) · [CHG-024 识别管线](../../changes/2026/07/chg-20260720-024-ocr-worker-pipeline.md) · [CHG-028 商务场景](../../changes/2026/07/chg-20260720-028-ocr-business-scenarios.md) |
 
@@ -98,7 +97,7 @@ flowchart TB
 
 ## 当前状态
 
-**未实现。** `crates/ocr`、`python/packages/ocr` 为骨架；引擎与下载均未做。
+**未实现。** OCR 引擎与语言包下载均未做；设计依赖的 `opendesk-worker` / `opendesk.db` 已移除，重新引入时按新 Change 设计。
 
 ## 当前约束
 

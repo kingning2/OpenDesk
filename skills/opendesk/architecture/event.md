@@ -33,7 +33,7 @@ Feature A (publish)  →  kernel::event  →  Feature B (subscribe)
 
 示例：
   chat.message.sent
-  mail.thread.synced
+  knowledge.index.completed
   agent.task.completed
 ```
 
