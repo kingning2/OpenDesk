@@ -1,0 +1,74 @@
+//! AI 配置存储 — 本地 JSON 文件读写。
+//!
+//! 存储由 Rust 负责(架构约束);前端经 IPC 读写,不直接触碰文件。
+//! API Key 骨架阶段以明文落盘,后续可在此处加加密。
+//!
+//! 作者：coisini
+//! 创建时间：2026-08-11
+
+use common::contracts::{AiIpcConfigRequest, AiIpcConfigResponse};
+use std::io;
+use std::path::PathBuf;
+use tokio::sync::Mutex;
+
+/// AI 平台与账号配置存储。
+///
+/// 配置持久化到 `app_config_dir/ai-config.json`;内部互斥锁串行化读写。
+///
+/// 作者：coisini
+/// 创建时间：2026-08-11
+pub struct AiConfigStore {
+    path: PathBuf,
+    lock: Mutex<()>,
+}
+
+impl AiConfigStore {
+    /// 以指定配置目录创建存储(文件为 `config_dir/ai-config.json`)。
+    ///
+    /// 作者：coisini
+    /// 创建时间：2026-08-11
+    pub fn new(config_dir: PathBuf) -> Self {
+        Self {
+            path: config_dir.join("ai-config.json"),
+            lock: Mutex::new(()),
+        }
+    }
+
+    /// 读取当前配置;文件不存在时返回空配置。
+    ///
+    /// 作者：coisini
+    /// 创建时间：2026-08-11
+    pub async fn get(&self) -> Result<AiIpcConfigResponse, String> {
+        let _guard = self.lock.lock().await;
+        match std::fs::read(&self.path) {
+            Ok(bytes) => serde_json::from_slice::<AiIpcConfigResponse>(&bytes)
+                .map_err(|error| format!("ai config parse failed: {error}")),
+            Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(AiIpcConfigResponse {
+                providers: Vec::new(),
+                accounts: Vec::new(),
+            }),
+            Err(error) => Err(format!("ai config read failed: {error}")),
+        }
+    }
+
+    /// 整体写入配置,返回持久化后的结果。
+    ///
+    /// 作者：coisini
+    /// 创建时间：2026-08-11
+    pub async fn set(&self, config: AiIpcConfigRequest) -> Result<AiIpcConfigResponse, String> {
+        let _guard = self.lock.lock().await;
+        let response = AiIpcConfigResponse {
+            providers: config.providers,
+            accounts: config.accounts,
+        };
+        if let Some(parent) = self.path.parent() {
+            std::fs::create_dir_all(parent)
+                .map_err(|error| format!("ai config dir create failed: {error}"))?;
+        }
+        let bytes = serde_json::to_vec_pretty(&response)
+            .map_err(|error| format!("ai config serialize failed: {error}"))?;
+        std::fs::write(&self.path, bytes)
+            .map_err(|error| format!("ai config write failed: {error}"))?;
+        Ok(response)
+    }
+}

@@ -6,17 +6,22 @@
 //! 创建时间：2026-07-16
 
 mod agent;
+mod ai_config;
 mod commands;
 mod logging;
 mod platform;
 mod state;
 
 use adapter::agent_sidecar::RuntimeAgentSidecar;
-use commands::{agent_ping, license_activate, license_machine_code, license_status};
+use commands::{
+    agent_ping, ai_config_get, ai_config_set, ai_test_api_key, license_activate,
+    license_machine_code, license_status,
+};
 use kernel::event::{EventBus, InMemoryEventBus};
 use logging::init_tracing;
 use runtime::sidecar::lifecycle::{SidecarConfig, SidecarLifecycle};
 use state::{build_license_gate, AppState};
+use std::path::PathBuf;
 use std::sync::Arc;
 use tauri::Manager;
 
@@ -52,6 +57,15 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
         .append_invoke_initialization_script(platform::platform_initialization_script())
         .manage(app_state)
         .setup(move |app| {
+            let config_dir = match app.path().app_config_dir() {
+                Ok(dir) => dir,
+                Err(error) => {
+                    tracing::error!(%error, "resolve app config dir failed; AI config disabled");
+                    PathBuf::from(".")
+                }
+            };
+            app.manage(Arc::new(ai_config::AiConfigStore::new(config_dir)));
+
             let lifecycle = app.state::<AppState>().lifecycle.clone();
             tauri::async_runtime::spawn(async move {
                 if let Err(error) = lifecycle.ensure_running().await {
@@ -62,6 +76,9 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
         })
         .invoke_handler(tauri::generate_handler![
             agent_ping,
+            ai_config_get,
+            ai_config_set,
+            ai_test_api_key,
             license_status,
             license_machine_code,
             license_activate

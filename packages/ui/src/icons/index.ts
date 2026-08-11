@@ -1,6 +1,8 @@
 export {
   BookOpen,
   Bot,
+  ChevronDown,
+  ChevronRight,
   Home,
   Languages,
   MessageSquare,
@@ -8,12 +10,14 @@ export {
   Monitor,
   Moon,
   Lock,
+  Pencil,
   Plus,
   Search,
   Settings,
   Square,
   SquaresUnite,
   Sun,
+  Trash2,
   Users,
   X,
 } from "lucide-react";

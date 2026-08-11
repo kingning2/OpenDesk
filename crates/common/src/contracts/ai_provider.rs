@@ -1,0 +1,10 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AiProvider {
+    pub id: String,
+    pub kind: String,
+    pub name: String,
+    pub base_url: Option<String>,
+    pub default_model: Option<String>,
+}

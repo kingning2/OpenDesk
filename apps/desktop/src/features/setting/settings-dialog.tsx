@@ -20,12 +20,13 @@ import {
   SelectValue,
   cn,
 } from "@desk/ui";
-import { Languages, X, type LucideIcon } from "@desk/ui/icons";
+import { Languages, X, Bot, type LucideIcon } from "@desk/ui/icons";
 import { useI18n } from "../../i18n";
 import type { AppLocale } from "../../i18n";
+import { AiSettingsPanel } from "@feature/ai";
 
 /** 设置侧栏分区 id。 */
-type SettingsSectionId = "language";
+type SettingsSectionId = "language" | "ai";
 
 /**
  * `SettingsDialog` 属性。
@@ -67,6 +68,10 @@ const NAV_GROUPS: NavGroup[] = [
   {
     labelKey: "settings.navPreferences",
     items: [{ id: "language", labelKey: "settings.navLanguage", icon: Languages }],
+  },
+  {
+    labelKey: "ai.sectionTitle",
+    items: [{ id: "ai", labelKey: "ai.sectionTitle", icon: Bot }],
   },
 ];
 
@@ -170,7 +175,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     requestExit();
   }
 
-  const sectionTitle = t("settings.language");
+  const sectionTitle =
+    section === "ai" ? t("ai.sectionTitle") : t("settings.language");
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -244,6 +250,9 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </header>
 
             <div className="min-h-0 flex-1 overflow-y-auto px-8 py-7">
+              {section === "ai" ? (
+                <AiSettingsPanel />
+              ) : (
               <section className="flex max-w-md flex-col gap-6">
                 <p className="text-[length:var(--text-sm)] leading-relaxed text-muted-foreground">
                   {t("settings.languageHint")}
@@ -292,6 +301,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   ) : null}
                 </div>
               </section>
+              )}
             </div>
           </div>
 

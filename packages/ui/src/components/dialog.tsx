@@ -72,17 +72,23 @@ const DialogPortal = DialogPrimitive.Portal;
 /**
  * Dialog 内容面板（居中模态，Motion 缩放 + 淡入）。
  *
+ * 自带默认内边距；提供 `title` / `description` / `footer` 时，
+ * 内部自动渲染标题区与底部操作区，弹窗无需再重复样板。
+ *
  * Portal 常挂载；`AnimatePresence` 包在 Portal 内，保证退场可播完。
  *
  * @author coisini
  * @created 2026-07-21
  *
- * @param props - Radix Content props；可选 `showClose` / `closeLabel`
+ * @param props - Radix Content props；可选 `title` / `description` / `footer` / `showClose` / `closeLabel`
  * @returns 内容节点
  */
 function DialogContent({
   className,
   children,
+  title,
+  description,
+  footer,
   showClose = true,
   closeLabel = "Close",
   dismissOnOutsidePress = true,
@@ -90,6 +96,12 @@ function DialogContent({
   onInteractOutside,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
+  /** 弹窗标题；提供时自动渲染标题区（含可选描述）。 */
+  title?: React.ReactNode;
+  /** 标题下的描述文本。 */
+  description?: React.ReactNode;
+  /** 底部操作区（按钮组），渲染在内容下方。 */
+  footer?: React.ReactNode;
   /** 是否显示右上角关闭按钮。默认 true。 */
   showClose?: boolean;
   /** 关闭按钮无障碍标签。 */
@@ -140,7 +152,7 @@ function DialogContent({
             >
               <motion.div
                 className={cn(
-                  "relative z-10 grid w-full max-w-md gap-4 overflow-hidden",
+                  "relative z-10 grid w-full max-w-md gap-4 overflow-hidden p-6",
                   "origin-center rounded-[var(--radius-xl)] border border-[color:var(--glass-border)]",
                   "bg-card text-card-foreground shadow-[var(--glass-shadow)]",
                   "outline-none",
@@ -155,7 +167,16 @@ function DialogContent({
                 }}
                 transition={{ duration: enterMs, ease: EASE_OUT }}
               >
+                {title || description ? (
+                  <DialogHeader>
+                    {title ? <DialogTitle>{title}</DialogTitle> : null}
+                    {description ? (
+                      <DialogDescription>{description}</DialogDescription>
+                    ) : null}
+                  </DialogHeader>
+                ) : null}
                 {children}
+                {footer ? <DialogFooter>{footer}</DialogFooter> : null}
                 {showClose ? (
                   <DialogPrimitive.Close asChild>
                     <IconButton label={closeLabel} className="absolute right-3 top-3">

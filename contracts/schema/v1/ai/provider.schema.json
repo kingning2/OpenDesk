@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://ai/provider/v1",
+  "title": "ai/provider",
+  "type": "object",
+  "required": ["id", "kind", "name"],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "base_url": {
+      "type": "string"
+    },
+    "default_model": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}
