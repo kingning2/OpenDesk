@@ -1,6 +1,6 @@
 # Frontend Guide（React / TypeScript）
 
-适用范围：`apps/desktop/src/**`、`packages/ui/**`、`packages/platform/**`、`packages/store/**`、`packages/i18n/**`
+适用范围：`apps/desktop/src/**`、`packages/ui/**`、`packages/platform/**`、`packages/store/**`
 
 ## 必须技术栈
 
@@ -9,7 +9,6 @@
 | 编译 | **React Compiler**（`babel-plugin-react-compiler`） |
 | UI | **shadcn/ui + Radix UI**（组件只在 `packages/ui`） |
 | 状态 | **Zustand**（经 `@desk/store`） |
-| 多语言 | **`@desk/i18n`**（i18next；文案字典在 app） |
 | 样式 | **Tailwind CSS**（令牌在 `@desk/ui/tokens`） |
 | 动画 | **Motion** + Spring 预设 |
 | 图标 | **Lucide React** |
@@ -92,20 +91,6 @@ export const chatStore = createDeskStore<ChatState>((set) => ({
 
 命名：`chatStore`、`userStore`。业务状态放 Feature / 壳层，不放 `@desk/store` 包本体。
 
-## i18n
-
-```typescript
-import { createI18n } from "@desk/i18n";
-
-export const appI18n = createI18n({
-  defaultLocale: "zh-CN",
-  messages: { "zh-CN": zhCN, en },
-  persistKey: "opendesk.locale",
-});
-```
-
-文案字典放 `apps/desktop/src/i18n/locales/`；组件内用 `useT()` / `useI18n()`。
-
 ## IPC
 
 ```typescript
@@ -144,7 +129,7 @@ apps/desktop
 | `ThemeToggle` / `IconButton` / `Button` / `Card` | `@desk/ui` | 通用交互与展示控件 |
 | `PageScaffold` / `PageContainer` | `@desk/ui` | Feature 页面统一内边距与宽度 |
 | `nav-registry.ts` | `apps/desktop` | 聚合各 Feature 的 `navItem` |
-| `page-meta.ts` | `apps/desktop` | 路由 → 页面标题映射 |
+| `page-meta.ts` | `apps/desktop` | 路由 → 页面标题映射（中文文案） |
 
 约定：`@desk/ui` 只放 Button / Card / Input 等通用组件；OpenDesk 窗口壳、NavRail、工作区 Tab 放 `apps/desktop`。
 

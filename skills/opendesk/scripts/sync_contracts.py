@@ -136,6 +136,11 @@ def _emit_ts(name: str, schema: dict, rel: Path, schema_root: Path) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _rs_field_name(prop: str) -> str:
+    """JSON 契约字段名 → Rust snake_case 字段名（如 httpOnly → http_only）。"""
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", prop).lower()
+
+
 def _emit_rs(name: str, schema: dict, rel: Path, schema_root: Path) -> str:
     required = set(schema.get("required", []))
     props = schema.get("properties", {})
@@ -153,7 +158,10 @@ def _emit_rs(name: str, schema: dict, rel: Path, schema_root: Path) -> str:
         rs_type = _prop_type_rs(spec, rel, schema_root)
         if prop not in required:
             rs_type = f"Option<{rs_type}>"
-        lines.append(f"    pub {prop}: {rs_type},")
+        field = _rs_field_name(prop)
+        if field != prop:
+            lines.append(f'    #[serde(rename = "{prop}")]')
+        lines.append(f"    pub {field}: {rs_type},")
     lines.append("}")
     lines.append("")
     return "\n".join(lines)
