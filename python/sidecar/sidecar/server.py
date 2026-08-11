@@ -2,18 +2,34 @@
 
 from __future__ import annotations
 
+import asyncio
+import inspect
 import json
 import logging
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, ClassVar
 
-from gateway.handlers import handle_agent_ping
+from gateway.handlers import (
+    handle_agent_ping,
+    handle_channel_login,
+    handle_llm_chat,
+    handle_llm_classify,
+    handle_qr_cancel,
+    handle_qr_check,
+    handle_qr_start,
+)
 from sidecar.routes import ROUTES
 
 logger = logging.getLogger("opendesk.sidecar")
 
 HANDLERS = {
     "handle_agent_ping": handle_agent_ping,
+    "handle_channel_login": handle_channel_login,
+    "handle_qr_start": handle_qr_start,
+    "handle_qr_check": handle_qr_check,
+    "handle_qr_cancel": handle_qr_cancel,
+    "handle_llm_chat": handle_llm_chat,
+    "handle_llm_classify": handle_llm_classify,
 }
 
 
@@ -59,6 +75,13 @@ class SidecarHandler(BaseHTTPRequestHandler):
         if isinstance(payload, dict):
             trace_id = str(payload.get("trace_id", ""))
         result = handler(payload if isinstance(payload, dict) else None, trace_id=trace_id)
+        # 异步 handler（如 Playwright 登录）用独立事件循环执行。
+        if inspect.iscoroutine(result):
+            loop = asyncio.new_event_loop()
+            try:
+                result = loop.run_until_complete(result)
+            finally:
+                loop.close()
         self._send_json(200, result)
 
     def _read_json(self) -> Any:
