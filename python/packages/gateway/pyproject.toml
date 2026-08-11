@@ -4,6 +4,8 @@ version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
   "shared",
+  "openai>=1.40",
+  "playwright>=1.40",
 ]
 
 [build-system]
