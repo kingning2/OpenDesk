@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://channel/sidecar/qr_start.request/v1",
+  "title": "channel/sidecar/qr_start.request",
+  "type": "object",
+  "required": ["account_id"],
+  "properties": {
+    "account_id": {
+      "type": "string"
+    },
+    "trace_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

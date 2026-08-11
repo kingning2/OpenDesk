@@ -1,0 +1,10 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChannelAccount {
+    pub id: String,
+    pub kind: String,
+    pub name: String,
+    pub credential: String,
+    pub enabled: bool,
+}

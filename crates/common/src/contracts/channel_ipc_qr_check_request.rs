@@ -1,0 +1,6 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChannelIpcQrCheckRequest {
+    pub session_id: String,
+}

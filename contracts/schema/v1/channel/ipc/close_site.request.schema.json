@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://channel/ipc/close_site.request/v1",
+  "title": "channel/ipc/close_site.request",
+  "type": "object",
+  "required": [],
+  "properties": {
+    "account_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

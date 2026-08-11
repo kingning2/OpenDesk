@@ -1,0 +1,11 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChannelSidecarQrStartResponse {
+    pub ok: bool,
+    pub status: String,
+    pub session_id: Option<String>,
+    pub qr_base64: Option<String>,
+    pub detail: Option<String>,
+    pub trace_id: Option<String>,
+}

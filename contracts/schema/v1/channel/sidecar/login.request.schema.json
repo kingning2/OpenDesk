@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://channel/sidecar/login.request/v1",
+  "title": "channel/sidecar/login.request",
+  "type": "object",
+  "required": ["account_id", "credential"],
+  "properties": {
+    "account_id": {
+      "type": "string"
+    },
+    "credential": {
+      "type": "string"
+    },
+    "trace_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

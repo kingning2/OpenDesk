@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://channel/cookie/v1",
+  "title": "channel/cookie",
+  "type": "object",
+  "required": ["name", "value", "domain", "path"],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "value": {
+      "type": "string"
+    },
+    "domain": {
+      "type": "string"
+    },
+    "path": {
+      "type": "string"
+    },
+    "expires": {
+      "type": "number"
+    },
+    "httpOnly": {
+      "type": "boolean"
+    },
+    "secure": {
+      "type": "boolean"
+    },
+    "sameSite": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

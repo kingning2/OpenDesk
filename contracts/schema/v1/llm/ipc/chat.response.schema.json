@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://llm/ipc/chat.response/v1",
+  "title": "llm/ipc/chat.response",
+  "type": "object",
+  "required": ["reply"],
+  "properties": {
+    "reply": {
+      "type": "string"
+    },
+    "trace_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

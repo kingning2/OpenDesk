@@ -1,0 +1,10 @@
+export interface ChannelConversation {
+  id: string;
+  account_id: string;
+  peer_id: string;
+  peer_name?: string;
+  item_id?: string;
+  item_title?: string;
+  item_price?: number;
+  updated_at: string;
+}

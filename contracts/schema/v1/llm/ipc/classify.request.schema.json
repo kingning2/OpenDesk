@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://llm/ipc/classify.request/v1",
+  "title": "llm/ipc/classify.request",
+  "type": "object",
+  "required": ["text", "options"],
+  "properties": {
+    "text": {
+      "type": "string"
+    },
+    "scenario": {
+      "type": "string"
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "provider": {
+      "$ref": "../provider.schema.json"
+    },
+    "trace_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

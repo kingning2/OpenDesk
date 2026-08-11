@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://channel/ipc/close_site.response/v1",
+  "title": "channel/ipc/close_site.response",
+  "type": "object",
+  "required": ["ok"],
+  "properties": {
+    "ok": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false
+}

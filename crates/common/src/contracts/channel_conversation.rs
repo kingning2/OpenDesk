@@ -1,0 +1,13 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChannelConversation {
+    pub id: String,
+    pub account_id: String,
+    pub peer_id: String,
+    pub peer_name: Option<String>,
+    pub item_id: Option<String>,
+    pub item_title: Option<String>,
+    pub item_price: Option<i64>,
+    pub updated_at: String,
+}

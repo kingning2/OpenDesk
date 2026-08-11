@@ -1,0 +1,10 @@
+use crate::contracts::{ChannelAccount, ChannelConversation, ChannelMessage, ChannelSettings};
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChannelIpcStateResponse {
+    pub accounts: Vec<ChannelAccount>,
+    pub conversations: Vec<ChannelConversation>,
+    pub messages: Vec<ChannelMessage>,
+    pub settings: ChannelSettings,
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://channel/ipc/state.request/v1",
+  "title": "channel/ipc/state.request",
+  "type": "object",
+  "required": ["accounts", "settings"],
+  "properties": {
+    "accounts": {
+      "type": "array",
+      "items": {
+        "$ref": "../account.schema.json"
+      }
+    },
+    "settings": {
+      "$ref": "../settings.schema.json"
+    }
+  },
+  "additionalProperties": false
+}

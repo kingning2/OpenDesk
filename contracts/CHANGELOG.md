@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.1.13
+
+- 新增 `channel` 契约：`qr_start` / `qr_check` / `qr_cancel` IPC + sidecar（Playwright 扫码登录）
+
+## 0.1.12
+
+- 新增 `channel` 契约：`cookie` DTO、`login` / `open_site` / `close_site` IPC、`sidecar/login`（Playwright 浏览器登录）
+- `account.credential` 语义升级：可存浏览器快照 JSON / cookies 数组 / 旧 cookie 字符串（兼容）
+- codegen：Rust 生成 camelCase JSON 字段为 snake_case + `#[serde(rename)]`，消除 clippy 警告
+
+## 0.1.11
+
+- 新增 `channel` 契约：account / conversation / message / settings DTO
+- 新增 channel IPC：`state` / `connect` / `disconnect` / `send`
+- 新增 channel 事件：`message` / `status`
+- 新增 `llm` 契约与 sidecar：`chat` / `classify`（纯大模型接入，渠道无关）
+
 ## 0.1.10
 
 - crawler IPC：`job.results` — 查询任务已收录频道（`results_json` 数组）

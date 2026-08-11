@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "opendesk://channel/ipc/connect.response/v1",
+  "title": "channel/ipc/connect.response",
+  "type": "object",
+  "required": ["ok", "state"],
+  "properties": {
+    "ok": {
+      "type": "boolean"
+    },
+    "state": {
+      "type": "string"
+    },
+    "detail": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

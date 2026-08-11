@@ -1,0 +1,11 @@
+use crate::contracts::LlmProvider;
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LlmIpcClassifyRequest {
+    pub text: String,
+    pub scenario: Option<String>,
+    pub options: Vec<String>,
+    pub provider: Option<LlmProvider>,
+    pub trace_id: Option<String>,
+}
