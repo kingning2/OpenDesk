@@ -16,18 +16,6 @@ members = [
   "python/packages/contracts",
   "python/packages/shared",
   "python/packages/gateway",
-  "python/packages/queue",
-  "python/packages/worker",
-  "python/packages/provider",
-  "python/packages/llm",
-  "python/packages/rag",
-  "python/packages/ocr",
-  "python/packages/agent",
-  "python/packages/browser",
-  "python/packages/workflow",
-  "python/packages/prompt",
-  "python/packages/memory",
-  "python/packages/model",
 ]
 
 [tool.uv.sources]
@@ -51,21 +39,9 @@ ignore = []
 
 [tool.ruff.lint.isort]
 known-first-party = [
-  "agent",
-  "browser",
   "contracts",
   "gateway",
-  "llm",
-  "memory",
-  "model",
-  "ocr",
-  "prompt",
-  "provider",
-  "queue",
-  "rag",
   "shared",
-  "worker",
-  "workflow",
 ]
 
 [tool.ruff.format]

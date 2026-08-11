@@ -4,29 +4,12 @@ requires-python = ">=3.13"
 
 [manifest]
 members = [
-    "agent",
-    "browser",
     "contracts",
     "gateway",
-    "llm",
-    "memory",
-    "model",
-    "ocr",
     "opendesk",
-    "prompt",
-    "provider",
-    "queue",
-    "rag",
     "shared",
     "sidecar",
-    "worker",
-    "workflow",
 ]
-
-[[package]]
-name = "agent"
-version = "0.1.0"
-source = { editable = "python/packages/agent" }
 
 [[package]]
 name = "altgraph"
@@ -36,11 +19,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/7e/f8/97fdf103f38fed679
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a9/ba/000a1996d4308bc65120167c21241a3b205464a2e0b58deda26ae8ac21d1/altgraph-0.17.5-py2.py3-none-any.whl", hash = "sha256:f3a22400bce1b0c701683820ac4f3b159cd301acab067c51c653e06961600597", size = 21228, upload-time = "2025-11-21T20:35:49.444Z" },
 ]
-
-[[package]]
-name = "browser"
-version = "0.1.0"
-source = { editable = "python/packages/browser" }
 
 [[package]]
 name = "contracts"
@@ -59,11 +37,6 @@ dependencies = [
 requires-dist = [{ name = "shared", editable = "python/packages/shared" }]
 
 [[package]]
-name = "llm"
-version = "0.1.0"
-source = { editable = "python/packages/llm" }
-
-[[package]]
 name = "macholib"
 version = "1.16.4"
 source = { registry = "https://pypi.org/simple" }
@@ -74,21 +47,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/10/2f/97589876ea9674879
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c7/d1/a9f36f8ecdf0fb7c9b1e78c8d7af12b8c8754e74851ac7b94a8305540fc7/macholib-1.16.4-py2.py3-none-any.whl", hash = "sha256:da1a3fa8266e30f0ce7e97c6a54eefaae8edd1e5f86f3eb8b95457cae90265ea", size = 38117, upload-time = "2025-11-22T08:28:36.939Z" },
 ]
-
-[[package]]
-name = "memory"
-version = "0.1.0"
-source = { editable = "python/packages/memory" }
-
-[[package]]
-name = "model"
-version = "0.1.0"
-source = { editable = "python/packages/model" }
-
-[[package]]
-name = "ocr"
-version = "0.1.0"
-source = { editable = "python/packages/ocr" }
 
 [[package]]
 name = "opendesk"
@@ -122,16 +80,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/03/4f/2750f7f6f025a1507
 wheels = [
     { url = "https://files.pythonhosted.org/packages/54/16/12b82f791c7f50ddec566873d5bdd245baa1491bac11d15ffb98aecc8f8b/pefile-2024.8.26-py3-none-any.whl", hash = "sha256:76f8b485dcd3b1bb8166f1128d395fa3d87af26360c2358fb75b80019b957c6f", size = 74766, upload-time = "2024-08-26T21:01:02.632Z" },
 ]
-
-[[package]]
-name = "prompt"
-version = "0.1.0"
-source = { editable = "python/packages/prompt" }
-
-[[package]]
-name = "provider"
-version = "0.1.0"
-source = { editable = "python/packages/provider" }
 
 [[package]]
 name = "pyinstaller"
@@ -181,16 +129,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/85/9f/01a1a99704853cb63
 wheels = [
     { url = "https://files.pythonhosted.org/packages/de/3d/8161f7711c017e01ac9f008dfddd9410dff3674334c233bde66e7ba65bbf/pywin32_ctypes-0.2.3-py3-none-any.whl", hash = "sha256:8a1513379d709975552d202d942d9837758905c8d01eb82b8bcc30918929e7b8", size = 30756, upload-time = "2024-08-14T10:15:33.187Z" },
 ]
-
-[[package]]
-name = "queue"
-version = "0.1.0"
-source = { editable = "python/packages/queue" }
-
-[[package]]
-name = "rag"
-version = "0.1.0"
-source = { editable = "python/packages/rag" }
 
 [[package]]
 name = "ruff"
@@ -253,13 +191,3 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [{ name = "pyinstaller", specifier = ">=6.13" }]
-
-[[package]]
-name = "worker"
-version = "0.1.0"
-source = { editable = "python/packages/worker" }
-
-[[package]]
-name = "workflow"
-version = "0.1.0"
-source = { editable = "python/packages/workflow" }
