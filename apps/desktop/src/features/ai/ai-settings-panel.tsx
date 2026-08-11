@@ -14,7 +14,6 @@ import type { AiAccount } from "@desk/contracts";
 import { aiTestApiKey } from "@desk/platform/ipc/ai";
 import deepseekLogo from "../../assets/deepseek.svg";
 import ollamaLogo from "../../assets/ollama.svg";
-import { useT } from "../../i18n";
 import type { BuiltInProvider } from "./builtin-providers";
 import { useAiConfigStore, type AiAccountInput } from "./use-ai-config";
 
@@ -47,7 +46,6 @@ function AccountDialog({
   account: AiAccount | null;
   onClose: () => void;
 }) {
-  const t = useT();
   const addAccount = useAiConfigStore((state) => state.addAccount);
   const updateAccount = useAiConfigStore((state) => state.updateAccount);
 
@@ -66,7 +64,7 @@ function AccountDialog({
   async function handleTest() {
     const trimmedKey = apiKey.trim();
     if (!trimmedKey) {
-      setError(t("ai.errorApiKeyRequired"));
+      setError("请输入 API Key");
       return;
     }
     setTesting(true);
@@ -86,11 +84,11 @@ function AccountDialog({
     const trimmedKey = apiKey.trim();
     const trimmedModel = defaultModel.trim();
     if (!trimmedName) {
-      setError(t("ai.errorNameRequired"));
+      setError("请输入名称");
       return;
     }
     if (!trimmedKey) {
-      setError(t("ai.errorApiKeyRequired"));
+      setError("请输入 API Key");
       return;
     }
     setSaving(true);
@@ -118,14 +116,14 @@ function AccountDialog({
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
       <DialogContent
-        title={account ? t("ai.editAccountTitle") : t("ai.addAccountTitle")}
+        title={account ? "编辑账号" : "添加账号"}
         footer={
           <>
             <Button variant="ghost" disabled={saving} onClick={onClose}>
-              {t("ai.cancel")}
+              取消
             </Button>
             <Button disabled={saving} onClick={() => void handleSubmit()}>
-              {t("ai.save")}
+              保存
             </Button>
           </>
         }
@@ -136,13 +134,13 @@ function AccountDialog({
               htmlFor="ai-account-name"
               className="text-[length:var(--text-sm)] font-medium text-foreground"
             >
-              {t("ai.accountName")}
+              账号名称
             </label>
             <Input
               id="ai-account-name"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder={t("ai.accountNamePlaceholder")}
+              placeholder="如:工作号"
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -150,7 +148,7 @@ function AccountDialog({
               htmlFor="ai-account-key"
               className="text-[length:var(--text-sm)] font-medium text-foreground"
             >
-              {t("ai.apiKey")}
+              API Key
             </label>
             <div className="flex items-center gap-2">
               <Input
@@ -161,7 +159,7 @@ function AccountDialog({
                   setApiKey(event.target.value);
                   setTestResult(null);
                 }}
-                placeholder={t("ai.apiKeyPlaceholder")}
+                placeholder="粘贴 API Key"
                 className="min-w-0 flex-1"
               />
               {provider?.kind === "deepseek" ? (
@@ -172,7 +170,7 @@ function AccountDialog({
                   disabled={testing}
                   onClick={() => void handleTest()}
                 >
-                  {testing ? t("ai.testing") : t("ai.testKey")}
+                  {testing ? "测试中…" : "测试"}
                 </Button>
               ) : null}
             </div>
@@ -184,7 +182,7 @@ function AccountDialog({
                     : "text-[length:var(--text-sm)] text-red-600 dark:text-red-400"
                 }
               >
-                {testResult.ok ? t("ai.testOk") : t("ai.testFail")}
+                {testResult.ok ? "API Key 可用" : "API Key 不可用"}
               </p>
             ) : null}
           </div>
@@ -193,13 +191,13 @@ function AccountDialog({
               htmlFor="ai-account-model"
               className="text-[length:var(--text-sm)] font-medium text-foreground"
             >
-              {t("ai.defaultModel")}
+              默认模型
             </label>
             <Input
               id="ai-account-model"
               value={defaultModel}
               onChange={(event) => setDefaultModel(event.target.value)}
-              placeholder={t("ai.defaultModelPlaceholder")}
+              placeholder="如:qwen2.5(可选)"
             />
           </div>
           {error ? (
@@ -233,7 +231,6 @@ function ConfirmDialog({
   state: ConfirmState | null;
   onClose: () => void;
 }) {
-  const t = useT();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -260,7 +257,7 @@ function ConfirmDialog({
         footer={
           <>
             <Button variant="ghost" disabled={saving} onClick={onClose}>
-              {t("ai.cancel")}
+              取消
             </Button>
             <Button
               disabled={saving}
@@ -331,16 +328,13 @@ function ProviderCard({
   onEditAccount: (account: AiAccount) => void;
   onDeleteAccount: (account: AiAccount) => void;
 }) {
-  const t = useT();
   const setProviderDefaultModel = useAiConfigStore(
     (state) => state.setProviderDefaultModel,
   );
   const [modelDraft, setModelDraft] = useState(provider.default_model ?? "");
   const [modelError, setModelError] = useState<string | null>(null);
   const kindLabel =
-    provider.kind === "deepseek"
-      ? t("ai.kindDeepseek")
-      : t("ai.kindOpenAICompatible");
+    provider.kind === "deepseek" ? "DeepSeek" : "OpenAI 兼容";
 
   async function saveModel() {
     const trimmed = modelDraft.trim();
@@ -373,7 +367,7 @@ function ProviderCard({
           </span>
           {!provider.authless ? (
             <span className="shrink-0 text-[length:var(--text-xs)] text-muted-foreground">
-              {accounts.length} {t("ai.accounts")}
+              {accounts.length} 账号
             </span>
           ) : null}
         </button>
@@ -381,7 +375,7 @@ function ProviderCard({
           <div className="flex shrink-0 items-center gap-1">
             <Button size="sm" variant="ghost" onClick={onAddAccount}>
               <Plus className="size-3.5" aria-hidden />
-              {t("ai.addAccount")}
+              添加账号
             </Button>
           </div>
         ) : null}
@@ -400,18 +394,18 @@ function ProviderCard({
                   htmlFor={`ai-model-${provider.id}`}
                   className="text-[length:var(--text-sm)] font-medium text-foreground"
                 >
-                  {t("ai.defaultModel")}
+                  默认模型
                 </label>
                 <Input
                   id={`ai-model-${provider.id}`}
                   value={modelDraft}
                   onChange={(event) => setModelDraft(event.target.value)}
                   onBlur={() => void saveModel()}
-                  placeholder={t("ai.defaultModelPlaceholder")}
+                  placeholder="如:qwen2.5(可选)"
                 />
               </div>
               <p className="text-[length:var(--text-xs)] text-muted-foreground">
-                {t("ai.authlessHint")}
+                本地服务,无需账号与 API Key,可直接使用。
               </p>
               {modelError ? (
                 <p className="text-[length:var(--text-sm)] text-red-600 dark:text-red-400">
@@ -421,7 +415,7 @@ function ProviderCard({
             </div>
           ) : accounts.length === 0 ? (
             <p className="text-[length:var(--text-sm)] text-muted-foreground">
-              {t("ai.emptyAccounts")}
+              还没有账号。
             </p>
           ) : (
             <ul className="flex flex-col gap-1">
@@ -445,7 +439,7 @@ function ProviderCard({
                     size="icon"
                     variant="ghost"
                     onClick={() => onEditAccount(account)}
-                    aria-label={t("ai.edit")}
+                    aria-label="编辑"
                   >
                     <Pencil className="size-3.5" aria-hidden />
                   </Button>
@@ -453,7 +447,7 @@ function ProviderCard({
                     size="icon"
                     variant="ghost"
                     onClick={() => onDeleteAccount(account)}
-                    aria-label={t("ai.delete")}
+                    aria-label="删除"
                   >
                     <Trash2 className="size-3.5" aria-hidden />
                   </Button>
@@ -476,7 +470,6 @@ function ProviderCard({
  * @returns 面板节点
  */
 export function AiSettingsPanel() {
-  const t = useT();
   const providers = useAiConfigStore((state) => state.providers);
   const accounts = useAiConfigStore((state) => state.accounts);
   const loading = useAiConfigStore((state) => state.loading);
@@ -503,9 +496,9 @@ export function AiSettingsPanel() {
   function openDeleteAccount(account: AiAccount) {
     setDialogSeq((seq) => seq + 1);
     setConfirm({
-      title: t("ai.deleteAccountTitle"),
-      description: t("ai.deleteAccountDesc"),
-      confirmLabel: t("ai.delete"),
+      title: "删除账号",
+      description: "确定删除该账号吗?",
+      confirmLabel: "删除",
       onConfirm: () => removeAccount(account.id),
     });
   }
@@ -513,7 +506,7 @@ export function AiSettingsPanel() {
   return (
     <div className="flex w-full flex-col gap-5">
       <p className="max-w-md text-[length:var(--text-sm)] leading-relaxed text-muted-foreground">
-        {t("ai.hint")}
+        配置 AI 账号,内置平台包含 DeepSeek 与 Ollama。API Key 保存在本机。
       </p>
 
       {loadError ? (
