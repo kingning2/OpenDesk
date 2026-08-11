@@ -16,15 +16,26 @@ tauri-build = { workspace = true }
 
 [dependencies]
 adapter = { path = "../../../crates/adapter" }
+async-trait = { workspace = true }
 common = { path = "../../../crates/common" }
+base64 = "0.22"
+diesel = { workspace = true }
+futures-util = { workspace = true }
 kernel = { path = "../../../crates/kernel" }
+md-5 = { workspace = true }
 ports = { path = "../../../crates/ports" }
+rand = { workspace = true }
 reqwest = { workspace = true }
+rmpv = { workspace = true }
 runtime = { path = "../../../crates/runtime" }
 serde = { workspace = true }
 serde_json = { workspace = true }
+storage = { path = "../../../crates/storage" }
 tauri = { workspace = true }
 tauri-plugin-opener = { workspace = true }
+thiserror = { workspace = true }
 tokio = { workspace = true }
+tokio-tungstenite = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
+url = { workspace = true }

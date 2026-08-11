@@ -7,12 +7,23 @@
 
 mod agent;
 mod ai_config;
+mod channels;
 mod commands;
 mod logging;
 mod platform;
 mod state;
 
 use adapter::agent_sidecar::RuntimeAgentSidecar;
+use channels::commands::{
+    channel_close_site, channel_connect, channel_disconnect, channel_login, channel_open_site,
+    channel_qr_cancel, channel_qr_check, channel_qr_start, channel_send, channel_state_get,
+    channel_state_set,
+};
+use channels::coordinator::ChannelCoordinator;
+use channels::dispatcher::ChannelDispatcher;
+use channels::protocol::ChannelProtocol;
+use channels::store::ChannelRepo;
+use channels::xianyu::XianyuChannel;
 use commands::{
     agent_ping, ai_config_get, ai_config_set, ai_test_api_key, license_activate,
     license_machine_code, license_status,
@@ -64,7 +75,43 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
                     PathBuf::from(".")
                 }
             };
-            app.manage(Arc::new(ai_config::AiConfigStore::new(config_dir)));
+            app.manage(Arc::new(ai_config::AiConfigStore::new(config_dir.clone())));
+
+            // 渠道层：SQLite + 调度器 + 协调器。
+            let db_dir = config_dir.join("channel");
+            std::fs::create_dir_all(&db_dir).ok();
+            let repo = match ChannelRepo::open(
+                &db_dir.join("channel.db"),
+                &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("migrations"),
+            ) {
+                Ok(repo) => Arc::new(repo),
+                Err(error) => {
+                    tracing::error!(%error, "open channel sqlite failed; channel disabled");
+                    return Ok(());
+                }
+            };
+            app.manage(repo.clone());
+
+            let dispatcher = Arc::new(ChannelDispatcher::new());
+            app.manage(dispatcher.clone());
+
+            let sidecar_client = app.state::<AppState>().lifecycle.client().clone();
+            let reply = Arc::new(
+                channels::reply::ReplyCoordinator::new(sidecar_client),
+            );
+
+            let coordinator = Arc::new(ChannelCoordinator::new(
+                repo,
+                dispatcher.clone(),
+                reply,
+                app.handle().clone(),
+            ));
+            app.manage(coordinator.clone());
+
+            // 注册闲鱼协议并绑定入站监听器。
+            let xianyu = Arc::new(XianyuChannel::new());
+            xianyu.set_inbound_listener(coordinator.clone());
+            dispatcher.register(xianyu);
 
             let lifecycle = app.state::<AppState>().lifecycle.clone();
             tauri::async_runtime::spawn(async move {
@@ -79,6 +126,17 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             ai_config_get,
             ai_config_set,
             ai_test_api_key,
+            channel_state_get,
+            channel_state_set,
+            channel_connect,
+            channel_disconnect,
+            channel_send,
+            channel_login,
+            channel_open_site,
+            channel_close_site,
+            channel_qr_start,
+            channel_qr_check,
+            channel_qr_cancel,
             license_status,
             license_machine_code,
             license_activate
