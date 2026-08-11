@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "@desk/contracts": "workspace:*",
-    "@desk/i18n": "workspace:*",
     "@desk/platform": "workspace:*",
     "@desk/store": "workspace:*",
     "@desk/ui": "workspace:*",

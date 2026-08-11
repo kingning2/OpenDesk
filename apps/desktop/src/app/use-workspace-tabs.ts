@@ -8,7 +8,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 
-import { useI18n } from "../i18n";
 import { navItems } from "../route/nav-registry";
 import { getPageMeta } from "../route/page-meta";
 import type { TabBarItem } from "./layout";
@@ -24,7 +23,6 @@ import type { TabBarItem } from "./layout";
 export function useWorkspaceTabs() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { t } = useI18n();
   const [openPaths, setOpenPaths] = useState(() => [pathname]);
 
   const ensureTab = useCallback((path: string) => {
@@ -51,11 +49,11 @@ export function useWorkspaceTabs() {
         return {
           id: path,
           path,
-          label: t(navItem?.labelKey ?? meta.titleKey),
+          label: navItem?.label ?? meta.title,
           closable: path !== "/",
         };
       }),
-    [openPaths, t],
+    [openPaths],
   );
 
   const selectTab = useCallback(

@@ -7,8 +7,6 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, PageScaffold } from "@desk/ui";
 
-import { useT } from "../../i18n";
-
 /**
  * 占位页属性。
  *
@@ -16,10 +14,10 @@ import { useT } from "../../i18n";
  * @created 2026-07-20
  */
 export interface FeaturePlaceholderPageProps {
-  /** 标题 i18n key。 */
-  titleKey: string;
-  /** 描述 i18n key。 */
-  descriptionKey?: string;
+  /** 标题。 */
+  title: string;
+  /** 描述。 */
+  description?: string;
 }
 
 /**
@@ -31,19 +29,17 @@ export interface FeaturePlaceholderPageProps {
  * @param props - 见 {@link FeaturePlaceholderPageProps}
  * @returns 占位页节点
  */
-export function FeaturePlaceholderPage({ titleKey, descriptionKey }: FeaturePlaceholderPageProps) {
-  const t = useT();
-
+export function FeaturePlaceholderPage({ title, description }: FeaturePlaceholderPageProps) {
   return (
     <PageScaffold>
       <Card variant="glass" className="w-full">
         <CardHeader>
-          <CardTitle>{t(titleKey)}</CardTitle>
-          {descriptionKey ? <CardDescription>{t(descriptionKey)}</CardDescription> : null}
+          <CardTitle>{title}</CardTitle>
+          {description ? <CardDescription>{description}</CardDescription> : null}
         </CardHeader>
         <CardContent>
           <p className="text-[length:var(--text-sm)] text-muted-foreground">
-            {t("placeholder.developing")}
+            该功能正在开发中。
           </p>
         </CardContent>
       </Card>

@@ -17,6 +17,6 @@ import { FeaturePlaceholderPage } from "../../app/pages/feature-placeholder";
  */
 export function ChatPage() {
   return (
-    <FeaturePlaceholderPage titleKey="chat.title" descriptionKey="chat.description" />
+    <FeaturePlaceholderPage title="Chat" description="客户会话工作区 — 开发中。" />
   );
 }

@@ -18,8 +18,8 @@ import { FeaturePlaceholderPage } from "../../app/pages/feature-placeholder";
 export function KnowledgePage() {
   return (
     <FeaturePlaceholderPage
-      titleKey="knowledge.title"
-      descriptionKey="knowledge.description"
+      title="Knowledge"
+      description="知识库与检索 — 开发中。"
     />
   );
 }

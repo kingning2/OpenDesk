@@ -19,7 +19,6 @@ import {
 } from "@desk/platform";
 import { LicensePlanBadge } from "@feature/license";
 import { SettingsDialogProvider, useSettingsDialog } from "@feature/setting";
-import { useI18n } from "../i18n";
 import { navItems } from "../route/nav-registry";
 import {
   AppLayout,
@@ -44,7 +43,6 @@ import { WorkspaceOutlet } from "./workspace-outlet";
 function AppShellInner() {
   const platform = getPlatform();
   const [isMaximized, setIsMaximized] = useState(false);
-  const { t } = useI18n();
   const { openSettings } = useSettingsDialog();
   const { tabs, activePath, openPaths, ensureTab, selectTab, closeTab, addTab } = useWorkspaceTabs();
 
@@ -78,8 +76,8 @@ function AppShellInner() {
         actions={
           <>
             <IconButton
-              label={t("shell.settings")}
-              title={t("shell.settings")}
+              label="设置"
+              title="设置"
               onClick={openSettings}
             >
               <Settings className="size-3.5" />
@@ -108,7 +106,7 @@ function AppShellInner() {
             <NavRailNav>
               {navItems.map((item) => {
                 const Icon = item.icon;
-                const label = t(item.labelKey);
+                const label = item.label;
                 return (
                   <NavLink
                     key={item.id}

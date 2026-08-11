@@ -1,5 +1,5 @@
 /**
- * 应用根组件：多语言、路由与授权门禁。
+ * 应用根组件：路由与授权门禁。
  *
  * @author coisini
  * @created 2026-07-20
@@ -9,7 +9,6 @@ import { useCallback } from "react";
 import { RouterProvider } from "react-router";
 import { Toaster } from "@desk/ui";
 import { appRouter } from "../route";
-import { I18nProvider, useT } from "../i18n";
 import {
   LicenseGateProvider,
   LicenseLockHero,
@@ -19,7 +18,7 @@ import {
 import "./globals.css";
 
 /**
- * 授权门禁与路由壳（需在 I18nProvider 内）。
+ * 授权门禁与路由壳。
  *
  * @author coisini
  * @created 2026-07-20
@@ -27,7 +26,6 @@ import "./globals.css";
  * @returns 壳节点
  */
 function AppChrome() {
-  const t = useT();
   const gate = useLicenseGate();
 
   const onActivated = useCallback(() => {
@@ -46,21 +44,21 @@ function AppChrome() {
             role="status"
             aria-live="polite"
           >
-            <LicenseLockHero anim="busy" caption={t("license.checking")} />
+            <LicenseLockHero anim="busy" caption="正在校验授权状态…" />
           </div>
         ) : null}
 
         {gate.error ? (
           <div className="fixed inset-x-0 bottom-0 top-11 z-50 flex items-center justify-center bg-background/40 p-6 backdrop-blur-md">
             <div className="max-w-md space-y-3 rounded-[var(--radius-lg)] border border-border bg-card p-6 text-center shadow-lg">
-              <p className="text-destructive">{t("license.readFailed")}</p>
+              <p className="text-destructive">授权状态读取失败</p>
               <p className="text-[length:var(--text-sm)] text-muted-foreground">{gate.error}</p>
               <button
                 type="button"
                 onClick={() => void gate.refresh()}
                 className="rounded-[var(--radius-md)] bg-primary px-4 py-2 text-primary-foreground"
               >
-                {t("license.retry")}
+                重试
               </button>
             </div>
           </div>
@@ -83,9 +81,5 @@ function AppChrome() {
  * @returns 根节点
  */
 export function App() {
-  return (
-    <I18nProvider>
-      <AppChrome />
-    </I18nProvider>
-  );
+  return <AppChrome />;
 }
