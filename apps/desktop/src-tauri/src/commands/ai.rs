@@ -94,7 +94,7 @@ pub async fn ai_test_api_key(
     let has_price = body
         .get("balance_infos")
         .and_then(serde_json::Value::as_array)
-        .map_or(false, |infos| !infos.is_empty());
+        .is_some_and(|infos| !infos.is_empty());
 
     Ok(AiApiKeyTestResult {
         ok: has_price,
