@@ -20,9 +20,9 @@ from shared.logging import bind_log_context
 
 logger = logging.getLogger("opendesk.sidecar.login")
 
-try:  # playwright 为可选运行时依赖；缺失时返回可读错误。
+try:  # playwright 为可选运行时依赖；缺失或损坏时返回可读错误。
     from playwright.async_api import async_playwright
-except ImportError:  # pragma: no cover
+except Exception:  # pragma: no cover — ImportError / 损坏扩展（如 greenlet）
     async_playwright = None  # type: ignore[assignment]
 
 LOGIN_CHECK_URL = "https://www.goofish.com/"

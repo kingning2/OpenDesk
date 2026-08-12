@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { platform } from "node:os";
+import { syncPythonWorkspace } from "./sync-python.mjs";
 
 const args = process.argv.slice(2);
 // pnpm and some wrappers may inject a standalone "--" separator.
@@ -60,6 +61,11 @@ if (!commandExists("uv")) {
 
 const cliTarget = parseCliTarget(normalizedArgs);
 let tauriArgs = [...normalizedArgs];
+
+// `pnpm tauri -- dev`：先 sync Python，避免 sidecar 冷启动超过健康检查超时。
+if (tauriArgs[0] === "dev") {
+  syncPythonWorkspace({ env });
+}
 
 // Windows：宿主编译器固定 MSVC；交叉目标以 --target / 已有 CARGO_BUILD_TARGET 为准。
 if (platform() === "win32") {

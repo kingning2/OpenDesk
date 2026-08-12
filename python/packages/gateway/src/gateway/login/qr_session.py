@@ -19,9 +19,9 @@ from gateway.login.snapshot import ANTI_DETECT_SCRIPT
 
 logger = logging.getLogger("opendesk.sidecar.qr")
 
-try:  # playwright 为可选运行时依赖。
+try:  # playwright 为可选运行时依赖；缺失或损坏时降级。
     from playwright.async_api import Browser, BrowserContext, Page, async_playwright
-except ImportError:  # pragma: no cover
+except Exception:  # pragma: no cover — ImportError / 损坏扩展（如 greenlet）
     async_playwright = None  # type: ignore[assignment]
     Browser = Any  # type: ignore[assignment,misc]
     BrowserContext = Any  # type: ignore[assignment,misc]

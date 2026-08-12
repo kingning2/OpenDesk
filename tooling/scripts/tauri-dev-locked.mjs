@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { platform } from "node:os";
+import { syncPythonWorkspace } from "./sync-python.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const WINDOWS_MSVC_TRIPLE = "x86_64-pc-windows-msvc";
@@ -45,6 +46,7 @@ if (platform() === "win32") {
 }
 
 run("node", ["tooling/scripts/build-license-verifier.mjs"], { env });
+syncPythonWorkspace({ cwd: root, env });
 
 const triple =
   platform() === "win32"
