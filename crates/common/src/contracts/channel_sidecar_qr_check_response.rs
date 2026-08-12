@@ -8,5 +8,6 @@ pub struct ChannelSidecarQrCheckResponse {
     pub session_id: Option<String>,
     pub cookies: Option<Vec<ChannelCookie>>,
     pub detail: Option<String>,
+    pub qr_base64: Option<String>,
     pub trace_id: Option<String>,
 }

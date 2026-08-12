@@ -22,6 +22,9 @@
     },
     "detail": {
       "type": "string"
+    },
+    "qr_base64": {
+      "type": "string"
     }
   },
   "additionalProperties": false

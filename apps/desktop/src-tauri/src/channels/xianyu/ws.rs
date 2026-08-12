@@ -33,6 +33,21 @@ const TOKEN_REFRESH_INTERVAL: Duration = Duration::from_secs(3600);
 #[allow(dead_code)]
 type WsStream = WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>;
 
+/// 判断是否为认证类错误：会话过期 / cookie 失效 / 未登录等，重试无意义，需重新登录。
+fn is_auth_error(error: &ChannelError) -> bool {
+    let text = error.to_string();
+    [
+        "SESSION_EXPIRED",
+        "TOKEN_EMPTY",
+        "FAIL_SYS",
+        "cookie 缺少",
+        "未登录",
+        "Session过期",
+    ]
+    .iter()
+    .any(|keyword| text.contains(keyword))
+}
+
 /// 内部可变状态 — 通过 `Arc` 与后台任务共享。
 struct Inner {
     account: RwLock<Option<ChannelAccount>>,
@@ -250,6 +265,11 @@ impl ChannelProtocol for XianyuChannel {
         let (tx, mut rx) = mpsc::channel::<String>(64);
         *self.inner.writer.lock().await = Some(tx);
 
+        // 终止旧的连接任务，避免重复连接循环。
+        if let Some(old) = self.task.lock().await.take() {
+            old.abort();
+        }
+
         let this = self.clone();
         let stop_flag = self.stop_flag.clone();
         let task = tokio::spawn(async move {
@@ -264,6 +284,10 @@ impl ChannelProtocol for XianyuChannel {
                 if let Err(error) = result {
                     this.inner
                         .set_state(ConnectionState::Error, Some(error.to_string()));
+                    // 认证类错误（会话过期 / cookie 失效）重试无意义，停止自动重连，等待重新登录。
+                    if is_auth_error(&error) {
+                        break;
+                    }
                 } else {
                     this.inner.set_state(ConnectionState::Disconnected, None);
                 }

@@ -55,8 +55,8 @@ def handle_llm_classify(payload: dict[str, Any] | None, *, trace_id: str) -> dic
             )
             raw = (completion.choices[0].message.content or "").strip()
             intent = next((o for o in options if o in raw), options[0] if options else "")
-            logger.info("llm classify ok", extra={"event": "llm.classify.ok", "intent": intent})
+            logger.info("LLM 意图分类成功", extra={"event": "llm.classify.ok", "intent": intent})
             return {"intent": intent, "trace_id": trace_id}
         except Exception:  # noqa: BLE001
-            logger.exception("llm classify failed", extra={"event": "llm.classify.failed"})
+            logger.exception("LLM 意图分类失败", extra={"event": "llm.classify.failed"})
             return {"intent": options[0] if options else "", "trace_id": trace_id}

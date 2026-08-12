@@ -77,6 +77,7 @@ impl XianyuApi {
             .post(HAS_LOGIN_URL)
             .query(&[("appName", "xianyu"), ("fromSite", "77")])
             .header("Origin", "https://www.goofish.com")
+            .header("Cookie", self.cookie_str.clone())
             .form(&form)
             .send()
             .await
@@ -132,6 +133,8 @@ impl XianyuApi {
             .query(&params)
             .header("Origin", "https://www.goofish.com")
             .header("Content-Type", "application/x-www-form-urlencoded")
+            // 关键：携带账号 cookies，否则服务端识别不了会话，报 Session过期。
+            .header("Cookie", self.cookie_str.clone())
             .form(&[("data", data_val.clone())])
             .send()
             .await

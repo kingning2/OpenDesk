@@ -16,8 +16,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="OpenDesk Python sidecar")
     parser.add_argument("--port", type=int, default=8787)
     args = parser.parse_args()
+    # 启动唯一日志：侧车就绪。
     logger.info(
-        "sidecar starting",
+        "侧车已启动",
         extra={"event": "sidecar.starting", "feature": "runtime", "port": args.port},
     )
     serve(args.port)

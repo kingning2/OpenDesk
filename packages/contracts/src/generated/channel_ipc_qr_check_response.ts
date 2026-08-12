@@ -6,4 +6,5 @@ export interface ChannelIpcQrCheckResponse {
   session_id?: string;
   cookies?: ChannelCookie[];
   detail?: string;
+  qr_base64?: string;
 }

@@ -52,10 +52,10 @@ def handle_llm_chat(payload: dict[str, Any] | None, *, trace_id: str) -> dict[st
                 messages=messages,
             )
             reply = completion.choices[0].message.content or ""
-            logger.info("llm chat ok", extra={"event": "llm.chat.ok", "model": model})
+            logger.info("LLM 对话成功", extra={"event": "llm.chat.ok", "model": model})
             return {"reply": reply, "trace_id": trace_id}
         except Exception as _error:  # noqa: BLE001
-            logger.exception("llm chat failed", extra={"event": "llm.chat.failed"})
+            logger.exception("LLM 对话失败", extra={"event": "llm.chat.failed"})
             return {
                 "reply": f"LLM 调用失败：{_error}",
                 "trace_id": trace_id,

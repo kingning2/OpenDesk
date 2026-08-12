@@ -9,7 +9,7 @@ import re
 import sys
 import traceback
 from collections.abc import Iterator, Mapping
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from contextvars import ContextVar
 from datetime import UTC, datetime
 from typing import Any, TextIO
@@ -18,7 +18,8 @@ _LOG_LEVELS = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
 _ENVIRONMENTS = {"development", "production"}
 _CONTEXT_FIELDS = ("trace_id", "task_id", "feature", "tenant_id")
 _TOP_LEVEL_FIELDS = {*_CONTEXT_FIELDS, "event"}
-_MESSAGE_LIMIT = 4096
+# 消息长度上限：需容纳二维码 base64（data URL 约 40-55KB）。
+_MESSAGE_LIMIT = 200_000
 _PREVIEW_LIMIT = 1000
 _STACK_LIMIT = 8000
 _REDACTED = "[REDACTED]"
@@ -119,13 +120,19 @@ class JsonLineFormatter(logging.Formatter):
             return json.dumps(fallback, ensure_ascii=False, separators=(",", ":"))
 
     def _build_entry(self, record: logging.LogRecord) -> dict[str, object]:
+        raw_message = record.getMessage()
+        # 二维码 data URL 是图片内容，跳过敏感信息清洗，避免手机号/密钥正则误伤 base64。
+        if raw_message.startswith("data:image/"):
+            message = _truncate(raw_message, _MESSAGE_LIMIT)
+        else:
+            message = _truncate(sanitize_text(raw_message), _MESSAGE_LIMIT)
         entry: dict[str, object] = {
             "schema_version": "1",
             "timestamp": _timestamp(record.created),
             "level": _normalize_record_level(record.levelname),
             "source": "python",
             "logger": sanitize_text(record.name),
-            "message": _truncate(sanitize_text(record.getMessage()), _MESSAGE_LIMIT),
+            "message": message,
         }
 
         context = _context.get() or {}
@@ -157,9 +164,26 @@ class JsonLineFormatter(logging.Formatter):
         return entry
 
 
+def _ensure_utf8(stream: TextIO) -> TextIO:
+    """强制 UTF-8 输出。
+
+    Windows 控制台/管道默认 GBK：JSON 日志会乱码，且含非 GBK 字符时
+    `stream.write` 抛 `UnicodeEncodeError`，被 Rust 侧转成 stderr 刷屏。
+    Rust 端按 UTF-8 读取日志，因此这里必须统一。
+    """
+    reconfigure = getattr(stream, "reconfigure", None)
+    if reconfigure is not None:
+        with suppress(Exception):
+            reconfigure(encoding="utf-8", errors="replace")
+    return stream
+
+
 def configure_logging(*, stream: TextIO | None = None) -> None:
     """Configure the root logger to emit v1 JSON Lines to stdout."""
-    handler = logging.StreamHandler(stream or sys.stdout)
+    if stream is None:
+        stream = _ensure_utf8(sys.stdout)
+        _ensure_utf8(sys.stderr)
+    handler = logging.StreamHandler(stream)
     handler.setFormatter(JsonLineFormatter())
 
     root = logging.getLogger()

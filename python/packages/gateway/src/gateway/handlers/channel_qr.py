@@ -23,12 +23,15 @@ async def handle_qr_start(payload: dict[str, Any] | None, *, trace_id: str) -> d
     """Contract: contracts/schema/v1/channel/sidecar/qr_start.*.schema.json"""
     with bind_log_context(trace_id=trace_id, feature="channel"):
         ok, detail, data = await start_qr_login()
-        logger.info("channel qr start", extra={"event": "channel.qr.start", "ok": ok})
+        qr = data.get("qr_base64")
+        if not qr:
+            # 启动失败：start_qr_login 内部已打关键步骤日志，这里补一条失败结果。
+            logger.warning("获取二维码失败：%s", detail, extra={"event": "channel.qr.failed"})
         return {
             "ok": ok,
             "status": data.get("status", "error"),
             "session_id": data.get("session_id"),
-            "qr_base64": data.get("qr_base64"),
+            "qr_base64": qr,
             "detail": detail,
             "trace_id": trace_id,
         }
@@ -48,16 +51,17 @@ async def handle_qr_check(payload: dict[str, Any] | None, *, trace_id: str) -> d
                 "trace_id": trace_id,
             }
         ok, detail, data = await check_qr_login(session_id)
-        logger.info(
-            "channel qr check",
-            extra={"event": "channel.qr.check", "ok": ok, "status": data.get("status")},
-        )
+        status = data.get("status")
+        # 等待扫码是常态，不逐次打扰；只在状态变化（扫码/确认/成功/刷新/过期/失败）时打一条。
+        if status != "waiting":
+            logger.info(detail, extra={"event": "channel.qr.check", "status": status})
         return {
             "ok": ok,
             "status": data.get("status", "error"),
             "session_id": session_id,
             "cookies": data.get("cookies"),
             "detail": detail,
+            "qr_base64": data.get("qr_base64"),
             "trace_id": trace_id,
         }
 

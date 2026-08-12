@@ -3,8 +3,6 @@ import type {
   ChannelIpcCloseSiteResponse,
   ChannelIpcConnectResponse,
   ChannelIpcDisconnectResponse,
-  ChannelIpcLoginRequest,
-  ChannelIpcLoginResponse,
   ChannelIpcOpenSiteRequest,
   ChannelIpcOpenSiteResponse,
   ChannelIpcQrCancelRequest,
@@ -45,12 +43,6 @@ export function channelSend(
   request: ChannelIpcSendRequest,
 ): Promise<ChannelIpcSendResponse> {
   return invoke<ChannelIpcSendResponse>("channel_send", { request });
-}
-
-export function channelLogin(
-  request: ChannelIpcLoginRequest,
-): Promise<ChannelIpcLoginResponse> {
-  return invoke<ChannelIpcLoginResponse>("channel_login", { request });
 }
 
 export function channelOpenSite(

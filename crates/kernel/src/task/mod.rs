@@ -50,7 +50,7 @@ impl TaskScheduler for InMemoryTaskScheduler {
         let task_name = name.to_string();
         let handle = tokio::spawn(async move {
             tokio::time::sleep(Duration::from_millis(delay_ms)).await;
-            info!(task_id, task = %task_name, "scheduled task executed");
+            info!(task_id, task = %task_name, "定时任务已执行");
         });
 
         let mut tasks = self

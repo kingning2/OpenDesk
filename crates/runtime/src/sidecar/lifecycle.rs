@@ -18,13 +18,13 @@ pub const SIDECAR_RESTARTED_TOPIC: &str = "runtime.sidecar.restarted";
 
 #[derive(Debug, thiserror::Error)]
 pub enum SidecarLifecycleError {
-    #[error("sidecar directory not found: {0}")]
+    #[error("侧车目录不存在: {0}")]
     SidecarDirNotFound(String),
-    #[error("failed to spawn sidecar: {0}")]
+    #[error("启动侧车失败: {0}")]
     SpawnFailed(String),
-    #[error("sidecar startup timed out after {0:?}")]
+    #[error("侧车启动超时（{0:?}）")]
     StartupTimeout(Duration),
-    #[error("sidecar stop failed: {0}")]
+    #[error("停止侧车失败: {0}")]
     StopFailed(String),
 }
 
@@ -129,7 +129,7 @@ impl SidecarLifecycle {
 
         if attempt > self.config.max_restart_attempts {
             return Err(SidecarLifecycleError::SpawnFailed(format!(
-                "max restart attempts ({}) exceeded",
+                "超过最大重启次数（{}）",
                 self.config.max_restart_attempts
             )));
         }
@@ -145,7 +145,7 @@ impl SidecarLifecycle {
 
     pub async fn start(&self) -> Result<(), SidecarLifecycleError> {
         if self.health_check().await? {
-            info!(port = self.config.port, "sidecar already healthy");
+            // 启动日志由 Python 侧车（"侧车已启动"）输出，这里不重复打。
             *self.ever_started.lock().await = true;
             return Ok(());
         }
@@ -178,7 +178,7 @@ impl SidecarLifecycle {
             tokio::spawn(pipe_logs(stderr, "stderr"));
         }
 
-        info!(port = self.config.port, "sidecar process spawned");
+        // 启动日志由 Python 侧车输出，这里不重复打。
         if track_child {
             *self.child.lock().await = Some(child);
         }
@@ -195,9 +195,9 @@ impl SidecarLifecycle {
                 .await
                 .map_err(|error| SidecarLifecycleError::StopFailed(error.to_string()))?;
             if let Err(error) = child.wait().await {
-                warn!(%error, "sidecar wait after kill failed");
+                warn!(%error, "侧车进程停止后等待失败");
             }
-            info!("sidecar process stopped");
+            info!("侧车进程已停止");
         }
         Ok(())
     }
@@ -215,7 +215,7 @@ impl SidecarLifecycle {
             }
             Ok(None) => false,
             Err(error) => {
-                warn!(%error, "sidecar try_wait failed");
+                warn!(%error, "侧车进程状态检查失败");
                 false
             }
         }
@@ -235,12 +235,12 @@ impl SidecarLifecycle {
         };
 
         let Ok(bytes) = serde_json::to_vec(&payload) else {
-            warn!("failed to serialize sidecar restarted event");
+            warn!("侧车重启事件序列化失败");
             return;
         };
 
         if let Err(error) = self.event_bus.publish(SIDECAR_RESTARTED_TOPIC, &bytes) {
-            warn!(%error, "failed to publish sidecar restarted event");
+            warn!(%error, "侧车重启事件发布失败");
         }
     }
 
@@ -248,7 +248,6 @@ impl SidecarLifecycle {
         let deadline = Instant::now() + self.config.startup_timeout;
         while Instant::now() < deadline {
             if self.health_check().await? {
-                info!(port = self.config.port, "sidecar is healthy");
                 return Ok(());
             }
             tokio::time::sleep(Duration::from_millis(200)).await;
@@ -288,12 +287,12 @@ fn build_spawn_command(config: &SidecarConfig) -> Result<Command, SidecarLifecyc
         if bundled.is_file() {
             let mut cmd = Command::new(bundled);
             cmd.arg("--port").arg(&port);
-            info!(executable = %bundled.display(), "starting bundled sidecar");
+            info!(executable = %bundled.display(), "启动内置侧车");
             return Ok(configure_stdio(cmd));
         }
         warn!(
             executable = %bundled.display(),
-            "bundled sidecar executable missing; falling back to development launcher"
+            "内置侧车可执行文件缺失，回退到开发启动器"
         );
     }
 
@@ -313,7 +312,7 @@ fn build_spawn_command(config: &SidecarConfig) -> Result<Command, SidecarLifecyc
     }
 
     if config.use_uv {
-        warn!("uv not found in PATH, falling back to python executable");
+        warn!("PATH 中未找到 uv，回退到 python 可执行文件");
     }
 
     for candidate in spawn_python_candidates(config) {
@@ -327,12 +326,13 @@ fn build_spawn_command(config: &SidecarConfig) -> Result<Command, SidecarLifecyc
             .arg("sidecar.main")
             .arg("--port")
             .arg(&port);
-        info!(executable = %candidate, "starting sidecar with python");
+        info!(executable = %candidate, "使用 python 启动侧车");
         return Ok(configure_stdio(cmd));
     }
 
     Err(SidecarLifecycleError::SpawnFailed(
-        "no Python runtime found in PATH (install uv, or ensure python/py is available; set OPENDESK_PYTHON)".into(),
+        "PATH 中未找到 Python 运行时（请安装 uv，或确保 python/py 可用；也可设置 OPENDESK_PYTHON）"
+            .into(),
     ))
 }
 

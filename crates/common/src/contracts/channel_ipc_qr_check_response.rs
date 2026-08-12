@@ -8,4 +8,5 @@ pub struct ChannelIpcQrCheckResponse {
     pub session_id: Option<String>,
     pub cookies: Option<Vec<ChannelCookie>>,
     pub detail: Option<String>,
+    pub qr_base64: Option<String>,
 }

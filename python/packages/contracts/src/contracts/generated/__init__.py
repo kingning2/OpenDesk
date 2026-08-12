@@ -19,8 +19,6 @@ from .channel_ipc_connect_request import ChannelIpcConnectRequest
 from .channel_ipc_connect_response import ChannelIpcConnectResponse
 from .channel_ipc_disconnect_request import ChannelIpcDisconnectRequest
 from .channel_ipc_disconnect_response import ChannelIpcDisconnectResponse
-from .channel_ipc_login_request import ChannelIpcLoginRequest
-from .channel_ipc_login_response import ChannelIpcLoginResponse
 from .channel_ipc_open_site_request import ChannelIpcOpenSiteRequest
 from .channel_ipc_open_site_response import ChannelIpcOpenSiteResponse
 from .channel_ipc_qr_cancel_request import ChannelIpcQrCancelRequest
@@ -35,8 +33,6 @@ from .channel_ipc_state_request import ChannelIpcStateRequest
 from .channel_ipc_state_response import ChannelIpcStateResponse
 from .channel_message import ChannelMessage
 from .channel_settings import ChannelSettings
-from .channel_sidecar_login_request import ChannelSidecarLoginRequest
-from .channel_sidecar_login_response import ChannelSidecarLoginResponse
 from .channel_sidecar_qr_cancel_request import ChannelSidecarQrCancelRequest
 from .channel_sidecar_qr_cancel_response import ChannelSidecarQrCancelResponse
 from .channel_sidecar_qr_check_request import ChannelSidecarQrCheckRequest
@@ -72,8 +68,6 @@ __all__ = [
     "ChannelIpcConnectResponse",
     "ChannelIpcDisconnectRequest",
     "ChannelIpcDisconnectResponse",
-    "ChannelIpcLoginRequest",
-    "ChannelIpcLoginResponse",
     "ChannelIpcOpenSiteRequest",
     "ChannelIpcOpenSiteResponse",
     "ChannelIpcQrCancelRequest",
@@ -88,8 +82,6 @@ __all__ = [
     "ChannelIpcStateResponse",
     "ChannelMessage",
     "ChannelSettings",
-    "ChannelSidecarLoginRequest",
-    "ChannelSidecarLoginResponse",
     "ChannelSidecarQrCancelRequest",
     "ChannelSidecarQrCancelResponse",
     "ChannelSidecarQrCheckRequest",

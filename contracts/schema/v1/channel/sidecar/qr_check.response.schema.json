@@ -23,6 +23,9 @@
     "detail": {
       "type": "string"
     },
+    "qr_base64": {
+      "type": "string"
+    },
     "trace_id": {
       "type": "string"
     }

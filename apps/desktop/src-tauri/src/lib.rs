@@ -15,9 +15,8 @@ mod state;
 
 use adapter::agent_sidecar::RuntimeAgentSidecar;
 use channels::commands::{
-    channel_close_site, channel_connect, channel_disconnect, channel_login, channel_open_site,
-    channel_qr_cancel, channel_qr_check, channel_qr_start, channel_send, channel_state_get,
-    channel_state_set,
+    channel_close_site, channel_connect, channel_disconnect, channel_open_site, channel_qr_cancel,
+    channel_qr_check, channel_qr_start, channel_send, channel_state_get, channel_state_set,
 };
 use channels::coordinator::ChannelCoordinator;
 use channels::dispatcher::ChannelDispatcher;
@@ -26,7 +25,7 @@ use channels::store::ChannelRepo;
 use channels::xianyu::XianyuChannel;
 use commands::{
     agent_ping, ai_config_get, ai_config_set, ai_test_api_key, license_activate,
-    license_machine_code, license_status,
+    license_machine_code, license_status, log_clear, log_recent,
 };
 use kernel::event::{EventBus, InMemoryEventBus};
 use logging::init_tracing;
@@ -71,7 +70,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             let config_dir = match app.path().app_config_dir() {
                 Ok(dir) => dir,
                 Err(error) => {
-                    tracing::error!(%error, "resolve app config dir failed; AI config disabled");
+                    tracing::error!(%error, "解析应用配置目录失败；AI 配置已禁用");
                     PathBuf::from(".")
                 }
             };
@@ -86,7 +85,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             ) {
                 Ok(repo) => Arc::new(repo),
                 Err(error) => {
-                    tracing::error!(%error, "open channel sqlite failed; channel disabled");
+                    tracing::error!(%error, "打开渠道数据库失败；渠道已禁用");
                     return Ok(());
                 }
             };
@@ -114,7 +113,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             let lifecycle = app.state::<AppState>().lifecycle.clone();
             tauri::async_runtime::spawn(async move {
                 if let Err(error) = lifecycle.ensure_running().await {
-                    tracing::error!(%error, "sidecar startup failed");
+                    tracing::error!(%error, "侧车启动失败");
                 }
             });
             Ok(())
@@ -129,7 +128,6 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             channel_connect,
             channel_disconnect,
             channel_send,
-            channel_login,
             channel_open_site,
             channel_close_site,
             channel_qr_start,
@@ -137,7 +135,9 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             channel_qr_cancel,
             license_status,
             license_machine_code,
-            license_activate
+            license_activate,
+            log_clear,
+            log_recent
         ])
         .build(context)?
         .run(move |app_handle, event| {
@@ -145,7 +145,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
                 let lifecycle = app_handle.state::<AppState>().lifecycle.clone();
                 tauri::async_runtime::block_on(async move {
                     if let Err(error) = lifecycle.stop().await {
-                        tracing::error!(%error, "sidecar shutdown failed");
+                        tracing::error!(%error, "侧车关闭失败");
                     }
                 });
             }

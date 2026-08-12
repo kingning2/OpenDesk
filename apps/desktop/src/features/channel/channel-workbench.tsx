@@ -1,15 +1,15 @@
 /**
- * 渠道平台工作区（二级页）— 平台内配置（浏览器快照登录 / 自动回复 / 连接）与会话工作区一体。
+ * 渠道平台工作区（二级页）— 平台内配置（扫码登录 / 自动回复 / 连接）与会话工作区一体。
  *
  * 由 `/features/channel/:platform` 路由进入；通过 `kind` 读取平台注册表。
- * 本页聚合了该平台的全部操作：账号配置（快照导入）、自动回复开关、登录、连接、会话列表、消息流、人工发送。
+ * 本页聚合了该平台的全部操作：账号配置（扫码登录）、自动回复开关、连接、会话列表、消息流、人工发送。
  */
 
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { ChevronRight, Plus, Trash2 } from "@desk/ui/icons";
 import { Button, Input, PageScaffold } from "@desk/ui";
-import { channelConnect, channelDisconnect, channelLogin, channelOpenSite, channelSend } from "@desk/platform/ipc/channel";
+import { channelConnect, channelDisconnect, channelOpenSite, channelSend } from "@desk/platform/ipc/channel";
 import type { ChannelAccount, ChannelMessage } from "@desk/contracts";
 import { useChannelEvents } from "./use-channel-events";
 import { useChannelStore } from "./use-channel-store";
@@ -40,7 +40,7 @@ function formatTime(timestamp: string): string {
   return timestamp;
 }
 
-/** 账号表单（Cookie 配置）。 */
+/** 账号表单（仅配置名称；凭据由扫码登录写入）。 */
 function AccountForm({
   account,
   kind,
@@ -53,32 +53,12 @@ function AccountForm({
   const upsertAccount = useChannelStore((state) => state.upsertAccount);
 
   const [name, setName] = useState(account?.name ?? "");
-  const [credential, setCredential] = useState(account?.credential ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [snapshotHint, setSnapshotHint] = useState<string | null>(null);
-
-  // 输入时实时校验快照。
-  function handleCredentialChange(value: string) {
-    setCredential(value);
-    const result = parseSnapshot(value);
-    if (value.trim() && !result.ok) {
-      setSnapshotHint(result.detail);
-    } else if (value.trim() && result.ok) {
-      setSnapshotHint(result.detail);
-    } else {
-      setSnapshotHint(null);
-    }
-  }
 
   async function save() {
-    if (!name.trim() || !credential.trim()) {
-      setError("名称与凭据不能为空");
-      return;
-    }
-    const parsed = parseSnapshot(credential);
-    if (!parsed.ok) {
-      setError(parsed.detail);
+    if (!name.trim()) {
+      setError("账号名称不能为空");
       return;
     }
     setSaving(true);
@@ -88,7 +68,7 @@ function AccountForm({
         id: account?.id ?? crypto.randomUUID(),
         kind,
         name: name.trim(),
-        credential: credential.trim(),
+        credential: account?.credential ?? "",
         enabled: account?.enabled ?? true,
       });
       onDone();
@@ -104,23 +84,6 @@ function AccountForm({
         <span className="text-[length:var(--text-sm)] text-muted-foreground">账号名称</span>
         <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="我的闲鱼账号" />
       </label>
-      <label className="block space-y-1">
-        <span className="text-[length:var(--text-sm)] text-muted-foreground">
-          登录快照（Chrome 扩展导出 JSON）
-        </span>
-        <textarea
-          value={credential}
-          onChange={(event) => handleCredentialChange(event.target.value)}
-          placeholder='粘贴闲鱼登录快照 JSON（含 cookies / env / headers）。旧 Cookie 字符串仍兼容。'
-          rows={6}
-          className="w-full resize-y rounded-[var(--radius-md)] border border-border bg-background px-3 py-2 font-mono text-[length:var(--text-xs)] outline-none focus:ring-2 focus:ring-ring"
-        />
-      </label>
-      {snapshotHint ? (
-        <p className={`text-[length:var(--text-xs)] ${credential.trim() && parseSnapshot(credential).ok ? "text-emerald-600" : "text-muted-foreground"}`}>
-          {snapshotHint}
-        </p>
-      ) : null}
       {error ? <p className="text-[length:var(--text-sm)] text-destructive">{error}</p> : null}
       <div className="flex justify-end gap-2">
         <Button variant="ghost" onClick={onDone}>取消</Button>
@@ -216,6 +179,7 @@ export function ChannelWorkbench() {
 
   // 平台账号（按 kind 过滤）。
   const platformAccounts = accounts.filter((account) => account.kind === platform.kind);
+  
   const primaryAccount = platformAccounts.find((account) => account.enabled) ?? platformAccounts[0];
   const activeConversation = conversations.find(
     (conversation) => conversation.id === activeConversationId,
@@ -250,28 +214,6 @@ export function ChannelWorkbench() {
       setStatus("disconnected");
     } catch (disconnectError) {
       console.error(disconnectError);
-    }
-  }
-
-  async function handleLogin() {
-    if (!primaryAccount || connecting) {
-      return;
-    }
-    setConnecting(true);
-    setStatus("connecting");
-    setLoginError(null);
-    try {
-      const result = await channelLogin({ account_id: primaryAccount.id });
-      setStatus(result.ok ? result.state : "error");
-      if (!result.ok) {
-        setLoginError(result.detail ?? "登录失败");
-      }
-      await load();
-    } catch (loginError) {
-      setStatus("error");
-      setLoginError(loginError instanceof Error ? loginError.message : String(loginError));
-    } finally {
-      setConnecting(false);
     }
   }
 
@@ -400,14 +342,11 @@ export function ChannelWorkbench() {
                   {status === "connected" ? "已连接" : status === "connecting" ? "连接中…" : "未连接"}
                 </span>
                 <div className="flex gap-2">
-                  <Button size="sm" disabled={!primaryAccount} onClick={() => {
+                  <Button size="sm" onClick={() => {
                     setQrSessionKey((key) => key + 1);
                     setQrOpen(true);
                   }}>
                     扫码登录
-                  </Button>
-                  <Button size="sm" variant="outline" disabled={connecting || !primaryAccount} onClick={handleLogin}>
-                    {connecting ? "登录中…" : "快照登录"}
                   </Button>
                   <Button
                     size="sm"
@@ -543,6 +482,8 @@ export function ChannelWorkbench() {
         key={qrSessionKey}
         open={qrOpen}
         accountId={primaryAccount?.id ?? ""}
+        name={primaryAccount?.name ?? `${platform.name}账号`}
+        kind={platform.kind}
         onClose={() => setQrOpen(false)}
         onSuccess={() => {
           setStatus("connected");

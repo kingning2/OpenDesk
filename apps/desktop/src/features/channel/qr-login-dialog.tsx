@@ -9,6 +9,7 @@ import {
   channelQrCheck,
   channelQrStart,
 } from "@desk/platform/ipc/channel";
+import { useLogStore } from "@feature/log";
 
 type QrStatus =
   | "ready"
@@ -16,6 +17,7 @@ type QrStatus =
   | "scanned"
   | "confirmed"
   | "success"
+  | "refreshed"
   | "expired"
   | "failed"
   | "error";
@@ -28,11 +30,17 @@ const POLL_INTERVAL_MS = 2000;
 export function QrLoginDialog({
   open,
   accountId,
+  name,
+  kind,
   onClose,
   onSuccess,
 }: {
   open: boolean;
   accountId: string;
+  /** 自动创建账号时的名称（无账号场景）。 */
+  name?: string;
+  /** 自动创建账号时的平台类型。 */
+  kind?: string;
   onClose: () => void;
   onSuccess: () => void;
 }) {
@@ -41,15 +49,33 @@ export function QrLoginDialog({
   const [message, setMessage] = useState("正在生成二维码…");
   const sessionRef = useRef<string | null>(null);
   const cancelledRef = useRef(false);
+  // StrictMode 下 effect 会连续挂载两次；标记只允许启动一次扫码会话，
+  // 否则会并发打开两个 Playwright 浏览器，二维码迟迟不返回。
+  const startedRef = useRef(false);
+
+  /** 把二维码图片推进日志面板，渲染成图片展示。 */
+  function pushQrLog(qr: string) {
+    useLogStore.getState().append([
+      { ts: Date.now(), level: "INFO", source: "react", target: "qr", message: qr },
+    ]);
+  }
 
   // 启动扫码登录（对话框由父级 key 重挂载保证初始状态）。
   useEffect(() => {
     if (!open) {
       return;
     }
+    if (startedRef.current) {
+      // 第二次挂载：仅恢复取消标记，不重复启动。
+      cancelledRef.current = false;
+      return () => {
+        cancelledRef.current = true;
+      };
+    }
+    startedRef.current = true;
     cancelledRef.current = false;
 
-    void channelQrStart({ account_id: accountId })
+    void channelQrStart({ account_id: accountId, name, kind })
       .then((result) => {
         if (cancelledRef.current) {
           return;
@@ -61,6 +87,7 @@ export function QrLoginDialog({
         }
         sessionRef.current = result.session_id ?? null;
         setQrBase64(result.qr_base64);
+        pushQrLog(result.qr_base64);
         setStatus("waiting");
         setMessage("请用闲鱼 App 扫码");
       })
@@ -73,8 +100,14 @@ export function QrLoginDialog({
 
     return () => {
       cancelledRef.current = true;
+      // 关闭弹窗时取消后端扫码会话，及时释放浏览器。
+      const sessionId = sessionRef.current;
+      if (sessionId) {
+        void channelQrCancel({ session_id: sessionId }).catch(() => {});
+      }
     };
-  }, [open, accountId]);
+    // kind/name 有意不进依赖：名称变化不应重启已开始的扫码会话。
+  }, [open, accountId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 轮询扫码状态。
   useEffect(() => {
@@ -105,6 +138,15 @@ export function QrLoginDialog({
             window.clearInterval(timer);
             onSuccess();
             onClose();
+            break;
+          case "refreshed":
+            // 二维码已过期，侧车原地换新码：直接换图，继续轮询。
+            if (result.qr_base64) {
+              setQrBase64(result.qr_base64);
+              pushQrLog(result.qr_base64);
+            }
+            setStatus("waiting");
+            setMessage("二维码已刷新，请扫码");
             break;
           case "expired":
             setMessage("二维码已过期，请重新打开");
@@ -169,19 +211,22 @@ export function QrLoginDialog({
             </div>
           )}
 
-          <p
-            className={`text-center text-[length:var(--text-sm)] ${
-              status === "scanned" || status === "confirmed"
-                ? "text-amber-600"
-                : status === "failed" || status === "expired"
-                  ? "text-destructive"
-                  : status === "success"
-                    ? "text-emerald-600"
-                    : "text-muted-foreground"
-            }`}
-          >
-            {message}
-          </p>
+          {/* 二维码未就绪时文案在占位框内展示，避免重复。 */}
+          {qrBase64 ? (
+            <p
+              className={`text-center text-[length:var(--text-sm)] ${
+                status === "scanned" || status === "confirmed"
+                  ? "text-amber-600"
+                  : status === "failed" || status === "expired"
+                    ? "text-destructive"
+                    : status === "success"
+                      ? "text-emerald-600"
+                      : "text-muted-foreground"
+              }`}
+            >
+              {message}
+            </p>
+          ) : null}
 
           <div className="flex w-full justify-center gap-2">
             {isTerminal ? (

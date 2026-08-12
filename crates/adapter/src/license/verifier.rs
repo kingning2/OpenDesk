@@ -108,7 +108,7 @@ impl VerifierProcessLicense {
             exit,
             elapsed_ms,
             args = ?args,
-            "license-verifier finished"
+            "授权校验器执行完成"
         );
 
         Ok((exit, stdout, stderr))
@@ -227,14 +227,14 @@ impl VerifierProcessLicense {
             warn!(
                 path = %self.key_path.display(),
                 error = %cleanup_error,
-                "failed to rollback license.key after activation failure"
+                "激活失败后回滚 license.key 失败"
             );
         }
         if let Err(cleanup_error) = self.remove_license_file(&self.token_path) {
             warn!(
                 path = %self.token_path.display(),
                 error = %cleanup_error,
-                "failed to rollback license.token after activation failure"
+                "激活失败后回滚 license.token 失败"
             );
         }
         self.invalidate_cache();
@@ -295,7 +295,7 @@ impl VerifierProcessLicense {
             Err(error) => {
                 warn!(
                     error = %error,
-                    "license status: machine code unavailable while unactivated"
+                    "授权状态：未激活时设备码不可用"
                 );
                 None
             }
@@ -413,7 +413,7 @@ impl LicenseGate for VerifierProcessLicense {
         info!(
             product = ?status.product,
             expires_at = ?status.expires_at,
-            "license activation succeeded"
+            "授权激活成功"
         );
         Ok(status)
     }
@@ -466,7 +466,7 @@ fn resolve_verifier_path() -> Result<PathBuf, LicenseError> {
         // 环境变量指向缺失文件时继续回退搜索，避免开发机 triple 不一致直接 FailClosed。
         warn!(
             path = %path.display(),
-            "LICENSE_VERIFIER_EXE is set but not a file; falling back to bundled lookup"
+            "LICENSE_VERIFIER_EXE 已设置但文件不存在，回退到内置查找"
         );
     }
 
@@ -475,7 +475,7 @@ fn resolve_verifier_path() -> Result<PathBuf, LicenseError> {
         for name in verifier_candidate_names() {
             let candidate = dir.join(&name);
             if candidate.is_file() {
-                info!(path = %candidate.display(), "resolved license-verifier");
+                info!(path = %candidate.display(), "已解析授权校验器");
                 return Ok(candidate);
             }
         }
@@ -499,7 +499,7 @@ fn verifier_search_dirs() -> Vec<PathBuf> {
             dirs.push(parent.to_path_buf());
         }
     } else {
-        warn!("current_exe unavailable for verifier lookup");
+        warn!("无法获取当前可执行文件路径，无法定位授权校验器");
         dirs.push(PathBuf::from("."));
     }
 

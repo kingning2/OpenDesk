@@ -53,7 +53,7 @@ pub fn build_license_gate() -> Arc<dyn LicenseGate> {
         match VerifierProcessLicense::from_env() {
             Ok(gate) => Arc::new(gate),
             Err(error) => {
-                tracing::error!(%error, "license-lock enabled but verifier unavailable");
+                tracing::error!(%error, "已启用授权锁但校验器不可用");
                 Arc::new(FailClosedLicenseGate::new(error.to_string()))
             }
         }

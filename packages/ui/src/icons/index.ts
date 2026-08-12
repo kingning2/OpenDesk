@@ -18,6 +18,7 @@ export {
   SquaresUnite,
   Store,
   Sun,
+  Terminal,
   Trash2,
   Users,
   X,

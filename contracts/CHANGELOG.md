@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.15
+
+- `qr_check` IPC / sidecar 响应新增可选 `qr_base64`：二维码过期时侧车原地刷新并返回新图
+
+## 0.1.14
+
+- 移除 `channel` 快照登录契约：`login` IPC + `sidecar/login`（扫码登录成为唯一登录方式）
+- `qr_start` IPC 请求新增可选 `name` / `kind`：无账号时扫码登录成功自动创建账号
+
 ## 0.1.13
 
 - 新增 `channel` 契约：`qr_start` / `qr_check` / `qr_cancel` IPC + sidecar（Playwright 扫码登录）

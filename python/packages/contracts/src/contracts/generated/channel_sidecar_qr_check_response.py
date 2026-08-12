@@ -11,4 +11,5 @@ class ChannelSidecarQrCheckResponse(TypedDict, total=False):
     session_id: str
     cookies: list[ChannelCookie]
     detail: str
+    qr_base64: str
     trace_id: str

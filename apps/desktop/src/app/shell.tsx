@@ -8,7 +8,7 @@
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router";
 import { IconButton, ThemeProvider, ThemeToggle } from "@desk/ui";
-import { Settings } from "@desk/ui/icons";
+import { Settings, Terminal } from "@desk/ui/icons";
 import {
   closeWindow,
   getPlatform,
@@ -18,6 +18,7 @@ import {
   toggleMaximizeWindow,
 } from "@desk/platform";
 import { LicensePlanBadge } from "@feature/license";
+import { LogPanel, useLogStore } from "@feature/log";
 import { SettingsDialogProvider, useSettingsDialog } from "@feature/setting";
 import { navItems } from "../route/nav-registry";
 import {
@@ -44,6 +45,7 @@ function AppShellInner() {
   const platform = getPlatform();
   const [isMaximized, setIsMaximized] = useState(false);
   const { openSettings } = useSettingsDialog();
+  const toggleLogPanel = useLogStore((state) => state.toggle);
   const { tabs, activePath, openPaths, ensureTab, selectTab, closeTab, addTab } = useWorkspaceTabs();
 
   useEffect(() => {
@@ -75,6 +77,13 @@ function AppShellInner() {
         isMaximized={isMaximized}
         actions={
           <>
+            <IconButton
+              label="运行日志"
+              title="运行日志"
+              onClick={toggleLogPanel}
+            >
+              <Terminal className="size-3.5" />
+            </IconButton>
             <IconButton
               label="设置"
               title="设置"
@@ -130,6 +139,7 @@ function AppShellInner() {
           <WorkspaceOutlet openPaths={openPaths} activePath={activePath} />
         </MainPanel>
       </AppLayout>
+      <LogPanel />
     </div>
   );
 }
