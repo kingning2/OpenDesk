@@ -19,9 +19,7 @@ from shared.logging import bind_log_context
 logger = logging.getLogger("opendesk.sidecar.qr")
 
 
-async def handle_qr_start(
-    payload: dict[str, Any] | None, *, trace_id: str
-) -> dict[str, Any]:
+async def handle_qr_start(payload: dict[str, Any] | None, *, trace_id: str) -> dict[str, Any]:
     """Contract: contracts/schema/v1/channel/sidecar/qr_start.*.schema.json"""
     with bind_log_context(trace_id=trace_id, feature="channel"):
         ok, detail, data = await start_qr_login()
@@ -36,9 +34,7 @@ async def handle_qr_start(
         }
 
 
-async def handle_qr_check(
-    payload: dict[str, Any] | None, *, trace_id: str
-) -> dict[str, Any]:
+async def handle_qr_check(payload: dict[str, Any] | None, *, trace_id: str) -> dict[str, Any]:
     """Contract: contracts/schema/v1/channel/sidecar/qr_check.*.schema.json"""
     with bind_log_context(trace_id=trace_id, feature="channel"):
         session_id = (payload or {}).get("session_id") or ""
@@ -66,9 +62,7 @@ async def handle_qr_check(
         }
 
 
-async def handle_qr_cancel(
-    payload: dict[str, Any] | None, *, trace_id: str
-) -> dict[str, Any]:
+async def handle_qr_cancel(payload: dict[str, Any] | None, *, trace_id: str) -> dict[str, Any]:
     """Contract: contracts/schema/v1/channel/sidecar/qr_cancel.*.schema.json"""
     with bind_log_context(trace_id=trace_id, feature="channel"):
         session_id = (payload or {}).get("session_id") or ""

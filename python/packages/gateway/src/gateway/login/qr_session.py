@@ -156,21 +156,29 @@ async def start_qr_login() -> tuple[bool, str, dict[str, Any]]:
                     session.status = STATUS_READY
                     session.detail = "已显示登录页（兜底截图）"
                     QR_SESSIONS[session_id] = session
-                    return True, "已显示登录页", {
-                        "status": STATUS_READY,
-                        "session_id": session_id,
-                        "qr_base64": _to_base64(screenshot),
-                    }
+                    return (
+                        True,
+                        "已显示登录页",
+                        {
+                            "status": STATUS_READY,
+                            "session_id": session_id,
+                            "qr_base64": _to_base64(screenshot),
+                        },
+                    )
 
         screenshot = await qr_element.screenshot()
         session.status = STATUS_READY
         session.detail = "二维码已就绪"
         QR_SESSIONS[session_id] = session
-        return True, "二维码已就绪", {
-            "status": STATUS_READY,
-            "session_id": session_id,
-            "qr_base64": _to_base64(screenshot),
-        }
+        return (
+            True,
+            "二维码已就绪",
+            {
+                "status": STATUS_READY,
+                "session_id": session_id,
+                "qr_base64": _to_base64(screenshot),
+            },
+        )
 
     except Exception as error:  # noqa: BLE001
         await session.close()
@@ -197,11 +205,7 @@ async def check_qr_login(session_id: str) -> tuple[bool, str, dict[str, Any]]:
         url = page.url.lower()
 
         # 登录成功：URL 回到 goofish.com 且不含登录跳转。
-        logged_in = (
-            "goofish.com" in url
-            and "login" not in url
-            and "passport" not in url
-        )
+        logged_in = "goofish.com" in url and "login" not in url and "passport" not in url
 
         if logged_in:
             cookies = await session.context.cookies()
@@ -210,10 +214,14 @@ async def check_qr_login(session_id: str) -> tuple[bool, str, dict[str, Any]]:
             QR_SESSIONS.pop(session_id, None)
             if not exported:
                 return False, "登录后导出 cookies 为空", {"status": STATUS_FAILED}
-            return True, "登录成功，已提取 cookies", {
-                "status": STATUS_SUCCESS,
-                "cookies": exported,
-            }
+            return (
+                True,
+                "登录成功，已提取 cookies",
+                {
+                    "status": STATUS_SUCCESS,
+                    "cookies": exported,
+                },
+            )
 
         # 仍在登录页：尝试读取扫码状态文案。
         page_text = ""

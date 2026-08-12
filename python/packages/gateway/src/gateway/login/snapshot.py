@@ -54,11 +54,7 @@ def build_context_overrides(snapshot: dict[str, Any]) -> dict[str, Any]:
 
     overrides: dict[str, Any] = {}
 
-    ua = (
-        headers.get("User-Agent")
-        or headers.get("user-agent")
-        or navigator.get("userAgent")
-    )
+    ua = headers.get("User-Agent") or headers.get("user-agent") or navigator.get("userAgent")
     if ua:
         overrides["user_agent"] = ua
 
