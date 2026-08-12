@@ -96,9 +96,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             app.manage(dispatcher.clone());
 
             let sidecar_client = app.state::<AppState>().lifecycle.client().clone();
-            let reply = Arc::new(
-                channels::reply::ReplyCoordinator::new(sidecar_client),
-            );
+            let reply = Arc::new(channels::reply::ReplyCoordinator::new(sidecar_client));
 
             let coordinator = Arc::new(ChannelCoordinator::new(
                 repo,

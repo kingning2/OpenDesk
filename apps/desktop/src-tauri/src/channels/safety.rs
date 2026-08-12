@@ -37,7 +37,10 @@ mod tests {
             SAFETY_FILTERED_REPLY.to_string()
         );
         assert_eq!(filter_reply("QQ联系"), SAFETY_FILTERED_REPLY.to_string());
-        assert_eq!(filter_reply("支付宝付款"), SAFETY_FILTERED_REPLY.to_string());
+        assert_eq!(
+            filter_reply("支付宝付款"),
+            SAFETY_FILTERED_REPLY.to_string()
+        );
     }
 
     #[test]

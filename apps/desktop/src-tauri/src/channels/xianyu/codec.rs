@@ -72,36 +72,40 @@ mod tests {
         // { "1": { "2": "cid@goofish", "5": 1700000000123, "10": {
         //     "reminderContent": "你好", "reminderTitle": "买家",
         //     "senderUserId": "peer-1", "reminderUrl": ".../itemId=12345&..." } } }
-        Value::Map(vec![
-            (
-                Value::String("1".into()),
-                Value::Map(vec![
-                    (Value::String("2".into()), Value::String("cid@goofish".into())),
-                    (Value::String("5".into()), Value::Integer(1_700_000_000_123_i64.into())),
-                    (
-                        Value::String("10".into()),
-                        Value::Map(vec![
-                            (
-                                Value::String("reminderContent".into()),
-                                Value::String("你好，多少钱".into()),
-                            ),
-                            (
-                                Value::String("reminderTitle".into()),
-                                Value::String("买家A".into()),
-                            ),
-                            (
-                                Value::String("senderUserId".into()),
-                                Value::String("peer-1".into()),
-                            ),
-                            (
-                                Value::String("reminderUrl".into()),
-                                Value::String("https://.../itemId=12345&from=x".into()),
-                            ),
-                        ]),
-                    ),
-                ]),
-            ),
-        ])
+        Value::Map(vec![(
+            Value::String("1".into()),
+            Value::Map(vec![
+                (
+                    Value::String("2".into()),
+                    Value::String("cid@goofish".into()),
+                ),
+                (
+                    Value::String("5".into()),
+                    Value::Integer(1_700_000_000_123_i64.into()),
+                ),
+                (
+                    Value::String("10".into()),
+                    Value::Map(vec![
+                        (
+                            Value::String("reminderContent".into()),
+                            Value::String("你好，多少钱".into()),
+                        ),
+                        (
+                            Value::String("reminderTitle".into()),
+                            Value::String("买家A".into()),
+                        ),
+                        (
+                            Value::String("senderUserId".into()),
+                            Value::String("peer-1".into()),
+                        ),
+                        (
+                            Value::String("reminderUrl".into()),
+                            Value::String("https://.../itemId=12345&from=x".into()),
+                        ),
+                    ]),
+                ),
+            ]),
+        )])
     }
 
     #[test]
@@ -112,8 +116,14 @@ mod tests {
             get_string(&frame, MSG_CONTENT),
             Some("你好，多少钱".to_string())
         );
-        assert_eq!(get_string(&frame, MSG_SENDER_NAME), Some("买家A".to_string()));
-        assert_eq!(get_string(&frame, MSG_SENDER_ID), Some("peer-1".to_string()));
+        assert_eq!(
+            get_string(&frame, MSG_SENDER_NAME),
+            Some("买家A".to_string())
+        );
+        assert_eq!(
+            get_string(&frame, MSG_SENDER_ID),
+            Some("peer-1".to_string())
+        );
         assert_eq!(get_i64(&frame, MSG_CREATE_TIME), Some(1_700_000_000_123));
     }
 

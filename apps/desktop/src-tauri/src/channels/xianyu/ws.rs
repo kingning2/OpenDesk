@@ -107,9 +107,10 @@ impl XianyuChannel {
             .expect("account lock")
             .clone()
             .ok_or_else(|| ChannelError::NotConnected("no account".into()))?;
-        let cookie_str = super::cookies::cookies_to_string(&super::cookies::parse_credential(&account.credential));
-        let api = XianyuApi::new(&cookie_str)
-            .map_err(ChannelError::Protocol)?;
+        let cookie_str = super::cookies::cookies_to_string(&super::cookies::parse_credential(
+            &account.credential,
+        ));
+        let api = XianyuApi::new(&cookie_str).map_err(ChannelError::Protocol)?;
         let cookies = super::cookies::parse_credential(&account.credential);
         // 校验 unb 存在（协议发送依赖）。
         super::cookies::my_id(&cookies)
@@ -117,10 +118,7 @@ impl XianyuChannel {
         let device_id = super::cookies::device_id(&cookies)
             .ok_or_else(|| ChannelError::Protocol("cookie 缺少 unb".into()))?;
 
-        let token = api
-            .fetch_token()
-            .await
-            .map_err(ChannelError::Protocol)?;
+        let token = api.fetch_token().await.map_err(ChannelError::Protocol)?;
 
         let (mut sink, mut stream) = connect_async(WS_URL)
             .await
@@ -128,7 +126,8 @@ impl XianyuChannel {
             .0
             .split();
 
-        self.inner.set_state(ConnectionState::Connected, Some("连接成功".into()));
+        self.inner
+            .set_state(ConnectionState::Connected, Some("连接成功".into()));
 
         let reg = message::register_frame(&device_id, &token);
         sink.send(Message::Text(reg.to_string()))
@@ -266,8 +265,7 @@ impl ChannelProtocol for XianyuChannel {
                     this.inner
                         .set_state(ConnectionState::Error, Some(error.to_string()));
                 } else {
-                    this.inner
-                        .set_state(ConnectionState::Disconnected, None);
+                    this.inner.set_state(ConnectionState::Disconnected, None);
                 }
                 tokio::time::sleep(Duration::from_secs(5)).await;
             }

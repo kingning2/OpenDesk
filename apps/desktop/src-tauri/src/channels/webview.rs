@@ -30,21 +30,20 @@ pub fn open_xianyu_site(app: &tauri::AppHandle, account: &ChannelAccount) -> Res
         .parse::<url::Url>()
         .map_err(|error| format!("闲鱼 URL 解析失败: {error}"))?;
 
-    let builder = WebviewWindowBuilder::new(
-        app,
-        XIANYU_WEBVIEW_LABEL,
-        WebviewUrl::External(url),
-    )
-    .title(format!("闲鱼 — {}", account.name))
-    .inner_size(980.0, 720.0)
-    .on_navigation(|url| url.as_str().starts_with("https://www.goofish.com"));
+    let builder = WebviewWindowBuilder::new(app, XIANYU_WEBVIEW_LABEL, WebviewUrl::External(url))
+        .title(format!("闲鱼 — {}", account.name))
+        .inner_size(980.0, 720.0)
+        .on_navigation(|url| url.as_str().starts_with("https://www.goofish.com"));
 
     let window = builder
         .build()
         .map_err(|error| format!("创建闲鱼窗口失败: {error}"))?;
 
     // 注入 cookies（逐个，匹配 domain）。
-    for cookie in cookies.iter().filter(|cookie| cookie.domain.contains("goofish.com")) {
+    for cookie in cookies
+        .iter()
+        .filter(|cookie| cookie.domain.contains("goofish.com"))
+    {
         if let Err(error) = inject_cookie(&window, cookie) {
             tracing::warn!(%error, cookie = %cookie.name, "注入 cookie 失败");
         }

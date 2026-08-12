@@ -120,7 +120,11 @@ pub fn build_reply_context(
     // 历史截断：取最近 max_history 条。
     let start = history.len().saturating_sub(max_history);
     for msg in &history[start..] {
-        let role = if msg.direction == "in" { "user" } else { "assistant" };
+        let role = if msg.direction == "in" {
+            "user"
+        } else {
+            "assistant"
+        };
         messages.push(LlmMessage {
             role: role.to_string(),
             content: msg.content.clone(),
@@ -206,10 +210,9 @@ impl ReplyCoordinator {
             provider: Some(provider.clone()),
             trace_id: Some(trace_id.to_string()),
         };
-        let response: LlmIpcClassifyResponse =
-            routes::llm_classify::call(&self.sidecar, request)
-                .await
-                .map_err(|error| error.to_string())?;
+        let response: LlmIpcClassifyResponse = routes::llm_classify::call(&self.sidecar, request)
+            .await
+            .map_err(|error| error.to_string())?;
         Ok(Intent::from_str(&response.intent))
     }
 }

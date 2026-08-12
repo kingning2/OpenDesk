@@ -35,8 +35,7 @@ mod tests {
 
     #[test]
     fn parse_standard_cookie_string() {
-        let cookies =
-            parse_cookies("unb=U-123; _m_h5_tk=abc_token_987; cookie2=xyz; cna=cnaval");
+        let cookies = parse_cookies("unb=U-123; _m_h5_tk=abc_token_987; cookie2=xyz; cna=cnaval");
         assert_eq!(cookies.get("unb"), Some(&"U-123".to_string()));
         assert_eq!(cookies.get("_m_h5_tk"), Some(&"abc_token_987".to_string()));
     }

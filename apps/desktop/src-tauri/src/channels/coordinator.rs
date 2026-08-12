@@ -15,7 +15,7 @@ use super::dispatcher::ChannelDispatcher;
 use super::protocol::{ChannelInboundMessage, ConnectionState, InboundListener};
 use super::reply::ReplyCoordinator;
 use super::safety::filter_reply;
-use super::store::{ChannelRepo, conversation_id_for, inbound_to_message};
+use super::store::{conversation_id_for, inbound_to_message, ChannelRepo};
 
 /// 前端事件名。
 pub const EVENT_CHANNEL_MESSAGE: &str = "channel.message";
@@ -142,7 +142,10 @@ impl InboundListener for ChannelCoordinator {
         self.emit_message(&event);
 
         // 4. 自动回复决策。
-        let settings = self.store.get_settings().unwrap_or(ChannelSettings { auto_reply: false });
+        let settings = self
+            .store
+            .get_settings()
+            .unwrap_or(ChannelSettings { auto_reply: false });
         if !settings.auto_reply {
             return;
         }
@@ -155,7 +158,13 @@ impl InboundListener for ChannelCoordinator {
         let provider: Option<LlmProvider> = None; // TODO: 接入 AI 账号配置。
         let reply = match self
             .reply
-            .generate_reply(&inbound.content, Some(&conversation), &history, provider.as_ref(), &inbound.account_id)
+            .generate_reply(
+                &inbound.content,
+                Some(&conversation),
+                &history,
+                provider.as_ref(),
+                &inbound.account_id,
+            )
             .await
         {
             Ok(Some(response)) => response.reply,

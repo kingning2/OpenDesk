@@ -3,9 +3,7 @@
 //! 使用 `crates/storage::sqlite::SqliteDb` 的通用连接与运行时迁移；
 //! 本文件负责 `channel_*` 表的 CRUD（迁移 SQL 在 `migrations/`）。
 
-use common::contracts::{
-    ChannelAccount, ChannelConversation, ChannelMessage, ChannelSettings,
-};
+use common::contracts::{ChannelAccount, ChannelConversation, ChannelMessage, ChannelSettings};
 use diesel::sql_types::Text;
 use diesel::{RunQueryDsl, SqliteConnection};
 use std::path::Path;
@@ -193,11 +191,10 @@ impl ChannelRepo {
     // ---- settings ----
 
     pub fn get_settings(&self) -> Result<ChannelSettings, ChannelStoreError> {
-        let rows = diesel::sql_query(
-            "SELECT key, value FROM channel_settings WHERE key = 'auto_reply'",
-        )
-        .load::<SettingRow>(&mut *self.conn()?)
-        .map_err(|error| ChannelStoreError::Db(error.to_string()))?;
+        let rows =
+            diesel::sql_query("SELECT key, value FROM channel_settings WHERE key = 'auto_reply'")
+                .load::<SettingRow>(&mut *self.conn()?)
+                .map_err(|error| ChannelStoreError::Db(error.to_string()))?;
         let auto_reply = rows
             .first()
             .and_then(|row| row.value.parse::<bool>().ok())

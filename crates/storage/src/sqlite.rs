@@ -73,10 +73,8 @@ mod tests {
 
     #[test]
     fn open_and_create_wal_db() {
-        let dir = std::env::temp_dir().join(format!(
-            "opendesk-storage-test-{}",
-            std::process::id()
-        ));
+        let dir =
+            std::env::temp_dir().join(format!("opendesk-storage-test-{}", std::process::id()));
         std::fs::create_dir_all(&dir).ok();
         let db = SqliteDb::open(&dir.join("test.db")).expect("open should succeed");
         let mut conn = db.connection().expect("lock");

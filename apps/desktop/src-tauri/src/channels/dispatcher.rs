@@ -53,9 +53,8 @@ impl ChannelDispatcher {
         &self,
         account: &ChannelAccount,
     ) -> Result<Arc<dyn ChannelProtocol>, DispatcherError> {
-        let kind = ChannelKind::from_str(&account.kind).ok_or_else(|| {
-            DispatcherError::UnsupportedKind(account.kind.clone())
-        })?;
+        let kind = ChannelKind::from_str(&account.kind)
+            .ok_or_else(|| DispatcherError::UnsupportedKind(account.kind.clone()))?;
         let map = self.protocols.read().await;
         map.get(&kind)
             .cloned()
@@ -63,10 +62,7 @@ impl ChannelDispatcher {
     }
 
     /// 连接账号。
-    pub async fn connect(
-        &self,
-        account: &ChannelAccount,
-    ) -> Result<(), DispatcherError> {
+    pub async fn connect(&self, account: &ChannelAccount) -> Result<(), DispatcherError> {
         let protocol = self.protocol_for(account).await?;
         protocol
             .connect(account)

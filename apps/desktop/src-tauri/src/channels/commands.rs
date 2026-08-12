@@ -34,7 +34,9 @@ pub async fn channel_state_get(
     let conversations = repo
         .list_conversations()
         .map_err(|error| error.to_string())?;
-    let messages = repo.list_all_messages().map_err(|error| error.to_string())?;
+    let messages = repo
+        .list_all_messages()
+        .map_err(|error| error.to_string())?;
     let settings = repo.get_settings().map_err(|error| error.to_string())?;
     Ok(ChannelIpcStateResponse {
         accounts,
@@ -51,7 +53,8 @@ pub async fn channel_state_set(
     request: ChannelIpcStateRequest,
 ) -> Result<ChannelIpcStateResponse, String> {
     for account in &request.accounts {
-        repo.upsert_account(account).map_err(|error| error.to_string())?;
+        repo.upsert_account(account)
+            .map_err(|error| error.to_string())?;
     }
     repo.set_settings(&request.settings)
         .map_err(|error| error.to_string())?;
@@ -197,8 +200,12 @@ pub async fn channel_login(
         let credential = serde_json::to_string(&cookies).unwrap_or_default();
         let mut updated = account.clone();
         updated.credential = credential;
-        repo.upsert_account(&updated).map_err(|error| error.to_string())?;
-        dispatcher.connect(&updated).await.map_err(|error| error.to_string())?;
+        repo.upsert_account(&updated)
+            .map_err(|error| error.to_string())?;
+        dispatcher
+            .connect(&updated)
+            .await
+            .map_err(|error| error.to_string())?;
     }
 
     Ok(ChannelIpcLoginResponse {
@@ -231,7 +238,10 @@ pub async fn channel_open_site(
         .ok_or_else(|| format!("账号不存在: {}", request.account_id))?;
 
     webview::open_xianyu_site(&app, &account)?;
-    Ok(ChannelIpcOpenSiteResponse { ok: true, detail: None })
+    Ok(ChannelIpcOpenSiteResponse {
+        ok: true,
+        detail: None,
+    })
 }
 
 /// 关闭内嵌闲鱼页面。
@@ -328,11 +338,16 @@ pub async fn channel_qr_check(
             let target = account_id
                 .and_then(|id| accounts.iter().find(|account| account.id == id))
                 .cloned()
-                .or_else(|| accounts.into_iter().find(|account| account.kind == "xianyu"));
+                .or_else(|| {
+                    accounts
+                        .into_iter()
+                        .find(|account| account.kind == "xianyu")
+                });
             if let Some(account) = target {
                 let mut updated = account;
                 updated.credential = credential;
-                repo.upsert_account(&updated).map_err(|error| error.to_string())?;
+                repo.upsert_account(&updated)
+                    .map_err(|error| error.to_string())?;
                 let _ = dispatcher.connect(&updated).await;
             }
         }

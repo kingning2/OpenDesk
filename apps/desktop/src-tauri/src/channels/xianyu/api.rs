@@ -22,7 +22,10 @@ impl XianyuApi {
     pub fn new(cookie_str: &str) -> Result<Self, String> {
         let mut headers = HeaderMap::new();
         headers.insert(USER_AGENT, HeaderValue::from_static("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"));
-        headers.insert(REFERER, HeaderValue::from_static("https://www.goofish.com/"));
+        headers.insert(
+            REFERER,
+            HeaderValue::from_static("https://www.goofish.com/"),
+        );
 
         let http = reqwest::Client::builder()
             .default_headers(headers)
@@ -96,8 +99,8 @@ impl XianyuApi {
         // 校验 cookie 完整性（unb 必须存在）。
         my_id(&cookies).ok_or_else(|| "cookie 缺少 unb".to_string())?;
         let token = sign_token(&cookies).unwrap_or_default();
-        let device_id = device_id_from_cookie(&self.cookie_str)
-            .ok_or_else(|| "cookie 缺少 unb".to_string())?;
+        let device_id =
+            device_id_from_cookie(&self.cookie_str).ok_or_else(|| "cookie 缺少 unb".to_string())?;
 
         let data_val = format!(
             r#"{{"appKey":"{}","deviceId":"{}"}}"#,
@@ -142,7 +145,10 @@ impl XianyuApi {
         let ret_ok = body
             .get("ret")
             .and_then(serde_json::Value::as_array)
-            .map(|ret| ret.iter().any(|item| item.as_str().is_some_and(|s| s.contains("SUCCESS"))))
+            .map(|ret| {
+                ret.iter()
+                    .any(|item| item.as_str().is_some_and(|s| s.contains("SUCCESS")))
+            })
             .unwrap_or(false);
 
         if !ret_ok {
