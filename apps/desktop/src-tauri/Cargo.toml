@@ -23,6 +23,7 @@ diesel = { workspace = true }
 futures-util = { workspace = true }
 kernel = { path = "../../../crates/kernel" }
 md-5 = { workspace = true }
+opendesk-macros = { path = "../../../crates/opendesk-macros" }
 ports = { path = "../../../crates/ports" }
 rand = { workspace = true }
 reqwest = { workspace = true }

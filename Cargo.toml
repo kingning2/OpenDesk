@@ -8,6 +8,7 @@ members = [
   "crates/adapter",
   "crates/runtime",
   "crates/storage",
+  "crates/opendesk-macros",
 ]
 exclude = ["subscription"]
 
@@ -37,7 +38,7 @@ rand = "0.8"
 enigo = "0.3"
 screenshots = "0.8"
 imageproc = "0.25"
-tokio-tungstenite = "0.24"
+tokio-tungstenite = { version = "0.24", features = ["rustls-tls-webpki-roots"] }
 futures-util = "0.3"
 rmp = "0.8"
 rmpv = "1"
