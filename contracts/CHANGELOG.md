@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.16
+
+- `channel/ipc/open_site.request` 新增必填布局字段 `x` / `y` / `width` / `height`：主窗口内嵌子 WebView 的逻辑像素 bounds
+
 ## 0.1.15
 
 - `qr_check` IPC / sidecar 响应新增可选 `qr_base64`：二维码过期时侧车原地刷新并返回新图
