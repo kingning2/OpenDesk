@@ -1,68 +1,170 @@
-//! 内嵌 Webview 显示闲鱼页面 — 注入快照 cookies 保持登录态。
+//! 主窗口内嵌子 WebView 显示闲鱼页面 — 注入 cookies 保持登录态。
 //!
-//! 登录载体为浏览器快照：Playwright 登录后导出的 cookies 注入 WebView2，
-//! 使桌面内嵌窗口可显示已登录的 goofish.com 页面。
+//! 负责：
+//! - 在主窗口指定 bounds 创建/更新子 WebView（Tauri `unstable` + `add_child`）
+//! - 注入账号 credential 中的 goofish cookies
+//! - 关闭时销毁子 WebView
+//!
+//! 作者：Xiaoman
+//! 创建时间：2026-08-13
 
 use common::contracts::{ChannelAccount, ChannelCookie};
 use tauri::webview::cookie::Cookie;
-use tauri::{Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
+use tauri::webview::WebviewBuilder;
+use tauri::{LogicalPosition, LogicalSize, Manager, Webview, WebviewUrl};
 
-/// 内嵌闲鱼窗口标签。
+/// 内嵌闲鱼子 WebView 标签（挂在主窗口下，非独立窗）。
 pub const XIANYU_WEBVIEW_LABEL: &str = "xianyu-site";
 
+const MAIN_WINDOW_LABEL: &str = "main";
 const GOOFISH_URL: &str = "https://www.goofish.com/";
 
-/// 打开内嵌闲鱼窗口并注入 cookies。
-pub fn open_xianyu_site(app: &tauri::AppHandle, account: &ChannelAccount) -> Result<(), String> {
-    // 已存在则聚焦返回。
-    if let Some(window) = app.get_webview_window(XIANYU_WEBVIEW_LABEL) {
-        let _ = window.show();
-        let _ = window.set_focus();
-        return Ok(());
+/// 打开或调整主窗口内嵌的闲鱼子 WebView。
+///
+/// 已存在时只更新位置/尺寸；首次创建时注入 cookies 并导航到闲鱼首页。
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-08-13
+///
+/// # 参数
+/// - `app` — Tauri 应用句柄
+/// - `account` — 含 credential（cookies）的渠道账号
+/// - `x` / `y` / `width` / `height` — 相对主窗口客户区的逻辑像素 bounds
+///
+/// # 返回值
+/// 成功返回 `Ok(())`；缺少主窗口、无 cookies 或创建失败时返回错误文案。
+pub fn open_xianyu_site(
+    app: &tauri::AppHandle,
+    account: &ChannelAccount,
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64,
+) -> Result<(), String> {
+    if width < 8.0 || height < 8.0 {
+        return Err("内嵌区域过小".into());
+    }
+
+    let position = LogicalPosition::new(x, y);
+    let size = LogicalSize::new(width, height);
+
+    // 已存在：只同步布局（前端 ResizeObserver / StrictMode 重挂载会反复调用）。
+    if let Some(webview) = app.get_webview(XIANYU_WEBVIEW_LABEL) {
+        return apply_bounds(&webview, position, size);
+    }
+
+    // 清理旧版独立窗口（若仍残留）。
+    if let Some(legacy) = app.get_webview_window(XIANYU_WEBVIEW_LABEL) {
+        let _ = legacy.destroy();
     }
 
     let cookies = crate::channels::xianyu::cookies::parse_credential(&account.credential);
     if cookies.is_empty() {
-        return Err("账号凭据中没有 cookies".into());
+        return Err("账号凭据中没有 cookies，请先扫码登录".into());
     }
 
-    let url = GOOFISH_URL
+    let blank = "about:blank"
+        .parse::<url::Url>()
+        .map_err(|error| format!("about:blank 解析失败: {error}"))?;
+    let target = GOOFISH_URL
         .parse::<url::Url>()
         .map_err(|error| format!("闲鱼 URL 解析失败: {error}"))?;
 
-    let builder = WebviewWindowBuilder::new(app, XIANYU_WEBVIEW_LABEL, WebviewUrl::External(url))
-        .title(format!("闲鱼 — {}", account.name))
-        .inner_size(980.0, 720.0)
-        .on_navigation(|url| url.as_str().starts_with("https://www.goofish.com"));
+    let window = app
+        .get_window(MAIN_WINDOW_LABEL)
+        .ok_or_else(|| "主窗口不存在".to_string())?;
 
-    let window = builder
-        .build()
-        .map_err(|error| format!("创建闲鱼窗口失败: {error}"))?;
+    let builder = WebviewBuilder::new(XIANYU_WEBVIEW_LABEL, WebviewUrl::External(blank))
+        .on_navigation(|url| {
+            let href = url.as_str();
+            href == "about:blank" || href.starts_with("https://www.goofish.com")
+        });
 
-    // 注入 cookies（逐个，匹配 domain）。
+    let webview = match window.add_child(builder, position, size) {
+        Ok(webview) => webview,
+        Err(error) => {
+            let message = error.to_string();
+            // close 与重建竞态：标签仍在但 get_webview 曾短暂为空。
+            if message.contains("already exists") {
+                if let Some(existing) = app.get_webview(XIANYU_WEBVIEW_LABEL) {
+                    tracing::info!("闲鱼内嵌视图已存在，改为同步布局");
+                    return apply_bounds(&existing, position, size);
+                }
+            }
+            return Err(format!("创建闲鱼内嵌视图失败: {message}"));
+        }
+    };
+
+    let mut injected = 0usize;
     for cookie in cookies
         .iter()
-        .filter(|cookie| cookie.domain.contains("goofish.com"))
+        .filter(|cookie| cookie_matches_goofish(cookie))
     {
-        if let Err(error) = inject_cookie(&window, cookie) {
-            tracing::warn!(%error, cookie = %cookie.name, "注入 cookie 失败");
+        match inject_cookie(&webview, cookie) {
+            Ok(()) => injected += 1,
+            Err(error) => {
+                tracing::warn!(%error, cookie = %cookie.name, "注入 cookie 失败");
+            }
         }
     }
+    tracing::info!(
+        account = %account.id,
+        injected,
+        total = cookies.len(),
+        "闲鱼内嵌视图已创建并注入 cookies"
+    );
+
+    webview
+        .navigate(target)
+        .map_err(|error| format!("导航闲鱼页面失败: {error}"))?;
 
     Ok(())
 }
 
-/// 关闭内嵌闲鱼窗口。
+/// 关闭并销毁主窗口内嵌的闲鱼子 WebView。
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-08-13
+///
+/// # 参数
+/// - `app` — Tauri 应用句柄
+///
+/// # 返回值
+/// 成功或不存在时返回 `Ok(())`。
 pub fn close_xianyu_site(app: &tauri::AppHandle) -> Result<(), String> {
-    if let Some(window) = app.get_webview_window(XIANYU_WEBVIEW_LABEL) {
-        window
-            .destroy()
-            .map_err(|error| format!("关闭闲鱼窗口失败: {error}"))?;
+    if let Some(webview) = app.get_webview(XIANYU_WEBVIEW_LABEL) {
+        webview
+            .close()
+            .map_err(|error| format!("关闭闲鱼内嵌视图失败: {error}"))?;
+        tracing::info!("已关闭闲鱼内嵌视图");
+    }
+    // 兼容：若旧独立窗仍在，一并销毁。
+    if let Some(legacy) = app.get_webview_window(XIANYU_WEBVIEW_LABEL) {
+        let _ = legacy.destroy();
     }
     Ok(())
 }
 
-fn inject_cookie(window: &WebviewWindow, cookie: &ChannelCookie) -> Result<(), String> {
+fn apply_bounds(
+    webview: &Webview,
+    position: LogicalPosition<f64>,
+    size: LogicalSize<f64>,
+) -> Result<(), String> {
+    webview
+        .set_position(position)
+        .map_err(|error| format!("更新闲鱼位置失败: {error}"))?;
+    webview
+        .set_size(size)
+        .map_err(|error| format!("更新闲鱼尺寸失败: {error}"))?;
+    Ok(())
+}
+
+fn cookie_matches_goofish(cookie: &ChannelCookie) -> bool {
+    let domain = cookie.domain.to_ascii_lowercase();
+    domain.is_empty() || domain.contains("goofish.com")
+}
+
+fn inject_cookie(webview: &Webview, cookie: &ChannelCookie) -> Result<(), String> {
     let base = Cookie::new(cookie.name.clone(), cookie.value.clone());
     let mut builder = Cookie::build(base);
 
@@ -85,7 +187,7 @@ fn inject_cookie(window: &WebviewWindow, cookie: &ChannelCookie) -> Result<(), S
     }
 
     let cookie = builder.build();
-    window
+    webview
         .set_cookie(cookie)
         .map_err(|error| format!("set_cookie 失败: {error}"))
 }

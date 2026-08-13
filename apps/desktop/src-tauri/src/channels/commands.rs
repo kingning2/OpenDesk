@@ -162,7 +162,9 @@ pub async fn channel_send(
     })
 }
 
-/// 打开内嵌闲鱼页面（Webview + 注入 cookies）。
+/// 打开主窗口内嵌闲鱼页面（子 WebView + 注入 cookies）。
+///
+/// `request` 需携带相对主窗口客户区的逻辑像素 bounds。
 #[tauri::command]
 pub async fn channel_open_site(
     state: tauri::State<'_, crate::state::AppState>,
@@ -183,14 +185,21 @@ pub async fn channel_open_site(
         .find(|account| account.id == request.account_id)
         .ok_or_else(|| format!("账号不存在: {}", request.account_id))?;
 
-    webview::open_xianyu_site(&app, &account)?;
+    webview::open_xianyu_site(
+        &app,
+        &account,
+        request.x,
+        request.y,
+        request.width,
+        request.height,
+    )?;
     Ok(ChannelIpcOpenSiteResponse {
         ok: true,
         detail: None,
     })
 }
 
-/// 关闭内嵌闲鱼页面。
+/// 关闭主窗口内嵌的闲鱼子 WebView。
 #[tauri::command]
 pub async fn channel_close_site(
     state: tauri::State<'_, crate::state::AppState>,

@@ -3,6 +3,7 @@
   "identifier": "default",
   "description": "Capability for the main window",
   "windows": ["main"],
+  "webviews": ["main", "xianyu-site"],
   "permissions": [
     "core:default",
     "opener:default",
