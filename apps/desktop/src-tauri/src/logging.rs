@@ -3,6 +3,9 @@
 //! 终端统一格式：`【信息】14:32:05 python 侧车已启动 port=8879`
 //! Python 侧车日志经 `log_pipe` 转发为 target `opendesk.sidecar` 的 tracing 事件，
 //! 因此本采集层可统一处理 Rust 与 Python 两侧日志，并在终端与 UI 中标注来源。
+//!
+//! 作者：Xiaoman
+//! 创建时间：2026-08-13
 
 use std::collections::VecDeque;
 use std::io::{IsTerminal, Write};
@@ -252,6 +255,9 @@ impl MessageVisitor {
 }
 
 /// 初始化日志：终端统一格式 + 缓冲采集层。
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-08-13
 pub fn init_tracing() {
     let filter = EnvFilter::try_from_default_env()
         .unwrap_or_else(|_| EnvFilter::new("info,runtime=debug,opendesk_lib=debug"));

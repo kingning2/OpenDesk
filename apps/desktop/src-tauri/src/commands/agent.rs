@@ -1,25 +1,27 @@
-//! Agent 相关 Tauri commands。
+//! Agent ?? Tauri commands?
 //!
-//! 作者：coisini
-//! 创建时间：2026-07-21
+//! ???coisini
+//! ?????2026-07-21
 
 use common::contracts::{AgentIpcPingRequest, AgentIpcPingResponse};
+use opendesk_macros::timed;
 
 use crate::agent::PingAgent;
 use crate::state::AppState;
 
-/// Agent ping IPC；有锁构建下会先执行授权硬检查。
+/// Agent ping IPC????????????????
 ///
-/// 作者：coisini
-/// 创建时间：2026-07-16
+/// ???coisini
+/// ?????2026-07-16
 ///
-/// # 参数
-/// - `state` — 应用共享状态
-/// - `request` — ping 请求（含 trace）
+/// # ??
+/// - `state` ? ??????
+/// - `request` ? ping ???? trace?
 ///
-/// # 返回值
-/// Sidecar ping 响应；未授权或 sidecar 不可用时返回错误字符串。
+/// # ???
+/// Sidecar ping ??????? sidecar ????????????
 #[tauri::command]
+#[timed]
 pub async fn agent_ping(
     state: tauri::State<'_, AppState>,
     request: AgentIpcPingRequest,

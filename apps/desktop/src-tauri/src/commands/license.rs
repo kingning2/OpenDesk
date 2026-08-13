@@ -1,23 +1,25 @@
-//! License 相关 Tauri commands。
+//! License ?? Tauri commands?
 //!
-//! 作者：coisini
-//! 创建时间：2026-07-21
+//! ???coisini
+//! ?????2026-07-21
 
 use common::license::{LicenseActivateRequest, LicenseStatus};
+use opendesk_macros::timed;
 
 use crate::state::AppState;
 
-/// 查询授权状态 IPC。
+/// ?????? IPC?
 ///
-/// 作者：coisini
-/// 创建时间：2026-07-16
+/// ???coisini
+/// ?????2026-07-16
 ///
-/// # 参数
-/// - `state` — 应用共享状态
+/// # ??
+/// - `state` ? ??????
 ///
-/// # 返回值
-/// 当前 [`LicenseStatus`]。
+/// # ???
+/// ?? [`LicenseStatus`]?
 #[tauri::command]
+#[timed]
 pub async fn license_status(state: tauri::State<'_, AppState>) -> Result<LicenseStatus, String> {
     state
         .license
@@ -26,17 +28,18 @@ pub async fn license_status(state: tauri::State<'_, AppState>) -> Result<License
         .map_err(|error| error.to_string())
 }
 
-/// 读取本机设备码 IPC。
+/// ??????? IPC?
 ///
-/// 作者：coisini
-/// 创建时间：2026-07-16
+/// ???coisini
+/// ?????2026-07-16
 ///
-/// # 参数
-/// - `state` — 应用共享状态
+/// # ??
+/// - `state` ? ??????
 ///
-/// # 返回值
-/// 设备码字符串。
+/// # ???
+/// ???????
 #[tauri::command]
+#[timed]
 pub async fn license_machine_code(state: tauri::State<'_, AppState>) -> Result<String, String> {
     state
         .license
@@ -45,18 +48,19 @@ pub async fn license_machine_code(state: tauri::State<'_, AppState>) -> Result<S
         .map_err(|error| error.to_string())
 }
 
-/// 激活授权 IPC。
+/// ???? IPC?
 ///
-/// 作者：coisini
-/// 创建时间：2026-07-16
+/// ???coisini
+/// ?????2026-07-16
 ///
-/// # 参数
-/// - `state` — 应用共享状态
-/// - `request` — 激活请求（含 license key）
+/// # ??
+/// - `state` ? ??????
+/// - `request` ? ?????? license key?
 ///
-/// # 返回值
-/// 激活后的 [`LicenseStatus`]。
+/// # ???
+/// ???? [`LicenseStatus`]?
 #[tauri::command]
+#[timed]
 pub async fn license_activate(
     state: tauri::State<'_, AppState>,
     request: LicenseActivateRequest,

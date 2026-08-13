@@ -12,6 +12,7 @@ mod commands;
 mod logging;
 mod platform;
 mod state;
+mod timing;
 
 use adapter::agent_sidecar::RuntimeAgentSidecar;
 use channels::commands::{
