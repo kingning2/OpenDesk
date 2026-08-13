@@ -92,12 +92,12 @@ export function channelSend(
 }
 
 /**
- * 打开渠道站点窗口。
+ * 打开渠道站点（主窗口内嵌子 WebView）。
  *
  * @author Xiaoman
  * @created 2026-08-13
  *
- * @param request - 打开请求
+ * @param request - 账号 id + 相对主窗口客户区的逻辑像素 bounds
  */
 export function channelOpenSite(
   request: ChannelIpcOpenSiteRequest,
@@ -106,7 +106,7 @@ export function channelOpenSite(
 }
 
 /**
- * 关闭渠道站点窗口。
+ * 关闭渠道站点内嵌视图。
  *
  * @author Xiaoman
  * @created 2026-08-13
