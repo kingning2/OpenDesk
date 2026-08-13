@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from typing import Any
 
 from shared.logging import bind_log_context
@@ -44,6 +45,7 @@ def handle_llm_classify(payload: dict[str, Any] | None, *, trace_id: str) -> dic
             f"[{option_list}]。直接返回选项原文，不要任何解释或标点。\n\n买家消息：{text}"
         )
 
+        started = time.perf_counter()
         try:
             client = OpenAI(base_url=base_url, api_key=api_key)
             completion = client.chat.completions.create(
@@ -55,8 +57,30 @@ def handle_llm_classify(payload: dict[str, Any] | None, *, trace_id: str) -> dic
             )
             raw = (completion.choices[0].message.content or "").strip()
             intent = next((o for o in options if o in raw), options[0] if options else "")
-            logger.info("LLM 意图分类成功", extra={"event": "llm.classify.ok", "intent": intent})
+            duration_ms = max(0, int((time.perf_counter() - started) * 1000))
+            logger.info(
+                "LLM 意图分类成功 intent=%s model=%s duration_ms=%s",
+                intent,
+                model,
+                duration_ms,
+                extra={
+                    "event": "llm.classify.ok",
+                    "intent": intent,
+                    "model": model,
+                    "duration_ms": duration_ms,
+                },
+            )
             return {"intent": intent, "trace_id": trace_id}
         except Exception:  # noqa: BLE001
-            logger.exception("LLM 意图分类失败", extra={"event": "llm.classify.failed"})
+            duration_ms = max(0, int((time.perf_counter() - started) * 1000))
+            logger.exception(
+                "LLM 意图分类失败 model=%s duration_ms=%s",
+                model,
+                duration_ms,
+                extra={
+                    "event": "llm.classify.failed",
+                    "model": model,
+                    "duration_ms": duration_ms,
+                },
+            )
             return {"intent": options[0] if options else "", "trace_id": trace_id}

@@ -7,6 +7,7 @@ import inspect
 import json
 import logging
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, ClassVar
 
@@ -30,6 +31,49 @@ HANDLERS = {
     "handle_llm_chat": handle_llm_chat,
     "handle_llm_classify": handle_llm_classify,
 }
+
+# 高频探测/轮询：正常且够快时只打 DEBUG，避免刷屏。
+_QUIET_PATHS = frozenset({"/v1/agent/ping", "/v1/channel/qr_check"})
+_QUIET_SLOW_MS = 500
+
+
+def _duration_ms(started: float) -> int:
+    return max(0, int((time.perf_counter() - started) * 1000))
+
+
+def _log_request_completed(
+    *,
+    path: str,
+    status: int,
+    duration_ms: int,
+    trace_id: str = "",
+    handler: str = "",
+    ok: bool | None = None,
+) -> None:
+    """记录一次 HTTP 业务接口完成（含耗时）。"""
+    extra: dict[str, Any] = {
+        "event": "sidecar.request.completed",
+        "feature": "runtime",
+        "method": "POST",
+        "path": path,
+        "status": status,
+        "duration_ms": duration_ms,
+    }
+    if handler:
+        extra["handler"] = handler
+    if trace_id:
+        extra["trace_id"] = trace_id
+    if ok is not None:
+        extra["ok"] = ok
+    message = f"接口调用完成 method=POST path={path} status={status} duration_ms={duration_ms}"
+    quiet = (
+        path in _QUIET_PATHS and status < 400 and duration_ms < _QUIET_SLOW_MS and ok is not False
+    )
+    if quiet:
+        logger.debug(message, extra=extra)
+    else:
+        logger.info(message, extra=extra)
+
 
 # 常驻后台事件循环（单例）：所有异步 handler 共用同一个 loop。
 # 之前每个请求新建/关闭 loop，导致 Playwright 页面跨请求复用失败
@@ -59,7 +103,7 @@ class SidecarHandler(BaseHTTPRequestHandler):
     routes: ClassVar[dict[str, tuple[str, str]]] = ROUTES
 
     def log_message(self, format: str, *args: object) -> None:
-        # 不打印每个请求：扫码轮询每 2s 一次，会刷屏。仅靠 handler 层关键事件日志。
+        # 关闭 BaseHTTPRequestHandler 默认访问日志；业务耗时见 sidecar.request.completed。
         del format, args
 
     def do_GET(self) -> None:
@@ -81,29 +125,75 @@ class SidecarHandler(BaseHTTPRequestHandler):
         self._send_json(404, {"code": "not_found", "message": "route not found"})
 
     def do_POST(self) -> None:
-        route = ROUTES.get(self.path)
+        started = time.perf_counter()
+        path = self.path
+        route = ROUTES.get(path)
         if route is None:
             self._send_json(404, {"code": "not_found", "message": "route not found"})
+            _log_request_completed(path=path, status=404, duration_ms=_duration_ms(started))
             return
         method, handler_name = route
         if method != "POST":
             self._send_json(405, {"code": "method_not_allowed", "message": "method not allowed"})
+            _log_request_completed(
+                path=path,
+                status=405,
+                duration_ms=_duration_ms(started),
+                handler=handler_name,
+            )
             return
         handler = HANDLERS.get(handler_name)
         if handler is None:
             self._send_json(500, {"code": "handler_missing", "message": "handler not registered"})
+            _log_request_completed(
+                path=path,
+                status=500,
+                duration_ms=_duration_ms(started),
+                handler=handler_name,
+            )
             return
         payload = self._read_json()
         trace_id = ""
         if isinstance(payload, dict):
             trace_id = str(payload.get("trace_id", ""))
-        result = handler(payload if isinstance(payload, dict) else None, trace_id=trace_id)
-        # 异步 handler（如 Playwright 登录）跑在常驻事件循环上，
-        # 保证跨请求复用的页面/浏览器不因旧 loop 关闭而失效。
-        if inspect.iscoroutine(result):
-            loop = _get_async_loop()
-            result = asyncio.run_coroutine_threadsafe(result, loop).result()
+        try:
+            result = handler(payload if isinstance(payload, dict) else None, trace_id=trace_id)
+            # 异步 handler（如 Playwright 登录）跑在常驻事件循环上，
+            # 保证跨请求复用的页面/浏览器不因旧 loop 关闭而失效。
+            if inspect.iscoroutine(result):
+                loop = _get_async_loop()
+                result = asyncio.run_coroutine_threadsafe(result, loop).result()
+        except Exception:
+            duration_ms = _duration_ms(started)
+            logger.exception(
+                "接口调用异常 method=POST path=%s duration_ms=%s",
+                path,
+                duration_ms,
+                extra={
+                    "event": "sidecar.request.failed",
+                    "feature": "runtime",
+                    "method": "POST",
+                    "path": path,
+                    "status": 500,
+                    "duration_ms": duration_ms,
+                    "handler": handler_name,
+                    "trace_id": trace_id,
+                },
+            )
+            self._send_json(500, {"code": "handler_error", "message": "handler failed"})
+            return
+        ok: bool | None = None
+        if isinstance(result, dict) and "ok" in result:
+            ok = bool(result.get("ok"))
         self._send_json(200, result)
+        _log_request_completed(
+            path=path,
+            status=200,
+            duration_ms=_duration_ms(started),
+            trace_id=trace_id,
+            handler=handler_name,
+            ok=ok,
+        )
 
     def _read_json(self) -> Any:
         length = int(self.headers.get("Content-Length", "0"))
@@ -130,7 +220,26 @@ class SidecarHandler(BaseHTTPRequestHandler):
 
 
 def serve(port: int = 8787) -> None:
-    server = ThreadingHTTPServer(("127.0.0.1", port), SidecarHandler)
+    host = "127.0.0.1"
+    server = ThreadingHTTPServer((host, port), SidecarHandler)
+    bind_host, bind_port = server.server_address
+    base_url = f"http://{bind_host}:{bind_port}"
+    health_url = f"{base_url}/health"
+    routes = ["/health", "/stats", *sorted(ROUTES)]
+    # 启动唯一日志：侧车已绑定并即将接受请求。
+    logger.info(
+        "python端http服务启动 base_url=%s",
+        base_url,
+        extra={
+            "event": "sidecar.starting",
+            "feature": "runtime",
+            "host": bind_host,
+            "port": bind_port,
+            "base_url": base_url,
+            "health_url": health_url,
+            "routes": routes,
+        },
+    )
     try:
         server.serve_forever()
     except Exception:

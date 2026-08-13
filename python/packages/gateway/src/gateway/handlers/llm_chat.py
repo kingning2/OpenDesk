@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from typing import Any
 
 from shared.logging import bind_log_context
@@ -45,6 +46,7 @@ def handle_llm_chat(payload: dict[str, Any] | None, *, trace_id: str) -> dict[st
                 "trace_id": trace_id,
             }
 
+        started = time.perf_counter()
         try:
             client = OpenAI(base_url=base_url, api_key=api_key)
             completion = client.chat.completions.create(
@@ -52,10 +54,34 @@ def handle_llm_chat(payload: dict[str, Any] | None, *, trace_id: str) -> dict[st
                 messages=messages,
             )
             reply = completion.choices[0].message.content or ""
-            logger.info("LLM 对话成功", extra={"event": "llm.chat.ok", "model": model})
+            duration_ms = max(0, int((time.perf_counter() - started) * 1000))
+            logger.info(
+                "LLM 对话成功 model=%s messages=%s reply_chars=%s duration_ms=%s",
+                model,
+                len(messages),
+                len(reply),
+                duration_ms,
+                extra={
+                    "event": "llm.chat.ok",
+                    "model": model,
+                    "message_count": len(messages),
+                    "reply_chars": len(reply),
+                    "duration_ms": duration_ms,
+                },
+            )
             return {"reply": reply, "trace_id": trace_id}
         except Exception as _error:  # noqa: BLE001
-            logger.exception("LLM 对话失败", extra={"event": "llm.chat.failed"})
+            duration_ms = max(0, int((time.perf_counter() - started) * 1000))
+            logger.exception(
+                "LLM 对话失败 model=%s duration_ms=%s",
+                model,
+                duration_ms,
+                extra={
+                    "event": "llm.chat.failed",
+                    "model": model,
+                    "duration_ms": duration_ms,
+                },
+            )
             return {
                 "reply": f"LLM 调用失败：{_error}",
                 "trace_id": trace_id,
