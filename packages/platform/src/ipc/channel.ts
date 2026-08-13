@@ -1,4 +1,10 @@
-import { invoke } from "@tauri-apps/api/core";
+/**
+ * Channel IPC 封装。
+ *
+ * @author Xiaoman
+ * @created 2026-08-13
+ */
+
 import type {
   ChannelIpcCloseSiteResponse,
   ChannelIpcConnectResponse,
@@ -17,58 +23,136 @@ import type {
   ChannelIpcStateResponse,
 } from "@desk/contracts";
 
+import { call } from "./invoke";
+
+/**
+ * 读取渠道状态。
+ *
+ * @author Xiaoman
+ * @created 2026-08-13
+ */
 export function channelStateGet(): Promise<ChannelIpcStateResponse> {
-  return invoke<ChannelIpcStateResponse>("channel_state_get");
+  return call<ChannelIpcStateResponse>("channel_state_get");
 }
 
+/**
+ * 写入渠道状态。
+ *
+ * @author Xiaoman
+ * @created 2026-08-13
+ *
+ * @param request - 状态请求
+ */
 export function channelStateSet(
   request: ChannelIpcStateRequest,
 ): Promise<ChannelIpcStateResponse> {
-  return invoke<ChannelIpcStateResponse>("channel_state_set", { request });
+  return call<ChannelIpcStateResponse>("channel_state_set", { request });
 }
 
+/**
+ * 连接渠道账号。
+ *
+ * @author Xiaoman
+ * @created 2026-08-13
+ *
+ * @param accountId - 账号 ID
+ */
 export function channelConnect(
   accountId: string,
 ): Promise<ChannelIpcConnectResponse> {
-  return invoke<ChannelIpcConnectResponse>("channel_connect", { accountId });
+  return call<ChannelIpcConnectResponse>("channel_connect", { accountId });
 }
 
+/**
+ * 断开渠道账号。
+ *
+ * @author Xiaoman
+ * @created 2026-08-13
+ *
+ * @param accountId - 账号 ID
+ */
 export function channelDisconnect(
   accountId: string,
 ): Promise<ChannelIpcDisconnectResponse> {
-  return invoke<ChannelIpcDisconnectResponse>("channel_disconnect", { accountId });
+  return call<ChannelIpcDisconnectResponse>("channel_disconnect", { accountId });
 }
 
+/**
+ * 发送渠道消息。
+ *
+ * @author Xiaoman
+ * @created 2026-08-13
+ *
+ * @param request - 发送请求
+ */
 export function channelSend(
   request: ChannelIpcSendRequest,
 ): Promise<ChannelIpcSendResponse> {
-  return invoke<ChannelIpcSendResponse>("channel_send", { request });
+  return call<ChannelIpcSendResponse>("channel_send", { request });
 }
 
+/**
+ * 打开渠道站点窗口。
+ *
+ * @author Xiaoman
+ * @created 2026-08-13
+ *
+ * @param request - 打开请求
+ */
 export function channelOpenSite(
   request: ChannelIpcOpenSiteRequest,
 ): Promise<ChannelIpcOpenSiteResponse> {
-  return invoke<ChannelIpcOpenSiteResponse>("channel_open_site", { request });
+  return call<ChannelIpcOpenSiteResponse>("channel_open_site", { request });
 }
 
+/**
+ * 关闭渠道站点窗口。
+ *
+ * @author Xiaoman
+ * @created 2026-08-13
+ */
 export function channelCloseSite(): Promise<ChannelIpcCloseSiteResponse> {
-  return invoke<ChannelIpcCloseSiteResponse>("channel_close_site");
+  return call<ChannelIpcCloseSiteResponse>("channel_close_site");
 }
 
+/**
+ * 启动扫码登录。
+ *
+ * @author Xiaoman
+ * @created 2026-08-13
+ *
+ * @param request - 扫码启动请求
+ */
 export function channelQrStart(
   request: ChannelIpcQrStartRequest,
 ): Promise<ChannelIpcQrStartResponse> {
-  return invoke<ChannelIpcQrStartResponse>("channel_qr_start", { request });
+  return call<ChannelIpcQrStartResponse>("channel_qr_start", { request });
 }
 
+/**
+ * 轮询扫码状态。
+ *
+ * @author Xiaoman
+ * @created 2026-08-13
+ *
+ * @param request - 扫码检查请求
+ */
 export function channelQrCheck(
   request: ChannelIpcQrCheckRequest,
 ): Promise<ChannelIpcQrCheckResponse> {
-  return invoke<ChannelIpcQrCheckResponse>("channel_qr_check", { request });
+  return call<ChannelIpcQrCheckResponse>("channel_qr_check", { request });
 }
 
+/**
+ * 取消扫码登录。
+ *
+ * @author Xiaoman
+ * @created 2026-08-13
+ *
+ * @param request - 取消请求
+ */
 export function channelQrCancel(
   request: ChannelIpcQrCancelRequest,
 ): Promise<ChannelIpcQrCancelResponse> {
-  return invoke<ChannelIpcQrCancelResponse>("channel_qr_cancel", { request });
+  return call<ChannelIpcQrCancelResponse>("channel_qr_cancel", { request });
 }

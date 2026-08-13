@@ -1,5 +1,13 @@
-import { invoke } from "@tauri-apps/api/core";
+/**
+ * Platform IPC 入口。
+ *
+ * @author Xiaoman
+ * @created 2026-08-13
+ */
 
-export function call<T>(command: string, payload?: Record<string, unknown>) {
-  return invoke<T>(command, payload);
-}
+export { call } from "./invoke";
+export * from "./agent";
+export * from "./ai";
+export * from "./channel";
+export * from "./license";
+export * from "./log";

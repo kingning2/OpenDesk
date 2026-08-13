@@ -5,16 +5,16 @@
  * - 定义与 Rust DTO 对齐的前端类型
  * - 封装 license_status / license_machine_code / license_activate
  *
- * @author coisini
+ * @author Xiaoman
  * @created 2026-07-16
  */
 
-import { invoke } from "@tauri-apps/api/core";
+import { call } from "./invoke";
 
 /**
  * 授权状态（与 Rust `LicenseStatus` camelCase 对齐）。
  *
- * @author coisini
+ * @author Xiaoman
  * @created 2026-07-16
  */
 export interface LicenseStatus {
@@ -35,7 +35,7 @@ export interface LicenseStatus {
 /**
  * 激活请求；`token` 与 `keyBytesBase64` 必须恰好提供其一。
  *
- * @author coisini
+ * @author Xiaoman
  * @created 2026-07-16
  */
 export interface LicenseActivateRequest {
@@ -48,31 +48,31 @@ export interface LicenseActivateRequest {
 /**
  * 查询当前授权状态。
  *
- * @author coisini
+ * @author Xiaoman
  * @created 2026-07-16
  *
  * @returns 授权状态 DTO
  */
 export function licenseStatus(): Promise<LicenseStatus> {
-  return invoke<LicenseStatus>("license_status");
+  return call<LicenseStatus>("license_status");
 }
 
 /**
  * 读取本机设备码。
  *
- * @author coisini
+ * @author Xiaoman
  * @created 2026-07-16
  *
  * @returns 设备码字符串
  */
 export function licenseMachineCode(): Promise<string> {
-  return invoke<string>("license_machine_code");
+  return call<string>("license_machine_code");
 }
 
 /**
  * 提交激活请求。
  *
- * @author coisini
+ * @author Xiaoman
  * @created 2026-07-16
  *
  * @param request - token 或 key Base64
@@ -81,5 +81,5 @@ export function licenseMachineCode(): Promise<string> {
 export function licenseActivate(
   request: LicenseActivateRequest,
 ): Promise<LicenseStatus> {
-  return invoke<LicenseStatus>("license_activate", { request });
+  return call<LicenseStatus>("license_activate", { request });
 }

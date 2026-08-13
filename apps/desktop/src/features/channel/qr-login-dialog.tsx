@@ -53,8 +53,17 @@ export function QrLoginDialog({
   // 否则会并发打开两个 Playwright 浏览器，二维码迟迟不返回。
   const startedRef = useRef(false);
 
-  /** 把二维码图片推进日志面板，渲染成图片展示。 */
+  /**
+   * 开发环境：把二维码推进日志面板渲染成图（生产不推，避免日志膨胀）。
+   *
+   * @author Xiaoman
+   * @created 2026-08-13
+   * @param qr - data URL 二维码
+   */
   function pushQrLog(qr: string) {
+    if (!import.meta.env.DEV) {
+      return;
+    }
     useLogStore.getState().append([
       { ts: Date.now(), level: "INFO", source: "react", target: "qr", message: qr },
     ]);
