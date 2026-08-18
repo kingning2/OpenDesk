@@ -252,7 +252,8 @@ async def _refresh_qr(session: QrSession) -> str | None:
 async def _finish_success(session: QrSession, session_id: str) -> tuple[bool, str, dict[str, Any]]:
     """登录成功：先访问闲鱼首页建立 h5 mtop 会话（_m_h5_tk），再导出 cookies。
 
-    导出失败/为空时重试；持续失败则返回确认态让下一轮再试，不破坏会话。
+    导出失败/为空时重试；**`_m_h5_tk` 缺失时补访首页再导出**（缺失会导致后续
+    Rust 侧 mtop 签名 token 为空 → 被风控拦截）。持续失败则返回确认态让下一轮再试，不破坏会话。
     """
     page = session.page
     if page is not None:
@@ -271,6 +272,22 @@ async def _finish_success(session: QrSession, session_id: str) -> tuple[bool, st
             cookies = await session.context.cookies()
             exported = _to_serializable_cookies(cookies)
             if exported:
+                has_m_h5_tk = any(c.get("name") == "_m_h5_tk" for c in exported)
+                if not has_m_h5_tk:
+                    # 签名 token 缺失：补访首页触发 mtop 落盘后重试（最多补 1 次）。
+                    logger.warning(
+                        "导出 cookies 缺少 _m_h5_tk，补访首页触发 mtop 会话（第 %s 次）",
+                        attempt + 1,
+                    )
+                    if attempt == 0 and page is not None:
+                        with contextlib.suppress(Exception):
+                            await page.goto(
+                                "https://www.goofish.com/",
+                                wait_until="domcontentloaded",
+                                timeout=40000,
+                            )
+                            await page.wait_for_timeout(3000)
+                        continue
                 await session.close()
                 QR_SESSIONS.pop(session_id, None)
                 return (
