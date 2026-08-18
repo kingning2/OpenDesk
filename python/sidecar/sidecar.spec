@@ -14,7 +14,6 @@ a = Analysis(
     hiddenimports=[
         "gateway",
         "gateway.handlers",
-        "gateway.handlers.agent_ping",
         "sidecar",
         "sidecar.main",
         "sidecar.server",

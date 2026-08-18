@@ -11,9 +11,9 @@ import time
 from typing import Any
 
 from gateway.login.qr_session import (
-    cancel_qr_login,
-    check_qr_login,
-    start_qr_login,
+    cancel_qr_login_by_platform,
+    check_qr_login_by_platform,
+    start_qr_login_by_platform,
 )
 from shared.logging import bind_log_context
 
@@ -23,8 +23,9 @@ logger = logging.getLogger("opendesk.sidecar.qr")
 async def handle_qr_start(payload: dict[str, Any] | None, *, trace_id: str) -> dict[str, Any]:
     """Contract: contracts/schema/v1/channel/sidecar/qr_start.*.schema.json"""
     with bind_log_context(trace_id=trace_id, feature="channel"):
+        platform = str((payload or {}).get("platform") or "xianyu").strip().lower() or "xianyu"
         started = time.perf_counter()
-        ok, detail, data = await start_qr_login()
+        ok, detail, data = await start_qr_login_by_platform(platform)
         duration_ms = max(0, int((time.perf_counter() - started) * 1000))
         qr = data.get("qr_base64")
         status = data.get("status", "error")
@@ -38,6 +39,7 @@ async def handle_qr_start(payload: dict[str, Any] | None, *, trace_id: str) -> d
                     "event": "channel.qr.failed",
                     "status": status,
                     "duration_ms": duration_ms,
+                    "platform": platform,
                 },
             )
         else:
@@ -50,6 +52,7 @@ async def handle_qr_start(payload: dict[str, Any] | None, *, trace_id: str) -> d
                     "status": status,
                     "duration_ms": duration_ms,
                     "session_id": data.get("session_id"),
+                    "platform": platform,
                 },
             )
         return {
@@ -65,6 +68,7 @@ async def handle_qr_start(payload: dict[str, Any] | None, *, trace_id: str) -> d
 async def handle_qr_check(payload: dict[str, Any] | None, *, trace_id: str) -> dict[str, Any]:
     """Contract: contracts/schema/v1/channel/sidecar/qr_check.*.schema.json"""
     with bind_log_context(trace_id=trace_id, feature="channel"):
+        platform = str((payload or {}).get("platform") or "xianyu").strip().lower() or "xianyu"
         session_id = (payload or {}).get("session_id") or ""
         if not session_id:
             return {
@@ -76,7 +80,7 @@ async def handle_qr_check(payload: dict[str, Any] | None, *, trace_id: str) -> d
                 "trace_id": trace_id,
             }
         started = time.perf_counter()
-        ok, detail, data = await check_qr_login(session_id)
+        ok, detail, data = await check_qr_login_by_platform(session_id, platform=platform)
         duration_ms = max(0, int((time.perf_counter() - started) * 1000))
         status = data.get("status")
         # 等待扫码是常态，不逐次打扰；只在状态变化（扫码/确认/成功/刷新/过期/失败）时打一条。
@@ -90,6 +94,7 @@ async def handle_qr_check(payload: dict[str, Any] | None, *, trace_id: str) -> d
                     "status": status,
                     "duration_ms": duration_ms,
                     "session_id": session_id,
+                    "platform": platform,
                 },
             )
         return {
@@ -106,9 +111,10 @@ async def handle_qr_check(payload: dict[str, Any] | None, *, trace_id: str) -> d
 async def handle_qr_cancel(payload: dict[str, Any] | None, *, trace_id: str) -> dict[str, Any]:
     """Contract: contracts/schema/v1/channel/sidecar/qr_cancel.*.schema.json"""
     with bind_log_context(trace_id=trace_id, feature="channel"):
+        platform = str((payload or {}).get("platform") or "xianyu").strip().lower() or "xianyu"
         session_id = (payload or {}).get("session_id") or ""
         started = time.perf_counter()
-        ok, detail, _data = await cancel_qr_login(session_id)
+        ok, detail, _data = await cancel_qr_login_by_platform(session_id, platform=platform)
         duration_ms = max(0, int((time.perf_counter() - started) * 1000))
         logger.info(
             "取消扫码登录 ok=%s duration_ms=%s",
@@ -119,6 +125,7 @@ async def handle_qr_cancel(payload: dict[str, Any] | None, *, trace_id: str) -> 
                 "ok": ok,
                 "duration_ms": duration_ms,
                 "session_id": session_id or None,
+                "platform": platform,
             },
         )
         return {
