@@ -1,0 +1,21 @@
+{
+  "$schema": "./channel-platforms.schema.json",
+  "default": "xianyu",
+  "platforms": [
+    {
+      "id": "xianyu",
+      "name": "闲鱼",
+      "implemented": true
+    },
+    {
+      "id": "xiaohongshu",
+      "name": "小红书",
+      "implemented": false
+    },
+    {
+      "id": "douyin",
+      "name": "抖音",
+      "implemented": false
+    }
+  ]
+}
