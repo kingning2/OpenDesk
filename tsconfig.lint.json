@@ -25,7 +25,10 @@
       "@desk/store/*": ["packages/store/src/*"],
       "@desk/contracts": ["packages/contracts/src"],
       "@desk/contracts/*": ["packages/contracts/src/*"],
-      "@feature/*": ["apps/desktop/src/features/*"]
+      "@desk/utils": ["packages/utils/src"],
+      "@desk/utils/*": ["packages/utils/src/*"],
+      "@feature/*": ["apps/desktop/src/features/*"],
+      "@platform-routes": ["apps/desktop/src/route/platforms/xianyu-routes.ts"]
     }
   },
   "include": [

@@ -13,6 +13,7 @@ export default tseslint.config(
       "**/.venv/**",
       "**/pnpm-lock.yaml",
       "tooling/strawberry-perl/**",
+      "plugins/**", // 第三方参照项目（xianyu-auto-reply），非本仓库代码，不参与 lint
     ],
   },
   js.configs.recommended,
