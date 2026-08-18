@@ -21,7 +21,7 @@ import { LicensePlanBadge } from "@feature/license";
 import { LogPanel, useLogStore } from "@feature/log";
 import { SettingsDialogProvider, useSettingsDialog } from "@feature/setting";
 import { usePlatformNav } from "../route/use-platform-nav";
-import { useRouteChange, useStartApp } from "../lifecycle";
+import { useRouteChange, useStartApp, useErrorLifecycle } from "../lifecycle";
 import {
   AppLayout,
   MainPanel,
@@ -52,6 +52,7 @@ function AppShellInner() {
 
   useRouteChange();
   useStartApp();
+  useErrorLifecycle();
 
   useEffect(() => {
     let cancelled = false;

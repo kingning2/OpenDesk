@@ -7,3 +7,4 @@
 
 export { useRouteChange } from "./useRouteChange";
 export { useStartApp } from "./useStartApp";
+export { useErrorLifecycle } from "./useErrorLifecycle";

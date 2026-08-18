@@ -12,6 +12,14 @@
 
 import { invoke as tauriInvoke } from "@tauri-apps/api/core";
 
+import {
+  classifyError,
+  IpcError,
+  reportError,
+  stringifyError,
+  type ErrorKind,
+} from "../error";
+
 /**
  * IPC 统一响应体（仿 HTTP 风格）。
  *
@@ -64,6 +72,17 @@ export async function call<T>(
       logIpcCompleted(command, durationMs, true);
     }
     if (isIpcResponse<T>(result)) {
+      if (result.code !== 200) {
+        const ipcError = new IpcError({
+          kind: classifyResponseCode(result.code),
+          command,
+          code: result.code,
+          message: result.message,
+        });
+        logIpcCompleted(command, durationMs, false, ipcError);
+        reportError(ipcError, command);
+        throw ipcError;
+      }
       return result.data;
     }
     return result;
@@ -71,7 +90,9 @@ export async function call<T>(
     const durationMs = Math.max(0, Math.round(performance.now() - started));
     // 静默命令失败仍要可见，否则面板拉取异常无从排查。
     logIpcCompleted(command, durationMs, false, error);
-    throw error;
+    const ipcError = wrapIpcError(error, command);
+    reportError(ipcError, command);
+    throw ipcError;
   }
 }
 
@@ -101,8 +122,46 @@ export async function callRequest<T>(
   } catch (error) {
     const durationMs = Math.max(0, Math.round(performance.now() - started));
     logIpcCompleted(command, durationMs, false, error);
-    throw error;
+    const ipcError = wrapIpcError(error, command);
+    reportError(ipcError, command);
+    throw ipcError;
   }
+}
+
+/**
+ * 将任意 invoke 拒绝错误包装为 IpcError（保留 command 上下文）。
+ *
+ * @author Xiaoman
+ * @created 2026-08-18
+ *
+ * @param error - invoke 拒绝的原始错误
+ * @param command - Tauri command 名
+ * @returns 带分类与 command 的 IpcError
+ */
+function wrapIpcError(error: unknown, command: string): IpcError {
+  if (error instanceof IpcError) {
+    return error;
+  }
+  const classified = classifyError(error, command);
+  return new IpcError({
+    kind: classified.kind,
+    message: classified.message,
+    command,
+    cause: error,
+  });
+}
+
+/**
+ * 按业务状态码判定错误分类 — 5xx 视为后端不可用（网络错误）。
+ *
+ * @author Xiaoman
+ * @created 2026-08-18
+ *
+ * @param code - 业务状态码
+ * @returns 错误分类
+ */
+function classifyResponseCode(code: number): ErrorKind {
+  return code >= 500 ? "network" : "ipc";
 }
 
 /**
@@ -136,29 +195,6 @@ function logIpcCompleted(
     console.debug(message);
   } else {
     console.info(message);
-  }
-}
-
-/**
- * 将未知错误转成短字符串。
- *
- * @author Xiaoman
- * @created 2026-08-13
- *
- * @param error - 未知错误
- * @returns 可读短文本
- */
-function stringifyError(error: unknown): string {
-  if (typeof error === "string") {
-    return error;
-  }
-  if (error instanceof Error) {
-    return error.message;
-  }
-  try {
-    return JSON.stringify(error) ?? String(error);
-  } catch {
-    return String(error);
   }
 }
 
