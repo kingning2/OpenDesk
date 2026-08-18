@@ -1,6 +1,6 @@
 # @desk/ui
 
-OpenDesk 设计系统与 **通用** UI 组件库。Feature 层的视觉与交互原语**必须**从此包导出。
+DingDa 设计系统与 **通用** UI 组件库。Feature 层的视觉与交互原语**必须**从此包导出。
 
 > Feature 层禁止裸用 `bg-white`、`rounded-lg` 等 Tailwind 原子类；使用语义组件与 variant。
 
@@ -11,7 +11,7 @@ OpenDesk 设计系统与 **通用** UI 组件库。Feature 层的视觉与交互
 | Button / Input / Select / Card / ScrollArea | 窗口 TitleBar |
 | IconButton / ThemeToggle / Toaster | NavRail / AppLayout / MainPanel |
 | PageScaffold / PageContainer | 工作区 TabBar |
-| tokens / theme / motion 原语 | 任何 OpenDesk 桌面壳装配 |
+| tokens / theme / motion 原语 | 任何 DingDa 桌面壳装配 |
 
 桌面窗口壳在 `apps/desktop/src/app/`。
 

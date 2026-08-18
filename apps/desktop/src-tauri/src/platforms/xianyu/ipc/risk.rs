@@ -63,7 +63,7 @@ pub struct RiskConfigSaveRequest {
 pub fn risk_log_list(
     state: State<'_, RiskHandle>,
     request: RiskListRequest,
-) -> common::OpenDeskResult<IpcResponse<RiskLogPage>> {
+) -> common::DingDaResult<IpcResponse<RiskLogPage>> {
     let service = RiskService::new(state.store.as_ref());
     let query = RiskLogQuery {
         page: request.page,
@@ -84,7 +84,7 @@ pub fn risk_log_list(
 pub fn risk_log_today_rate(
     state: State<'_, RiskHandle>,
     request: RiskRateRequest,
-) -> common::OpenDeskResult<IpcResponse<app::risk::RiskTodaySuccessRate>> {
+) -> common::DingDaResult<IpcResponse<app::risk::RiskTodaySuccessRate>> {
     let service = RiskService::new(state.store.as_ref());
     let result = service.today_success_rate(request.owner_id, &request.date)?;
     Ok(IpcResponse::ok(result))
@@ -95,7 +95,7 @@ pub fn risk_log_today_rate(
 pub fn risk_log_clear(
     state: State<'_, RiskHandle>,
     request: RiskClearRequest,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = RiskService::new(state.store.as_ref());
     service.clear(request.owner_id, &request.account_id)?;
     Ok(IpcResponse::ok(()))
@@ -106,7 +106,7 @@ pub fn risk_log_clear(
 pub fn risk_log_clear_processing(
     state: State<'_, RiskHandle>,
     owner_id: i64,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = RiskService::new(state.store.as_ref());
     service.clear_processing(owner_id)?;
     Ok(IpcResponse::ok(()))
@@ -117,7 +117,7 @@ pub fn risk_log_clear_processing(
 pub fn risk_config_get(
     state: State<'_, RiskHandle>,
     owner_id: i64,
-) -> common::OpenDeskResult<IpcResponse<RiskConfig>> {
+) -> common::DingDaResult<IpcResponse<RiskConfig>> {
     let service = RiskService::new(state.store.as_ref());
     let result = service.get_config(owner_id)?;
     Ok(IpcResponse::ok(result))
@@ -128,10 +128,10 @@ pub fn risk_config_get(
 pub fn risk_config_set(
     state: State<'_, RiskHandle>,
     request: RiskConfigSaveRequest,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = RiskService::new(state.store.as_ref());
     service
         .save_config(request.owner_id, &request.config)
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(()))
 }

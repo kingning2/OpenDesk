@@ -1,4 +1,4 @@
-//! Tauri 壳层共用模块 — 从 `opendesk_business` re-export 纯业务代码。
+//! Tauri 壳层共用模块 — 从 `dingda_business` re-export 纯业务代码。
 //!
 //! 本目录只保留 Tauri 专属胶水：
 //! - `ipc/`：所有 `#[tauri::command]`
@@ -8,7 +8,7 @@
 //! - `shell_platform.rs`：Tauri 初始化脚本注入
 //! - `compile.rs`：平台编译期常量 re-export
 //!
-//! 纯 Rust 业务逻辑已移至 `opendesk-business` crate，通过 re-export 向 IPC 层暴露。
+//! 纯 Rust 业务逻辑已移至 `dingda-business` crate，通过 re-export 向 IPC 层暴露。
 //!
 //! 作者：Xiaoman
 //! 创建时间：2026-08-18
@@ -22,7 +22,7 @@ pub mod lifecycle;
 pub mod shell_platform;
 pub mod state;
 
-// 从 opendesk-business re-export，保持 IPC 层路径不变
+// 从 dingda-business re-export，保持 IPC 层路径不变
 pub use app::agent;
 pub use app::ai_config;
 pub use app::auto_reply_handle as auto_reply;

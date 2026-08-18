@@ -21,7 +21,7 @@ pub enum LicenseError {
     /// 本地 license 数据目录不可用。
     #[error(
         "license data directory unavailable ({detail}). \
-         Set OPENDESK_LICENSE_DIR or ensure APPDATA/HOME exists"
+         Set DINGDA_LICENSE_DIR or ensure APPDATA/HOME exists"
     )]
     DataDirUnavailable {
         /// 失败细节（路径或环境变量缺失说明）。

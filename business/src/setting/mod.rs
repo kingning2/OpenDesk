@@ -7,16 +7,16 @@
 //!
 //! 余额 / 充值 / 提现 / 结算 / 密码等依赖 SaaS 服务端的项不迁移（桌面单用户）。
 
-use common::OpenDeskResult;
+use common::DingDaResult;
 use serde::{Deserialize, Serialize};
 
 /// 用户设置存储 Port。
 pub trait UserSettingStore: Send + Sync {
     /// 读取单键值。
-    fn get(&self, owner_id: i64, key: &str) -> OpenDeskResult<Option<String>>;
+    fn get(&self, owner_id: i64, key: &str) -> DingDaResult<Option<String>>;
 
     /// 写入单键值（空值按删除处理）。
-    fn set(&self, owner_id: i64, key: &str, value: &str) -> OpenDeskResult<()>;
+    fn set(&self, owner_id: i64, key: &str, value: &str) -> DingDaResult<()>;
 }
 
 /// 用户设置服务。
@@ -30,12 +30,12 @@ impl<'a> UserSettingService<'a> {
     }
 
     /// 读取单键值。
-    pub fn get(&self, owner_id: i64, key: &str) -> OpenDeskResult<Option<String>> {
+    pub fn get(&self, owner_id: i64, key: &str) -> DingDaResult<Option<String>> {
         self.store.get(owner_id, key)
     }
 
     /// 写入单键值（空值删除）。
-    pub fn set(&self, owner_id: i64, key: &str, value: &str) -> OpenDeskResult<()> {
+    pub fn set(&self, owner_id: i64, key: &str, value: &str) -> DingDaResult<()> {
         if key.trim().is_empty() {
             return Err("设置键不能为空".to_string().into());
         }
@@ -87,7 +87,7 @@ mod tests {
     }
 
     impl UserSettingStore for MockStore {
-        fn get(&self, owner_id: i64, key: &str) -> OpenDeskResult<Option<String>> {
+        fn get(&self, owner_id: i64, key: &str) -> DingDaResult<Option<String>> {
             Ok(self
                 .map
                 .lock()
@@ -95,7 +95,7 @@ mod tests {
                 .get(&(owner_id, key.to_string()))
                 .cloned())
         }
-        fn set(&self, owner_id: i64, key: &str, value: &str) -> OpenDeskResult<()> {
+        fn set(&self, owner_id: i64, key: &str, value: &str) -> DingDaResult<()> {
             let mut map = self.map.lock().expect("lock");
             if value.is_empty() {
                 map.remove(&(owner_id, key.to_string()));

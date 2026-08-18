@@ -50,7 +50,7 @@ pub struct FilterDeleteRequest {
 pub fn filter_list(
     state: State<'_, FilterHandle>,
     request: FilterListRequest,
-) -> common::OpenDeskResult<IpcResponse<Vec<FilterRule>>> {
+) -> common::DingDaResult<IpcResponse<Vec<FilterRule>>> {
     let service = FilterService::new(state.store.as_ref());
     let result = service.list(request.owner_id, &request.account_id)?;
     Ok(IpcResponse::ok(result))
@@ -60,7 +60,7 @@ pub fn filter_list(
 pub fn filter_create(
     state: State<'_, FilterHandle>,
     request: FilterCreateRequest,
-) -> common::OpenDeskResult<IpcResponse<FilterRule>> {
+) -> common::DingDaResult<IpcResponse<FilterRule>> {
     let service = FilterService::new(state.store.as_ref());
     let result = service.create(request.owner_id, &request.account_id, request.rule)?;
     Ok(IpcResponse::ok(result))
@@ -70,11 +70,11 @@ pub fn filter_create(
 pub fn filter_update(
     state: State<'_, FilterHandle>,
     request: FilterUpdateRequest,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = FilterService::new(state.store.as_ref());
     service
         .update(request.owner_id, &request.rule)
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(()))
 }
 
@@ -82,7 +82,7 @@ pub fn filter_update(
 pub fn filter_set_enabled(
     state: State<'_, FilterHandle>,
     request: FilterEnabledRequest,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = FilterService::new(state.store.as_ref());
     service.set_enabled(request.owner_id, request.rule_id, request.enabled)?;
     Ok(IpcResponse::ok(()))
@@ -92,7 +92,7 @@ pub fn filter_set_enabled(
 pub fn filter_delete(
     state: State<'_, FilterHandle>,
     request: FilterDeleteRequest,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = FilterService::new(state.store.as_ref());
     service.delete(request.owner_id, request.rule_id)?;
     Ok(IpcResponse::ok(()))

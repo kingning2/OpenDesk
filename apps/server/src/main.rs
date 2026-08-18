@@ -1,4 +1,4 @@
-//! opendesk-server — Web 服务形态（验证 crates/app 不绑定 Tauri，可复用为 HTTP 服务）。
+//! dingda-server — Web 服务形态（验证 crates/app 不绑定 Tauri，可复用为 HTTP 服务）。
 //!
 //! 仅暴露只读健康检查与账号列表，证明业务库可被 Web 层直接复用；
 //! 完整业务 API（订单/发货/评价等）后续按需补齐。
@@ -25,7 +25,7 @@ struct AccountsResponse {
 async fn health() -> Json<HealthResponse> {
     Json(HealthResponse {
         status: "ok",
-        service: "opendesk-server",
+        service: "dingda-server",
     })
 }
 
@@ -50,7 +50,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let state = AppState::new();
     let app = router(state);
     let listener = tokio::net::TcpListener::bind("127.0.0.1:8089").await?;
-    tracing::info!("opendesk-server listening on http://127.0.0.1:8089");
+    tracing::info!("dingda-server listening on http://127.0.0.1:8089");
     axum::serve(listener, app).await?;
     Ok(())
 }

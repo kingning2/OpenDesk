@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "opendesk://channel/ipc/open_site.request/v1",
+  "$id": "dingda://channel/ipc/open_site.request/v1",
   "title": "channel/ipc/open_site.request",
   "type": "object",
   "required": ["account_id", "x", "y", "width", "height"],

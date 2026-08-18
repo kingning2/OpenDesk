@@ -24,7 +24,7 @@ _PREVIEW_LIMIT = 1000
 _STACK_LIMIT = 8000
 _REDACTED = "[REDACTED]"
 
-_context: ContextVar[dict[str, str] | None] = ContextVar("opendesk_log_context", default=None)
+_context: ContextVar[dict[str, str] | None] = ContextVar("dingda_log_context", default=None)
 
 _EMAIL_RE = re.compile(r"(?<![\w.+-])[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}(?![\w.-])")
 _PHONE_RE = re.compile(r"(?<!\d)(?:\+?86[- ]?)?1[3-9]\d{9}(?!\d)")
@@ -110,7 +110,7 @@ class JsonLineFormatter(logging.Formatter):
                 "timestamp": _timestamp(record.created),
                 "level": "ERROR",
                 "source": "python",
-                "logger": "opendesk.logging",
+                "logger": "dingda.logging",
                 "message": "log serialization failed",
                 "attributes": {
                     "original_logger": sanitize_text(record.name),
@@ -191,21 +191,21 @@ def configure_logging(*, stream: TextIO | None = None) -> None:
     root.addHandler(handler)
     root.setLevel(_get_log_level())
 
-    configured_level = os.getenv("OPENDESK_LOG_LEVEL", "INFO").upper()
+    configured_level = os.getenv("DINGDA_LOG_LEVEL", "INFO").upper()
     if configured_level not in _LOG_LEVELS:
-        logging.getLogger("opendesk.logging").warning(
+        logging.getLogger("dingda.logging").warning(
             "invalid log level; falling back to INFO",
             extra={"event": "logging.invalid_level"},
         )
 
 
 def _get_log_level() -> str:
-    candidate = os.getenv("OPENDESK_LOG_LEVEL", "INFO").upper()
+    candidate = os.getenv("DINGDA_LOG_LEVEL", "INFO").upper()
     return candidate if candidate in _LOG_LEVELS else "INFO"
 
 
 def _get_environment(value: str | None = None) -> str:
-    candidate = (value or os.getenv("OPENDESK_ENV", "production")).lower()
+    candidate = (value or os.getenv("DINGDA_ENV", "production")).lower()
     return candidate if candidate in _ENVIRONMENTS else "production"
 
 

@@ -16,12 +16,12 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 export type DesktopPlatform = "macos" | "windows" | "linux";
 
 /** Rust 注入到 `window` 上的平台全局键。 */
-export const OPENDESK_PLATFORM_KEY = "__OPENDESK_PLATFORM__" as const;
+export const DINGDA_PLATFORM_KEY = "__DINGDA_PLATFORM__" as const;
 
 declare global {
   interface Window {
     /** 由 Rust `append_invoke_initialization_script` 注入；非 Tauri 环境可能缺失。 */
-    __OPENDESK_PLATFORM__?: DesktopPlatform;
+    __DINGDA_PLATFORM__?: DesktopPlatform;
   }
 }
 
@@ -38,7 +38,7 @@ export function getPlatform(): DesktopPlatform {
     return "windows";
   }
 
-  const injected = window.__OPENDESK_PLATFORM__;
+  const injected = window.__DINGDA_PLATFORM__;
   if (injected === "macos" || injected === "windows" || injected === "linux") {
     return injected;
   }

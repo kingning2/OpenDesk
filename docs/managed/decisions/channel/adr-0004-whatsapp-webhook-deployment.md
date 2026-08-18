@@ -16,7 +16,7 @@ related:
 
 # WhatsApp Business Webhook 部署与开发接入
 
-> **Superseded by [ADR-0006](adr-0006-whatsapp-baileys-worker.md)**（2026-07-21）。WhatsApp 通道改为 opendesk-worker Baileys 协议桥，不再采用 Business Cloud API + Webhook。下文保留历史决策记录。
+> **Superseded by [ADR-0006](adr-0006-whatsapp-baileys-worker.md)**（2026-07-21）。WhatsApp 通道改为 dingda-worker Baileys 协议桥，不再采用 Business Cloud API + Webhook。下文保留历史决策记录。
 
 ## Status
 
@@ -24,7 +24,7 @@ related:
 
 ## Context
 
-WhatsApp Cloud API 要求 Meta 向 **公网 HTTPS** 回调 URL 推送入站消息。OpenDesk 是本地桌面应用，无内置公网 IP。CHG-020 实现 Rust webhook 处理，但若无部署说明，M5 无法验收。
+WhatsApp Cloud API 要求 Meta 向 **公网 HTTPS** 回调 URL 推送入站消息。DingDa 是本地桌面应用，无内置公网 IP。CHG-020 实现 Rust webhook 处理，但若无部署说明，M5 无法验收。
 
 约束：
 
@@ -71,7 +71,7 @@ Meta → 企业 VPS/Nginx（TLS）→ 转发 → 销售办公网内 relay 或单
 #### 生产（Production）— MVP 最小方案
 
 ```text
-Meta → 轻量 Relay 服务（VPS）→ WSS/长轮询 → 桌面 OpenDesk 客户端
+Meta → 轻量 Relay 服务（VPS）→ WSS/长轮询 → 桌面 DingDa 客户端
 ```
 
 MVP **实现路径 A**（优先）：
@@ -82,7 +82,7 @@ MVP **实现路径 A**（优先）：
 
 MVP **备选路径 B**（单人/小团队）：
 
-- 固定一台 **always-on** 机器跑 OpenDesk + cloudflared 命名隧道
+- 固定一台 **always-on** 机器跑 DingDa + cloudflared 命名隧道
 - 适合早期演示，文档标注运维成本
 
 **MVP 不实现：** 多区域 HA、自动扩缩、K8s Ingress 模板（可列后续项）。
@@ -110,7 +110,7 @@ MVP **备选路径 B**（单人/小团队）：
 |------|----------|
 | 仅文档不写 relay | 多桌面场景无法稳定收消息 |
 | Meta → Python Sidecar | 违反 Rust 协调者边界 |
-| 内置 OpenDesk 公网服务器 | 桌面安全与运维复杂 |
+| 内置 DingDa 公网服务器 | 桌面安全与运维复杂 |
 | 仅手动轮询 API 拉消息 | 非实时，API 限制多，体验差 |
 
 ## Consequences

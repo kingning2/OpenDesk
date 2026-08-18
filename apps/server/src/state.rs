@@ -4,7 +4,7 @@
 //! 存储先用内存实现（进程内），后续换 SQLite。
 
 use app::account::{AccountStore, XianyuAccount};
-use common::OpenDeskResult;
+use common::DingDaResult;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
@@ -22,11 +22,7 @@ impl InMemoryAccountStore {
 }
 
 impl AccountStore for InMemoryAccountStore {
-    fn get_account(
-        &self,
-        owner_id: i64,
-        account_id: &str,
-    ) -> OpenDeskResult<Option<XianyuAccount>> {
+    fn get_account(&self, owner_id: i64, account_id: &str) -> DingDaResult<Option<XianyuAccount>> {
         let accounts = self.accounts.lock().map_err(|e| e.to_string())?;
         Ok(accounts
             .get(account_id)
@@ -34,7 +30,7 @@ impl AccountStore for InMemoryAccountStore {
             .cloned())
     }
 
-    fn list_accounts(&self, owner_id: i64) -> OpenDeskResult<Vec<XianyuAccount>> {
+    fn list_accounts(&self, owner_id: i64) -> DingDaResult<Vec<XianyuAccount>> {
         let accounts = self.accounts.lock().map_err(|e| e.to_string())?;
         Ok(accounts
             .values()
@@ -43,7 +39,7 @@ impl AccountStore for InMemoryAccountStore {
             .collect())
     }
 
-    fn create_account(&self, account: &XianyuAccount) -> OpenDeskResult<XianyuAccount> {
+    fn create_account(&self, account: &XianyuAccount) -> DingDaResult<XianyuAccount> {
         let mut accounts = self.accounts.lock().map_err(|e| e.to_string())?;
         if accounts.contains_key(&account.account_id) {
             return Err(format!("账号 {} 已存在", account.account_id).into());
@@ -56,7 +52,7 @@ impl AccountStore for InMemoryAccountStore {
         Ok(account)
     }
 
-    fn update_account(&self, account: &XianyuAccount) -> OpenDeskResult<()> {
+    fn update_account(&self, account: &XianyuAccount) -> DingDaResult<()> {
         let mut accounts = self.accounts.lock().map_err(|e| e.to_string())?;
         if !accounts.contains_key(&account.account_id) {
             return Err(format!("账号 {} 不存在", account.account_id).into());
@@ -65,7 +61,7 @@ impl AccountStore for InMemoryAccountStore {
         Ok(())
     }
 
-    fn delete_account(&self, owner_id: i64, account_id: &str) -> OpenDeskResult<()> {
+    fn delete_account(&self, owner_id: i64, account_id: &str) -> DingDaResult<()> {
         let mut accounts = self.accounts.lock().map_err(|e| e.to_string())?;
         let owned = accounts
             .get(account_id)
@@ -77,7 +73,7 @@ impl AccountStore for InMemoryAccountStore {
         Ok(())
     }
 
-    fn find_by_account_id(&self, account_id: &str) -> OpenDeskResult<Option<XianyuAccount>> {
+    fn find_by_account_id(&self, account_id: &str) -> DingDaResult<Option<XianyuAccount>> {
         let accounts = self.accounts.lock().map_err(|e| e.to_string())?;
         Ok(accounts.get(account_id).cloned())
     }

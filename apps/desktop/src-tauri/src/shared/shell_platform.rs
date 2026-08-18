@@ -19,7 +19,7 @@ pub fn desktop_platform_label() -> &'static str {
     }
 }
 
-/// 在页面脚本执行前注入 `window.__OPENDESK_PLATFORM__` 的初始化脚本。
+/// 在页面脚本执行前注入 `window.__DINGDA_PLATFORM__` 的初始化脚本。
 ///
 /// 作者：coisini
 /// 创建时间：2026-07-21
@@ -28,7 +28,7 @@ pub fn desktop_platform_label() -> &'static str {
 /// 可传给 `append_invoke_initialization_script` 的 JS 字符串。
 pub fn platform_initialization_script() -> String {
     format!(
-        r#"Object.defineProperty(window,"__OPENDESK_PLATFORM__",{{value:"{}",writable:false,configurable:false}});"#,
+        r#"Object.defineProperty(window,"__DINGDA_PLATFORM__",{{value:"{}",writable:false,configurable:false}});"#,
         desktop_platform_label()
     )
 }

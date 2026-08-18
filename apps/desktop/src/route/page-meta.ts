@@ -26,7 +26,7 @@ export interface PageMeta {
 const pageMetaByPath: Record<string, PageMeta> = {
   "/": {
     title: "首页",
-    description: "OpenDesk 架构脚手架",
+    description: "DingDa 架构脚手架",
   },
   "/features/agent": {
     title: "Agent",
@@ -64,5 +64,5 @@ export function getPageMeta(pathname: string): PageMeta {
     };
   }
 
-  return pageMetaByPath[pathname] ?? { title: "OpenDesk" };
+  return pageMetaByPath[pathname] ?? { title: "DingDa" };
 }

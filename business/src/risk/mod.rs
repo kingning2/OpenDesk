@@ -6,7 +6,7 @@
 //! - 清空日志 / 清空处理中日志；
 //! - 远程过滑块全局配置与本机滑块处理开关的存取。
 
-use common::OpenDeskResult;
+use common::DingDaResult;
 use serde::{Deserialize, Serialize};
 
 /// 风控日志条目（对齐 Python 版 `RiskLog`）。
@@ -135,19 +135,19 @@ impl Default for RiskConfig {
 /// 风控存储 Port。
 pub trait RiskStore: Send + Sync {
     /// 分页查询（按归属）。
-    fn list_logs(&self, owner_id: i64, query: &RiskLogQuery) -> OpenDeskResult<Vec<RiskLogItem>>;
+    fn list_logs(&self, owner_id: i64, query: &RiskLogQuery) -> DingDaResult<Vec<RiskLogItem>>;
 
     /// 清空日志（account_id 为空则全部）。
-    fn clear_logs(&self, owner_id: i64, account_id: &str) -> OpenDeskResult<()>;
+    fn clear_logs(&self, owner_id: i64, account_id: &str) -> DingDaResult<()>;
 
     /// 清空处理中日志。
-    fn clear_processing(&self, owner_id: i64) -> OpenDeskResult<()>;
+    fn clear_processing(&self, owner_id: i64) -> DingDaResult<()>;
 
     /// 读取配置。
-    fn get_config(&self, owner_id: i64) -> OpenDeskResult<RiskConfig>;
+    fn get_config(&self, owner_id: i64) -> DingDaResult<RiskConfig>;
 
     /// 保存配置。
-    fn save_config(&self, owner_id: i64, config: &RiskConfig) -> OpenDeskResult<()>;
+    fn save_config(&self, owner_id: i64, config: &RiskConfig) -> DingDaResult<()>;
 }
 
 /// 风控服务。
@@ -161,7 +161,7 @@ impl<'a> RiskService<'a> {
     }
 
     /// 分页查询（page 从 1 起，page_size 钳制 1-200）。
-    pub fn list(&self, owner_id: i64, query: &RiskLogQuery) -> OpenDeskResult<RiskLogPage> {
+    pub fn list(&self, owner_id: i64, query: &RiskLogQuery) -> DingDaResult<RiskLogPage> {
         let page = query.page.max(1);
         let page_size = query.page_size.clamp(1, 200);
         let all = self.store.list_logs(owner_id, query)?;
@@ -191,7 +191,7 @@ impl<'a> RiskService<'a> {
         &self,
         owner_id: i64,
         date: &str,
-    ) -> OpenDeskResult<RiskTodaySuccessRate> {
+    ) -> DingDaResult<RiskTodaySuccessRate> {
         let all = self.store.list_logs(
             owner_id,
             &RiskLogQuery {
@@ -240,22 +240,22 @@ impl<'a> RiskService<'a> {
     }
 
     /// 清空日志（account_id 为空则全部）。
-    pub fn clear(&self, owner_id: i64, account_id: &str) -> OpenDeskResult<()> {
+    pub fn clear(&self, owner_id: i64, account_id: &str) -> DingDaResult<()> {
         self.store.clear_logs(owner_id, account_id)
     }
 
     /// 清空处理中日志。
-    pub fn clear_processing(&self, owner_id: i64) -> OpenDeskResult<()> {
+    pub fn clear_processing(&self, owner_id: i64) -> DingDaResult<()> {
         self.store.clear_processing(owner_id)
     }
 
     /// 读取配置。
-    pub fn get_config(&self, owner_id: i64) -> OpenDeskResult<RiskConfig> {
+    pub fn get_config(&self, owner_id: i64) -> DingDaResult<RiskConfig> {
         self.store.get_config(owner_id)
     }
 
     /// 保存配置（远程 URL 校验：禁止填写 Token 获取专用域名）。
-    pub fn save_config(&self, owner_id: i64, config: &RiskConfig) -> OpenDeskResult<()> {
+    pub fn save_config(&self, owner_id: i64, config: &RiskConfig) -> DingDaResult<()> {
         const TOKEN_API_ONLY_DOMAINS: [&str; 2] = ["api.xianyusite.shop", "api.zhinianblog.cn"];
         let lowered = config.remote_url.trim().to_lowercase();
         if TOKEN_API_ONLY_DOMAINS
@@ -287,11 +287,7 @@ mod tests {
     }
 
     impl RiskStore for MockStore {
-        fn list_logs(
-            &self,
-            owner_id: i64,
-            query: &RiskLogQuery,
-        ) -> OpenDeskResult<Vec<RiskLogItem>> {
+        fn list_logs(&self, owner_id: i64, query: &RiskLogQuery) -> DingDaResult<Vec<RiskLogItem>> {
             let logs = self.logs.lock().expect("lock");
             Ok(logs
                 .iter()
@@ -320,23 +316,23 @@ mod tests {
                 .cloned()
                 .collect())
         }
-        fn clear_logs(&self, owner_id: i64, account_id: &str) -> OpenDeskResult<()> {
+        fn clear_logs(&self, owner_id: i64, account_id: &str) -> DingDaResult<()> {
             let mut logs = self.logs.lock().expect("lock");
             logs.retain(|log| {
                 log.owner_id != owner_id || (!account_id.is_empty() && log.account_id != account_id)
             });
             Ok(())
         }
-        fn clear_processing(&self, owner_id: i64) -> OpenDeskResult<()> {
+        fn clear_processing(&self, owner_id: i64) -> DingDaResult<()> {
             let mut logs = self.logs.lock().expect("lock");
             logs.retain(|log| log.owner_id != owner_id || log.processing_status != "processing");
             Ok(())
         }
-        fn get_config(&self, owner_id: i64) -> OpenDeskResult<RiskConfig> {
+        fn get_config(&self, owner_id: i64) -> DingDaResult<RiskConfig> {
             let _ = owner_id;
             Ok(self.config.lock().expect("lock").clone())
         }
-        fn save_config(&self, owner_id: i64, config: &RiskConfig) -> OpenDeskResult<()> {
+        fn save_config(&self, owner_id: i64, config: &RiskConfig) -> DingDaResult<()> {
             let _ = owner_id;
             *self.config.lock().expect("lock") = config.clone();
             Ok(())

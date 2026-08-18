@@ -1,5 +1,5 @@
 {
-  "name": "opendesk",
+  "name": "dingda",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -23,9 +23,9 @@
     "lint:rust:fix": "node tooling/scripts/lint-rust-fix.mjs",
     "lint:python": "node tooling/scripts/lint-python.mjs",
     "lint:python:fix": "node tooling/scripts/lint-python-fix.mjs",
-    "branch": "python skills/opendesk/scripts/create_branch.py --interactive",
-    "branch:create": "python skills/opendesk/scripts/create_branch.py",
-    "branch:sync": "python skills/opendesk/scripts/sync_branch_rules.py"
+    "branch": "python skills/dingda/scripts/create_branch.py --interactive",
+    "branch:create": "python skills/dingda/scripts/create_branch.py",
+    "branch:sync": "python skills/dingda/scripts/sync_branch_rules.py"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

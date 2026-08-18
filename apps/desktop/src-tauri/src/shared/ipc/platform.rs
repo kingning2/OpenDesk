@@ -1,6 +1,6 @@
 //! ???? Tauri commands ? ??????????????????
 
-use common::OpenDeskResult;
+use common::DingDaResult;
 use platform::registry::PlatformRegistry;
 use serde::Serialize;
 
@@ -18,7 +18,7 @@ pub struct PlatformDescriptorDto {
 /// ?????????????
 
 #[tauri::command]
-pub fn platform_descriptors() -> OpenDeskResult<IpcResponse<Vec<PlatformDescriptorDto>>> {
+pub fn platform_descriptors() -> DingDaResult<IpcResponse<Vec<PlatformDescriptorDto>>> {
     let registry = PlatformRegistry::new();
     let descriptors = registry
         .descriptors()

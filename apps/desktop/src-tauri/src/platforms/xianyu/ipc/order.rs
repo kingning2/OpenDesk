@@ -44,7 +44,7 @@ pub struct OrderDeliveryRequest {
 pub fn order_list(
     state: State<'_, OrderHandle>,
     request: OrderListRequest,
-) -> common::OpenDeskResult<IpcResponse<(Vec<Order>, u32)>> {
+) -> common::DingDaResult<IpcResponse<(Vec<Order>, u32)>> {
     let service = OrderService::new(state.store.as_ref());
     let status = request.status.as_deref().map(OrderStatus::from_str);
     let result = service
@@ -55,7 +55,7 @@ pub fn order_list(
             status,
             &request.keyword,
         )
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(result))
 }
 
@@ -64,11 +64,11 @@ pub fn order_get(
     state: State<'_, OrderHandle>,
     owner_id: i64,
     order_no: String,
-) -> common::OpenDeskResult<IpcResponse<Option<Order>>> {
+) -> common::DingDaResult<IpcResponse<Option<Order>>> {
     let service = OrderService::new(state.store.as_ref());
     let result = service
         .get_order_by_no(owner_id, &order_no)
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(result))
 }
 
@@ -76,12 +76,12 @@ pub fn order_get(
 pub fn order_update_status(
     state: State<'_, OrderHandle>,
     request: OrderStatusRequest,
-) -> common::OpenDeskResult<IpcResponse<bool>> {
+) -> common::DingDaResult<IpcResponse<bool>> {
     let service = OrderService::new(state.store.as_ref());
     let status = OrderStatus::from_str(&request.status);
     let result = service
         .update_status(&request.order_no, status)
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(result))
 }
 
@@ -89,7 +89,7 @@ pub fn order_update_status(
 pub fn order_update_delivery(
     state: State<'_, OrderHandle>,
     request: OrderDeliveryRequest,
-) -> common::OpenDeskResult<IpcResponse<bool>> {
+) -> common::DingDaResult<IpcResponse<bool>> {
     let service = OrderService::new(state.store.as_ref());
     let update = DeliveryInfoUpdate {
         status: OrderStatus::from_str(&request.status),
@@ -99,7 +99,7 @@ pub fn order_update_delivery(
     };
     let result = service
         .update_delivery_info(&request.order_no, update)
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(result))
 }
 
@@ -107,11 +107,9 @@ pub fn order_update_delivery(
 pub fn order_create(
     state: State<'_, OrderHandle>,
     order: Order,
-) -> common::OpenDeskResult<IpcResponse<Order>> {
+) -> common::DingDaResult<IpcResponse<Order>> {
     let service = OrderService::new(state.store.as_ref());
-    let result = service
-        .create(&order)
-        .map_err(common::OpenDeskError::wrap)?;
+    let result = service.create(&order).map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(result))
 }
 
@@ -120,10 +118,10 @@ pub fn order_delete(
     state: State<'_, OrderHandle>,
     owner_id: i64,
     order_id: i64,
-) -> common::OpenDeskResult<IpcResponse<bool>> {
+) -> common::DingDaResult<IpcResponse<bool>> {
     let service = OrderService::new(state.store.as_ref());
     let result = service
         .delete(owner_id, order_id)
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(result))
 }

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "opendesk://runtime/event/sidecar.restarted/v1",
+  "$id": "dingda://runtime/event/sidecar.restarted/v1",
   "title": "runtime/event/sidecar.restarted",
   "type": "object",
   "required": ["event_id", "occurred_at", "port", "attempt"],

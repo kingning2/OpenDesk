@@ -5,24 +5,24 @@
 //! - 新建 / 更新 / 删除 / 启用切换。
 
 use super::filter::FilterRule;
-use common::OpenDeskResult;
+use common::DingDaResult;
 
 /// 过滤规则存储 Port。
 pub trait FilterStore: Send + Sync {
     /// 按账号查询全部过滤规则。
-    fn list_filters(&self, owner_id: i64, account_id: &str) -> OpenDeskResult<Vec<FilterRule>>;
+    fn list_filters(&self, owner_id: i64, account_id: &str) -> DingDaResult<Vec<FilterRule>>;
 
     /// 新建。
-    fn create_filter(&self, rule: &FilterRule) -> OpenDeskResult<FilterRule>;
+    fn create_filter(&self, rule: &FilterRule) -> DingDaResult<FilterRule>;
 
     /// 更新。
-    fn update_filter(&self, owner_id: i64, rule: &FilterRule) -> OpenDeskResult<()>;
+    fn update_filter(&self, owner_id: i64, rule: &FilterRule) -> DingDaResult<()>;
 
     /// 删除。
-    fn delete_filter(&self, owner_id: i64, rule_id: i64) -> OpenDeskResult<()>;
+    fn delete_filter(&self, owner_id: i64, rule_id: i64) -> DingDaResult<()>;
 
     /// 切换启用状态。
-    fn set_enabled(&self, owner_id: i64, rule_id: i64, enabled: bool) -> OpenDeskResult<()>;
+    fn set_enabled(&self, owner_id: i64, rule_id: i64, enabled: bool) -> DingDaResult<()>;
 }
 
 /// 过滤规则服务。
@@ -36,7 +36,7 @@ impl<'a> FilterService<'a> {
     }
 
     /// 按账号查询。
-    pub fn list(&self, owner_id: i64, account_id: &str) -> OpenDeskResult<Vec<FilterRule>> {
+    pub fn list(&self, owner_id: i64, account_id: &str) -> DingDaResult<Vec<FilterRule>> {
         self.store.list_filters(owner_id, account_id)
     }
 
@@ -46,7 +46,7 @@ impl<'a> FilterService<'a> {
         owner_id: i64,
         account_id: &str,
         mut rule: FilterRule,
-    ) -> OpenDeskResult<FilterRule> {
+    ) -> DingDaResult<FilterRule> {
         rule.owner_id = owner_id;
         rule.account_id = account_id.to_string();
         rule.keyword = rule.keyword.trim().to_string();
@@ -57,7 +57,7 @@ impl<'a> FilterService<'a> {
     }
 
     /// 更新。
-    pub fn update(&self, owner_id: i64, rule: &FilterRule) -> OpenDeskResult<()> {
+    pub fn update(&self, owner_id: i64, rule: &FilterRule) -> DingDaResult<()> {
         if rule.keyword.trim().is_empty() {
             return Err("过滤关键词不能为空".to_string().into());
         }
@@ -65,12 +65,12 @@ impl<'a> FilterService<'a> {
     }
 
     /// 删除。
-    pub fn delete(&self, owner_id: i64, rule_id: i64) -> OpenDeskResult<()> {
+    pub fn delete(&self, owner_id: i64, rule_id: i64) -> DingDaResult<()> {
         self.store.delete_filter(owner_id, rule_id)
     }
 
     /// 切换启用状态。
-    pub fn set_enabled(&self, owner_id: i64, rule_id: i64, enabled: bool) -> OpenDeskResult<()> {
+    pub fn set_enabled(&self, owner_id: i64, rule_id: i64, enabled: bool) -> DingDaResult<()> {
         self.store.set_enabled(owner_id, rule_id, enabled)
     }
 }
@@ -97,7 +97,7 @@ mod tests {
     }
 
     impl FilterStore for MockStore {
-        fn list_filters(&self, owner_id: i64, account_id: &str) -> OpenDeskResult<Vec<FilterRule>> {
+        fn list_filters(&self, owner_id: i64, account_id: &str) -> DingDaResult<Vec<FilterRule>> {
             Ok(self
                 .rules
                 .lock()
@@ -107,7 +107,7 @@ mod tests {
                 .cloned()
                 .collect())
         }
-        fn create_filter(&self, rule: &FilterRule) -> OpenDeskResult<FilterRule> {
+        fn create_filter(&self, rule: &FilterRule) -> DingDaResult<FilterRule> {
             let mut rule = rule.clone();
             let mut next = self.next_id.lock().expect("lock");
             *next += 1;
@@ -115,7 +115,7 @@ mod tests {
             self.rules.lock().expect("lock").push(rule.clone());
             Ok(rule)
         }
-        fn update_filter(&self, owner_id: i64, rule: &FilterRule) -> OpenDeskResult<()> {
+        fn update_filter(&self, owner_id: i64, rule: &FilterRule) -> DingDaResult<()> {
             let mut list = self.rules.lock().expect("lock");
             let Some(existing) = list
                 .iter_mut()
@@ -127,7 +127,7 @@ mod tests {
             existing.owner_id = owner_id;
             Ok(())
         }
-        fn delete_filter(&self, owner_id: i64, rule_id: i64) -> OpenDeskResult<()> {
+        fn delete_filter(&self, owner_id: i64, rule_id: i64) -> DingDaResult<()> {
             let mut list = self.rules.lock().expect("lock");
             let before = list.len();
             list.retain(|r| !(r.id == rule_id && r.owner_id == owner_id));
@@ -136,7 +136,7 @@ mod tests {
             }
             Ok(())
         }
-        fn set_enabled(&self, owner_id: i64, rule_id: i64, enabled: bool) -> OpenDeskResult<()> {
+        fn set_enabled(&self, owner_id: i64, rule_id: i64, enabled: bool) -> DingDaResult<()> {
             let mut list = self.rules.lock().expect("lock");
             let Some(rule) = list
                 .iter_mut()

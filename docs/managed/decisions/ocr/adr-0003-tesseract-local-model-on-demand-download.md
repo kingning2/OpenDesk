@@ -13,7 +13,7 @@ related:
 
 ## Context
 
-OpenDesk OCR 需满足：
+DingDa OCR 需满足：
 
 1. **引擎选型**：用户确认使用 **Tesseract**；
 2. **本地优先**：识别在本地完成，不上传图像到云端 OCR API；
@@ -29,7 +29,7 @@ Tesseract 依赖 `*.traineddata` 文件（`TESSDATA_PREFIX` 目录）。无已�
 
 | 项 | 选择 |
 |----|------|
-| 引擎 | **Tesseract**（Rust 侧 `ocr-engine` crate 封装，**仅 `opendesk-worker` 链接**） |
+| 引擎 | **Tesseract**（Rust 侧 `ocr-engine` crate 封装，**仅 `dingda-worker` 链接**） |
 | 推理位置 | Worker 进程 |
 | 云端 OCR | **禁止**（MVP 及可预见版本） |
 
@@ -37,7 +37,7 @@ Tesseract 依赖 `*.traineddata` 文件（`TESSDATA_PREFIX` 目录）。无已�
 
 | 项 | 规则 |
 |----|------|
-| 存储路径 | `{data_local}/OpenDesk/tessdata/*.traineddata` |
+| 存储路径 | `{data_local}/DingDa/tessdata/*.traineddata` |
 | 安装包 | **不包含**任何 `traineddata` |
 | 首次使用 | 用户打开 OCR/设置页 → 浏览语言列表 → **点击下载** |
 | 下载执行 | **Tauri 主进程** HTTP 下载（async + 进度 Event）；**不在 Worker 内下载**（避免与 OCR 任务争用且便于 UI 展示） |
@@ -46,7 +46,7 @@ Tesseract 依赖 `*.traineddata` 文件（`TESSDATA_PREFIX` 目录）。无已�
 
 ### 3. 元数据
 
-- `opendesk.db.ocr_language_pack` 表记录：语言代码、显示名、下载 URL、本地状态、`installed_at`。
+- `dingda.db.ocr_language_pack` 表记录：语言代码、显示名、下载 URL、本地状态、`installed_at`。
 - Migration **种子数据**写入可选语言目录（如 `eng`、`chi_sim`、`chi_tra`），默认均为 `not_installed`。
 - `ocr.submit` 须指定或推断 `language_codes`；**任一未安装则拒绝入队**，返回可展示错误码 `OCR_LANGUAGE_NOT_INSTALLED`。
 
@@ -56,7 +56,7 @@ Tesseract 依赖 `*.traineddata` 文件（`TESSDATA_PREFIX` 目录）。无已�
 Worker 启动 OCR 任务前：
   读取 job.payload.language_codes
   校验 tessdata 目录下对应 .traineddata 存在
-  设置 TESSDATA_PREFIX={data}/OpenDesk/tessdata
+  设置 TESSDATA_PREFIX={data}/DingDa/tessdata
   调用 Tesseract（组合语言如 eng+chi_sim）
 ```
 
@@ -72,7 +72,7 @@ Worker **不发起**模型下载；仅读取已安装文件。
 
 | 阶段 | 包含内容 |
 |------|----------|
-| `pnpm tauri build` / 安装包 | 应用、`opendesk-worker`、**无 tessdata** |
+| `pnpm tauri build` / 安装包 | 应用、`dingda-worker`、**无 tessdata** |
 | 用户首次 OCR | 须先下载至少一种语言包 |
 
 ## Alternatives

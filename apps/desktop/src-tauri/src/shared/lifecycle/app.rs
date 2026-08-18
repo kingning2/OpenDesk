@@ -8,7 +8,7 @@
 /// 作者：Xiaoman
 /// 创建时间：2026-08-18
 pub fn on_setup() {
-    tracing::info!(target: "opendesk.lifecycle", "应用 Rust 壳 setup 完成");
+    tracing::info!(target: "dingda.lifecycle", "应用 Rust 壳 setup 完成");
 }
 
 /// 应用退出 — 侧车停止由 `lib.rs` `RunEvent::Exit` 调用方负责，此处仅打日志。
@@ -16,5 +16,5 @@ pub fn on_setup() {
 /// 作者：Xiaoman
 /// 创建时间：2026-08-18
 pub fn on_exit() {
-    tracing::info!(target: "opendesk.lifecycle", "应用正在退出");
+    tracing::info!(target: "dingda.lifecycle", "应用正在退出");
 }

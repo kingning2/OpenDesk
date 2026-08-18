@@ -9,7 +9,7 @@ use crate::shared::ipc::IpcResponse;
 use crate::shared::state::AppState;
 use app::account::AccountStore;
 use common::contracts::ChannelAccount;
-use opendesk_macros::timed;
+use dingda_macros::timed;
 use serde::Deserialize;
 use std::sync::Arc;
 use tauri::State;
@@ -44,17 +44,17 @@ pub async fn account_connect(
     accounts: State<'_, AccountHandle>,
     dispatcher: State<'_, Arc<ChannelDispatcher>>,
     request: AccountConnectRequest,
-) -> common::OpenDeskResult<IpcResponse<String>> {
+) -> common::DingDaResult<IpcResponse<String>> {
     state
         .license
         .ensure_licensed()
         .await
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
 
     let account = accounts
         .store
         .get_account(request.owner_id, &request.account_id)
-        .map_err(common::OpenDeskError::wrap)?
+        .map_err(common::DingDaError::wrap)?
         .ok_or_else(|| format!("账号不存在: {}", request.account_id))?;
     if !account.has_cookie() {
         return Err("账号缺少 Cookie，请先扫码登录".into());
@@ -65,7 +65,7 @@ pub async fn account_connect(
     dispatcher
         .connect(&channel_account)
         .await
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(
         dispatcher
             .connection_state(&request.account_id)
@@ -82,18 +82,18 @@ pub async fn account_disconnect(
     state: State<'_, AppState>,
     dispatcher: State<'_, Arc<ChannelDispatcher>>,
     request: AccountConnectRequest,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     state
         .license
         .ensure_licensed()
         .await
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
 
     tracing::info!(account = %request.account_id, "断开闲鱼连接");
     dispatcher
         .disconnect(&request.account_id)
         .await
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(()))
 }
 
@@ -103,12 +103,12 @@ pub async fn account_connection_state(
     state: State<'_, AppState>,
     dispatcher: State<'_, Arc<ChannelDispatcher>>,
     request: AccountConnectRequest,
-) -> common::OpenDeskResult<IpcResponse<String>> {
+) -> common::DingDaResult<IpcResponse<String>> {
     state
         .license
         .ensure_licensed()
         .await
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
 
     Ok(IpcResponse::ok(
         dispatcher

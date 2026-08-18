@@ -5,7 +5,7 @@
 ## 运行
 
 ```bash
-python skills/opendesk/scripts/sync_contracts.py
+python skills/dingda/scripts/sync_contracts.py
 ```
 
 ## 输出

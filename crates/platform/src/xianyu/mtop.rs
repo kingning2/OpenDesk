@@ -11,7 +11,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 use common::constants::xianyu;
-use common::OpenDeskResult;
+use common::DingDaResult;
 
 use super::cookie::{parse_cookies, sign_token};
 use super::sign::generate_sign;
@@ -74,7 +74,7 @@ pub struct MtopClient {
 }
 
 impl MtopClient {
-    pub fn new(cookie_str: &str) -> OpenDeskResult<Self> {
+    pub fn new(cookie_str: &str) -> DingDaResult<Self> {
         let mut headers = HeaderMap::new();
         headers.insert(USER_AGENT, HeaderValue::from_static("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"));
         headers.insert(REFERER, HeaderValue::from_static(xianyu::WEB_ORIGIN));
@@ -96,7 +96,7 @@ impl MtopClient {
     }
 
     /// 执行 mtop 请求；TOKEN_EXPIRED 时写回 set-cookie 并重试（最多 3 次）。
-    pub async fn call(&self, request: &MtopRequest) -> OpenDeskResult<MtopResponse> {
+    pub async fn call(&self, request: &MtopRequest) -> DingDaResult<MtopResponse> {
         let mut retry = 0;
         loop {
             let response = self.call_once(request).await?;
@@ -117,7 +117,7 @@ impl MtopClient {
         }
     }
 
-    async fn call_once(&self, request: &MtopRequest) -> OpenDeskResult<MtopResponse> {
+    async fn call_once(&self, request: &MtopRequest) -> DingDaResult<MtopResponse> {
         let cookie_str = self.cookie.read().await.clone();
         let cookies = parse_cookies(&cookie_str);
         let token = sign_token(&cookies).unwrap_or_default();

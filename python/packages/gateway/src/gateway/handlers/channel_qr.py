@@ -17,7 +17,7 @@ from gateway.login.qr_session import (
 )
 from shared.logging import bind_log_context
 
-logger = logging.getLogger("opendesk.sidecar.qr")
+logger = logging.getLogger("dingda.sidecar.qr")
 
 
 async def handle_qr_start(payload: dict[str, Any] | None, *, trace_id: str) -> dict[str, Any]:

@@ -41,7 +41,7 @@ pub struct PublishLogClearRequest {
 pub fn publish_log_list(
     state: State<'_, PublishLogHandle>,
     request: PublishLogListRequest,
-) -> common::OpenDeskResult<IpcResponse<(Vec<PublishLog>, u32)>> {
+) -> common::DingDaResult<IpcResponse<(Vec<PublishLog>, u32)>> {
     let service = PublishLogService::new(state.store.as_ref());
     let query = PublishLogQuery {
         page: request.page,
@@ -58,7 +58,7 @@ pub fn publish_log_list(
 pub fn publish_log_clear(
     state: State<'_, PublishLogHandle>,
     request: PublishLogClearRequest,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = PublishLogService::new(state.store.as_ref());
     service.clear_older_than(request.owner_id, request.days)?;
     Ok(IpcResponse::ok(()))

@@ -56,7 +56,7 @@ function rewriteCliTarget(argv, target) {
 
 // Sidecar spawn defaults to uv; fall back to python when uv is not installed.
 if (!commandExists("uv")) {
-  env.OPENDESK_USE_UV = "0";
+  env.DINGDA_USE_UV = "0";
 }
 
 const cliTarget = parseCliTarget(normalizedArgs);

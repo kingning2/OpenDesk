@@ -4,7 +4,7 @@
 //! 创建时间：2026-08-18
 
 use common::events::EventSink;
-use common::OpenDeskResult;
+use common::DingDaResult;
 use tauri::{AppHandle, Emitter};
 
 /// 将 `common::events::EventSink` 桥接到 `tauri::AppHandle::emit`。
@@ -22,11 +22,11 @@ impl TauriEventSink {
 }
 
 impl EventSink for TauriEventSink {
-    fn publish(&self, topic: &str, payload: &[u8]) -> OpenDeskResult<()> {
+    fn publish(&self, topic: &str, payload: &[u8]) -> DingDaResult<()> {
         let json: serde_json::Value = serde_json::from_slice(payload)
-            .map_err(|e| common::OpenDeskError::Serialization(e.to_string()))?;
+            .map_err(|e| common::DingDaError::Serialization(e.to_string()))?;
         self.app
             .emit(topic, json)
-            .map_err(|e| common::OpenDeskError::Internal(e.to_string()))
+            .map_err(|e| common::DingDaError::Internal(e.to_string()))
     }
 }

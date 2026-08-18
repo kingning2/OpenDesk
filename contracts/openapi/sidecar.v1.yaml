@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: OpenDesk Sidecar API
+  title: DingDa Sidecar API
   version: v1
   description: |
     Rust Application Core 调用 Python Runtime 的本机 HTTP API。

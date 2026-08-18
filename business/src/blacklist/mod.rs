@@ -5,7 +5,7 @@
 //! - 新建（批量 buyer_ids）、查询、启用切换、删除、批量删除；
 //! - 平台黑名单：查询列表。
 
-use common::OpenDeskResult;
+use common::DingDaResult;
 use serde::{Deserialize, Serialize};
 
 /// 个人黑名单条目。
@@ -59,26 +59,23 @@ pub trait BlacklistStore: Send + Sync {
         &self,
         owner_id: i64,
         query: &BlacklistQuery,
-    ) -> OpenDeskResult<(Vec<PersonalBlacklistItem>, u32)>;
+    ) -> DingDaResult<(Vec<PersonalBlacklistItem>, u32)>;
 
     /// 分页查询平台黑名单。
     fn list_platform(
         &self,
         owner_id: i64,
         query: &BlacklistQuery,
-    ) -> OpenDeskResult<(Vec<PlatformBlacklistItem>, u32)>;
+    ) -> DingDaResult<(Vec<PlatformBlacklistItem>, u32)>;
 
     /// 新建个人黑名单条目。
-    fn create_personal(
-        &self,
-        item: &PersonalBlacklistItem,
-    ) -> OpenDeskResult<PersonalBlacklistItem>;
+    fn create_personal(&self, item: &PersonalBlacklistItem) -> DingDaResult<PersonalBlacklistItem>;
 
     /// 切换启用状态。
-    fn set_enabled(&self, owner_id: i64, id: i64, enabled: bool) -> OpenDeskResult<()>;
+    fn set_enabled(&self, owner_id: i64, id: i64, enabled: bool) -> DingDaResult<()>;
 
     /// 删除。
-    fn delete(&self, owner_id: i64, id: i64) -> OpenDeskResult<()>;
+    fn delete(&self, owner_id: i64, id: i64) -> DingDaResult<()>;
 }
 
 /// 黑名单服务。
@@ -96,7 +93,7 @@ impl<'a> BlacklistService<'a> {
         &self,
         owner_id: i64,
         query: &BlacklistQuery,
-    ) -> OpenDeskResult<(Vec<PersonalBlacklistItem>, u32)> {
+    ) -> DingDaResult<(Vec<PersonalBlacklistItem>, u32)> {
         self.store.list_personal(owner_id, query)
     }
 
@@ -105,7 +102,7 @@ impl<'a> BlacklistService<'a> {
         &self,
         owner_id: i64,
         query: &BlacklistQuery,
-    ) -> OpenDeskResult<(Vec<PlatformBlacklistItem>, u32)> {
+    ) -> DingDaResult<(Vec<PlatformBlacklistItem>, u32)> {
         self.store.list_platform(owner_id, query)
     }
 
@@ -117,7 +114,7 @@ impl<'a> BlacklistService<'a> {
         account_id: Option<&str>,
         item_id: Option<&str>,
         reason: Option<&str>,
-    ) -> OpenDeskResult<PersonalBlacklistItem> {
+    ) -> DingDaResult<PersonalBlacklistItem> {
         let buyer_id = buyer_id.trim();
         if buyer_id.is_empty() {
             return Err("买家 ID 不能为空".to_string().into());
@@ -146,12 +143,12 @@ impl<'a> BlacklistService<'a> {
     }
 
     /// 切换启用状态。
-    pub fn set_enabled(&self, owner_id: i64, id: i64, enabled: bool) -> OpenDeskResult<()> {
+    pub fn set_enabled(&self, owner_id: i64, id: i64, enabled: bool) -> DingDaResult<()> {
         self.store.set_enabled(owner_id, id, enabled)
     }
 
     /// 删除。
-    pub fn delete(&self, owner_id: i64, id: i64) -> OpenDeskResult<()> {
+    pub fn delete(&self, owner_id: i64, id: i64) -> DingDaResult<()> {
         self.store.delete(owner_id, id)
     }
 }
@@ -181,7 +178,7 @@ mod tests {
             &self,
             owner_id: i64,
             query: &BlacklistQuery,
-        ) -> OpenDeskResult<(Vec<PersonalBlacklistItem>, u32)> {
+        ) -> DingDaResult<(Vec<PersonalBlacklistItem>, u32)> {
             let list: Vec<PersonalBlacklistItem> = self
                 .items
                 .lock()
@@ -205,13 +202,13 @@ mod tests {
             &self,
             _owner_id: i64,
             _query: &BlacklistQuery,
-        ) -> OpenDeskResult<(Vec<PlatformBlacklistItem>, u32)> {
+        ) -> DingDaResult<(Vec<PlatformBlacklistItem>, u32)> {
             Ok((Vec::new(), 0))
         }
         fn create_personal(
             &self,
             item: &PersonalBlacklistItem,
-        ) -> OpenDeskResult<PersonalBlacklistItem> {
+        ) -> DingDaResult<PersonalBlacklistItem> {
             let mut item = item.clone();
             let mut next = self.next_id.lock().expect("lock");
             *next += 1;
@@ -219,7 +216,7 @@ mod tests {
             self.items.lock().expect("lock").push(item.clone());
             Ok(item)
         }
-        fn set_enabled(&self, owner_id: i64, id: i64, enabled: bool) -> OpenDeskResult<()> {
+        fn set_enabled(&self, owner_id: i64, id: i64, enabled: bool) -> DingDaResult<()> {
             let mut list = self.items.lock().expect("lock");
             let Some(item) = list
                 .iter_mut()
@@ -230,7 +227,7 @@ mod tests {
             item.is_enabled = enabled;
             Ok(())
         }
-        fn delete(&self, owner_id: i64, id: i64) -> OpenDeskResult<()> {
+        fn delete(&self, owner_id: i64, id: i64) -> DingDaResult<()> {
             self.items
                 .lock()
                 .expect("lock")

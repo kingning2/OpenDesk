@@ -10,7 +10,7 @@ use super::message::{device_id_from_cookie, now_ms};
 use super::sign::generate_sign;
 
 use common::constants::xianyu;
-use common::{OpenDeskError, OpenDeskResult};
+use common::{DingDaError, DingDaResult};
 
 const TOKEN_URL: &str = xianyu::LOGIN_TOKEN_URL;
 const HAS_LOGIN_URL: &str = xianyu::HAS_LOGIN_URL;
@@ -24,7 +24,7 @@ pub struct XianyuApi {
 }
 
 impl XianyuApi {
-    pub fn new(cookie_str: &str) -> OpenDeskResult<Self> {
+    pub fn new(cookie_str: &str) -> DingDaResult<Self> {
         let mut headers = HeaderMap::new();
         headers.insert(USER_AGENT, HeaderValue::from_static("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"));
         headers.insert(REFERER, HeaderValue::from_static(xianyu::WEB_ORIGIN));
@@ -48,7 +48,7 @@ impl XianyuApi {
 
     /// 校验 Cookie 是否仍有效（`hasLogin.do` 返回 success）。
     #[allow(dead_code)]
-    pub async fn has_login(&self) -> OpenDeskResult<bool> {
+    pub async fn has_login(&self) -> DingDaResult<bool> {
         let cookie_str = self.cookie.read().await.clone();
         let cookies = parse_cookies(&cookie_str);
         let hid = cookies.get("unb").cloned().unwrap_or_default();
@@ -109,7 +109,7 @@ impl XianyuApi {
     /// 客户端需用新 token 重新签名后重试。本方法实现：
     /// 1. **预热**：cookie 缺 `_m_h5_tk` 时先发一次空签名请求，触发服务端下发；
     /// 2. **重试**：失败且 set-cookie 更新了 `_m_h5_tk`（token 变化）时，重签名再试（最多 3 次）。
-    pub async fn fetch_token(&self) -> OpenDeskResult<String> {
+    pub async fn fetch_token(&self) -> DingDaResult<String> {
         let mut current_token = self.sign_token_value().await;
 
         // 预热：cookie 缺 _m_h5_tk 时先请求一次，让服务端下发签名 token。
@@ -119,12 +119,12 @@ impl XianyuApi {
             current_token = self.sign_token_value().await;
         }
         if current_token.is_empty() {
-            return Err(OpenDeskError::validation(
+            return Err(DingDaError::validation(
                 "cookie 缺少 _m_h5_tk，无法生成有效签名，请重新扫码登录",
             ));
         }
 
-        let mut last_error = OpenDeskError::internal("token 获取失败");
+        let mut last_error = DingDaError::internal("token 获取失败");
         for attempt in 0..3 {
             match self.fetch_token_once().await {
                 Ok(token) => return Ok(token),
@@ -150,14 +150,14 @@ impl XianyuApi {
     }
 
     /// 执行一次 token 接口请求（带 set-cookie 写回）。
-    async fn fetch_token_once(&self) -> OpenDeskResult<String> {
+    async fn fetch_token_once(&self) -> DingDaResult<String> {
         let cookie_str = self.cookie.read().await.clone();
         let cookies = parse_cookies(&cookie_str);
         // 校验 cookie 完整性（unb 必须存在）。
-        my_id(&cookies).ok_or_else(|| OpenDeskError::validation("cookie 缺少 unb"))?;
+        my_id(&cookies).ok_or_else(|| DingDaError::validation("cookie 缺少 unb"))?;
         let token = sign_token(&cookies).unwrap_or_default();
         let device_id = device_id_from_cookie(&cookie_str)
-            .ok_or_else(|| OpenDeskError::validation("cookie 缺少 unb"))?;
+            .ok_or_else(|| DingDaError::validation("cookie 缺少 unb"))?;
 
         let data_val = format!(
             r#"{{"appKey":"{}","deviceId":"{}"}}"#,

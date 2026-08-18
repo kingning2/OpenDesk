@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "opendesk://agent/ipc/ping.request/v1",
+  "$id": "dingda://agent/ipc/ping.request/v1",
   "title": "agent/ipc/ping.request",
   "type": "object",
   "required": [],

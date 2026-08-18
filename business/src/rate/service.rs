@@ -7,7 +7,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::gateway::{RateGateway, RateResult};
-use common::OpenDeskResult;
+use common::DingDaResult;
 
 /// 评价内容配置（账号级）。
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -76,7 +76,7 @@ impl<'a> RateService<'a> {
     }
 
     /// 评价买家；成功后更新订单评价状态。
-    pub async fn rate_buyer(&self, trade_id: &str, feedback: &str) -> OpenDeskResult<RateResult> {
+    pub async fn rate_buyer(&self, trade_id: &str, feedback: &str) -> DingDaResult<RateResult> {
         let result = self.gateway.rate_buyer(trade_id, feedback).await?;
         if result.success {
             // 订单号与 trade_id 相同（闲鱼交易号即订单号）。
@@ -102,7 +102,7 @@ mod tests {
 
     #[async_trait]
     impl RateGateway for MockGateway {
-        async fn rate_buyer(&self, trade_id: &str, feedback: &str) -> OpenDeskResult<RateResult> {
+        async fn rate_buyer(&self, trade_id: &str, feedback: &str) -> DingDaResult<RateResult> {
             if self.success {
                 Ok(RateResult {
                     success: true,
@@ -116,7 +116,7 @@ mod tests {
             }
         }
 
-        async fn update_rated(&self, _order_no: &str, is_rated: bool) -> OpenDeskResult<bool> {
+        async fn update_rated(&self, _order_no: &str, is_rated: bool) -> DingDaResult<bool> {
             self.rated.store(is_rated, Ordering::SeqCst);
             Ok(true)
         }

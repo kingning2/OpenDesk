@@ -57,22 +57,22 @@ def to_serializable_cookies(cookies: list[dict[str, Any]]) -> list[dict[str, Any
 def resolve_user_agent(platform: str) -> str:
     """按平台解析登录 User-Agent，兼容旧闲鱼变量名。"""
     platform_key = platform.upper()
-    configured = os.getenv(f"OPENDESK_{platform_key}_LOGIN_USER_AGENT", "").strip()
+    configured = os.getenv(f"DINGDA_{platform_key}_LOGIN_USER_AGENT", "").strip()
     if not configured and platform == "xianyu":
-        configured = os.getenv("OPENDESK_XIANYU_LOGIN_USER_AGENT", "").strip()
+        configured = os.getenv("DINGDA_XIANYU_LOGIN_USER_AGENT", "").strip()
     return configured or CHROME_DESKTOP_UA
 
 
 def resolve_proxy(platform: str) -> dict[str, str] | None:
     """按平台解析 Playwright 代理配置，兼容旧闲鱼变量名。"""
     platform_key = platform.upper()
-    server = os.getenv(f"OPENDESK_{platform_key}_PROXY_SERVER", "").strip()
-    username = os.getenv(f"OPENDESK_{platform_key}_PROXY_USERNAME", "").strip()
-    password = os.getenv(f"OPENDESK_{platform_key}_PROXY_PASSWORD", "").strip()
+    server = os.getenv(f"DINGDA_{platform_key}_PROXY_SERVER", "").strip()
+    username = os.getenv(f"DINGDA_{platform_key}_PROXY_USERNAME", "").strip()
+    password = os.getenv(f"DINGDA_{platform_key}_PROXY_PASSWORD", "").strip()
     if platform == "xianyu" and not server:
-        server = os.getenv("OPENDESK_XIANYU_PROXY_SERVER", "").strip()
-        username = username or os.getenv("OPENDESK_XIANYU_PROXY_USERNAME", "").strip()
-        password = password or os.getenv("OPENDESK_XIANYU_PROXY_PASSWORD", "").strip()
+        server = os.getenv("DINGDA_XIANYU_PROXY_SERVER", "").strip()
+        username = username or os.getenv("DINGDA_XIANYU_PROXY_USERNAME", "").strip()
+        password = password or os.getenv("DINGDA_XIANYU_PROXY_PASSWORD", "").strip()
     if not server:
         return None
     proxy: dict[str, str] = {"server": server}

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "opendesk://channel/ipc/send.request/v1",
+  "$id": "dingda://channel/ipc/send.request/v1",
   "title": "channel/ipc/send.request",
   "type": "object",
   "required": ["conversation_id", "content"],

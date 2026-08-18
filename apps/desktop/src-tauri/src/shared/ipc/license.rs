@@ -4,8 +4,8 @@
 //! ?????2026-07-21
 
 use common::license::{LicenseActivateRequest, LicenseStatus};
-use common::OpenDeskResult;
-use opendesk_macros::timed;
+use common::DingDaResult;
+use dingda_macros::timed;
 
 use crate::shared::ipc::IpcResponse;
 use crate::state::AppState;
@@ -24,7 +24,7 @@ use crate::state::AppState;
 #[timed]
 pub async fn license_status(
     state: tauri::State<'_, AppState>,
-) -> OpenDeskResult<IpcResponse<LicenseStatus>> {
+) -> DingDaResult<IpcResponse<LicenseStatus>> {
     Ok(IpcResponse::ok(
         state
             .license
@@ -48,7 +48,7 @@ pub async fn license_status(
 #[timed]
 pub async fn license_machine_code(
     state: tauri::State<'_, AppState>,
-) -> OpenDeskResult<IpcResponse<String>> {
+) -> DingDaResult<IpcResponse<String>> {
     Ok(IpcResponse::ok(
         state
             .license
@@ -74,7 +74,7 @@ pub async fn license_machine_code(
 pub async fn license_activate(
     state: tauri::State<'_, AppState>,
     request: LicenseActivateRequest,
-) -> OpenDeskResult<IpcResponse<LicenseStatus>> {
+) -> DingDaResult<IpcResponse<LicenseStatus>> {
     Ok(IpcResponse::ok(
         state
             .license

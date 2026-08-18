@@ -1,10 +1,10 @@
 [package]
-name = "opendesk"
+name = "dingda"
 version.workspace = true
 edition.workspace = true
 
 [lib]
-name = "opendesk_lib"
+name = "dingda_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [features]
@@ -17,7 +17,7 @@ tauri-build = { workspace = true }
 
 [dependencies]
 adapter = { path = "../../../crates/adapter" }
-app = { package = "opendesk-business", path = "../../../business" }
+app = { package = "dingda-business", path = "../../../business" }
 agent = { path = "../../../crates/agent" }
 async-trait = { workspace = true }
 common = { path = "../../../crates/common" }
@@ -27,7 +27,7 @@ diesel = { workspace = true }
 futures-util = { workspace = true }
 kernel = { path = "../../../crates/kernel" }
 md-5 = { workspace = true }
-opendesk-macros = { path = "../../../crates/opendesk-macros" }
+dingda-macros = { path = "../../../crates/dingda-macros" }
 platform = { path = "../../../crates/platform" }
 ports = { path = "../../../crates/ports" }
 rand = { workspace = true }

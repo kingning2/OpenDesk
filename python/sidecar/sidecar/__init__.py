@@ -1,1 +1,1 @@
-"""OpenDesk Python sidecar package."""
+"""DingDa Python sidecar package."""

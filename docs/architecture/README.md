@@ -1,6 +1,6 @@
 # Architecture
 
-OpenDesk 架构文档与 ADR 存放目录。
+DingDa 架构文档与 ADR 存放目录。
 
 ## 三层边界
 

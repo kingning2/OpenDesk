@@ -7,7 +7,7 @@
 //! 创建时间：2026-08-11
 
 use common::contracts::{AiIpcConfigRequest, AiIpcConfigResponse};
-use common::OpenDeskResult;
+use common::DingDaResult;
 use std::io;
 use std::path::PathBuf;
 use tokio::sync::Mutex;
@@ -48,7 +48,7 @@ impl AiConfigStore {
     ///
     /// # 返回值
     /// 配置内容，或错误描述。
-    pub async fn get(&self) -> OpenDeskResult<AiIpcConfigResponse> {
+    pub async fn get(&self) -> DingDaResult<AiIpcConfigResponse> {
         let _guard = self.lock.lock().await;
         match std::fs::read(&self.path) {
             Ok(bytes) => Ok(serde_json::from_slice::<AiIpcConfigResponse>(&bytes)
@@ -71,7 +71,7 @@ impl AiConfigStore {
     ///
     /// # 返回值
     /// 持久化后的配置，或错误描述。
-    pub async fn set(&self, config: AiIpcConfigRequest) -> OpenDeskResult<AiIpcConfigResponse> {
+    pub async fn set(&self, config: AiIpcConfigRequest) -> DingDaResult<AiIpcConfigResponse> {
         let _guard = self.lock.lock().await;
         let response = AiIpcConfigResponse {
             providers: config.providers,

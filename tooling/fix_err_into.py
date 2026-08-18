@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Add .into() to Err(...) when migrating to OpenDeskResult."""
+"""Add .into() to Err(...) when migrating to DingDaResult."""
 
 import re
 from pathlib import Path

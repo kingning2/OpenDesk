@@ -36,7 +36,7 @@ pub struct SinglePublishRequest {
 pub async fn publish_capability(
     state: State<'_, PublishHandle>,
     request: CapabilityRequest,
-) -> common::OpenDeskResult<IpcResponse<AccountCapability>> {
+) -> common::DingDaResult<IpcResponse<AccountCapability>> {
     let cookie = state
         .gateway
         .account_cookie(request.user_id, &request.account_id)?;
@@ -60,7 +60,7 @@ pub async fn publish_capability(
 pub async fn publish_single(
     state: State<'_, PublishHandle>,
     request: SinglePublishRequest,
-) -> common::OpenDeskResult<IpcResponse<PublishServiceResult>> {
+) -> common::DingDaResult<IpcResponse<PublishServiceResult>> {
     let service = PublishService::new(state.gateway.as_ref());
     let publish_request = PublishRequest {
         user_id: request.user_id,

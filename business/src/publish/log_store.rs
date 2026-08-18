@@ -4,7 +4,7 @@
 //! - 分页查询（账号 / 状态筛选）；
 //! - 清空 N 天前的日志（默认保留最近 10 天）。
 
-use common::OpenDeskResult;
+use common::DingDaResult;
 use serde::{Deserialize, Serialize};
 
 /// 发布状态。
@@ -67,10 +67,10 @@ pub struct PublishLogQuery {
 /// 日志存储 Port。
 pub trait PublishLogStore: Send + Sync {
     /// 分页查询。
-    fn list_logs(&self, owner_id: i64, query: &PublishLogQuery) -> OpenDeskResult<Vec<PublishLog>>;
+    fn list_logs(&self, owner_id: i64, query: &PublishLogQuery) -> DingDaResult<Vec<PublishLog>>;
 
     /// 清空 N 天前的日志（days=0 清空全部；created_at 为空视为保留）。
-    fn clear_older_than(&self, owner_id: i64, days: u32) -> OpenDeskResult<()>;
+    fn clear_older_than(&self, owner_id: i64, days: u32) -> DingDaResult<()>;
 }
 
 /// 日志服务。
@@ -88,14 +88,14 @@ impl<'a> PublishLogService<'a> {
         &self,
         owner_id: i64,
         query: &PublishLogQuery,
-    ) -> OpenDeskResult<(Vec<PublishLog>, u32)> {
+    ) -> DingDaResult<(Vec<PublishLog>, u32)> {
         let all = self.store.list_logs(owner_id, query)?;
         let total = all.len() as u32;
         Ok((all, total))
     }
 
     /// 清空 N 天前日志。
-    pub fn clear_older_than(&self, owner_id: i64, days: u32) -> OpenDeskResult<()> {
+    pub fn clear_older_than(&self, owner_id: i64, days: u32) -> DingDaResult<()> {
         self.store.clear_older_than(owner_id, days)
     }
 }
@@ -114,7 +114,7 @@ mod tests {
             &self,
             owner_id: i64,
             query: &PublishLogQuery,
-        ) -> OpenDeskResult<Vec<PublishLog>> {
+        ) -> DingDaResult<Vec<PublishLog>> {
             let logs = self.logs.lock().expect("lock");
             Ok(logs
                 .iter()
@@ -126,7 +126,7 @@ mod tests {
                 .cloned()
                 .collect())
         }
-        fn clear_older_than(&self, owner_id: i64, days: u32) -> OpenDeskResult<()> {
+        fn clear_older_than(&self, owner_id: i64, days: u32) -> DingDaResult<()> {
             let mut logs = self.logs.lock().expect("lock");
             let cutoff = if days == 0 {
                 None

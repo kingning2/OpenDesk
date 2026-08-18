@@ -17,7 +17,7 @@ import type { StoreApi } from "zustand";
 export type DeskStore<T> = UseBoundStore<StoreApi<T>>;
 
 /**
- * 创建 OpenDesk 约定的 Zustand store（React hook）。
+ * 创建 DingDa 约定的 Zustand store（React hook）。
  *
  * 命名建议：`chatStore`、`userStore`（见 frontend 规范）。
  *

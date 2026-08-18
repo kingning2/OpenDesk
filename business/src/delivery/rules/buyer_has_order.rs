@@ -2,7 +2,7 @@
 
 use crate::delivery::base::{DeliveryRule, RuleCheckResult};
 use crate::delivery::context::DeliveryCheckContext;
-use common::OpenDeskResult;
+use common::DingDaResult;
 
 /// 买家已有订单规则：同一买家在同一卖家下已有其他订单时禁止发货。
 pub struct BuyerHasOrderRule;
@@ -25,7 +25,7 @@ impl DeliveryRule for BuyerHasOrderRule {
         serde_json::json!({ "same_item_only": false })
     }
 
-    fn check(&self, context: &DeliveryCheckContext) -> OpenDeskResult<RuleCheckResult> {
+    fn check(&self, context: &DeliveryCheckContext) -> DingDaResult<RuleCheckResult> {
         let same_item_only = context.config_bool("same_item_only", false);
         let prefix = context.prefix();
         let item_id = if same_item_only {
@@ -89,7 +89,7 @@ mod tests {
             _buyer_id: &str,
             _exclude_order_no: &str,
             _item_id: Option<&str>,
-        ) -> OpenDeskResult<u32> {
+        ) -> DingDaResult<u32> {
             Ok(self.0)
         }
         fn count_owner_orders(
@@ -98,7 +98,7 @@ mod tests {
             _buyer_id: &str,
             _exclude_order_no: &str,
             _item_id: Option<&str>,
-        ) -> OpenDeskResult<u32> {
+        ) -> DingDaResult<u32> {
             Ok(0)
         }
         fn count_unconfirmed_orders(
@@ -107,7 +107,7 @@ mod tests {
             _buyer_id: &str,
             _exclude_order_no: &str,
             _item_id: Option<&str>,
-        ) -> OpenDeskResult<u32> {
+        ) -> DingDaResult<u32> {
             Ok(0)
         }
         fn find_blacklist(
@@ -116,10 +116,10 @@ mod tests {
             _account_id: &str,
             _buyer_id: &str,
             _item_id: Option<&str>,
-        ) -> OpenDeskResult<Option<crate::delivery::data::BlacklistRecord>> {
+        ) -> DingDaResult<Option<crate::delivery::data::BlacklistRecord>> {
             Ok(None)
         }
-        fn fetch_buyer_rate_count(&self, _buyer_id: &str) -> OpenDeskResult<u32> {
+        fn fetch_buyer_rate_count(&self, _buyer_id: &str) -> DingDaResult<u32> {
             Ok(10)
         }
     }

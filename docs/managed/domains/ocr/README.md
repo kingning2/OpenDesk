@@ -2,7 +2,7 @@
 
 ## 职责
 
-对图片、PDF、扫描件等做 **本地文字识别**（**Tesseract**），结果结构化存入 `opendesk.db`。
+对图片、PDF、扫描件等做 **本地文字识别**（**Tesseract**），结果结构化存入 `dingda.db`。
 
 - **语言包管理**：展示可下载 tessdata 列表；用户 **点击下载/删除**（不随安装包分发）
 - 提交 OCR 任务（须已安装所需 `language_codes`；关联可选 `customer_id`）
@@ -36,7 +36,7 @@ AI 通过只读工具 `ocr.get_text` 获取已绑定客户的识别文本（CHG-
 React（OCR 页 + 语言包下载页）
   → ocr.model.list / download / delete     （主进程 HTTP 下载 → tessdata/）
   → ocr.submit / get_result / cancel       （主进程入队）
-  → opendesk-worker（Tesseract + 已安装 tessdata → 写 ocr_* 表）
+  → dingda-worker（Tesseract + 已安装 tessdata → 写 ocr_* 表）
   → Event → React 刷新
 ```
 
@@ -50,10 +50,10 @@ flowchart TB
         DL[model_download\nHTTP → tessdata/]
         ENQ[submit → 入队]
     end
-    subgraph Worker["opendesk-worker"]
+    subgraph Worker["dingda-worker"]
         TE[Tesseract\nTESSDATA_PREFIX]
     end
-    DB[(opendesk.db)]
+    DB[(dingda.db)]
 
     LP --> DL
     DL --> DB
@@ -63,7 +63,7 @@ flowchart TB
     DB --> OCR
 ```
 
-**tessdata 路径：** `{data_local}/OpenDesk/tessdata/*.traineddata`
+**tessdata 路径：** `{data_local}/DingDa/tessdata/*.traineddata`
 
 ## 入口
 
@@ -71,7 +71,7 @@ flowchart TB
 |------|--------------|
 | Rust Feature | `crates/ocr/` |
 | OCR 引擎 | `crates/ocr-engine/`（规划） |
-| Worker | 规划（`opendesk-worker` 已移除，重新引入时实现） |
+| Worker | 规划（`dingda-worker` 已移除，重新引入时实现） |
 | Contract | `contracts/schema/v1/ocr/` |
 | React | `apps/desktop/src/features/ocr/` |
 | ADR | [ADR-0002 Worker](../../decisions/runtime/adr-0002-heavy-work-worker-process.md) · [ADR-0003 Tesseract 本地下载](../../decisions/ocr/adr-0003-tesseract-local-model-on-demand-download.md) |
@@ -97,7 +97,7 @@ flowchart TB
 
 ## 当前状态
 
-**未实现。** OCR 引擎与语言包下载均未做；设计依赖的 `opendesk-worker` / `opendesk.db` 已移除，重新引入时按新 Change 设计。
+**未实现。** OCR 引擎与语言包下载均未做；设计依赖的 `dingda-worker` / `dingda.db` 已移除，重新引入时按新 Change 设计。
 
 ## 当前约束
 

@@ -38,7 +38,7 @@ class JsonLineFormatterTests(unittest.TestCase):
         self.formatter = JsonLineFormatter()
 
     def format_record(self, message: str, **extra: object) -> dict[str, object]:
-        record = logging.LogRecord("opendesk.test", logging.INFO, __file__, 1, message, (), None)
+        record = logging.LogRecord("dingda.test", logging.INFO, __file__, 1, message, (), None)
         for key, value in extra.items():
             setattr(record, key, value)
         rendered = self.formatter.format(record)
@@ -46,13 +46,13 @@ class JsonLineFormatterTests(unittest.TestCase):
         return json.loads(rendered)
 
     def test_contract_shape_and_unicode_are_preserved(self) -> None:
-        entry = self.format_record("你好\nOpenDesk", event="test.started")
+        entry = self.format_record("你好\nDingDa", event="test.started")
 
         self.assertTrue(entry.keys() >= _REQUIRED_FIELDS)
         self.assertTrue(entry.keys() <= _ALLOWED_FIELDS)
         self.assertEqual(entry["schema_version"], "1")
         self.assertEqual(entry["source"], "python")
-        self.assertEqual(entry["message"], "你好\nOpenDesk")
+        self.assertEqual(entry["message"], "你好\nDingDa")
 
     def test_context_is_bound_and_restored(self) -> None:
         with bind_log_context(trace_id="trace-1", task_id="task-1", feature="agent"):
@@ -98,7 +98,7 @@ class JsonLineFormatterTests(unittest.TestCase):
             raise RuntimeError("token=sample-credential person@example.com")
         except RuntimeError:
             record = logging.LogRecord(
-                "opendesk.test",
+                "dingda.test",
                 logging.ERROR,
                 r"C:\Users\Developer\project\module.py",
                 1,
@@ -122,7 +122,7 @@ class LoggingConfigurationTests(unittest.TestCase):
 
     def test_invalid_log_level_falls_back_to_info(self) -> None:
         stream = io.StringIO()
-        with patch.dict(os.environ, {"OPENDESK_LOG_LEVEL": "verbose"}):
+        with patch.dict(os.environ, {"DINGDA_LOG_LEVEL": "verbose"}):
             configure_logging(stream=stream)
 
         self.assertEqual(logging.getLogger().level, logging.INFO)

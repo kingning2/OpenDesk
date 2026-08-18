@@ -1,8 +1,8 @@
 [package]
-name = "opendesk-business"
+name = "dingda-business"
 version.workspace = true
 edition.workspace = true
-description = "OpenDesk 桌面端纯 Rust 业务逻辑（不依赖 Tauri）"
+description = "DingDa 桌面端纯 Rust 业务逻辑（不依赖 Tauri）"
 
 [dependencies]
 adapter = { path = "../crates/adapter" }

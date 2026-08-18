@@ -20,7 +20,7 @@
   cloudflared       └─────────────────┬───────────────────┘
                                       │
                     ┌─────────────────▼───────────────────┐
-                    │  OpenDesk Rust webhook handler        │
+                    │  DingDa Rust webhook handler        │
                     │  GET  /webhook/whatsapp  (verify)   │
                     │  POST /webhook/whatsapp  (inbound)  │
                     └─────────────────┬───────────────────┘
@@ -39,12 +39,12 @@
 | Meta 开发者账号 | [developers.facebook.com](https://developers.facebook.com) |
 | WhatsApp Business 测试号 | Cloud API 测试号码 |
 | App Secret | 用于 `X-Hub-Signature-256` 验签 |
-| Verify Token | 自定义字符串，与 OpenDesk 配置一致 |
-| OpenDesk | CHG-020 已构建，本地 webhook 端口可配置（默认 `8787`） |
+| Verify Token | 自定义字符串，与 DingDa 配置一致 |
+| DingDa | CHG-020 已构建，本地 webhook 端口可配置（默认 `8787`） |
 
 ## 3. 开发环境（推荐首选验收）
 
-### 3.1 启动 OpenDesk webhook
+### 3.1 启动 DingDa webhook
 
 确保桌面端已启动，Rust 监听 `http://127.0.0.1:8787/webhook/whatsapp`（路径以 Contract 为准）。
 
@@ -68,7 +68,7 @@ ngrok http 8787
 
 1. 应用 → WhatsApp → Configuration
 2. **Callback URL：** `https://<tunnel-host>/webhook/whatsapp`
-3. **Verify Token：** 与 OpenDesk 设置中 `WA_VERIFY_TOKEN` 一致
+3. **Verify Token：** 与 DingDa 设置中 `WA_VERIFY_TOKEN` 一致
 4. 点击 **Verify and Save**
 5. Subscribe 字段：`messages`（至少）
 
@@ -93,7 +93,7 @@ ngrok http 8787
 ```text
 Meta → https://wa-hook.staging.example.com/webhook/whatsapp
      → Nginx (TLS)
-     → 内网 OpenDesk 或 staging relay
+     → 内网 DingDa 或 staging relay
 ```
 
 Nginx 示例（仅示意）：
@@ -113,7 +113,7 @@ location /webhook/whatsapp {
 ### 路径 A：Relay + 桌面 WSS（多销售桌面）
 
 ```text
-Meta → Relay (VPS, HTTPS) → WSS push → 各 OpenDesk 客户端
+Meta → Relay (VPS, HTTPS) → WSS push → 各 DingDa 客户端
 ```
 
 - Relay 公网收 webhook，按 `phone_number_id` / `device_id` 路由
@@ -124,7 +124,7 @@ Meta → Relay (VPS, HTTPS) → WSS push → 各 OpenDesk 客户端
 
 ### 路径 B：Always-on 单机 + 命名隧道（小团队演示）
 
-- 一台常开 PC 跑 OpenDesk + cloudflared 命名隧道
+- 一台常开 PC 跑 DingDa + cloudflared 命名隧道
 - 运维简单，不适合大规模
 
 **MVP 验收：** 至少完成 **§3 开发隧道**；路径 A/B 写入运维 runbook，Relay 可与 CHG-020 分阶段实现。

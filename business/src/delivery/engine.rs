@@ -218,7 +218,7 @@ impl<'a> DeliveryEngine<'a> {
 mod tests {
     use super::*;
     use crate::delivery::data::BlacklistRecord;
-    use common::OpenDeskResult;
+    use common::DingDaResult;
 
     struct Data {
         rate: u32,
@@ -233,7 +233,7 @@ mod tests {
             _buyer_id: &str,
             _exclude_order_no: &str,
             _item_id: Option<&str>,
-        ) -> OpenDeskResult<u32> {
+        ) -> DingDaResult<u32> {
             Ok(self.orders)
         }
         fn count_owner_orders(
@@ -242,7 +242,7 @@ mod tests {
             _buyer_id: &str,
             _exclude_order_no: &str,
             _item_id: Option<&str>,
-        ) -> OpenDeskResult<u32> {
+        ) -> DingDaResult<u32> {
             Ok(0)
         }
         fn count_unconfirmed_orders(
@@ -251,7 +251,7 @@ mod tests {
             _buyer_id: &str,
             _exclude_order_no: &str,
             _item_id: Option<&str>,
-        ) -> OpenDeskResult<u32> {
+        ) -> DingDaResult<u32> {
             Ok(0)
         }
         fn find_blacklist(
@@ -260,10 +260,10 @@ mod tests {
             _account_id: &str,
             _buyer_id: &str,
             _item_id: Option<&str>,
-        ) -> OpenDeskResult<Option<BlacklistRecord>> {
+        ) -> DingDaResult<Option<BlacklistRecord>> {
             Ok(self.blacklist.clone())
         }
-        fn fetch_buyer_rate_count(&self, _buyer_id: &str) -> OpenDeskResult<u32> {
+        fn fetch_buyer_rate_count(&self, _buyer_id: &str) -> DingDaResult<u32> {
             Ok(self.rate)
         }
     }

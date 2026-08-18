@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "opendesk://ai/ipc/config.request/v1",
+  "$id": "dingda://ai/ipc/config.request/v1",
   "title": "ai/ipc/config.request",
   "type": "object",
   "required": ["providers", "accounts"],

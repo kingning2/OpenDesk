@@ -2,10 +2,10 @@
 
 ## 职责
 
-OpenDesk 本地持久化的 **唯一 Rust 所有权**：
+DingDa 本地持久化的 **唯一 Rust 所有权**：
 
 - 通用 SQLite `RecordStore` 实现（`ports::repository`），供各使用方经 Port 访问
-- 业务表与领域专用库（crawler.db / opendesk.db）**已随采集/客户/邮箱板块移除**，如后续需要按新 Change 重新引入
+- 业务表与领域专用库（crawler.db / dingda.db）**已随采集/客户/邮箱板块移除**，如后续需要按新 Change 重新引入
 
 ## 非职责
 

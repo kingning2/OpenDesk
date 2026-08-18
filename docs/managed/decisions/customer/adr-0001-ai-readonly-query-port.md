@@ -11,7 +11,7 @@ supersedes: none
 
 ## Context
 
-OpenDesk MVP 要求 AI「记得每个客户」：来源渠道、当前报价、合作状态、沟通摘要。同时用户明确要求：
+DingDa MVP 要求 AI「记得每个客户」：来源渠道、当前报价、合作状态、沟通摘要。同时用户明确要求：
 
 - AI **可以查询**数据库中的客户与价目信息；
 - AI **不能修改**客户数据、报价、合作状态或任何持久化记录。
@@ -61,7 +61,7 @@ Python Agent
 | 创建/编辑客户 | React UI → Rust IPC → UseCase |
 | 更新报价、合作状态 | React UI → Rust IPC → UseCase + 审计表 |
 | 发送邮件 | React UI → Rust mail-net → SMTP |
-| 发送 WhatsApp | React UI → Rust channel → **opendesk-worker（Baileys）** |
+| 发送 WhatsApp | React UI → Rust channel → **dingda-worker（Baileys）** |
 | 记录沟通时间线 | Rust UseCase（在发信/收信/人工备注时写入） |
 
 ### 5. AI 生成前强制上下文
@@ -100,4 +100,4 @@ Python Agent
 **兼容要求：**
 
 - 所有 MVP Agent 功能 Change 须引用本 ADR
-- `skills/opendesk/scripts/check_architecture.py` 应能检测 Python 直连 DB（若尚未覆盖，后续补充规则）
+- `skills/dingda/scripts/check_architecture.py` 应能检测 Python 直连 DB（若尚未覆盖，后续补充规则）

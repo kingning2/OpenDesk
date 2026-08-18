@@ -37,9 +37,9 @@ impl LicenseHostSecurity {
     /// 返回 [`LicenseHostSecurity`]；attestation 密钥可为空（仅开发态）。
     pub fn from_embedded() -> Self {
         Self {
-            attest_key: decode_hex(env!("OPENDESK_LICENSE_ATTEST_KEY_HEX").trim())
+            attest_key: decode_hex(env!("DINGDA_LICENSE_ATTEST_KEY_HEX").trim())
                 .unwrap_or_default(),
-            expected_sha256: env!("OPENDESK_LICENSE_VERIFIER_SHA256").trim().to_string(),
+            expected_sha256: env!("DINGDA_LICENSE_VERIFIER_SHA256").trim().to_string(),
         }
     }
 
@@ -106,7 +106,7 @@ impl LicenseHostSecurity {
             .unwrap_or(0);
         hasher.update(nanos.to_le_bytes());
         hasher.update(std::process::id().to_le_bytes());
-        hasher.update(b"opendesk-nonce");
+        hasher.update(b"dingda-nonce");
         hex_encode(hasher.finalize())
     }
 
@@ -203,10 +203,10 @@ mod tests {
         let security = LicenseHostSecurity::new(b"test-key-32-bytes-pad-pad-pad!!".to_vec(), "");
         let nonce = "abc";
         let hex = security
-            .sign_attestation(nonce, true, "opendesk", 1, "machine")
+            .sign_attestation(nonce, true, "dingda", 1, "machine")
             .expect("sign");
         security
-            .verify_attestation(&hex, nonce, true, "opendesk", 1, "machine")
+            .verify_attestation(&hex, nonce, true, "dingda", 1, "machine")
             .expect("verify");
     }
 

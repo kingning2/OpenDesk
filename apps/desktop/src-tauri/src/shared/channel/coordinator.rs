@@ -13,7 +13,7 @@ use agent::llm::ChatMessage;
 use app::auto_reply::{AutoReplyDecision, ChatInput};
 use common::contracts::{ChannelConversation, ChannelMessage, ChannelSettings};
 use common::events::{emit, AppEvent, ChannelMessageEvent, ChannelStatusEvent, EventSink};
-use common::OpenDeskResult;
+use common::DingDaResult;
 
 use crate::shared::auto_reply::AutoReplyHandle;
 
@@ -67,7 +67,7 @@ impl ChannelCoordinator {
         &self,
         conversation: &ChannelConversation,
         content: &str,
-    ) -> OpenDeskResult<String> {
+    ) -> DingDaResult<String> {
         let message_id = self
             .dispatcher
             .send(&conversation.account_id, &conversation.peer_id, content)

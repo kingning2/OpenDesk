@@ -28,9 +28,9 @@ pub enum BusinessStoreError {
     Poisoned(String),
 }
 
-impl From<BusinessStoreError> for common::OpenDeskError {
+impl From<BusinessStoreError> for common::DingDaError {
     fn from(err: BusinessStoreError) -> Self {
-        common::OpenDeskError::store(err.to_string())
+        common::DingDaError::store(err.to_string())
     }
 }
 

@@ -1,6 +1,6 @@
-//! 编译期渠道平台工具 — 与 `OPENDESK_CHANNEL_PLATFORM` / `platform_*` cfg 对齐。
+//! 编译期渠道平台工具 — 与 `DINGDA_CHANNEL_PLATFORM` / `platform_*` cfg 对齐。
 //!
-//! 构建时通过环境变量 `OPENDESK_CHANNEL_PLATFORM` 选定唯一平台（默认 `xianyu`），
+//! 构建时通过环境变量 `DINGDA_CHANNEL_PLATFORM` 选定唯一平台（默认 `xianyu`），
 //! build.rs 注入 `platform_<id>` cfg，本模块提供运行时常量与条件编译辅助。
 //!
 //! 作者：Xiaoman
@@ -9,7 +9,7 @@
 use crate::protocol::ChannelKind;
 
 /// 当前构建选定的渠道平台 id（编译期常量）。
-pub const ACTIVE_PLATFORM: &str = env!("OPENDESK_CHANNEL_PLATFORM");
+pub const ACTIVE_PLATFORM: &str = env!("DINGDA_CHANNEL_PLATFORM");
 
 /// 解析 [`ACTIVE_PLATFORM`] 为 [`ChannelKind`]。
 ///
@@ -20,7 +20,7 @@ pub const fn active_kind() -> ChannelKind {
         b"xianyu" => ChannelKind::Xianyu,
         b"xiaohongshu" => ChannelKind::Xiaohongshu,
         b"douyin" => ChannelKind::Douyin,
-        _ => panic!("未知 OPENDESK_CHANNEL_PLATFORM"),
+        _ => panic!("未知 DINGDA_CHANNEL_PLATFORM"),
     }
 }
 

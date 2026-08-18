@@ -1,5 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
-"""PyInstaller spec — freeze OpenDesk Python sidecar for Tauri externalBin."""
+"""PyInstaller spec — freeze DingDa Python sidecar for Tauri externalBin."""
 
 from pathlib import Path
 

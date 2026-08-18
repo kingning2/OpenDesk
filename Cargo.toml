@@ -10,7 +10,7 @@ members = [
   "crates/adapter",
   "crates/runtime",
   "crates/storage",
-  "crates/opendesk-macros",
+  "crates/dingda-macros",
   "crates/agent",
   "crates/platform",
 ]
@@ -19,7 +19,7 @@ exclude = ["subscription"]
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-authors = ["OpenDesk Team"]
+authors = ["DingDa Team"]
 license = "MIT"
 
 [workspace.dependencies]

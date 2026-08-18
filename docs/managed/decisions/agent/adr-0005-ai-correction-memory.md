@@ -36,7 +36,7 @@ AI 在邮件润色、WhatsApp 建议等场景会犯错（错误币种、忽略�
 
 ### 1. 数据模型：`ai_correction`
 
-由 **人通过 UI 创建**，Rust UseCase 写入 `opendesk.db`；AI 只读消费（经 Rust 打包进任务 payload，**不**作为 Agent Tool 让 Python 随意查库）。
+由 **人通过 UI 创建**，Rust UseCase 写入 `dingda.db`；AI 只读消费（经 Rust 打包进任务 payload，**不**作为 Agent Tool 让 Python 随意查库）。
 
 | 字段 | 说明 |
 |------|------|

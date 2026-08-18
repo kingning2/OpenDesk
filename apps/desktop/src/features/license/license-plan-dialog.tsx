@@ -67,7 +67,7 @@ export function LicensePlanDialog({
     return null;
   }
 
-  const product = status.product?.trim() || "OpenDesk";
+  const product = status.product?.trim() || "DingDa";
   const expiresAt = status.expiresAt;
   const detailedRemaining = formatLicenseRemainingDetailed(expiresAt, nowSec);
   const expiresLabel = formatLicenseExpiresAt(expiresAt);

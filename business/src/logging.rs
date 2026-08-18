@@ -1,7 +1,7 @@
 //! 应用日志初始化：终端输出 + 内存环形缓冲（供前端日志面板读取）。
 //!
 //! 终端统一格式：`【信息】14:32:05 python 侧车已启动 port=8879`
-//! Python 侧车日志经 `log_pipe` 转发为 target `opendesk.sidecar` 的 tracing 事件，
+//! Python 侧车日志经 `log_pipe` 转发为 target `dingda.sidecar` 的 tracing 事件，
 //! 因此本采集层可统一处理 Rust 与 Python 两侧日志，并在终端与 UI 中标注来源。
 //!
 //! 作者：Xiaoman
@@ -31,7 +31,7 @@ pub struct LogEntry {
     pub level: String,
     /// 来源：rust | python（Python 日志经 log_pipe 转发后标记为 python）。
     pub source: String,
-    /// 目标模块（如 `opendesk_lib::shared::channel::coordinator`）。
+    /// 目标模块（如 `dingda_lib::shared::channel::coordinator`）。
     pub target: String,
     /// 格式化后的日志消息。
     pub message: String,
@@ -164,8 +164,8 @@ fn event_info(event: &Event<'_>) -> (String, String, String) {
     }
 
     let metadata = event.metadata();
-    // Python 侧车日志统一以 `opendesk.sidecar` target 转发进来。
-    let source = if metadata.target() == "opendesk.sidecar" {
+    // Python 侧车日志统一以 `dingda.sidecar` target 转发进来。
+    let source = if metadata.target() == "dingda.sidecar" {
         "python"
     } else {
         "rust"
@@ -275,7 +275,7 @@ impl MessageVisitor {
 /// 创建时间：2026-08-13
 pub fn init_tracing() {
     let filter = EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| EnvFilter::new("info,runtime=debug,opendesk_lib=debug"));
+        .unwrap_or_else(|_| EnvFilter::new("info,runtime=debug,dingda_lib=debug"));
 
     let _ = Registry::default()
         .with(filter)

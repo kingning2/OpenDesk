@@ -11,7 +11,7 @@ supersedes: none
 
 ## Context
 
-OpenDesk 是 Tauri 桌面应用：主进程同时承载 WebView 与 Rust IPC。OCR、PDF 渲染、批量文件处理等任务 CPU/内存占用高、耗时长。
+DingDa 是 Tauri 桌面应用：主进程同时承载 WebView 与 Rust IPC。OCR、PDF 渲染、批量文件处理等任务 CPU/内存占用高、耗时长。
 
 若在主进程执行：
 
@@ -26,12 +26,12 @@ OpenDesk 是 Tauri 桌面应用：主进程同时承载 WebView 与 Rust IPC。O
 ### 1. 三进程模型
 
 - **Tauri 主进程**：UI + 轻量 Rust Core（短 SQL、入队、事件）。
-- **`opendesk-worker` 独立二进制**：OCR 及所有重 CPU/IO 任务。
+- **`dingda-worker` 独立二进制**：OCR 及所有重 CPU/IO 任务。
 - **Python Sidecar**：仅 AI 推理（既有架构）。
 
 ### 2. 任务协调
 
-- 统一使用 `opendesk.db.background_job` 队列表。
+- 统一使用 `dingda.db.background_job` 队列表。
 - 主进程：**只** `INSERT queued` + spawn/monitor Worker。
 - Worker：**claim → 执行 → 写结果表 → 更新 status**。
 - UI 通过 Tauri Event + 轮询 job 状态获取进度，**禁止** Worker 直接调用 WebView API。
@@ -44,7 +44,7 @@ Python 可接收 **已 OCR 的文本** 做 AI 后处理（可选），文本由�
 
 ### 4. 数据库并发
 
-- `opendesk.db` 使用 **WAL** 模式，支持主进程读 + Worker 写。
+- `dingda.db` 使用 **WAL** 模式，支持主进程读 + Worker 写。
 - 长事务仅在 Worker 内；主进程事务须短（<50ms 目标）。
 
 ### 5. 现有爬虫
@@ -70,7 +70,7 @@ YouTube 爬虫当前 in-process；**不强制本 ADR retrofit**。新增强 CPU 
 
 **成本：**
 
-- 新增 `opendesk-worker` crate/binary、部署与升级路径；
+- 新增 `dingda-worker` crate/binary、部署与升级路径；
 - 需设计 job 队列、取消、进度协议；
 - 双进程打开 SQLite 须 WAL + 迁移规范。
 

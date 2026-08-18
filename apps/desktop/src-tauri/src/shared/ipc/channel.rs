@@ -16,8 +16,8 @@ use crate::shared::channel::coordinator::ChannelCoordinator;
 use crate::shared::channel::dispatcher::ChannelDispatcher;
 use crate::shared::channel::ChannelRepo;
 use crate::shared::ipc::IpcResponse;
-use common::OpenDeskResult;
-use opendesk_macros::timed;
+use common::DingDaResult;
+use dingda_macros::timed;
 
 /// QR 扫码会话的登录目标：绑定已有账号，或登录成功后自动创建。
 enum QrTarget {
@@ -36,7 +36,7 @@ fn qr_account_map() -> &'static Mutex<HashMap<String, QrTarget>> {
 #[tauri::command]
 pub async fn channel_state_get(
     repo: State<'_, Arc<ChannelRepo>>,
-) -> OpenDeskResult<IpcResponse<ChannelIpcStateResponse>> {
+) -> DingDaResult<IpcResponse<ChannelIpcStateResponse>> {
     let accounts = repo.list_accounts().map_err(|error| error.to_string())?;
     let conversations = repo
         .list_conversations()
@@ -59,7 +59,7 @@ pub async fn channel_state_get(
 pub async fn channel_state_set(
     repo: State<'_, Arc<ChannelRepo>>,
     request: ChannelIpcStateRequest,
-) -> OpenDeskResult<IpcResponse<ChannelIpcStateResponse>> {
+) -> DingDaResult<IpcResponse<ChannelIpcStateResponse>> {
     for account in &request.accounts {
         repo.upsert_account(account)
             .map_err(|error| error.to_string())?;
@@ -79,7 +79,7 @@ pub async fn channel_connect(
     repo: State<'_, Arc<ChannelRepo>>,
     dispatcher: State<'_, Arc<ChannelDispatcher>>,
     account_id: String,
-) -> OpenDeskResult<IpcResponse<ChannelIpcConnectResponse>> {
+) -> DingDaResult<IpcResponse<ChannelIpcConnectResponse>> {
     state
         .license
         .ensure_licensed()
@@ -120,7 +120,7 @@ pub async fn channel_disconnect(
     state: tauri::State<'_, crate::shared::state::AppState>,
     dispatcher: State<'_, Arc<ChannelDispatcher>>,
     account_id: String,
-) -> OpenDeskResult<IpcResponse<ChannelIpcDisconnectResponse>> {
+) -> DingDaResult<IpcResponse<ChannelIpcDisconnectResponse>> {
     state
         .license
         .ensure_licensed()
@@ -142,7 +142,7 @@ pub async fn channel_send(
     coordinator: State<'_, Arc<ChannelCoordinator>>,
     repo: State<'_, Arc<ChannelRepo>>,
     request: ChannelIpcSendRequest,
-) -> OpenDeskResult<IpcResponse<ChannelIpcSendResponse>> {
+) -> DingDaResult<IpcResponse<ChannelIpcSendResponse>> {
     state
         .license
         .ensure_licensed()
@@ -177,7 +177,7 @@ pub async fn channel_qr_start(
     state: tauri::State<'_, crate::shared::state::AppState>,
     repo: State<'_, Arc<ChannelRepo>>,
     request: ChannelIpcQrStartRequest,
-) -> OpenDeskResult<IpcResponse<ChannelIpcQrStartResponse>> {
+) -> DingDaResult<IpcResponse<ChannelIpcQrStartResponse>> {
     state
         .license
         .ensure_licensed()
@@ -241,7 +241,7 @@ pub async fn channel_qr_check(
     repo: State<'_, Arc<ChannelRepo>>,
     dispatcher: State<'_, Arc<ChannelDispatcher>>,
     request: ChannelIpcQrCheckRequest,
-) -> OpenDeskResult<IpcResponse<ChannelIpcQrCheckResponse>> {
+) -> DingDaResult<IpcResponse<ChannelIpcQrCheckResponse>> {
     state
         .license
         .ensure_licensed()
@@ -309,7 +309,7 @@ pub async fn channel_qr_check(
 pub async fn channel_qr_cancel(
     state: tauri::State<'_, crate::shared::state::AppState>,
     request: ChannelIpcQrCancelRequest,
-) -> OpenDeskResult<IpcResponse<ChannelIpcQrCancelResponse>> {
+) -> DingDaResult<IpcResponse<ChannelIpcQrCancelResponse>> {
     state
         .license
         .ensure_licensed()

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "opendesk://channel/ipc/disconnect.response/v1",
+  "$id": "dingda://channel/ipc/disconnect.response/v1",
   "title": "channel/ipc/disconnect.response",
   "type": "object",
   "required": ["ok"],

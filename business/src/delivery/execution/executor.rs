@@ -214,7 +214,7 @@ mod tests {
     use super::*;
     use crate::delivery::execution::card::{Card, CardSource};
     use crate::delivery::execution::gateway::ConfirmResult;
-    use common::OpenDeskResult;
+    use common::DingDaResult;
     use std::sync::Mutex;
 
     struct MockGateway {
@@ -235,12 +235,7 @@ mod tests {
                 message: "ok".to_string(),
             }
         }
-        async fn send_text(
-            &self,
-            _chat_id: &str,
-            _buyer_id: &str,
-            text: &str,
-        ) -> OpenDeskResult<()> {
+        async fn send_text(&self, _chat_id: &str, _buyer_id: &str, text: &str) -> DingDaResult<()> {
             self.sent.lock().expect("sent lock").push(text.to_string());
             Ok(())
         }
@@ -251,7 +246,7 @@ mod tests {
             _delivery_method: &str,
             _content: &str,
             _fail_reason: &str,
-        ) -> OpenDeskResult<()> {
+        ) -> DingDaResult<()> {
             self.order_updated
                 .lock()
                 .expect("order lock")

@@ -10,5 +10,5 @@ pub mod events;
 pub mod license;
 
 pub use constants::{douyin, xianyu, xiaohongshu, FeatureFlags};
-pub use errors::{OpenDeskError, Result as OpenDeskResult};
+pub use errors::{DingDaError, Result as DingDaResult};
 pub use events::{emit, AppEvent, EventSink};

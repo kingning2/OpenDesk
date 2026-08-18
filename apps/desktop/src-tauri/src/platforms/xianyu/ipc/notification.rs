@@ -44,7 +44,7 @@ pub struct NotificationDeleteRequest {
 pub fn notification_channel_list(
     state: State<'_, NotificationHandle>,
     owner_id: i64,
-) -> common::OpenDeskResult<IpcResponse<Vec<NotificationChannel>>> {
+) -> common::DingDaResult<IpcResponse<Vec<NotificationChannel>>> {
     let service = NotificationService::new(state.store.as_ref());
     let result = service.list_channels(owner_id)?;
     Ok(IpcResponse::ok(result))
@@ -55,11 +55,11 @@ pub fn notification_channel_create(
     state: State<'_, NotificationHandle>,
     owner_id: i64,
     channel: NotificationChannel,
-) -> common::OpenDeskResult<IpcResponse<NotificationChannel>> {
+) -> common::DingDaResult<IpcResponse<NotificationChannel>> {
     let service = NotificationService::new(state.store.as_ref());
     let result = service
         .create_channel(owner_id, channel)
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(result))
 }
 
@@ -68,11 +68,11 @@ pub fn notification_channel_update(
     state: State<'_, NotificationHandle>,
     owner_id: i64,
     channel: NotificationChannel,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = NotificationService::new(state.store.as_ref());
     service
         .update_channel(owner_id, channel)
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(()))
 }
 
@@ -80,7 +80,7 @@ pub fn notification_channel_update(
 pub fn notification_channel_set_enabled(
     state: State<'_, NotificationHandle>,
     request: ChannelEnabledRequest,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = NotificationService::new(state.store.as_ref());
     service.set_channel_enabled(request.owner_id, request.channel_id, request.enabled)?;
     Ok(IpcResponse::ok(()))
@@ -90,7 +90,7 @@ pub fn notification_channel_set_enabled(
 pub fn notification_channel_test(
     state: State<'_, NotificationHandle>,
     request: ChannelActionRequest,
-) -> common::OpenDeskResult<IpcResponse<String>> {
+) -> common::DingDaResult<IpcResponse<String>> {
     let service = NotificationService::new(state.store.as_ref());
     let result = service.test_channel(request.owner_id, request.channel_id)?;
     Ok(IpcResponse::ok(result))
@@ -100,7 +100,7 @@ pub fn notification_channel_test(
 pub fn notification_channel_delete(
     state: State<'_, NotificationHandle>,
     request: ChannelActionRequest,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = NotificationService::new(state.store.as_ref());
     service.delete_channel(request.owner_id, request.channel_id)?;
     Ok(IpcResponse::ok(()))
@@ -110,7 +110,7 @@ pub fn notification_channel_delete(
 pub fn notification_list(
     state: State<'_, NotificationHandle>,
     owner_id: i64,
-) -> common::OpenDeskResult<IpcResponse<Vec<MessageNotification>>> {
+) -> common::DingDaResult<IpcResponse<Vec<MessageNotification>>> {
     let service = NotificationService::new(state.store.as_ref());
     let result = service.list_notifications(owner_id)?;
     Ok(IpcResponse::ok(result))
@@ -120,7 +120,7 @@ pub fn notification_list(
 pub fn notification_set(
     state: State<'_, NotificationHandle>,
     request: NotificationSetRequest,
-) -> common::OpenDeskResult<IpcResponse<MessageNotification>> {
+) -> common::DingDaResult<IpcResponse<MessageNotification>> {
     let service = NotificationService::new(state.store.as_ref());
     let result = service.set_notification(
         request.owner_id,
@@ -135,7 +135,7 @@ pub fn notification_set(
 pub fn notification_delete(
     state: State<'_, NotificationHandle>,
     request: NotificationDeleteRequest,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = NotificationService::new(state.store.as_ref());
     service.delete_notification(request.owner_id, request.notification_id)?;
     Ok(IpcResponse::ok(()))

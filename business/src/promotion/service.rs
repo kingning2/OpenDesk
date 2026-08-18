@@ -259,7 +259,7 @@ impl<'a> PublishRuleService<'a> {
 mod tests {
     use super::*;
     use crate::promotion::store::AccountCheck;
-    use common::OpenDeskResult;
+    use common::DingDaResult;
     use std::collections::HashMap;
     use std::sync::Mutex;
 
@@ -294,29 +294,29 @@ mod tests {
             _page: u32,
             _page_size: u32,
             _is_admin: bool,
-        ) -> OpenDeskResult<(Vec<ProductRule>, u32)> {
+        ) -> DingDaResult<(Vec<ProductRule>, u32)> {
             let rules = self.rules.lock().expect("rules lock").clone();
             Ok((rules.clone(), rules.len() as u32))
         }
-        fn create_product_rule(&self, rule: &ProductRule) -> OpenDeskResult<ProductRule> {
+        fn create_product_rule(&self, rule: &ProductRule) -> DingDaResult<ProductRule> {
             let mut rule = rule.clone();
             rule.id = 1;
             self.rules.lock().expect("rules lock").push(rule.clone());
             Ok(rule)
         }
-        fn update_product_rule(&self, _rule: &ProductRule) -> OpenDeskResult<()> {
+        fn update_product_rule(&self, _rule: &ProductRule) -> DingDaResult<()> {
             Ok(())
         }
-        fn delete_product_rule(&self, _rule_id: i64) -> OpenDeskResult<()> {
+        fn delete_product_rule(&self, _rule_id: i64) -> DingDaResult<()> {
             Ok(())
         }
-        fn toggle_product_rule(&self, _rule_id: i64, _enabled: bool) -> OpenDeskResult<()> {
+        fn toggle_product_rule(&self, _rule_id: i64, _enabled: bool) -> DingDaResult<()> {
             Ok(())
         }
-        fn get_product_rule(&self, _rule_id: i64) -> OpenDeskResult<Option<ProductRule>> {
+        fn get_product_rule(&self, _rule_id: i64) -> DingDaResult<Option<ProductRule>> {
             Ok(None)
         }
-        fn check_account(&self, _owner_id: i64, account_id: &str) -> OpenDeskResult<AccountCheck> {
+        fn check_account(&self, _owner_id: i64, account_id: &str) -> DingDaResult<AccountCheck> {
             Ok(self
                 .accounts
                 .get(account_id)
@@ -335,7 +335,7 @@ mod tests {
             _page: u32,
             _page_size: u32,
             _is_admin: bool,
-        ) -> OpenDeskResult<(Vec<PublishRule>, u32)> {
+        ) -> DingDaResult<(Vec<PublishRule>, u32)> {
             let rules = self.publish.lock().expect("publish lock").clone();
             Ok((rules.clone(), rules.len() as u32))
         }
@@ -343,7 +343,7 @@ mod tests {
             &self,
             _owner_id: i64,
             account_id: &str,
-        ) -> OpenDeskResult<Option<PublishRule>> {
+        ) -> DingDaResult<Option<PublishRule>> {
             let found = self
                 .publish
                 .lock()
@@ -353,7 +353,7 @@ mod tests {
                 .cloned();
             Ok(found)
         }
-        fn create_publish_rule(&self, rule: &PublishRule) -> OpenDeskResult<PublishRule> {
+        fn create_publish_rule(&self, rule: &PublishRule) -> DingDaResult<PublishRule> {
             let mut rule = rule.clone();
             rule.id = 1;
             self.publish
@@ -362,13 +362,13 @@ mod tests {
                 .push(rule.clone());
             Ok(rule)
         }
-        fn update_publish_rule(&self, _rule: &PublishRule) -> OpenDeskResult<()> {
+        fn update_publish_rule(&self, _rule: &PublishRule) -> DingDaResult<()> {
             Ok(())
         }
-        fn delete_publish_rule(&self, _rule_id: i64) -> OpenDeskResult<()> {
+        fn delete_publish_rule(&self, _rule_id: i64) -> DingDaResult<()> {
             Ok(())
         }
-        fn toggle_publish_rule(&self, _rule_id: i64, _enabled: bool) -> OpenDeskResult<()> {
+        fn toggle_publish_rule(&self, _rule_id: i64, _enabled: bool) -> DingDaResult<()> {
             Ok(())
         }
     }

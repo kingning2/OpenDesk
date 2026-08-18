@@ -1049,6 +1049,90 @@ dependencies = [
 ]
 
 [[package]]
+name = "dingda"
+version = "0.1.0"
+dependencies = [
+ "adapter",
+ "agent",
+ "async-trait",
+ "base64 0.22.1",
+ "chrono",
+ "common",
+ "diesel",
+ "dingda-business",
+ "dingda-macros",
+ "futures-util",
+ "kernel",
+ "md-5",
+ "platform",
+ "ports",
+ "rand 0.8.7",
+ "reqwest 0.12.28",
+ "rmpv",
+ "runtime",
+ "serde",
+ "serde_json",
+ "storage",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-opener",
+ "thiserror 2.0.18",
+ "tokio",
+ "tokio-tungstenite",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+ "uuid",
+]
+
+[[package]]
+name = "dingda-business"
+version = "0.1.0"
+dependencies = [
+ "adapter",
+ "agent",
+ "async-trait",
+ "chrono",
+ "common",
+ "diesel",
+ "kernel",
+ "md-5",
+ "platform",
+ "ports",
+ "serde",
+ "serde_json",
+ "storage",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "dingda-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.118",
+]
+
+[[package]]
+name = "dingda-server"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "common",
+ "dingda-business",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "dirs"
 version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2865,90 +2949,6 @@ dependencies = [
  "dunce",
  "is-wsl",
  "libc",
-]
-
-[[package]]
-name = "opendesk"
-version = "0.1.0"
-dependencies = [
- "adapter",
- "agent",
- "async-trait",
- "base64 0.22.1",
- "chrono",
- "common",
- "diesel",
- "futures-util",
- "kernel",
- "md-5",
- "opendesk-business",
- "opendesk-macros",
- "platform",
- "ports",
- "rand 0.8.7",
- "reqwest 0.12.28",
- "rmpv",
- "runtime",
- "serde",
- "serde_json",
- "storage",
- "tauri",
- "tauri-build",
- "tauri-plugin-opener",
- "thiserror 2.0.18",
- "tokio",
- "tokio-tungstenite",
- "tracing",
- "tracing-subscriber",
- "url",
- "uuid",
-]
-
-[[package]]
-name = "opendesk-business"
-version = "0.1.0"
-dependencies = [
- "adapter",
- "agent",
- "async-trait",
- "chrono",
- "common",
- "diesel",
- "kernel",
- "md-5",
- "platform",
- "ports",
- "serde",
- "serde_json",
- "storage",
- "thiserror 2.0.18",
- "tokio",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
-name = "opendesk-macros"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.118",
-]
-
-[[package]]
-name = "opendesk-server"
-version = "0.1.0"
-dependencies = [
- "axum",
- "common",
- "opendesk-business",
- "reqwest 0.12.28",
- "serde",
- "serde_json",
- "tokio",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]

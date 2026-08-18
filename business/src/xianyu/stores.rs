@@ -46,7 +46,7 @@ use crate::publish::{
 };
 use crate::risk::{RiskConfig, RiskLogItem, RiskLogQuery, RiskStore};
 use crate::setting::UserSettingStore;
-use common::{OpenDeskError, OpenDeskResult};
+use common::{DingDaError, DingDaResult};
 use diesel::sql_types::Text;
 use diesel::{QueryableByName, RunQueryDsl};
 
@@ -71,19 +71,15 @@ impl InMemoryAccountStore {
 const DOMAIN_ACCOUNT: &str = "account";
 
 impl AccountStore for InMemoryAccountStore {
-    fn get_account(
-        &self,
-        owner_id: i64,
-        account_id: &str,
-    ) -> OpenDeskResult<Option<XianyuAccount>> {
+    fn get_account(&self, owner_id: i64, account_id: &str) -> DingDaResult<Option<XianyuAccount>> {
         Ok(self.db.get(DOMAIN_ACCOUNT, account_id, owner_id)?)
     }
 
-    fn list_accounts(&self, owner_id: i64) -> OpenDeskResult<Vec<XianyuAccount>> {
+    fn list_accounts(&self, owner_id: i64) -> DingDaResult<Vec<XianyuAccount>> {
         Ok(self.db.scan(DOMAIN_ACCOUNT, owner_id)?)
     }
 
-    fn create_account(&self, account: &XianyuAccount) -> OpenDeskResult<XianyuAccount> {
+    fn create_account(&self, account: &XianyuAccount) -> DingDaResult<XianyuAccount> {
         let mut account = account.clone();
         if account.id == 0 {
             account.id = self.db.next_id(DOMAIN_ACCOUNT, account.owner_id)?;
@@ -97,7 +93,7 @@ impl AccountStore for InMemoryAccountStore {
         Ok(account)
     }
 
-    fn update_account(&self, account: &XianyuAccount) -> OpenDeskResult<()> {
+    fn update_account(&self, account: &XianyuAccount) -> DingDaResult<()> {
         if self
             .db
             .get::<XianyuAccount>(DOMAIN_ACCOUNT, &account.account_id, account.owner_id)?
@@ -113,11 +109,11 @@ impl AccountStore for InMemoryAccountStore {
         )?)
     }
 
-    fn delete_account(&self, owner_id: i64, account_id: &str) -> OpenDeskResult<()> {
+    fn delete_account(&self, owner_id: i64, account_id: &str) -> DingDaResult<()> {
         Ok(self.db.delete(DOMAIN_ACCOUNT, account_id, owner_id)?)
     }
 
-    fn find_by_account_id(&self, account_id: &str) -> OpenDeskResult<Option<XianyuAccount>> {
+    fn find_by_account_id(&self, account_id: &str) -> DingDaResult<Option<XianyuAccount>> {
         let mut conn = self.db.connection()?;
         #[derive(QueryableByName)]
         struct PayloadRow {
@@ -130,7 +126,7 @@ impl AccountStore for InMemoryAccountStore {
         .bind::<Text, _>(DOMAIN_ACCOUNT)
         .bind::<Text, _>(account_id)
         .load(&mut *conn)
-        .map_err(|e| OpenDeskError::Store(e.to_string()))?;
+        .map_err(|e| DingDaError::Store(e.to_string()))?;
         rows.into_iter()
             .next()
             .map_or(Ok(None), |row| Ok(serde_json::from_str(&row.payload)?))
@@ -161,7 +157,7 @@ impl AddressStore for InMemoryAddressStore {
         &self,
         owner_id: i64,
         query: &AddressQuery,
-    ) -> OpenDeskResult<(Vec<PublishAddress>, u32)> {
+    ) -> DingDaResult<(Vec<PublishAddress>, u32)> {
         let addresses: Vec<PublishAddress> = self.db.scan(DOMAIN_ADDRESS, owner_id)?;
         let mut list: Vec<PublishAddress> = addresses
             .into_iter()
@@ -180,17 +176,13 @@ impl AddressStore for InMemoryAddressStore {
         Ok((list, total))
     }
 
-    fn get_address(
-        &self,
-        owner_id: i64,
-        address_id: i64,
-    ) -> OpenDeskResult<Option<PublishAddress>> {
+    fn get_address(&self, owner_id: i64, address_id: i64) -> DingDaResult<Option<PublishAddress>> {
         Ok(self
             .db
             .get(DOMAIN_ADDRESS, &address_id.to_string(), owner_id)?)
     }
 
-    fn create_address(&self, address: &PublishAddress) -> OpenDeskResult<PublishAddress> {
+    fn create_address(&self, address: &PublishAddress) -> DingDaResult<PublishAddress> {
         let mut address = address.clone();
         address.id = self.db.next_id(DOMAIN_ADDRESS, address.owner_id)?;
         self.db.put(
@@ -202,7 +194,7 @@ impl AddressStore for InMemoryAddressStore {
         Ok(address)
     }
 
-    fn update_address(&self, address: &PublishAddress) -> OpenDeskResult<()> {
+    fn update_address(&self, address: &PublishAddress) -> DingDaResult<()> {
         if self
             .db
             .get::<PublishAddress>(DOMAIN_ADDRESS, &address.id.to_string(), address.owner_id)?
@@ -218,7 +210,7 @@ impl AddressStore for InMemoryAddressStore {
         )?)
     }
 
-    fn delete_address(&self, address_id: i64) -> OpenDeskResult<()> {
+    fn delete_address(&self, address_id: i64) -> DingDaResult<()> {
         let owner_id = {
             let mut conn = self.db.connection()?;
             #[derive(QueryableByName)]
@@ -232,7 +224,7 @@ impl AddressStore for InMemoryAddressStore {
             .bind::<Text, _>(DOMAIN_ADDRESS)
             .bind::<Text, _>(&address_id.to_string())
             .load(&mut *conn)
-            .map_err(|e| OpenDeskError::Store(e.to_string()))?;
+            .map_err(|e| DingDaError::Store(e.to_string()))?;
             rows.into_iter()
                 .next()
                 .ok_or_else(|| format!("地址 {} 不存在", address_id))?
@@ -265,7 +257,7 @@ const DOMAIN_KEYWORD: &str = "keyword";
 const OWNER_ID_SINGLE: i64 = 1;
 
 impl KeywordStore for InMemoryKeywordStore {
-    fn list_keywords(&self, account_id: &str) -> OpenDeskResult<Vec<KeywordRule>> {
+    fn list_keywords(&self, account_id: &str) -> DingDaResult<Vec<KeywordRule>> {
         let rules: Vec<KeywordRule> = self.db.scan(DOMAIN_KEYWORD, OWNER_ID_SINGLE)?;
         Ok(rules
             .into_iter()
@@ -273,7 +265,7 @@ impl KeywordStore for InMemoryKeywordStore {
             .collect())
     }
 
-    fn replace_keywords(&self, account_id: &str, rules: &[KeywordRule]) -> OpenDeskResult<()> {
+    fn replace_keywords(&self, account_id: &str, rules: &[KeywordRule]) -> DingDaResult<()> {
         let existing: Vec<KeywordRule> = self.db.scan(DOMAIN_KEYWORD, OWNER_ID_SINGLE)?;
         for rule in existing {
             if rule.account_id == account_id {
@@ -291,7 +283,7 @@ impl KeywordStore for InMemoryKeywordStore {
         Ok(())
     }
 
-    fn add_keyword(&self, rule: &KeywordRule) -> OpenDeskResult<KeywordRule> {
+    fn add_keyword(&self, rule: &KeywordRule) -> DingDaResult<KeywordRule> {
         let mut rule = rule.clone();
         rule.id = self.db.next_id(DOMAIN_KEYWORD, OWNER_ID_SINGLE)?;
         self.db
@@ -299,7 +291,7 @@ impl KeywordStore for InMemoryKeywordStore {
         Ok(rule)
     }
 
-    fn delete_keyword(&self, rule_id: i64) -> OpenDeskResult<()> {
+    fn delete_keyword(&self, rule_id: i64) -> DingDaResult<()> {
         Ok(self
             .db
             .delete(DOMAIN_KEYWORD, &rule_id.to_string(), OWNER_ID_SINGLE)?)
@@ -326,7 +318,7 @@ impl InMemoryItemStore {
 const DOMAIN_ITEM: &str = "item";
 
 impl ItemStore for InMemoryItemStore {
-    fn list_items(&self, owner_id: i64, query: &ItemQuery) -> OpenDeskResult<(Vec<Item>, u32)> {
+    fn list_items(&self, owner_id: i64, query: &ItemQuery) -> DingDaResult<(Vec<Item>, u32)> {
         let items: Vec<Item> = self.db.scan(DOMAIN_ITEM, owner_id)?;
         let mut list: Vec<Item> = items
             .into_iter()
@@ -351,11 +343,11 @@ impl ItemStore for InMemoryItemStore {
         Ok((list, total))
     }
 
-    fn get_item(&self, owner_id: i64, item_id: &str) -> OpenDeskResult<Option<Item>> {
+    fn get_item(&self, owner_id: i64, item_id: &str) -> DingDaResult<Option<Item>> {
         Ok(self.db.get(DOMAIN_ITEM, item_id, owner_id)?)
     }
 
-    fn update_item(&self, item: &Item) -> OpenDeskResult<()> {
+    fn update_item(&self, item: &Item) -> DingDaResult<()> {
         if self
             .db
             .get::<Item>(DOMAIN_ITEM, &item.item_id, item.owner_id)?
@@ -389,7 +381,7 @@ impl InMemoryCardStore {
 const DOMAIN_CARD: &str = "card";
 
 impl CardStore for InMemoryCardStore {
-    fn list_cards(&self, owner_id: i64, query: &CardQuery) -> OpenDeskResult<(Vec<Card>, u32)> {
+    fn list_cards(&self, owner_id: i64, query: &CardQuery) -> DingDaResult<(Vec<Card>, u32)> {
         let cards: Vec<Card> = self.db.scan(DOMAIN_CARD, owner_id)?;
         let mut list: Vec<Card> = cards
             .into_iter()
@@ -404,11 +396,11 @@ impl CardStore for InMemoryCardStore {
         Ok((list, total))
     }
 
-    fn get_card(&self, owner_id: i64, card_id: i64) -> OpenDeskResult<Option<Card>> {
+    fn get_card(&self, owner_id: i64, card_id: i64) -> DingDaResult<Option<Card>> {
         Ok(self.db.get(DOMAIN_CARD, &card_id.to_string(), owner_id)?)
     }
 
-    fn create_card(&self, card: &Card) -> OpenDeskResult<Card> {
+    fn create_card(&self, card: &Card) -> DingDaResult<Card> {
         let mut card = card.clone();
         card.id = self.db.next_id(DOMAIN_CARD, card.owner_id)?;
         self.db
@@ -416,7 +408,7 @@ impl CardStore for InMemoryCardStore {
         Ok(card)
     }
 
-    fn update_card(&self, card: &Card) -> OpenDeskResult<()> {
+    fn update_card(&self, card: &Card) -> DingDaResult<()> {
         if self
             .db
             .get::<Card>(DOMAIN_CARD, &card.id.to_string(), card.owner_id)?
@@ -429,7 +421,7 @@ impl CardStore for InMemoryCardStore {
             .put(DOMAIN_CARD, &card.id.to_string(), card.owner_id, card)?)
     }
 
-    fn delete_card(&self, owner_id: i64, card_id: i64) -> OpenDeskResult<()> {
+    fn delete_card(&self, owner_id: i64, card_id: i64) -> DingDaResult<()> {
         Ok(self
             .db
             .delete(DOMAIN_CARD, &card_id.to_string(), owner_id)?)
@@ -452,7 +444,7 @@ impl InMemoryOrderStore {
         Self { db }
     }
 
-    fn put_order(&self, order: &Order) -> OpenDeskResult<()> {
+    fn put_order(&self, order: &Order) -> DingDaResult<()> {
         Ok(self
             .db
             .put(DOMAIN_ORDER, &order.order_no, order.owner_id, order)?)
@@ -462,7 +454,7 @@ impl InMemoryOrderStore {
 const DOMAIN_ORDER: &str = "order";
 
 impl OrderStore for InMemoryOrderStore {
-    fn get_order(&self, order_no: &str) -> OpenDeskResult<Option<Order>> {
+    fn get_order(&self, order_no: &str) -> DingDaResult<Option<Order>> {
         let mut conn = self.db.connection()?;
         #[derive(QueryableByName)]
         struct PayloadRow {
@@ -475,13 +467,13 @@ impl OrderStore for InMemoryOrderStore {
         .bind::<Text, _>(DOMAIN_ORDER)
         .bind::<Text, _>(order_no)
         .load(&mut *conn)
-        .map_err(|e| OpenDeskError::Store(e.to_string()))?;
+        .map_err(|e| DingDaError::Store(e.to_string()))?;
         rows.into_iter()
             .next()
             .map_or(Ok(None), |row| Ok(serde_json::from_str(&row.payload)?))
     }
 
-    fn get_order_by_no(&self, owner_id: i64, order_no: &str) -> OpenDeskResult<Option<Order>> {
+    fn get_order_by_no(&self, owner_id: i64, order_no: &str) -> DingDaResult<Option<Order>> {
         Ok(self.db.get(DOMAIN_ORDER, order_no, owner_id)?)
     }
 
@@ -491,7 +483,7 @@ impl OrderStore for InMemoryOrderStore {
         account_id: &str,
         buyer_id: &str,
         item_id: Option<&str>,
-    ) -> OpenDeskResult<Option<Order>> {
+    ) -> DingDaResult<Option<Order>> {
         let orders: Vec<Order> = self.db.scan(DOMAIN_ORDER, owner_id)?;
         Ok(orders.into_iter().find(|order| {
             order.owner_id == owner_id
@@ -509,7 +501,7 @@ impl OrderStore for InMemoryOrderStore {
         _page_size: u32,
         status: Option<OrderStatus>,
         keyword: &str,
-    ) -> OpenDeskResult<(Vec<Order>, u32)> {
+    ) -> DingDaResult<(Vec<Order>, u32)> {
         let orders: Vec<Order> = self.db.scan(DOMAIN_ORDER, owner_id)?;
         let mut list: Vec<Order> = orders
             .into_iter()
@@ -527,7 +519,7 @@ impl OrderStore for InMemoryOrderStore {
         Ok((list, total))
     }
 
-    fn update_status(&self, order_no: &str, status: OrderStatus) -> OpenDeskResult<bool> {
+    fn update_status(&self, order_no: &str, status: OrderStatus) -> DingDaResult<bool> {
         let Some(mut order) = self.get_order(order_no)? else {
             return Ok(false);
         };
@@ -536,7 +528,7 @@ impl OrderStore for InMemoryOrderStore {
         Ok(true)
     }
 
-    fn update_chat_id(&self, order_no: &str, chat_id: &str) -> OpenDeskResult<bool> {
+    fn update_chat_id(&self, order_no: &str, chat_id: &str) -> DingDaResult<bool> {
         let Some(mut order) = self.get_order(order_no)? else {
             return Ok(false);
         };
@@ -549,7 +541,7 @@ impl OrderStore for InMemoryOrderStore {
         &self,
         order_no: &str,
         update: &DeliveryInfoUpdate,
-    ) -> OpenDeskResult<bool> {
+    ) -> DingDaResult<bool> {
         let Some(mut order) = self.get_order(order_no)? else {
             return Ok(false);
         };
@@ -564,7 +556,7 @@ impl OrderStore for InMemoryOrderStore {
         Ok(true)
     }
 
-    fn update_delivery_fail_reason(&self, order_no: &str, reason: &str) -> OpenDeskResult<bool> {
+    fn update_delivery_fail_reason(&self, order_no: &str, reason: &str) -> DingDaResult<bool> {
         let Some(mut order) = self.get_order(order_no)? else {
             return Ok(false);
         };
@@ -573,7 +565,7 @@ impl OrderStore for InMemoryOrderStore {
         Ok(true)
     }
 
-    fn update_rated(&self, order_no: &str, is_rated: bool) -> OpenDeskResult<bool> {
+    fn update_rated(&self, order_no: &str, is_rated: bool) -> DingDaResult<bool> {
         let Some(mut order) = self.get_order(order_no)? else {
             return Ok(false);
         };
@@ -582,7 +574,7 @@ impl OrderStore for InMemoryOrderStore {
         Ok(true)
     }
 
-    fn create_order(&self, order: &Order) -> OpenDeskResult<Order> {
+    fn create_order(&self, order: &Order) -> DingDaResult<Order> {
         let mut order = order.clone();
         let orders: Vec<Order> = self.db.scan(DOMAIN_ORDER, order.owner_id)?;
         order.id = orders.iter().map(|o| o.id).max().unwrap_or(0) + 1;
@@ -590,7 +582,7 @@ impl OrderStore for InMemoryOrderStore {
         Ok(order)
     }
 
-    fn delete_order(&self, owner_id: i64, order_id: i64) -> OpenDeskResult<bool> {
+    fn delete_order(&self, owner_id: i64, order_id: i64) -> DingDaResult<bool> {
         let orders: Vec<Order> = self.db.scan(DOMAIN_ORDER, owner_id)?;
         let matched: Vec<String> = orders
             .into_iter()
@@ -604,7 +596,7 @@ impl OrderStore for InMemoryOrderStore {
         Ok(deleted)
     }
 
-    fn batch_delete_orders(&self, owner_id: i64, order_ids: &[i64]) -> OpenDeskResult<u32> {
+    fn batch_delete_orders(&self, owner_id: i64, order_ids: &[i64]) -> DingDaResult<u32> {
         let orders: Vec<Order> = self.db.scan(DOMAIN_ORDER, owner_id)?;
         let matched: Vec<String> = orders
             .into_iter()
@@ -644,7 +636,7 @@ impl BlacklistStore for InMemoryBlacklistStore {
         &self,
         owner_id: i64,
         query: &BlacklistQuery,
-    ) -> OpenDeskResult<(Vec<PersonalBlacklistItem>, u32)> {
+    ) -> DingDaResult<(Vec<PersonalBlacklistItem>, u32)> {
         let items: Vec<PersonalBlacklistItem> = self.db.scan(DOMAIN_BL_PERSONAL, owner_id)?;
         let mut list: Vec<PersonalBlacklistItem> = items
             .into_iter()
@@ -666,7 +658,7 @@ impl BlacklistStore for InMemoryBlacklistStore {
         &self,
         owner_id: i64,
         query: &BlacklistQuery,
-    ) -> OpenDeskResult<(Vec<PlatformBlacklistItem>, u32)> {
+    ) -> DingDaResult<(Vec<PlatformBlacklistItem>, u32)> {
         let items: Vec<PlatformBlacklistItem> = self.db.scan(DOMAIN_BL_PLATFORM, owner_id)?;
         let mut list: Vec<PlatformBlacklistItem> = items
             .into_iter()
@@ -684,10 +676,7 @@ impl BlacklistStore for InMemoryBlacklistStore {
         Ok((list.clone(), list.len() as u32))
     }
 
-    fn create_personal(
-        &self,
-        item: &PersonalBlacklistItem,
-    ) -> OpenDeskResult<PersonalBlacklistItem> {
+    fn create_personal(&self, item: &PersonalBlacklistItem) -> DingDaResult<PersonalBlacklistItem> {
         let mut item = item.clone();
         item.id = self.db.next_id(DOMAIN_BL_PERSONAL, item.owner_id)?;
         self.db.put(
@@ -699,7 +688,7 @@ impl BlacklistStore for InMemoryBlacklistStore {
         Ok(item)
     }
 
-    fn set_enabled(&self, owner_id: i64, id: i64, enabled: bool) -> OpenDeskResult<()> {
+    fn set_enabled(&self, owner_id: i64, id: i64, enabled: bool) -> DingDaResult<()> {
         let mut item: PersonalBlacklistItem = self
             .db
             .get(DOMAIN_BL_PERSONAL, &id.to_string(), owner_id)?
@@ -710,7 +699,7 @@ impl BlacklistStore for InMemoryBlacklistStore {
             .put(DOMAIN_BL_PERSONAL, &item.id.to_string(), owner_id, &item)?)
     }
 
-    fn delete(&self, owner_id: i64, id: i64) -> OpenDeskResult<()> {
+    fn delete(&self, owner_id: i64, id: i64) -> DingDaResult<()> {
         Ok(self
             .db
             .delete(DOMAIN_BL_PERSONAL, &id.to_string(), owner_id)?)
@@ -737,7 +726,7 @@ impl InMemoryFilterStore {
 const DOMAIN_FILTER: &str = "filter";
 
 impl FilterStore for InMemoryFilterStore {
-    fn list_filters(&self, owner_id: i64, account_id: &str) -> OpenDeskResult<Vec<FilterRule>> {
+    fn list_filters(&self, owner_id: i64, account_id: &str) -> DingDaResult<Vec<FilterRule>> {
         let rules: Vec<FilterRule> = self.db.scan(DOMAIN_FILTER, owner_id)?;
         Ok(rules
             .into_iter()
@@ -745,7 +734,7 @@ impl FilterStore for InMemoryFilterStore {
             .collect())
     }
 
-    fn create_filter(&self, rule: &FilterRule) -> OpenDeskResult<FilterRule> {
+    fn create_filter(&self, rule: &FilterRule) -> DingDaResult<FilterRule> {
         let mut rule = rule.clone();
         rule.id = self.db.next_id(DOMAIN_FILTER, rule.owner_id)?;
         self.db
@@ -753,7 +742,7 @@ impl FilterStore for InMemoryFilterStore {
         Ok(rule)
     }
 
-    fn update_filter(&self, owner_id: i64, rule: &FilterRule) -> OpenDeskResult<()> {
+    fn update_filter(&self, owner_id: i64, rule: &FilterRule) -> DingDaResult<()> {
         if self
             .db
             .get::<FilterRule>(DOMAIN_FILTER, &rule.id.to_string(), owner_id)?
@@ -768,7 +757,7 @@ impl FilterStore for InMemoryFilterStore {
             .put(DOMAIN_FILTER, &rule.id.to_string(), owner_id, &rule)?)
     }
 
-    fn delete_filter(&self, owner_id: i64, rule_id: i64) -> OpenDeskResult<()> {
+    fn delete_filter(&self, owner_id: i64, rule_id: i64) -> DingDaResult<()> {
         if self
             .db
             .get::<FilterRule>(DOMAIN_FILTER, &rule_id.to_string(), owner_id)?
@@ -781,7 +770,7 @@ impl FilterStore for InMemoryFilterStore {
             .delete(DOMAIN_FILTER, &rule_id.to_string(), owner_id)?)
     }
 
-    fn set_enabled(&self, owner_id: i64, rule_id: i64, enabled: bool) -> OpenDeskResult<()> {
+    fn set_enabled(&self, owner_id: i64, rule_id: i64, enabled: bool) -> DingDaResult<()> {
         let mut rule: FilterRule = self
             .db
             .get(DOMAIN_FILTER, &rule_id.to_string(), owner_id)?
@@ -817,7 +806,7 @@ impl FeedbackStore for InMemoryFeedbackStore {
         &self,
         owner_id: i64,
         query: &FeedbackQuery,
-    ) -> OpenDeskResult<(Vec<Feedback>, u32)> {
+    ) -> DingDaResult<(Vec<Feedback>, u32)> {
         let feedbacks: Vec<Feedback> = self.db.scan(DOMAIN_FEEDBACK, owner_id)?;
         let mut list: Vec<Feedback> = feedbacks
             .into_iter()
@@ -834,13 +823,13 @@ impl FeedbackStore for InMemoryFeedbackStore {
         Ok((list, total))
     }
 
-    fn get_feedback(&self, owner_id: i64, feedback_id: i64) -> OpenDeskResult<Option<Feedback>> {
+    fn get_feedback(&self, owner_id: i64, feedback_id: i64) -> DingDaResult<Option<Feedback>> {
         Ok(self
             .db
             .get(DOMAIN_FEEDBACK, &feedback_id.to_string(), owner_id)?)
     }
 
-    fn create_feedback(&self, feedback: &Feedback) -> OpenDeskResult<Feedback> {
+    fn create_feedback(&self, feedback: &Feedback) -> DingDaResult<Feedback> {
         let mut feedback = feedback.clone();
         feedback.id = self.db.next_id(DOMAIN_FEEDBACK, feedback.owner_id)?;
         self.db.put(
@@ -852,14 +841,14 @@ impl FeedbackStore for InMemoryFeedbackStore {
         Ok(feedback)
     }
 
-    fn delete_feedback(&self, feedback_id: i64) -> OpenDeskResult<()> {
+    fn delete_feedback(&self, feedback_id: i64) -> DingDaResult<()> {
         let mut conn = self.db.connection()?;
         let affected =
             diesel::sql_query("DELETE FROM business_records WHERE domain = ? AND record_id = ?")
                 .bind::<Text, _>(DOMAIN_FEEDBACK)
                 .bind::<Text, _>(&feedback_id.to_string())
                 .execute(&mut *conn)
-                .map_err(|e| OpenDeskError::Store(e.to_string()))?;
+                .map_err(|e| DingDaError::Store(e.to_string()))?;
         if affected == 0 {
             return Err(format!("反馈 {} 不存在", feedback_id).into());
         }
@@ -888,7 +877,7 @@ const DOMAIN_NOTIF_CHANNEL: &str = "notification_channel";
 const DOMAIN_NOTIFICATION: &str = "notification";
 
 impl NotificationStore for InMemoryNotificationStore {
-    fn list_channels(&self, owner_id: i64) -> OpenDeskResult<Vec<NotificationChannel>> {
+    fn list_channels(&self, owner_id: i64) -> DingDaResult<Vec<NotificationChannel>> {
         let mut list: Vec<NotificationChannel> = self.db.scan(DOMAIN_NOTIF_CHANNEL, owner_id)?;
         list.sort_by_key(|channel| channel.id);
         Ok(list)
@@ -898,13 +887,13 @@ impl NotificationStore for InMemoryNotificationStore {
         &self,
         owner_id: i64,
         channel_id: i64,
-    ) -> OpenDeskResult<Option<NotificationChannel>> {
+    ) -> DingDaResult<Option<NotificationChannel>> {
         Ok(self
             .db
             .get(DOMAIN_NOTIF_CHANNEL, &channel_id.to_string(), owner_id)?)
     }
 
-    fn create_channel(&self, channel: &NotificationChannel) -> OpenDeskResult<NotificationChannel> {
+    fn create_channel(&self, channel: &NotificationChannel) -> DingDaResult<NotificationChannel> {
         let mut channel = channel.clone();
         channel.id = self.db.next_id(DOMAIN_NOTIF_CHANNEL, channel.owner_id)?;
         self.db.put(
@@ -916,7 +905,7 @@ impl NotificationStore for InMemoryNotificationStore {
         Ok(channel)
     }
 
-    fn update_channel(&self, channel: &NotificationChannel) -> OpenDeskResult<()> {
+    fn update_channel(&self, channel: &NotificationChannel) -> DingDaResult<()> {
         if self
             .db
             .get::<NotificationChannel>(
@@ -936,7 +925,7 @@ impl NotificationStore for InMemoryNotificationStore {
         )?)
     }
 
-    fn delete_channel(&self, owner_id: i64, channel_id: i64) -> OpenDeskResult<()> {
+    fn delete_channel(&self, owner_id: i64, channel_id: i64) -> DingDaResult<()> {
         if self
             .db
             .get::<NotificationChannel>(DOMAIN_NOTIF_CHANNEL, &channel_id.to_string(), owner_id)?
@@ -949,7 +938,7 @@ impl NotificationStore for InMemoryNotificationStore {
             .delete(DOMAIN_NOTIF_CHANNEL, &channel_id.to_string(), owner_id)?)
     }
 
-    fn list_notifications(&self, owner_id: i64) -> OpenDeskResult<Vec<MessageNotification>> {
+    fn list_notifications(&self, owner_id: i64) -> DingDaResult<Vec<MessageNotification>> {
         let notifications: Vec<MessageNotification> =
             self.db.scan(DOMAIN_NOTIFICATION, owner_id)?;
         let channels: Vec<NotificationChannel> = self.db.scan(DOMAIN_NOTIF_CHANNEL, owner_id)?;
@@ -973,7 +962,7 @@ impl NotificationStore for InMemoryNotificationStore {
         account_id: &str,
         channel_id: i64,
         enabled: bool,
-    ) -> OpenDeskResult<MessageNotification> {
+    ) -> DingDaResult<MessageNotification> {
         let mut notifications: Vec<MessageNotification> =
             self.db.scan(DOMAIN_NOTIFICATION, owner_id)?;
         if let Some(existing) = notifications.iter_mut().find(|n| {
@@ -1006,7 +995,7 @@ impl NotificationStore for InMemoryNotificationStore {
         Ok(notification)
     }
 
-    fn delete_notification(&self, owner_id: i64, notification_id: i64) -> OpenDeskResult<()> {
+    fn delete_notification(&self, owner_id: i64, notification_id: i64) -> DingDaResult<()> {
         if self
             .db
             .get::<MessageNotification>(
@@ -1046,7 +1035,7 @@ const DOMAIN_RISK_CONFIG: &str = "risk_config";
 const RISK_CONFIG_KEY: &str = "config";
 
 impl RiskStore for InMemoryRiskStore {
-    fn list_logs(&self, owner_id: i64, query: &RiskLogQuery) -> OpenDeskResult<Vec<RiskLogItem>> {
+    fn list_logs(&self, owner_id: i64, query: &RiskLogQuery) -> DingDaResult<Vec<RiskLogItem>> {
         let logs: Vec<RiskLogItem> = self.db.scan(DOMAIN_RISK, owner_id)?;
         let mut list: Vec<RiskLogItem> =
             logs.into_iter()
@@ -1073,7 +1062,7 @@ impl RiskStore for InMemoryRiskStore {
         Ok(list)
     }
 
-    fn clear_logs(&self, owner_id: i64, account_id: &str) -> OpenDeskResult<()> {
+    fn clear_logs(&self, owner_id: i64, account_id: &str) -> DingDaResult<()> {
         let logs: Vec<RiskLogItem> = self.db.scan(DOMAIN_RISK, owner_id)?;
         for log in logs {
             if account_id.is_empty() || log.account_id == account_id {
@@ -1083,7 +1072,7 @@ impl RiskStore for InMemoryRiskStore {
         Ok(())
     }
 
-    fn clear_processing(&self, owner_id: i64) -> OpenDeskResult<()> {
+    fn clear_processing(&self, owner_id: i64) -> DingDaResult<()> {
         let logs: Vec<RiskLogItem> = self.db.scan(DOMAIN_RISK, owner_id)?;
         for log in logs {
             if log.processing_status == "processing" {
@@ -1093,14 +1082,14 @@ impl RiskStore for InMemoryRiskStore {
         Ok(())
     }
 
-    fn get_config(&self, owner_id: i64) -> OpenDeskResult<RiskConfig> {
+    fn get_config(&self, owner_id: i64) -> DingDaResult<RiskConfig> {
         Ok(self
             .db
             .get(DOMAIN_RISK_CONFIG, RISK_CONFIG_KEY, owner_id)?
             .unwrap_or_default())
     }
 
-    fn save_config(&self, owner_id: i64, config: &RiskConfig) -> OpenDeskResult<()> {
+    fn save_config(&self, owner_id: i64, config: &RiskConfig) -> DingDaResult<()> {
         Ok(self
             .db
             .put(DOMAIN_RISK_CONFIG, RISK_CONFIG_KEY, owner_id, config)?)
@@ -1127,11 +1116,11 @@ impl InMemoryUserSettingStore {
 const DOMAIN_SETTING: &str = "setting";
 
 impl UserSettingStore for InMemoryUserSettingStore {
-    fn get(&self, owner_id: i64, key: &str) -> OpenDeskResult<Option<String>> {
+    fn get(&self, owner_id: i64, key: &str) -> DingDaResult<Option<String>> {
         Ok(self.db.get(DOMAIN_SETTING, key, owner_id)?)
     }
 
-    fn set(&self, owner_id: i64, key: &str, value: &str) -> OpenDeskResult<()> {
+    fn set(&self, owner_id: i64, key: &str, value: &str) -> DingDaResult<()> {
         if value.is_empty() {
             Ok(self.db.delete(DOMAIN_SETTING, key, owner_id)?)
         } else {
@@ -1166,7 +1155,7 @@ impl AutoReplyLogStore for InMemoryAutoReplyLogStore {
         &self,
         owner_id: i64,
         query: &AutoReplyLogQuery,
-    ) -> OpenDeskResult<Vec<AutoReplyLogItem>> {
+    ) -> DingDaResult<Vec<AutoReplyLogItem>> {
         let logs: Vec<AutoReplyLogItem> = self.db.scan(DOMAIN_AUTO_REPLY_LOG, owner_id)?;
         let mut list: Vec<AutoReplyLogItem> =
             logs.into_iter()
@@ -1218,17 +1207,17 @@ impl InMemoryBatchStore {
 const DOMAIN_BATCH: &str = "batch";
 
 impl BatchStore for InMemoryBatchStore {
-    fn create_task(&self, task: &BatchTask) -> OpenDeskResult<()> {
+    fn create_task(&self, task: &BatchTask) -> DingDaResult<()> {
         Ok(self
             .db
             .put(DOMAIN_BATCH, &task.batch_id, task.owner_id, task)?)
     }
 
-    fn get_task(&self, owner_id: i64, batch_id: &str) -> OpenDeskResult<Option<BatchTask>> {
+    fn get_task(&self, owner_id: i64, batch_id: &str) -> DingDaResult<Option<BatchTask>> {
         Ok(self.db.get(DOMAIN_BATCH, batch_id, owner_id)?)
     }
 
-    fn update_task(&self, task: &BatchTask) -> OpenDeskResult<()> {
+    fn update_task(&self, task: &BatchTask) -> DingDaResult<()> {
         Ok(self
             .db
             .put(DOMAIN_BATCH, &task.batch_id, task.owner_id, task)?)
@@ -1259,7 +1248,7 @@ impl PublishMaterialStore for InMemoryPublishMaterialStore {
         &self,
         owner_id: i64,
         query: &PublishMaterialQuery,
-    ) -> OpenDeskResult<(Vec<PublishMaterial>, u32)> {
+    ) -> DingDaResult<(Vec<PublishMaterial>, u32)> {
         let materials: Vec<PublishMaterial> = self.db.scan(DOMAIN_PUB_MATERIAL, owner_id)?;
         let mut list: Vec<PublishMaterial> = materials
             .into_iter()
@@ -1282,13 +1271,13 @@ impl PublishMaterialStore for InMemoryPublishMaterialStore {
         &self,
         owner_id: i64,
         material_id: i64,
-    ) -> OpenDeskResult<Option<PublishMaterial>> {
+    ) -> DingDaResult<Option<PublishMaterial>> {
         Ok(self
             .db
             .get(DOMAIN_PUB_MATERIAL, &material_id.to_string(), owner_id)?)
     }
 
-    fn create_material(&self, material: &PublishMaterial) -> OpenDeskResult<PublishMaterial> {
+    fn create_material(&self, material: &PublishMaterial) -> DingDaResult<PublishMaterial> {
         let mut material = material.clone();
         material.id = self.db.next_id(DOMAIN_PUB_MATERIAL, material.owner_id)?;
         self.db.put(
@@ -1300,7 +1289,7 @@ impl PublishMaterialStore for InMemoryPublishMaterialStore {
         Ok(material)
     }
 
-    fn update_material(&self, material: &PublishMaterial) -> OpenDeskResult<()> {
+    fn update_material(&self, material: &PublishMaterial) -> DingDaResult<()> {
         if self
             .db
             .get::<PublishMaterial>(
@@ -1320,14 +1309,14 @@ impl PublishMaterialStore for InMemoryPublishMaterialStore {
         )?)
     }
 
-    fn delete_material(&self, material_id: i64) -> OpenDeskResult<()> {
+    fn delete_material(&self, material_id: i64) -> DingDaResult<()> {
         let mut conn = self.db.connection()?;
         let deleted =
             diesel::sql_query("DELETE FROM business_records WHERE domain = ? AND record_id = ?")
                 .bind::<Text, _>(DOMAIN_PUB_MATERIAL)
                 .bind::<Text, _>(&material_id.to_string())
                 .execute(&mut *conn)
-                .map_err(|e| OpenDeskError::Store(e.to_string()))?;
+                .map_err(|e| DingDaError::Store(e.to_string()))?;
         if deleted == 0 {
             return Err(format!("素材 {} 不存在", material_id).into());
         }
@@ -1367,7 +1356,7 @@ const DOMAIN_PUB_LOG: &str = "publish_log";
 ///
 /// # 返回值
 /// 成功或错误描述。
-pub fn append_log(store: &InMemoryPublishLogStore, mut log: PublishLog) -> OpenDeskResult<()> {
+pub fn append_log(store: &InMemoryPublishLogStore, mut log: PublishLog) -> DingDaResult<()> {
     if log.id == 0 {
         log.id = store.db.next_id(DOMAIN_PUB_LOG, log.owner_id)?;
     }
@@ -1398,7 +1387,7 @@ pub fn update_log(
     item_url: Option<&str>,
     item_id: Option<&str>,
     error_message: Option<&str>,
-) -> OpenDeskResult<()> {
+) -> DingDaResult<()> {
     let record_id = log_id.to_string();
     #[derive(QueryableByName)]
     struct PayloadRow {
@@ -1411,7 +1400,7 @@ pub fn update_log(
             .bind::<Text, _>(DOMAIN_PUB_LOG)
             .bind::<Text, _>(&record_id)
             .load(&mut *conn)
-            .map_err(|e| common::OpenDeskError::store(e.to_string()))?
+            .map_err(|e| common::DingDaError::store(e.to_string()))?
     };
     let Some(row) = rows.into_iter().next() else {
         return Err(format!("日志 {} 不存在", log_id).into());
@@ -1427,7 +1416,7 @@ pub fn update_log(
 }
 
 impl PublishLogStore for InMemoryPublishLogStore {
-    fn list_logs(&self, owner_id: i64, query: &PublishLogQuery) -> OpenDeskResult<Vec<PublishLog>> {
+    fn list_logs(&self, owner_id: i64, query: &PublishLogQuery) -> DingDaResult<Vec<PublishLog>> {
         let mut list: Vec<PublishLog> = self
             .db
             .scan::<PublishLog>(DOMAIN_PUB_LOG, owner_id)?
@@ -1441,7 +1430,7 @@ impl PublishLogStore for InMemoryPublishLogStore {
         Ok(list)
     }
 
-    fn clear_older_than(&self, owner_id: i64, days: u32) -> OpenDeskResult<()> {
+    fn clear_older_than(&self, owner_id: i64, days: u32) -> DingDaResult<()> {
         let cutoff = if days == 0 {
             None
         } else {

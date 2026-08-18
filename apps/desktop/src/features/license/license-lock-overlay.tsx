@@ -89,7 +89,7 @@ export function LicenseLockOverlay({ onActivated }: LicenseLockOverlayProps) {
         {expanded && lockAnim !== "success" ? (
           <Card variant="glass" className="w-full">
             <CardHeader className="text-center">
-              <CardTitle>激活 OpenDesk</CardTitle>
+              <CardTitle>激活 DingDa</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-center text-[length:var(--text-sm)] text-muted-foreground">

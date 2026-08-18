@@ -33,7 +33,7 @@ pub struct SettingSetRequest {
 pub fn user_setting_get(
     state: State<'_, UserSettingHandle>,
     request: SettingGetRequest,
-) -> common::OpenDeskResult<IpcResponse<Option<String>>> {
+) -> common::DingDaResult<IpcResponse<Option<String>>> {
     let service = UserSettingService::new(state.store.as_ref());
     let result = service.get(request.owner_id, &request.key)?;
     Ok(IpcResponse::ok(result))
@@ -44,7 +44,7 @@ pub fn user_setting_get(
 pub fn user_setting_set(
     state: State<'_, UserSettingHandle>,
     request: SettingSetRequest,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = UserSettingService::new(state.store.as_ref());
     service.set(request.owner_id, &request.key, &request.value)?;
     Ok(IpcResponse::ok(()))
@@ -55,7 +55,7 @@ pub fn user_setting_set(
 pub fn user_settings_get_all(
     state: State<'_, UserSettingHandle>,
     owner_id: i64,
-) -> common::OpenDeskResult<IpcResponse<PersonalSettings>> {
+) -> common::DingDaResult<IpcResponse<PersonalSettings>> {
     Ok(IpcResponse::ok(load_personal_settings(
         state.store.as_ref(),
         owner_id,

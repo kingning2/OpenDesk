@@ -75,7 +75,7 @@ jobs:
         shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}"
-          $baseName = "opendesk-$tag-windows-x64"
+          $baseName = "dingda-$tag-windows-x64"
           $triple = "x86_64-pc-windows-msvc"
           $bundleCandidates = @(
             "target/$triple/release/bundle",
@@ -115,7 +115,7 @@ jobs:
           $portableDir = Join-Path $env:RUNNER_TEMP "$baseName-portable"
           if (Test-Path $portableDir) { Remove-Item $portableDir -Recurse -Force }
           New-Item -ItemType Directory -Force -Path $portableDir | Out-Null
-          $mainExe = Join-Path $releaseDir "opendesk.exe"
+          $mainExe = Join-Path $releaseDir "dingda.exe"
           if (-not (Test-Path $mainExe)) {
             Write-Error "Main binary not found: $mainExe"
             exit 1
@@ -196,7 +196,7 @@ jobs:
         shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}"
-          $baseName = "opendesk-$tag-windows-x86"
+          $baseName = "dingda-$tag-windows-x86"
           $triple = "i686-pc-windows-msvc"
           $bundleCandidates = @(
             "target/$triple/release/bundle",
@@ -236,7 +236,7 @@ jobs:
           $portableDir = Join-Path $env:RUNNER_TEMP "$baseName-portable"
           if (Test-Path $portableDir) { Remove-Item $portableDir -Recurse -Force }
           New-Item -ItemType Directory -Force -Path $portableDir | Out-Null
-          $mainExe = Join-Path $releaseDir "opendesk.exe"
+          $mainExe = Join-Path $releaseDir "dingda.exe"
           if (-not (Test-Path $mainExe)) {
             Write-Error "Main binary not found: $mainExe"
             exit 1
@@ -308,7 +308,7 @@ jobs:
         id: package
         run: |
           TAG="${{ github.ref_name }}"
-          BASE_NAME="opendesk-${TAG}-macos-intel"
+          BASE_NAME="dingda-${TAG}-macos-intel"
           BUNDLE_DIR=""
           for candidate in \
             "target/x86_64-apple-darwin/release/bundle" \
@@ -407,7 +407,7 @@ jobs:
         id: package
         run: |
           TAG="${{ github.ref_name }}"
-          BASE_NAME="opendesk-${TAG}-macos-apple-silicon"
+          BASE_NAME="dingda-${TAG}-macos-apple-silicon"
           BUNDLE_DIR=""
           for candidate in \
             "target/aarch64-apple-darwin/release/bundle" \
@@ -501,7 +501,7 @@ jobs:
           for variant in required_variants:
               variant_names = [
                   name for name in names
-                  if name.startswith("opendesk-") and variant in name
+                  if name.startswith("dingda-") and variant in name
               ]
               has_installer = any(
                   name.endswith(installer_suffixes) for name in variant_names

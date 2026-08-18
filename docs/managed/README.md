@@ -1,6 +1,6 @@
-# OpenDesk Managed Docs
+# DingDa Managed Docs
 
-这里是 OpenDesk 的增量文档管理中心。它不替代仓库已有文档，也不要求搬迁或修改现有 Markdown 文件。
+这里是 DingDa 的增量文档管理中心。它不替代仓库已有文档，也不要求搬迁或修改现有 Markdown 文件。
 
 ## Agent 最小读取路径
 

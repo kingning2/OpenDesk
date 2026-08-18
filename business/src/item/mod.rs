@@ -5,7 +5,7 @@
 //! - 分页查询（关键词 / 账号筛选）；
 //! - 商品详情（AI 提示词 / 默认回复 / 卡券配置状态）。
 
-use common::OpenDeskResult;
+use common::DingDaResult;
 use serde::{Deserialize, Serialize};
 
 /// 商品（对齐 `xy_catalog_items` 核心字段）。
@@ -52,13 +52,13 @@ pub struct ItemQuery {
 /// 商品存储 Port。
 pub trait ItemStore: Send + Sync {
     /// 分页查询商品。
-    fn list_items(&self, owner_id: i64, query: &ItemQuery) -> OpenDeskResult<(Vec<Item>, u32)>;
+    fn list_items(&self, owner_id: i64, query: &ItemQuery) -> DingDaResult<(Vec<Item>, u32)>;
 
     /// 按商品 ID 查询。
-    fn get_item(&self, owner_id: i64, item_id: &str) -> OpenDeskResult<Option<Item>>;
+    fn get_item(&self, owner_id: i64, item_id: &str) -> DingDaResult<Option<Item>>;
 
     /// 更新商品（AI 提示词等）。
-    fn update_item(&self, item: &Item) -> OpenDeskResult<()>;
+    fn update_item(&self, item: &Item) -> DingDaResult<()>;
 }
 
 /// 商品服务。
@@ -72,12 +72,12 @@ impl<'a> ItemService<'a> {
     }
 
     /// 分页查询。
-    pub fn list(&self, owner_id: i64, query: &ItemQuery) -> OpenDeskResult<(Vec<Item>, u32)> {
+    pub fn list(&self, owner_id: i64, query: &ItemQuery) -> DingDaResult<(Vec<Item>, u32)> {
         self.store.list_items(owner_id, query)
     }
 
     /// 按商品 ID 查询。
-    pub fn get(&self, owner_id: i64, item_id: &str) -> OpenDeskResult<Option<Item>> {
+    pub fn get(&self, owner_id: i64, item_id: &str) -> DingDaResult<Option<Item>> {
         self.store.get_item(owner_id, item_id)
     }
 
@@ -87,7 +87,7 @@ impl<'a> ItemService<'a> {
         owner_id: i64,
         item_id: &str,
         apply: impl FnOnce(&mut Item),
-    ) -> OpenDeskResult<()> {
+    ) -> DingDaResult<()> {
         let Some(mut item) = self.store.get_item(owner_id, item_id)? else {
             return Err("商品不存在或无权限".to_string().into());
         };
@@ -114,7 +114,7 @@ mod tests {
     }
 
     impl ItemStore for MockStore {
-        fn list_items(&self, owner_id: i64, query: &ItemQuery) -> OpenDeskResult<(Vec<Item>, u32)> {
+        fn list_items(&self, owner_id: i64, query: &ItemQuery) -> DingDaResult<(Vec<Item>, u32)> {
             let list: Vec<Item> = self
                 .items
                 .lock()
@@ -140,7 +140,7 @@ mod tests {
             let total = list.len() as u32;
             Ok((list, total))
         }
-        fn get_item(&self, owner_id: i64, item_id: &str) -> OpenDeskResult<Option<Item>> {
+        fn get_item(&self, owner_id: i64, item_id: &str) -> DingDaResult<Option<Item>> {
             Ok(self
                 .items
                 .lock()
@@ -149,7 +149,7 @@ mod tests {
                 .find(|item| item.owner_id == owner_id && item.item_id == item_id)
                 .cloned())
         }
-        fn update_item(&self, item: &Item) -> OpenDeskResult<()> {
+        fn update_item(&self, item: &Item) -> DingDaResult<()> {
             let mut list = self.items.lock().expect("lock");
             if let Some(existing) = list.iter_mut().find(|i| i.id == item.id) {
                 *existing = item.clone();

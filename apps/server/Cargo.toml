@@ -1,10 +1,10 @@
 [package]
-name = "opendesk-server"
+name = "dingda-server"
 version.workspace = true
 edition.workspace = true
 
 [dependencies]
-app = { package = "opendesk-business", path = "../../business" }
+app = { package = "dingda-business", path = "../../business" }
 axum = "0.8"
 common = { path = "../../crates/common" }
 serde = { workspace = true }

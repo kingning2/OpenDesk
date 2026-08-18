@@ -35,11 +35,9 @@ pub struct AccountHandle {
 pub fn account_list(
     state: State<'_, AccountHandle>,
     owner_id: i64,
-) -> common::OpenDeskResult<IpcResponse<Vec<XianyuAccount>>> {
+) -> common::DingDaResult<IpcResponse<Vec<XianyuAccount>>> {
     let service = AccountService::new(state.store.as_ref());
-    let result = service
-        .list(owner_id)
-        .map_err(common::OpenDeskError::wrap)?;
+    let result = service.list(owner_id).map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(result))
 }
 
@@ -49,11 +47,11 @@ pub fn account_create(
     state: State<'_, AccountHandle>,
     owner_id: i64,
     account: XianyuAccount,
-) -> common::OpenDeskResult<IpcResponse<XianyuAccount>> {
+) -> common::DingDaResult<IpcResponse<XianyuAccount>> {
     let service = AccountService::new(state.store.as_ref());
     let result = service
         .create(owner_id, &account)
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(result))
 }
 
@@ -64,11 +62,11 @@ pub fn account_update(
     owner_id: i64,
     account_id: String,
     patch: AccountUpdate,
-) -> common::OpenDeskResult<IpcResponse<XianyuAccount>> {
+) -> common::DingDaResult<IpcResponse<XianyuAccount>> {
     let service = AccountService::new(state.store.as_ref());
     let result = service
         .update(owner_id, &account_id, &patch)
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(result))
 }
 
@@ -77,12 +75,12 @@ pub fn account_update(
 pub fn account_set_status(
     state: State<'_, AccountHandle>,
     request: AccountStatusRequest,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = AccountService::new(state.store.as_ref());
     let status = AccountStatus::from_str(&request.status);
     service
         .set_status(request.owner_id, &request.account_id, status)
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(()))
 }
 
@@ -91,10 +89,10 @@ pub fn account_set_status(
 pub fn account_delete(
     state: State<'_, AccountHandle>,
     request: AccountDeleteRequest,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = AccountService::new(state.store.as_ref());
     service
         .delete(request.owner_id, &request.account_id)
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(()))
 }

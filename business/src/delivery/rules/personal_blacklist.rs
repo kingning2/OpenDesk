@@ -2,7 +2,7 @@
 
 use crate::delivery::base::{DeliveryRule, RuleCheckResult};
 use crate::delivery::context::DeliveryCheckContext;
-use common::OpenDeskResult;
+use common::DingDaResult;
 
 /// 个人黑名单规则：买家在个人黑名单中时禁止发货。
 pub struct PersonalBlacklistRule;
@@ -20,7 +20,7 @@ impl DeliveryRule for PersonalBlacklistRule {
         "检查买家是否在个人黑名单中（支持商品级、账户级、用户级匹配）"
     }
 
-    fn check(&self, context: &DeliveryCheckContext) -> OpenDeskResult<RuleCheckResult> {
+    fn check(&self, context: &DeliveryCheckContext) -> DingDaResult<RuleCheckResult> {
         let prefix = context.prefix();
 
         // owner_id 缺失：无法查询用户级黑名单，fail-open 放行。
@@ -88,7 +88,7 @@ mod tests {
             _buyer_id: &str,
             _exclude_order_no: &str,
             _item_id: Option<&str>,
-        ) -> OpenDeskResult<u32> {
+        ) -> DingDaResult<u32> {
             Ok(0)
         }
         fn count_owner_orders(
@@ -97,7 +97,7 @@ mod tests {
             _buyer_id: &str,
             _exclude_order_no: &str,
             _item_id: Option<&str>,
-        ) -> OpenDeskResult<u32> {
+        ) -> DingDaResult<u32> {
             Ok(0)
         }
         fn count_unconfirmed_orders(
@@ -106,7 +106,7 @@ mod tests {
             _buyer_id: &str,
             _exclude_order_no: &str,
             _item_id: Option<&str>,
-        ) -> OpenDeskResult<u32> {
+        ) -> DingDaResult<u32> {
             Ok(0)
         }
         fn find_blacklist(
@@ -115,10 +115,10 @@ mod tests {
             _account_id: &str,
             _buyer_id: &str,
             _item_id: Option<&str>,
-        ) -> OpenDeskResult<Option<BlacklistRecord>> {
+        ) -> DingDaResult<Option<BlacklistRecord>> {
             Ok(self.0.clone())
         }
-        fn fetch_buyer_rate_count(&self, _buyer_id: &str) -> OpenDeskResult<u32> {
+        fn fetch_buyer_rate_count(&self, _buyer_id: &str) -> DingDaResult<u32> {
             Ok(10)
         }
     }

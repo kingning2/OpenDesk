@@ -4,8 +4,8 @@
 //! ?????2026-08-11
 
 use common::contracts::{AiIpcConfigRequest, AiIpcConfigResponse};
-use common::OpenDeskResult;
-use opendesk_macros::timed;
+use common::DingDaResult;
+use dingda_macros::timed;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -35,7 +35,7 @@ pub struct AiApiKeyTestResult {
 #[timed]
 pub async fn ai_config_get(
     state: tauri::State<'_, Arc<AiConfigStore>>,
-) -> OpenDeskResult<IpcResponse<AiIpcConfigResponse>> {
+) -> DingDaResult<IpcResponse<AiIpcConfigResponse>> {
     let result = state.get().await?;
     Ok(IpcResponse::ok(result))
 }
@@ -56,7 +56,7 @@ pub async fn ai_config_get(
 pub async fn ai_config_set(
     state: tauri::State<'_, Arc<AiConfigStore>>,
     config: AiIpcConfigRequest,
-) -> OpenDeskResult<IpcResponse<AiIpcConfigResponse>> {
+) -> DingDaResult<IpcResponse<AiIpcConfigResponse>> {
     let result = state.set(config).await?;
     Ok(IpcResponse::ok(result))
 }
@@ -80,7 +80,7 @@ pub async fn ai_config_set(
 pub async fn ai_test_api_key(
     base_url: String,
     api_key: String,
-) -> OpenDeskResult<IpcResponse<AiApiKeyTestResult>> {
+) -> DingDaResult<IpcResponse<AiApiKeyTestResult>> {
     let url = format!("{}/user/balance", base_url.trim_end_matches('/'));
     let response = reqwest::Client::new()
         .get(url)

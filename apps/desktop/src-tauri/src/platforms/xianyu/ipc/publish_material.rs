@@ -44,7 +44,7 @@ pub struct MaterialBatchDeleteRequest {
 pub fn publish_material_list(
     state: State<'_, PublishMaterialHandle>,
     request: MaterialListRequest,
-) -> common::OpenDeskResult<IpcResponse<(Vec<PublishMaterial>, u32)>> {
+) -> common::DingDaResult<IpcResponse<(Vec<PublishMaterial>, u32)>> {
     let service = PublishMaterialService::new(state.store.as_ref());
     let query = PublishMaterialQuery {
         page: request.page,
@@ -63,11 +63,11 @@ pub fn publish_material_create(
     state: State<'_, PublishMaterialHandle>,
     owner_id: i64,
     material: PublishMaterial,
-) -> common::OpenDeskResult<IpcResponse<PublishMaterial>> {
+) -> common::DingDaResult<IpcResponse<PublishMaterial>> {
     let service = PublishMaterialService::new(state.store.as_ref());
     let result = service
         .create(owner_id, material)
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(result))
 }
 
@@ -76,11 +76,11 @@ pub fn publish_material_update(
     state: State<'_, PublishMaterialHandle>,
     owner_id: i64,
     material: PublishMaterial,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = PublishMaterialService::new(state.store.as_ref());
     service
         .update(owner_id, &material)
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(()))
 }
 
@@ -88,7 +88,7 @@ pub fn publish_material_update(
 pub fn publish_material_delete(
     state: State<'_, PublishMaterialHandle>,
     request: MaterialDeleteRequest,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = PublishMaterialService::new(state.store.as_ref());
     service.delete(request.owner_id, request.material_id)?;
     Ok(IpcResponse::ok(()))
@@ -98,7 +98,7 @@ pub fn publish_material_delete(
 pub fn publish_material_batch_delete(
     state: State<'_, PublishMaterialHandle>,
     request: MaterialBatchDeleteRequest,
-) -> common::OpenDeskResult<IpcResponse<usize>> {
+) -> common::DingDaResult<IpcResponse<usize>> {
     let service = PublishMaterialService::new(state.store.as_ref());
     let result = service.batch_delete(request.owner_id, &request.material_ids)?;
     Ok(IpcResponse::ok(result))

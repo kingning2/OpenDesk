@@ -5,9 +5,9 @@
 //! 作者：Xiaoman
 //! 创建时间：2026-08-18
 
-use common::errors::OpenDeskError;
+use common::errors::DingDaError;
 use common::events::EventSink;
-use common::OpenDeskResult;
+use common::DingDaResult;
 use kernel::event::{EventBus, InMemoryEventBus};
 use std::sync::Arc;
 
@@ -29,9 +29,9 @@ impl KernelEventSink {
 }
 
 impl EventSink for KernelEventSink {
-    fn publish(&self, topic: &str, payload: &[u8]) -> OpenDeskResult<()> {
+    fn publish(&self, topic: &str, payload: &[u8]) -> DingDaResult<()> {
         EventBus::publish(self.0.as_ref(), topic, payload)
-            .map_err(|error| OpenDeskError::Internal(format!("event publish failed: {error}")))
+            .map_err(|error| DingDaError::Internal(format!("event publish failed: {error}")))
     }
 }
 

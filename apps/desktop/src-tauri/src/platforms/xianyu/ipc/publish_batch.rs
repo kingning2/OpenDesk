@@ -31,7 +31,7 @@ pub struct BatchStatusRequest {
 pub async fn publish_batch_submit(
     state: State<'_, BatchPublishHandle>,
     request: BatchSubmitRequest,
-) -> common::OpenDeskResult<IpcResponse<BatchTask>> {
+) -> common::DingDaResult<IpcResponse<BatchTask>> {
     let batch_id = format!("batch-{}", uuid_fragment());
     let service = BatchService::new(state.store.as_ref());
     let task = service.submit(
@@ -89,7 +89,7 @@ pub async fn publish_batch_submit(
 pub fn publish_batch_status(
     state: State<'_, BatchPublishHandle>,
     request: BatchStatusRequest,
-) -> common::OpenDeskResult<IpcResponse<Option<BatchTask>>> {
+) -> common::DingDaResult<IpcResponse<Option<BatchTask>>> {
     let service = BatchService::new(state.store.as_ref());
     let result = service.status(request.owner_id, &request.batch_id)?;
     Ok(IpcResponse::ok(result))

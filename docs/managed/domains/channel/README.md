@@ -4,7 +4,7 @@
 
 **WhatsApp 桌面辅助（Assist）**，基于 **Baileys 协议桥**（见 [ADR-0006](../../decisions/channel/adr-0006-whatsapp-baileys-worker.md)），不是自动客服。
 
-- 多账号 **QR 协议登录**（opendesk-worker）
+- 多账号 **QR 协议登录**（dingda-worker）
 - 收消息（Worker 同步 → Rust → 桌面 UI）
 - 发消息（**人工点击发送** → Rust → Worker 出站队列）
 - 会话绑定 `customer_id`（邮箱/手机号关联）
@@ -22,7 +22,7 @@
 ## 稳定边界
 
 ```text
-opendesk-worker（Baileys 协议桥）
+dingda-worker（Baileys 协议桥）
   → 标准化入站/出站事件
   → Rust channel UseCase（持久化、幂等）
   → SQLite（channel_account / channel_conversation / channel_message）
@@ -41,7 +41,7 @@ React 发送
 | 类型 | 路径 |
 |------|------|
 | Rust | `crates/channel/`（骨架） |
-| Worker | 规划（`opendesk-worker` 已移除，重新引入时实现 `wa_protocol_bridge` job） |
+| Worker | 规划（`dingda-worker` 已移除，重新引入时实现 `wa_protocol_bridge` job） |
 | Contract | `contracts/schema/v1/channel/`（待建） |
 | React | `apps/desktop/src/features/channel/`（骨架） |
 | Epic 子任务 | [CHG-020](../../changes/2026/07/chg-20260720-020-whatsapp-business-assist.md) |

@@ -2,7 +2,7 @@
 
 use crate::delivery::base::{DeliveryRule, RuleCheckResult};
 use crate::delivery::context::DeliveryCheckContext;
-use common::OpenDeskResult;
+use common::DingDaResult;
 
 /// 买家信用度检查规则：评价数为 0（或低于阈值）时禁止发货。
 pub struct BuyerCreditRule;
@@ -24,7 +24,7 @@ impl DeliveryRule for BuyerCreditRule {
         serde_json::json!({ "threshold": 0 })
     }
 
-    fn check(&self, context: &DeliveryCheckContext) -> OpenDeskResult<RuleCheckResult> {
+    fn check(&self, context: &DeliveryCheckContext) -> DingDaResult<RuleCheckResult> {
         let threshold = context.config_u32("threshold", 0);
         let prefix = context.prefix();
 
@@ -87,7 +87,7 @@ mod tests {
             _buyer_id: &str,
             _exclude_order_no: &str,
             _item_id: Option<&str>,
-        ) -> OpenDeskResult<u32> {
+        ) -> DingDaResult<u32> {
             Ok(0)
         }
         fn count_owner_orders(
@@ -96,7 +96,7 @@ mod tests {
             _buyer_id: &str,
             _exclude_order_no: &str,
             _item_id: Option<&str>,
-        ) -> OpenDeskResult<u32> {
+        ) -> DingDaResult<u32> {
             Ok(0)
         }
         fn count_unconfirmed_orders(
@@ -105,7 +105,7 @@ mod tests {
             _buyer_id: &str,
             _exclude_order_no: &str,
             _item_id: Option<&str>,
-        ) -> OpenDeskResult<u32> {
+        ) -> DingDaResult<u32> {
             Ok(0)
         }
         fn find_blacklist(
@@ -114,10 +114,10 @@ mod tests {
             _account_id: &str,
             _buyer_id: &str,
             _item_id: Option<&str>,
-        ) -> OpenDeskResult<Option<crate::delivery::data::BlacklistRecord>> {
+        ) -> DingDaResult<Option<crate::delivery::data::BlacklistRecord>> {
             Ok(None)
         }
-        fn fetch_buyer_rate_count(&self, _buyer_id: &str) -> OpenDeskResult<u32> {
+        fn fetch_buyer_rate_count(&self, _buyer_id: &str) -> DingDaResult<u32> {
             if self.1 {
                 Err("api down".to_string().into())
             } else {

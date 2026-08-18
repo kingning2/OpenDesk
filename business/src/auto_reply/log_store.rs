@@ -3,7 +3,7 @@
 //! 对齐 Python 版 `/api/v1/auto-reply-logs`：按账号 / 日期 / 消息类型 / 规则类型 /
 //! 发送状态筛选，分页返回。日志由管线在回复决策时写入（本模块只负责查询）。
 
-use common::OpenDeskResult;
+use common::DingDaResult;
 use serde::{Deserialize, Serialize};
 
 /// 自动回复日志条目（对齐 Python 版 `AutoReplyLogItem`）。
@@ -106,7 +106,7 @@ pub trait AutoReplyLogStore: Send + Sync {
         &self,
         owner_id: i64,
         query: &AutoReplyLogQuery,
-    ) -> OpenDeskResult<Vec<AutoReplyLogItem>>;
+    ) -> DingDaResult<Vec<AutoReplyLogItem>>;
 }
 
 /// 日志服务。
@@ -120,11 +120,7 @@ impl<'a> AutoReplyLogService<'a> {
     }
 
     /// 分页查询（page 从 1 开始）。
-    pub fn list(
-        &self,
-        owner_id: i64,
-        query: &AutoReplyLogQuery,
-    ) -> OpenDeskResult<AutoReplyLogPage> {
+    pub fn list(&self, owner_id: i64, query: &AutoReplyLogQuery) -> DingDaResult<AutoReplyLogPage> {
         let page = query.page.max(1);
         let page_size = query.page_size.clamp(1, 200);
         let all = self.store.list_logs(owner_id, query)?;
@@ -164,7 +160,7 @@ mod tests {
             &self,
             owner_id: i64,
             query: &AutoReplyLogQuery,
-        ) -> OpenDeskResult<Vec<AutoReplyLogItem>> {
+        ) -> DingDaResult<Vec<AutoReplyLogItem>> {
             let logs = self.logs.lock().expect("lock");
             Ok(logs
                 .iter()

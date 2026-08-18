@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "opendesk://channel/event/status/v1",
+  "$id": "dingda://channel/event/status/v1",
   "title": "channel/event/status",
   "type": "object",
   "required": ["account_id", "state"],

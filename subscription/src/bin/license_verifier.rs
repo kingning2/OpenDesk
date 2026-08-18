@@ -8,7 +8,7 @@ use subscription_activation::{machine_code::compute_machine_code, verify::verify
 
 #[derive(Parser, Debug)]
 #[command(name = "license-verifier")]
-#[command(about = "License verifier for OpenDesk (vendored OpenSSL)")]
+#[command(about = "License verifier for DingDa (vendored OpenSSL)")]
 struct Cli {
     #[command(subcommand)]
     cmd: Commands,

@@ -26,7 +26,7 @@ use crate::protocol::{
 };
 
 use common::constants::xianyu;
-use common::OpenDeskResult;
+use common::DingDaResult;
 
 const WS_URL: &str = xianyu::WS_URL;
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(15);
@@ -327,7 +327,7 @@ impl ChannelProtocol for XianyuChannel {
             .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(listener);
     }
 
-    async fn connect(&self, account: &ChannelAccount) -> OpenDeskResult<()> {
+    async fn connect(&self, account: &ChannelAccount) -> DingDaResult<()> {
         if self.inner.read_state() == ConnectionState::Connected {
             return Ok(());
         }
@@ -397,7 +397,7 @@ impl ChannelProtocol for XianyuChannel {
         Ok(())
     }
 
-    async fn disconnect(&self) -> OpenDeskResult<()> {
+    async fn disconnect(&self) -> DingDaResult<()> {
         if let Some(account) = self
             .inner
             .account
@@ -415,7 +415,7 @@ impl ChannelProtocol for XianyuChannel {
         Ok(())
     }
 
-    async fn send(&self, peer_id: &str, text: &str) -> OpenDeskResult<String> {
+    async fn send(&self, peer_id: &str, text: &str) -> DingDaResult<String> {
         let account = self
             .inner
             .account

@@ -4,7 +4,7 @@
 //! 校验账号 → 解析地址 → 创建日志 → 能力检测 → 按能力发布 → 更新日志 → 同步商品。
 
 use super::gateway::{AccountCapability, PublishGateway, PublishLogEntry, PublishResult, SyncInfo};
-use common::OpenDeskResult;
+use common::DingDaResult;
 use serde::Serialize;
 
 /// 普通卖家默认库存。
@@ -128,7 +128,7 @@ impl<'a> PublishService<'a> {
             .unwrap_or(&cookie)
             .to_string();
 
-        let result: OpenDeskResult<PublishResult> = if !capability.success {
+        let result: DingDaResult<PublishResult> = if !capability.success {
             Ok(PublishResult {
                 success: false,
                 item_url: None,
@@ -249,18 +249,14 @@ mod tests {
 
     #[async_trait::async_trait]
     impl PublishGateway for MockGateway {
-        fn account_cookie(
-            &self,
-            _user_id: i64,
-            _account_id: &str,
-        ) -> OpenDeskResult<Option<String>> {
+        fn account_cookie(&self, _user_id: i64, _account_id: &str) -> DingDaResult<Option<String>> {
             Ok(self.cookie.clone())
         }
         fn resolve_address(
             &self,
             _account_id: &str,
             item: &serde_json::Value,
-        ) -> OpenDeskResult<serde_json::Value> {
+        ) -> DingDaResult<serde_json::Value> {
             Ok(item.clone())
         }
         async fn detect_capability(
@@ -268,7 +264,7 @@ mod tests {
             _account_id: &str,
             _cookie: &str,
             _user_id: i64,
-        ) -> OpenDeskResult<AccountCapability> {
+        ) -> DingDaResult<AccountCapability> {
             Ok(AccountCapability {
                 success: true,
                 is_fish_shop: self.is_fish_shop,
@@ -282,7 +278,7 @@ mod tests {
             _cookie: &str,
             _account_id: &str,
             _user_id: i64,
-        ) -> OpenDeskResult<PublishResult> {
+        ) -> DingDaResult<PublishResult> {
             Ok(PublishResult {
                 success: self.publish_ok,
                 item_url: Some("https://goofish.com/item/1".to_string()),
@@ -298,7 +294,7 @@ mod tests {
             _cookie: &str,
             _account_id: &str,
             _user_id: i64,
-        ) -> OpenDeskResult<PublishResult> {
+        ) -> DingDaResult<PublishResult> {
             Ok(PublishResult {
                 success: self.publish_ok,
                 item_url: Some("https://goofish.com/item/1".to_string()),
@@ -308,7 +304,7 @@ mod tests {
                 account_invalid: false,
             })
         }
-        fn create_log(&self, _entry: &PublishLogEntry, _status: &str) -> OpenDeskResult<i64> {
+        fn create_log(&self, _entry: &PublishLogEntry, _status: &str) -> DingDaResult<i64> {
             let mut logs = self.created_logs.lock().expect("log lock");
             logs.push(1);
             Ok(logs.len() as i64)
@@ -320,14 +316,14 @@ mod tests {
             _item_url: Option<&str>,
             _item_id: Option<&str>,
             _error_message: Option<&str>,
-        ) -> OpenDeskResult<()> {
+        ) -> DingDaResult<()> {
             Ok(())
         }
         async fn sync_account_items(
             &self,
             _account_id: &str,
             _cookie: &str,
-        ) -> OpenDeskResult<SyncInfo> {
+        ) -> DingDaResult<SyncInfo> {
             Ok(SyncInfo {
                 sync_status: "success".to_string(),
                 sync_message: "已自动获取 10 个商品".to_string(),
@@ -411,14 +407,14 @@ mod tests {
         struct ErrorGateway;
         #[async_trait::async_trait]
         impl PublishGateway for ErrorGateway {
-            fn account_cookie(&self, _u: i64, _a: &str) -> OpenDeskResult<Option<String>> {
+            fn account_cookie(&self, _u: i64, _a: &str) -> DingDaResult<Option<String>> {
                 Ok(Some("c=1".to_string()))
             }
             fn resolve_address(
                 &self,
                 _a: &str,
                 i: &serde_json::Value,
-            ) -> OpenDeskResult<serde_json::Value> {
+            ) -> DingDaResult<serde_json::Value> {
                 Ok(i.clone())
             }
             async fn detect_capability(
@@ -426,7 +422,7 @@ mod tests {
                 _a: &str,
                 _c: &str,
                 _u: i64,
-            ) -> OpenDeskResult<AccountCapability> {
+            ) -> DingDaResult<AccountCapability> {
                 Ok(AccountCapability {
                     success: true,
                     is_fish_shop: false,
@@ -440,7 +436,7 @@ mod tests {
                 _c: &str,
                 _a: &str,
                 _u: i64,
-            ) -> OpenDeskResult<PublishResult> {
+            ) -> DingDaResult<PublishResult> {
                 Err("mtop down".to_string().into())
             }
             async fn publish_personal(
@@ -449,10 +445,10 @@ mod tests {
                 _c: &str,
                 _a: &str,
                 _u: i64,
-            ) -> OpenDeskResult<PublishResult> {
+            ) -> DingDaResult<PublishResult> {
                 Err("mtop down".to_string().into())
             }
-            fn create_log(&self, _e: &PublishLogEntry, _s: &str) -> OpenDeskResult<i64> {
+            fn create_log(&self, _e: &PublishLogEntry, _s: &str) -> DingDaResult<i64> {
                 Ok(1)
             }
             fn update_log(
@@ -462,10 +458,10 @@ mod tests {
                 _u: Option<&str>,
                 _i: Option<&str>,
                 _e: Option<&str>,
-            ) -> OpenDeskResult<()> {
+            ) -> DingDaResult<()> {
                 Ok(())
             }
-            async fn sync_account_items(&self, _a: &str, _c: &str) -> OpenDeskResult<SyncInfo> {
+            async fn sync_account_items(&self, _a: &str, _c: &str) -> DingDaResult<SyncInfo> {
                 Ok(SyncInfo::default())
             }
         }

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "opendesk://llm/provider/v1",
+  "$id": "dingda://llm/provider/v1",
   "title": "llm/provider",
   "type": "object",
   "required": ["base_url", "api_key", "model"],

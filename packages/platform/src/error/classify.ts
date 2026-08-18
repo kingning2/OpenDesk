@@ -32,7 +32,7 @@ const NETWORK_MARKERS: readonly string[] = [
   "enotfound",
   "ehostunreach",
   "etimedout",
-  // OpenDeskError::Unavailable
+  // DingDaError::Unavailable
   "unavailable",
   // 超时
   "timeout",

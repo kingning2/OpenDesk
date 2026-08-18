@@ -5,7 +5,7 @@ mod tests {
     use crate::order::{
         DeliveryInfoUpdate, DeliveryMethod, Order, OrderService, OrderStatus, OrderStore,
     };
-    use common::OpenDeskResult;
+    use common::DingDaResult;
     use std::sync::Mutex;
 
     struct MockStore {
@@ -49,7 +49,7 @@ mod tests {
     }
 
     impl OrderStore for MockStore {
-        fn get_order(&self, order_no: &str) -> OpenDeskResult<Option<Order>> {
+        fn get_order(&self, order_no: &str) -> DingDaResult<Option<Order>> {
             Ok(self
                 .orders
                 .lock()
@@ -58,7 +58,7 @@ mod tests {
                 .find(|o| o.order_no == order_no)
                 .cloned())
         }
-        fn get_order_by_no(&self, owner_id: i64, order_no: &str) -> OpenDeskResult<Option<Order>> {
+        fn get_order_by_no(&self, owner_id: i64, order_no: &str) -> DingDaResult<Option<Order>> {
             Ok(self
                 .orders
                 .lock()
@@ -73,7 +73,7 @@ mod tests {
             account_id: &str,
             buyer_id: &str,
             _item_id: Option<&str>,
-        ) -> OpenDeskResult<Option<Order>> {
+        ) -> DingDaResult<Option<Order>> {
             Ok(self
                 .orders
                 .lock()
@@ -94,7 +94,7 @@ mod tests {
             _page_size: u32,
             status: Option<OrderStatus>,
             keyword: &str,
-        ) -> OpenDeskResult<(Vec<Order>, u32)> {
+        ) -> DingDaResult<(Vec<Order>, u32)> {
             let list: Vec<Order> = self
                 .orders
                 .lock()
@@ -110,7 +110,7 @@ mod tests {
             let total = list.len() as u32;
             Ok((list, total))
         }
-        fn update_status(&self, order_no: &str, status: OrderStatus) -> OpenDeskResult<bool> {
+        fn update_status(&self, order_no: &str, status: OrderStatus) -> DingDaResult<bool> {
             let mut list = self.orders.lock().expect("lock");
             let Some(order) = list.iter_mut().find(|o| o.order_no == order_no) else {
                 return Ok(false);
@@ -118,7 +118,7 @@ mod tests {
             order.status = status;
             Ok(true)
         }
-        fn update_chat_id(&self, order_no: &str, chat_id: &str) -> OpenDeskResult<bool> {
+        fn update_chat_id(&self, order_no: &str, chat_id: &str) -> DingDaResult<bool> {
             let mut list = self.orders.lock().expect("lock");
             let Some(order) = list.iter_mut().find(|o| o.order_no == order_no) else {
                 return Ok(false);
@@ -130,7 +130,7 @@ mod tests {
             &self,
             order_no: &str,
             update: &DeliveryInfoUpdate,
-        ) -> OpenDeskResult<bool> {
+        ) -> DingDaResult<bool> {
             let mut list = self.orders.lock().expect("lock");
             let Some(order) = list.iter_mut().find(|o| o.order_no == order_no) else {
                 return Ok(false);
@@ -144,11 +144,7 @@ mod tests {
             }
             Ok(true)
         }
-        fn update_delivery_fail_reason(
-            &self,
-            order_no: &str,
-            reason: &str,
-        ) -> OpenDeskResult<bool> {
+        fn update_delivery_fail_reason(&self, order_no: &str, reason: &str) -> DingDaResult<bool> {
             let mut list = self.orders.lock().expect("lock");
             let Some(order) = list.iter_mut().find(|o| o.order_no == order_no) else {
                 return Ok(false);
@@ -156,7 +152,7 @@ mod tests {
             order.delivery_fail_reason = reason.to_string();
             Ok(true)
         }
-        fn update_rated(&self, order_no: &str, is_rated: bool) -> OpenDeskResult<bool> {
+        fn update_rated(&self, order_no: &str, is_rated: bool) -> DingDaResult<bool> {
             let mut list = self.orders.lock().expect("lock");
             let Some(order) = list.iter_mut().find(|o| o.order_no == order_no) else {
                 return Ok(false);
@@ -164,19 +160,19 @@ mod tests {
             order.is_rated = is_rated;
             Ok(true)
         }
-        fn create_order(&self, order: &Order) -> OpenDeskResult<Order> {
+        fn create_order(&self, order: &Order) -> DingDaResult<Order> {
             let mut order = order.clone();
             order.id = (self.orders.lock().expect("lock").len() + 1) as i64;
             self.orders.lock().expect("lock").push(order.clone());
             Ok(order)
         }
-        fn delete_order(&self, owner_id: i64, order_id: i64) -> OpenDeskResult<bool> {
+        fn delete_order(&self, owner_id: i64, order_id: i64) -> DingDaResult<bool> {
             let mut list = self.orders.lock().expect("lock");
             let before = list.len();
             list.retain(|o| !(o.owner_id == owner_id && o.id == order_id));
             Ok(list.len() < before)
         }
-        fn batch_delete_orders(&self, owner_id: i64, order_ids: &[i64]) -> OpenDeskResult<u32> {
+        fn batch_delete_orders(&self, owner_id: i64, order_ids: &[i64]) -> DingDaResult<u32> {
             let mut list = self.orders.lock().expect("lock");
             let before = list.len();
             list.retain(|o| !(o.owner_id == owner_id && order_ids.contains(&o.id)));

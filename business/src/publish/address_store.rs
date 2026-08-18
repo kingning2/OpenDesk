@@ -8,7 +8,7 @@
 //!
 //! 说明：原前端 Excel 导入导出依赖后端文件处理，桌面端不迁移。
 
-use common::OpenDeskResult;
+use common::DingDaResult;
 use serde::{Deserialize, Serialize};
 
 /// 地址类型。
@@ -82,20 +82,19 @@ pub trait AddressStore: Send + Sync {
         &self,
         owner_id: i64,
         query: &AddressQuery,
-    ) -> OpenDeskResult<(Vec<PublishAddress>, u32)>;
+    ) -> DingDaResult<(Vec<PublishAddress>, u32)>;
 
     /// 按 ID 查询（归属校验）。
-    fn get_address(&self, owner_id: i64, address_id: i64)
-        -> OpenDeskResult<Option<PublishAddress>>;
+    fn get_address(&self, owner_id: i64, address_id: i64) -> DingDaResult<Option<PublishAddress>>;
 
     /// 新建。
-    fn create_address(&self, address: &PublishAddress) -> OpenDeskResult<PublishAddress>;
+    fn create_address(&self, address: &PublishAddress) -> DingDaResult<PublishAddress>;
 
     /// 更新。
-    fn update_address(&self, address: &PublishAddress) -> OpenDeskResult<()>;
+    fn update_address(&self, address: &PublishAddress) -> DingDaResult<()>;
 
     /// 删除。
-    fn delete_address(&self, address_id: i64) -> OpenDeskResult<()>;
+    fn delete_address(&self, address_id: i64) -> DingDaResult<()>;
 }
 
 /// 地址服务。
@@ -113,7 +112,7 @@ impl<'a> AddressService<'a> {
         &self,
         owner_id: i64,
         query: &AddressQuery,
-    ) -> OpenDeskResult<(Vec<PublishAddress>, u32)> {
+    ) -> DingDaResult<(Vec<PublishAddress>, u32)> {
         self.store.list_addresses(owner_id, query)
     }
 
@@ -122,7 +121,7 @@ impl<'a> AddressService<'a> {
         &self,
         owner_id: i64,
         mut address: PublishAddress,
-    ) -> OpenDeskResult<PublishAddress> {
+    ) -> DingDaResult<PublishAddress> {
         address.owner_id = owner_id;
         address.address = address.address.trim().to_string();
         if address.address.is_empty() {
@@ -132,7 +131,7 @@ impl<'a> AddressService<'a> {
     }
 
     /// 更新（归属校验）。
-    pub fn update(&self, owner_id: i64, address: &PublishAddress) -> OpenDeskResult<()> {
+    pub fn update(&self, owner_id: i64, address: &PublishAddress) -> DingDaResult<()> {
         if self.store.get_address(owner_id, address.id)?.is_none() {
             return Err("地址不存在或无权限".to_string().into());
         }
@@ -143,7 +142,7 @@ impl<'a> AddressService<'a> {
     }
 
     /// 删除（归属校验）。
-    pub fn delete(&self, owner_id: i64, address_id: i64) -> OpenDeskResult<()> {
+    pub fn delete(&self, owner_id: i64, address_id: i64) -> DingDaResult<()> {
         if self.store.get_address(owner_id, address_id)?.is_none() {
             return Err("地址不存在或无权限".to_string().into());
         }
@@ -151,7 +150,7 @@ impl<'a> AddressService<'a> {
     }
 
     /// 批量删除（逐条校验归属，返回实际删除数量）。
-    pub fn batch_delete(&self, owner_id: i64, ids: &[i64]) -> OpenDeskResult<usize> {
+    pub fn batch_delete(&self, owner_id: i64, ids: &[i64]) -> DingDaResult<usize> {
         let mut deleted = 0usize;
         for id in ids {
             if self.delete(owner_id, *id).is_ok() {
@@ -186,7 +185,7 @@ mod tests {
             &self,
             owner_id: i64,
             query: &AddressQuery,
-        ) -> OpenDeskResult<(Vec<PublishAddress>, u32)> {
+        ) -> DingDaResult<(Vec<PublishAddress>, u32)> {
             let list: Vec<PublishAddress> = self
                 .addresses
                 .lock()
@@ -210,7 +209,7 @@ mod tests {
             &self,
             owner_id: i64,
             address_id: i64,
-        ) -> OpenDeskResult<Option<PublishAddress>> {
+        ) -> DingDaResult<Option<PublishAddress>> {
             Ok(self
                 .addresses
                 .lock()
@@ -219,7 +218,7 @@ mod tests {
                 .find(|a| a.id == address_id && a.owner_id == owner_id)
                 .cloned())
         }
-        fn create_address(&self, address: &PublishAddress) -> OpenDeskResult<PublishAddress> {
+        fn create_address(&self, address: &PublishAddress) -> DingDaResult<PublishAddress> {
             let mut address = address.clone();
             let mut next = self.next_id.lock().expect("lock");
             *next += 1;
@@ -227,7 +226,7 @@ mod tests {
             self.addresses.lock().expect("lock").push(address.clone());
             Ok(address)
         }
-        fn update_address(&self, address: &PublishAddress) -> OpenDeskResult<()> {
+        fn update_address(&self, address: &PublishAddress) -> DingDaResult<()> {
             let mut list = self.addresses.lock().expect("lock");
             if let Some(existing) = list.iter_mut().find(|a| a.id == address.id) {
                 *existing = address.clone();
@@ -235,7 +234,7 @@ mod tests {
             }
             Err("地址不存在".to_string().into())
         }
-        fn delete_address(&self, address_id: i64) -> OpenDeskResult<()> {
+        fn delete_address(&self, address_id: i64) -> DingDaResult<()> {
             let mut list = self.addresses.lock().expect("lock");
             let before = list.len();
             list.retain(|a| a.id != address_id);

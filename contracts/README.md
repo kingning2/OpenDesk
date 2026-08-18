@@ -1,4 +1,4 @@
-# OpenDesk Contracts
+# DingDa Contracts
 
 三端共享契约层 — **唯一真相源**（DTO · IPC · HTTP · Event · Error）。
 

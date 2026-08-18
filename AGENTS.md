@@ -1,4 +1,4 @@
-# OpenDesk
+# DingDa
 
 企业 AI 客服桌面平台 — Architecture Skeleton 阶段。
 
@@ -19,7 +19,7 @@ pnpm branch:sync                                # 切换分支后刷新规则
 | `contract/<kind>/<slug>` | `contracts/` + codegen |
 | `main` | 集成分支 |
 
-配置源：[`skills/opendesk/config/branch_roles.json`](skills/opendesk/config/branch_roles.json)
+配置源：[`skills/dingda/config/branch_roles.json`](skills/dingda/config/branch_roles.json)
 
 ## 架构约束（硬约束）
 
@@ -33,7 +33,7 @@ React（展示）  →  Tauri IPC  →  Rust（协调者）  →  Python（AI Ru
 
 完整约束：[`.cursor/rules/master.md`](.cursor/rules/master.md)
 
-AI 开发知识库：[`skills/opendesk/`](skills/opendesk/)（架构 · recipes · templates · scripts）
+AI 开发知识库：[`skills/dingda/`](skills/dingda/)（架构 · recipes · templates · scripts）
 
 ## Managed Docs 变更门禁（所有 Agent 强制）
 

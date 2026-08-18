@@ -1,6 +1,6 @@
 ---
 id: ADR-0006-whatsapp-baileys-worker
-title: WhatsApp Baileys 协议桥在 opendesk-worker
+title: WhatsApp Baileys 协议桥在 dingda-worker
 type: adr
 status: accepted
 domain: channel
@@ -13,7 +13,7 @@ related:
   - EPIC-20260721-001-email-agent-port
 ---
 
-# WhatsApp Baileys 协议桥在 opendesk-worker
+# WhatsApp Baileys 协议桥在 dingda-worker
 
 ## Status
 
@@ -21,9 +21,9 @@ Accepted — 替代 [ADR-0004](adr-0004-whatsapp-webhook-deployment.md)（Busine
 
 ## Context
 
-1. email-agent 生产环境使用 **Baileys 协议桥**（QR 登录、多账号、会话同步），迁入 OpenDesk 时需保留该能力。
+1. email-agent 生产环境使用 **Baileys 协议桥**（QR 登录、多账号、会话同步），迁入 DingDa 时需保留该能力。
 2. 原 MVP 规划（ADR-0004）假定 **WhatsApp Business Cloud API + 公网 Webhook**，与迁入目标不一致。
-3. OpenDesk 架构要求：重 IO/长连接任务在 **opendesk-worker**；Rust 主进程协调；Python 不直连渠道协议。
+3. DingDa 架构要求：重 IO/长连接任务在 **dingda-worker**；Rust 主进程协调；Python 不直连渠道协议。
 4. 产品约束不变：**禁止无人值守自动发送**；可保留发件队列，但出站须 UI 人工确认。
 
 ## Decision
@@ -33,7 +33,7 @@ Accepted — 替代 [ADR-0004](adr-0004-whatsapp-webhook-deployment.md)（Busine
 | 项 | 决策 |
 |----|------|
 | 协议 | WhatsApp Web 协议（Baileys 或等价实现） |
-| 运行位置 | **opendesk-worker** 子进程/任务（非 Tauri 主进程 UI 线程） |
+| 运行位置 | **dingda-worker** 子进程/任务（非 Tauri 主进程 UI 线程） |
 | 登录 | QR 扫码；多账号状态由 Worker 维护 |
 | 消息入库 | Worker → SQLite（`channel_*` 表）→ Tauri Event → React |
 | 出站 | React `channel/send` IPC → Rust 校验 `customer_id` + 人工标记 → Worker 发信队列 |
@@ -45,7 +45,7 @@ React（会话 UI、QR 展示、人工发送）
   → Tauri IPC（channel/*）
   → Rust channel UseCase（校验、持久化、入队）
   → background_job / Worker IPC
-  → opendesk-worker（Baileys bridge）
+  → dingda-worker（Baileys bridge）
   → WhatsApp 网络
 
 入站：Baileys 事件 → Worker 标准化 → 写 DB → Event → React

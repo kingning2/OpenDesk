@@ -38,7 +38,7 @@ pub struct LogListRequest {
 pub fn auto_reply_log_list(
     state: State<'_, AutoReplyLogHandle>,
     request: LogListRequest,
-) -> common::OpenDeskResult<IpcResponse<AutoReplyLogPage>> {
+) -> common::DingDaResult<IpcResponse<AutoReplyLogPage>> {
     let service = AutoReplyLogService::new(state.store.as_ref());
     let query = AutoReplyLogQuery {
         page: request.page,

@@ -9,7 +9,7 @@ from typing import Any
 from gateway.login.password_login import password_login_by_platform
 from shared.logging import bind_log_context
 
-logger = logging.getLogger("opendesk.sidecar.password-login")
+logger = logging.getLogger("dingda.sidecar.password-login")
 
 
 async def handle_password_login(payload: dict[str, Any] | None, *, trace_id: str) -> dict[str, Any]:

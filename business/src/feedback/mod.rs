@@ -8,7 +8,7 @@
 //! 说明：原前端的管理员回复 / 解决标记 / 图片上传依赖 SaaS 服务端，
 //! 桌面单用户场景不迁移。
 
-use common::OpenDeskResult;
+use common::DingDaResult;
 use serde::{Deserialize, Serialize};
 
 /// 反馈类型。
@@ -58,16 +58,16 @@ pub trait FeedbackStore: Send + Sync {
         &self,
         owner_id: i64,
         query: &FeedbackQuery,
-    ) -> OpenDeskResult<(Vec<Feedback>, u32)>;
+    ) -> DingDaResult<(Vec<Feedback>, u32)>;
 
     /// 按 ID 查询（归属校验）。
-    fn get_feedback(&self, owner_id: i64, feedback_id: i64) -> OpenDeskResult<Option<Feedback>>;
+    fn get_feedback(&self, owner_id: i64, feedback_id: i64) -> DingDaResult<Option<Feedback>>;
 
     /// 新建。
-    fn create_feedback(&self, feedback: &Feedback) -> OpenDeskResult<Feedback>;
+    fn create_feedback(&self, feedback: &Feedback) -> DingDaResult<Feedback>;
 
     /// 删除。
-    fn delete_feedback(&self, feedback_id: i64) -> OpenDeskResult<()>;
+    fn delete_feedback(&self, feedback_id: i64) -> DingDaResult<()>;
 }
 
 /// 反馈服务。
@@ -81,16 +81,12 @@ impl<'a> FeedbackService<'a> {
     }
 
     /// 分页查询。
-    pub fn list(
-        &self,
-        owner_id: i64,
-        query: &FeedbackQuery,
-    ) -> OpenDeskResult<(Vec<Feedback>, u32)> {
+    pub fn list(&self, owner_id: i64, query: &FeedbackQuery) -> DingDaResult<(Vec<Feedback>, u32)> {
         self.store.list_feedbacks(owner_id, query)
     }
 
     /// 新建（标题/内容必填）。
-    pub fn create(&self, owner_id: i64, mut feedback: Feedback) -> OpenDeskResult<Feedback> {
+    pub fn create(&self, owner_id: i64, mut feedback: Feedback) -> DingDaResult<Feedback> {
         feedback.owner_id = owner_id;
         feedback.title = feedback.title.trim().to_string();
         feedback.content = feedback.content.trim().to_string();
@@ -104,7 +100,7 @@ impl<'a> FeedbackService<'a> {
     }
 
     /// 删除（归属校验）。
-    pub fn delete(&self, owner_id: i64, feedback_id: i64) -> OpenDeskResult<()> {
+    pub fn delete(&self, owner_id: i64, feedback_id: i64) -> DingDaResult<()> {
         if self.store.get_feedback(owner_id, feedback_id)?.is_none() {
             return Err("反馈不存在或无权限".to_string().into());
         }
@@ -136,7 +132,7 @@ mod tests {
             &self,
             owner_id: i64,
             query: &FeedbackQuery,
-        ) -> OpenDeskResult<(Vec<Feedback>, u32)> {
+        ) -> DingDaResult<(Vec<Feedback>, u32)> {
             let list: Vec<Feedback> = self
                 .feedbacks
                 .lock()
@@ -154,11 +150,7 @@ mod tests {
             let total = list.len() as u32;
             Ok((list, total))
         }
-        fn get_feedback(
-            &self,
-            owner_id: i64,
-            feedback_id: i64,
-        ) -> OpenDeskResult<Option<Feedback>> {
+        fn get_feedback(&self, owner_id: i64, feedback_id: i64) -> DingDaResult<Option<Feedback>> {
             Ok(self
                 .feedbacks
                 .lock()
@@ -167,7 +159,7 @@ mod tests {
                 .find(|f| f.id == feedback_id && f.owner_id == owner_id)
                 .cloned())
         }
-        fn create_feedback(&self, feedback: &Feedback) -> OpenDeskResult<Feedback> {
+        fn create_feedback(&self, feedback: &Feedback) -> DingDaResult<Feedback> {
             let mut feedback = feedback.clone();
             let mut next = self.next_id.lock().expect("lock");
             *next += 1;
@@ -175,7 +167,7 @@ mod tests {
             self.feedbacks.lock().expect("lock").push(feedback.clone());
             Ok(feedback)
         }
-        fn delete_feedback(&self, feedback_id: i64) -> OpenDeskResult<()> {
+        fn delete_feedback(&self, feedback_id: i64) -> DingDaResult<()> {
             let mut list = self.feedbacks.lock().expect("lock");
             let before = list.len();
             list.retain(|f| f.id != feedback_id);

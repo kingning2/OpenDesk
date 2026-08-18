@@ -25,7 +25,7 @@ from gateway.login.playwright_common import (
     try_click_first,
 )
 
-logger = logging.getLogger("opendesk.sidecar.password-login")
+logger = logging.getLogger("dingda.sidecar.password-login")
 STATUS_SUCCESS = "success"
 STATUS_FAILED = "failed"
 

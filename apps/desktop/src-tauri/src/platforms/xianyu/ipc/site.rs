@@ -34,16 +34,16 @@ pub async fn channel_open_site(
     repo: State<'_, Arc<ChannelRepo>>,
     app: AppHandle,
     request: ChannelIpcOpenSiteRequest,
-) -> common::OpenDeskResult<IpcResponse<ChannelIpcOpenSiteResponse>> {
+) -> common::DingDaResult<IpcResponse<ChannelIpcOpenSiteResponse>> {
     state
         .license
         .ensure_licensed()
         .await
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
 
     let account = repo
         .list_accounts()
-        .map_err(common::OpenDeskError::wrap)?
+        .map_err(common::DingDaError::wrap)?
         .into_iter()
         .find(|account| account.id == request.account_id)
         .ok_or_else(|| format!("账号不存在: {}", request.account_id))?;
@@ -79,12 +79,12 @@ pub async fn channel_open_site(
 pub async fn channel_close_site(
     state: State<'_, AppState>,
     app: AppHandle,
-) -> common::OpenDeskResult<IpcResponse<ChannelIpcCloseSiteResponse>> {
+) -> common::DingDaResult<IpcResponse<ChannelIpcCloseSiteResponse>> {
     state
         .license
         .ensure_licensed()
         .await
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     webview::close_xianyu_site(&app)?;
     Ok(IpcResponse::ok(ChannelIpcCloseSiteResponse { ok: true }))
 }

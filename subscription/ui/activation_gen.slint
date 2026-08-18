@@ -1,9 +1,9 @@
-// OpenDesk 激活码签发（管理员本机工具，界面从简）
+// DingDa 激活码签发（管理员本机工具，界面从简）
 
 import { Button, LineEdit, VerticalBox, HorizontalBox, TextEdit } from "std-widgets.slint";
 
 export component ActivationGenWindow inherits Window {
-    title: "OpenDesk 激活码签发";
+    title: "DingDa 激活码签发";
     preferred-width: 560px;
     preferred-height: 540px;
     min-width: 480px;
@@ -11,7 +11,7 @@ export component ActivationGenWindow inherits Window {
 
     in-out property <string> machine-code: "";
     in-out property <string> days-text: "30";
-    in-out property <string> product: "opendesk";
+    in-out property <string> product: "dingda";
     in-out property <string> version: "1";
     in-out property <string> private-key-path: "keys/private_key.pem";
     in-out property <string> output-path: "license.key";
@@ -27,7 +27,7 @@ export component ActivationGenWindow inherits Window {
         spacing: 10px;
 
         Text {
-            text: "OpenDesk 激活码签发";
+            text: "DingDa 激活码签发";
             font-size: 18px;
             font-weight: 700;
         }

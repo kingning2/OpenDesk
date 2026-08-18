@@ -7,7 +7,7 @@
 //!
 //! 实际推送（webhook / SMTP 等）由 sidecar 执行，本模块只做配置管理与校验。
 
-use common::OpenDeskResult;
+use common::DingDaResult;
 use serde::{Deserialize, Serialize};
 
 /// 通知渠道类型（与 Python 版 `channelTypes` 对齐）。
@@ -96,26 +96,26 @@ pub struct MessageNotification {
 /// 通知存储 Port。
 pub trait NotificationStore: Send + Sync {
     /// 渠道列表（按归属）。
-    fn list_channels(&self, owner_id: i64) -> OpenDeskResult<Vec<NotificationChannel>>;
+    fn list_channels(&self, owner_id: i64) -> DingDaResult<Vec<NotificationChannel>>;
 
     /// 按 ID 查询渠道（归属校验）。
     fn get_channel(
         &self,
         owner_id: i64,
         channel_id: i64,
-    ) -> OpenDeskResult<Option<NotificationChannel>>;
+    ) -> DingDaResult<Option<NotificationChannel>>;
 
     /// 新建渠道。
-    fn create_channel(&self, channel: &NotificationChannel) -> OpenDeskResult<NotificationChannel>;
+    fn create_channel(&self, channel: &NotificationChannel) -> DingDaResult<NotificationChannel>;
 
     /// 更新渠道（归属校验由调用方完成）。
-    fn update_channel(&self, channel: &NotificationChannel) -> OpenDeskResult<()>;
+    fn update_channel(&self, channel: &NotificationChannel) -> DingDaResult<()>;
 
     /// 删除渠道（归属校验）。
-    fn delete_channel(&self, owner_id: i64, channel_id: i64) -> OpenDeskResult<()>;
+    fn delete_channel(&self, owner_id: i64, channel_id: i64) -> DingDaResult<()>;
 
     /// 消息通知列表（含渠道名称冗余）。
-    fn list_notifications(&self, owner_id: i64) -> OpenDeskResult<Vec<MessageNotification>>;
+    fn list_notifications(&self, owner_id: i64) -> DingDaResult<Vec<MessageNotification>>;
 
     /// upsert：同账号同渠道存在则更新 enabled，否则新建。
     fn upsert_notification(
@@ -124,10 +124,10 @@ pub trait NotificationStore: Send + Sync {
         account_id: &str,
         channel_id: i64,
         enabled: bool,
-    ) -> OpenDeskResult<MessageNotification>;
+    ) -> DingDaResult<MessageNotification>;
 
     /// 删除消息通知（归属校验）。
-    fn delete_notification(&self, owner_id: i64, notification_id: i64) -> OpenDeskResult<()>;
+    fn delete_notification(&self, owner_id: i64, notification_id: i64) -> DingDaResult<()>;
 }
 
 /// 通知服务。
@@ -141,7 +141,7 @@ impl<'a> NotificationService<'a> {
     }
 
     /// 渠道列表。
-    pub fn list_channels(&self, owner_id: i64) -> OpenDeskResult<Vec<NotificationChannel>> {
+    pub fn list_channels(&self, owner_id: i64) -> DingDaResult<Vec<NotificationChannel>> {
         self.store.list_channels(owner_id)
     }
 
@@ -150,7 +150,7 @@ impl<'a> NotificationService<'a> {
         &self,
         owner_id: i64,
         mut channel: NotificationChannel,
-    ) -> OpenDeskResult<NotificationChannel> {
+    ) -> DingDaResult<NotificationChannel> {
         channel.owner_id = owner_id;
         Self::normalize(&mut channel)?;
         self.store.create_channel(&channel)
@@ -161,7 +161,7 @@ impl<'a> NotificationService<'a> {
         &self,
         owner_id: i64,
         mut channel: NotificationChannel,
-    ) -> OpenDeskResult<()> {
+    ) -> DingDaResult<()> {
         if self.store.get_channel(owner_id, channel.id)?.is_none() {
             return Err("渠道不存在或无权限".to_string().into());
         }
@@ -175,7 +175,7 @@ impl<'a> NotificationService<'a> {
         owner_id: i64,
         channel_id: i64,
         enabled: bool,
-    ) -> OpenDeskResult<()> {
+    ) -> DingDaResult<()> {
         let Some(mut channel) = self.store.get_channel(owner_id, channel_id)? else {
             return Err("渠道不存在或无权限".to_string().into());
         };
@@ -184,7 +184,7 @@ impl<'a> NotificationService<'a> {
     }
 
     /// 删除渠道。
-    pub fn delete_channel(&self, owner_id: i64, channel_id: i64) -> OpenDeskResult<()> {
+    pub fn delete_channel(&self, owner_id: i64, channel_id: i64) -> DingDaResult<()> {
         if self.store.get_channel(owner_id, channel_id)?.is_none() {
             return Err("渠道不存在或无权限".to_string().into());
         }
@@ -192,7 +192,7 @@ impl<'a> NotificationService<'a> {
     }
 
     /// 测试渠道：校验归属 + 配置可解析（实际投递由 sidecar 执行）。
-    pub fn test_channel(&self, owner_id: i64, channel_id: i64) -> OpenDeskResult<String> {
+    pub fn test_channel(&self, owner_id: i64, channel_id: i64) -> DingDaResult<String> {
         let channel = self
             .store
             .get_channel(owner_id, channel_id)?
@@ -204,7 +204,7 @@ impl<'a> NotificationService<'a> {
     }
 
     /// 消息通知列表。
-    pub fn list_notifications(&self, owner_id: i64) -> OpenDeskResult<Vec<MessageNotification>> {
+    pub fn list_notifications(&self, owner_id: i64) -> DingDaResult<Vec<MessageNotification>> {
         self.store.list_notifications(owner_id)
     }
 
@@ -215,7 +215,7 @@ impl<'a> NotificationService<'a> {
         account_id: &str,
         channel_id: i64,
         enabled: bool,
-    ) -> OpenDeskResult<MessageNotification> {
+    ) -> DingDaResult<MessageNotification> {
         if account_id.trim().is_empty() {
             return Err("账号不能为空".to_string().into());
         }
@@ -227,12 +227,12 @@ impl<'a> NotificationService<'a> {
     }
 
     /// 删除消息通知。
-    pub fn delete_notification(&self, owner_id: i64, notification_id: i64) -> OpenDeskResult<()> {
+    pub fn delete_notification(&self, owner_id: i64, notification_id: i64) -> DingDaResult<()> {
         self.store.delete_notification(owner_id, notification_id)
     }
 
     /// 归一化名称与配置。
-    fn normalize(channel: &mut NotificationChannel) -> OpenDeskResult<()> {
+    fn normalize(channel: &mut NotificationChannel) -> DingDaResult<()> {
         channel.name = channel.name.trim().to_string();
         if channel.name.is_empty() {
             return Err("渠道名称不能为空".to_string().into());
@@ -272,7 +272,7 @@ mod tests {
     }
 
     impl NotificationStore for MockStore {
-        fn list_channels(&self, owner_id: i64) -> OpenDeskResult<Vec<NotificationChannel>> {
+        fn list_channels(&self, owner_id: i64) -> DingDaResult<Vec<NotificationChannel>> {
             Ok(self
                 .channels
                 .lock()
@@ -286,7 +286,7 @@ mod tests {
             &self,
             owner_id: i64,
             channel_id: i64,
-        ) -> OpenDeskResult<Option<NotificationChannel>> {
+        ) -> DingDaResult<Option<NotificationChannel>> {
             Ok(self
                 .channels
                 .lock()
@@ -298,7 +298,7 @@ mod tests {
         fn create_channel(
             &self,
             channel: &NotificationChannel,
-        ) -> OpenDeskResult<NotificationChannel> {
+        ) -> DingDaResult<NotificationChannel> {
             let mut channel = channel.clone();
             let mut next = self.next_id.lock().expect("lock");
             *next += 1;
@@ -306,7 +306,7 @@ mod tests {
             self.channels.lock().expect("lock").push(channel.clone());
             Ok(channel)
         }
-        fn update_channel(&self, channel: &NotificationChannel) -> OpenDeskResult<()> {
+        fn update_channel(&self, channel: &NotificationChannel) -> DingDaResult<()> {
             let mut list = self.channels.lock().expect("lock");
             if let Some(existing) = list.iter_mut().find(|c| c.id == channel.id) {
                 *existing = channel.clone();
@@ -314,7 +314,7 @@ mod tests {
             }
             Err("渠道不存在".to_string().into())
         }
-        fn delete_channel(&self, owner_id: i64, channel_id: i64) -> OpenDeskResult<()> {
+        fn delete_channel(&self, owner_id: i64, channel_id: i64) -> DingDaResult<()> {
             let mut list = self.channels.lock().expect("lock");
             let before = list.len();
             list.retain(|c| !(c.owner_id == owner_id && c.id == channel_id));
@@ -323,7 +323,7 @@ mod tests {
             }
             Ok(())
         }
-        fn list_notifications(&self, owner_id: i64) -> OpenDeskResult<Vec<MessageNotification>> {
+        fn list_notifications(&self, owner_id: i64) -> DingDaResult<Vec<MessageNotification>> {
             let channels = self.channels.lock().expect("lock");
             let list: Vec<MessageNotification> = self
                 .notifications
@@ -348,7 +348,7 @@ mod tests {
             account_id: &str,
             channel_id: i64,
             enabled: bool,
-        ) -> OpenDeskResult<MessageNotification> {
+        ) -> DingDaResult<MessageNotification> {
             let mut list = self.notifications.lock().expect("lock");
             let mut next = self.next_id.lock().expect("lock");
             if let Some(existing) = list.iter_mut().find(|n| {
@@ -369,7 +369,7 @@ mod tests {
             list.push(notification.clone());
             Ok(notification)
         }
-        fn delete_notification(&self, owner_id: i64, notification_id: i64) -> OpenDeskResult<()> {
+        fn delete_notification(&self, owner_id: i64, notification_id: i64) -> DingDaResult<()> {
             let mut list = self.notifications.lock().expect("lock");
             let before = list.len();
             list.retain(|n| !(n.owner_id == owner_id && n.id == notification_id));

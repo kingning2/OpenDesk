@@ -6,7 +6,7 @@
 //! - 启用状态切换。
 
 use crate::delivery::execution::card::Card;
-use common::OpenDeskResult;
+use common::DingDaResult;
 
 /// 卡券查询条件。
 #[derive(Debug, Clone, Default)]
@@ -22,19 +22,19 @@ pub struct CardQuery {
 /// 卡券存储 Port。
 pub trait CardStore: Send + Sync {
     /// 分页查询。
-    fn list_cards(&self, owner_id: i64, query: &CardQuery) -> OpenDeskResult<(Vec<Card>, u32)>;
+    fn list_cards(&self, owner_id: i64, query: &CardQuery) -> DingDaResult<(Vec<Card>, u32)>;
 
     /// 按 ID 查询（归属校验）。
-    fn get_card(&self, owner_id: i64, card_id: i64) -> OpenDeskResult<Option<Card>>;
+    fn get_card(&self, owner_id: i64, card_id: i64) -> DingDaResult<Option<Card>>;
 
     /// 新建。
-    fn create_card(&self, card: &Card) -> OpenDeskResult<Card>;
+    fn create_card(&self, card: &Card) -> DingDaResult<Card>;
 
     /// 更新。
-    fn update_card(&self, card: &Card) -> OpenDeskResult<()>;
+    fn update_card(&self, card: &Card) -> DingDaResult<()>;
 
     /// 删除。
-    fn delete_card(&self, owner_id: i64, card_id: i64) -> OpenDeskResult<()>;
+    fn delete_card(&self, owner_id: i64, card_id: i64) -> DingDaResult<()>;
 }
 
 /// 卡券服务。
@@ -48,12 +48,12 @@ impl<'a> CardService<'a> {
     }
 
     /// 分页查询。
-    pub fn list(&self, owner_id: i64, query: &CardQuery) -> OpenDeskResult<(Vec<Card>, u32)> {
+    pub fn list(&self, owner_id: i64, query: &CardQuery) -> DingDaResult<(Vec<Card>, u32)> {
         self.store.list_cards(owner_id, query)
     }
 
     /// 新建（名称必备）。
-    pub fn create(&self, owner_id: i64, mut card: Card) -> OpenDeskResult<Card> {
+    pub fn create(&self, owner_id: i64, mut card: Card) -> DingDaResult<Card> {
         card.owner_id = owner_id;
         if card.name.trim().is_empty() {
             return Err("卡券名称不能为空".to_string().into());
@@ -65,7 +65,7 @@ impl<'a> CardService<'a> {
     }
 
     /// 更新（归属校验）。
-    pub fn update(&self, owner_id: i64, card: &Card) -> OpenDeskResult<()> {
+    pub fn update(&self, owner_id: i64, card: &Card) -> DingDaResult<()> {
         if self.store.get_card(owner_id, card.id)?.is_none() {
             return Err("卡券不存在或无权限".to_string().into());
         }
@@ -73,7 +73,7 @@ impl<'a> CardService<'a> {
     }
 
     /// 删除（归属校验）。
-    pub fn delete(&self, owner_id: i64, card_id: i64) -> OpenDeskResult<()> {
+    pub fn delete(&self, owner_id: i64, card_id: i64) -> DingDaResult<()> {
         if self.store.get_card(owner_id, card_id)?.is_none() {
             return Err("卡券不存在或无权限".to_string().into());
         }
@@ -81,7 +81,7 @@ impl<'a> CardService<'a> {
     }
 
     /// 切换启用状态。
-    pub fn set_enabled(&self, owner_id: i64, card_id: i64, enabled: bool) -> OpenDeskResult<()> {
+    pub fn set_enabled(&self, owner_id: i64, card_id: i64, enabled: bool) -> DingDaResult<()> {
         let Some(mut card) = self.store.get_card(owner_id, card_id)? else {
             return Err("卡券不存在或无权限".to_string().into());
         };
@@ -112,7 +112,7 @@ mod tests {
     }
 
     impl CardStore for MockStore {
-        fn list_cards(&self, owner_id: i64, query: &CardQuery) -> OpenDeskResult<(Vec<Card>, u32)> {
+        fn list_cards(&self, owner_id: i64, query: &CardQuery) -> DingDaResult<(Vec<Card>, u32)> {
             let list: Vec<Card> = self
                 .cards
                 .lock()
@@ -128,7 +128,7 @@ mod tests {
             let total = list.len() as u32;
             Ok((list, total))
         }
-        fn get_card(&self, owner_id: i64, card_id: i64) -> OpenDeskResult<Option<Card>> {
+        fn get_card(&self, owner_id: i64, card_id: i64) -> DingDaResult<Option<Card>> {
             Ok(self
                 .cards
                 .lock()
@@ -137,7 +137,7 @@ mod tests {
                 .find(|card| card.id == card_id && card.owner_id == owner_id)
                 .cloned())
         }
-        fn create_card(&self, card: &Card) -> OpenDeskResult<Card> {
+        fn create_card(&self, card: &Card) -> DingDaResult<Card> {
             let mut card = card.clone();
             let mut next = self.next_id.lock().expect("lock");
             *next += 1;
@@ -145,14 +145,14 @@ mod tests {
             self.cards.lock().expect("lock").push(card.clone());
             Ok(card)
         }
-        fn update_card(&self, card: &Card) -> OpenDeskResult<()> {
+        fn update_card(&self, card: &Card) -> DingDaResult<()> {
             let mut list = self.cards.lock().expect("lock");
             if let Some(existing) = list.iter_mut().find(|c| c.id == card.id) {
                 *existing = card.clone();
             }
             Ok(())
         }
-        fn delete_card(&self, owner_id: i64, card_id: i64) -> OpenDeskResult<()> {
+        fn delete_card(&self, owner_id: i64, card_id: i64) -> DingDaResult<()> {
             self.cards
                 .lock()
                 .expect("lock")

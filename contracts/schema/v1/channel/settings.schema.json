@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "opendesk://channel/settings/v1",
+  "$id": "dingda://channel/settings/v1",
   "title": "channel/settings",
   "type": "object",
   "required": ["auto_reply"],

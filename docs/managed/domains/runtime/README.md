@@ -9,7 +9,7 @@
 - 日志管道：`log_pipe.rs`
 - 配置：`SidecarConfig::from_env()`
 
-**重任务 Worker（opendesk-worker）已随采集/客户/邮箱板块移除**，如后续需要按新 Change 重新引入。
+**重任务 Worker（dingda-worker）已随采集/客户/邮箱板块移除**，如后续需要按新 Change 重新引入。
 
 ## 非职责
 

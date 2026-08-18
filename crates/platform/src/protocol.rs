@@ -4,7 +4,7 @@
 //! 并注册进 [`super::dispatcher::ChannelDispatcher`]。
 
 use async_trait::async_trait;
-use common::OpenDeskResult;
+use common::DingDaResult;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use thiserror::Error;
@@ -134,13 +134,13 @@ pub trait ChannelProtocol: Send + Sync {
     fn kind(&self) -> ChannelKind;
 
     /// 建立长连接并开始收消息（异步任务在内部派生）。
-    async fn connect(&self, account: &ChannelAccount) -> OpenDeskResult<()>;
+    async fn connect(&self, account: &ChannelAccount) -> DingDaResult<()>;
 
     /// 断开连接。
-    async fn disconnect(&self) -> OpenDeskResult<()>;
+    async fn disconnect(&self) -> DingDaResult<()>;
 
     /// 向 `peer_id` 发送文本，返回平台侧消息 id。
-    async fn send(&self, peer_id: &str, text: &str) -> OpenDeskResult<String>;
+    async fn send(&self, peer_id: &str, text: &str) -> DingDaResult<String>;
 
     fn connection_state(&self) -> ConnectionState;
 
@@ -150,9 +150,9 @@ pub trait ChannelProtocol: Send + Sync {
 /// 渠道账号（业务层复用的契约 DTO）。
 pub use common::contracts::ChannelAccount;
 
-/// 将 [`ChannelError`] 转为全局 [`common::OpenDeskError`]（协议层边界汇总）。
-impl From<ChannelError> for common::OpenDeskError {
+/// 将 [`ChannelError`] 转为全局 [`common::DingDaError`]（协议层边界汇总）。
+impl From<ChannelError> for common::DingDaError {
     fn from(err: ChannelError) -> Self {
-        common::OpenDeskError::channel(err.to_string())
+        common::DingDaError::channel(err.to_string())
     }
 }

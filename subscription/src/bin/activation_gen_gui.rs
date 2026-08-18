@@ -1,4 +1,4 @@
-//! OpenDesk 激活码签发 GUI（Slint）。
+//! DingDa 激活码签发 GUI（Slint）。
 //!
 //! 作者：coisini
 //! 创建时间：2026-07-16

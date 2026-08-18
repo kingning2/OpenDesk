@@ -30,12 +30,12 @@ function commandExists(command) {
 export function syncPythonWorkspace(options = {}) {
   if (!commandExists("uv")) {
     console.warn(
-      "[opendesk] uv not found; skip Python workspace pre-sync (sidecar will fall back to python)",
+      "[dingda] uv not found; skip Python workspace pre-sync (sidecar will fall back to python)",
     );
     return false;
   }
 
-  console.log("[opendesk] syncing Python workspace dependencies...");
+  console.log("[dingda] syncing Python workspace dependencies...");
   const result = spawnSync("uv", ["sync", "--all-packages"], {
     cwd: options.cwd ?? root,
     env: options.env ?? process.env,

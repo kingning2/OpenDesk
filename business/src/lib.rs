@@ -1,4 +1,4 @@
-//! OpenDesk 桌面端纯 Rust 业务逻辑。
+//! DingDa 桌面端纯 Rust 业务逻辑。
 //!
 //! 本 crate 收录所有**不依赖 Tauri** 的业务代码，供 `apps/desktop/src-tauri` 的
 //! Tauri 壳层引用。分层原则：
@@ -34,7 +34,7 @@
 //! 作者：Xiaoman
 //! 创建时间：2026-08-18
 
-pub use common::OpenDeskResult;
+pub use common::DingDaResult;
 
 // --- 原 business 模块 ---
 pub mod agent;

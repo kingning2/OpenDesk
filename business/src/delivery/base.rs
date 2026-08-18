@@ -1,7 +1,7 @@
 //! 规则基类与检查结果。
 
 use crate::delivery::context::DeliveryCheckContext;
-use common::OpenDeskResult;
+use common::DingDaResult;
 
 /// 规则检查结果。
 #[derive(Debug, Clone)]
@@ -72,7 +72,7 @@ pub trait DeliveryRule: Send + Sync {
     }
 
     /// 执行规则检查。
-    fn check(&self, context: &DeliveryCheckContext) -> OpenDeskResult<RuleCheckResult>;
+    fn check(&self, context: &DeliveryCheckContext) -> DingDaResult<RuleCheckResult>;
 }
 
 #[cfg(test)]

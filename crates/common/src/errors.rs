@@ -1,12 +1,12 @@
-//! OpenDesk 全局错误类型与 `Result` 别名。
+//! DingDa 全局错误类型与 `Result` 别名。
 //!
 //! 负责：
-//! - 跨层统一错误枚举 [`OpenDeskError`]
+//! - 跨层统一错误枚举 [`DingDaError`]
 //! - 便捷构造方法与 IPC 字符串转换
 //! - 与 [`anyhow`] 的边界层互转（壳层日志、上下文链）
 //!
 //! 各 crate 可继续保留领域错误（`StoreError`、`ChannelError` 等），
-//! 在 Application / IPC 边界通过 [`OpenDeskError::wrap`] 或 `map_err` 汇总。
+//! 在 Application / IPC 边界通过 [`DingDaError::wrap`] 或 `map_err` 汇总。
 //!
 //! 作者：Xiaoman
 //! 创建时间：2026-08-18
@@ -15,7 +15,7 @@ use serde::ser::Serializer;
 use serde::Serialize;
 use thiserror::Error;
 
-/// OpenDesk 跨层统一错误枚举。
+/// DingDa 跨层统一错误枚举。
 ///
 /// 按失败语义分类，便于日志过滤与 IPC 出口统一转 `String`。
 /// 底层 IO / JSON 错误通过 `#[from]` 自动转换。
@@ -23,7 +23,7 @@ use thiserror::Error;
 /// 作者：Xiaoman
 /// 创建时间：2026-08-18
 #[derive(Debug, Error)]
-pub enum OpenDeskError {
+pub enum DingDaError {
     /// 资源或实体不存在。
     #[error("not found: {resource} ({detail})")]
     NotFound {
@@ -91,13 +91,13 @@ pub enum OpenDeskError {
     Json(#[from] serde_json::Error),
 }
 
-/// 全局 `Result` 别名，默认错误类型为 [`OpenDeskError`]。
+/// 全局 `Result` 别名，默认错误类型为 [`DingDaError`]。
 ///
 /// 作者：Xiaoman
 /// 创建时间：2026-08-18
-pub type Result<T> = std::result::Result<T, OpenDeskError>;
+pub type Result<T> = std::result::Result<T, DingDaError>;
 
-impl OpenDeskError {
+impl DingDaError {
     /// 构造「不存在」错误。
     ///
     /// 作者：Xiaoman
@@ -108,7 +108,7 @@ impl OpenDeskError {
     /// - `detail` — 标识或说明
     ///
     /// # 返回值
-    /// [`OpenDeskError::NotFound`] 实例。
+    /// [`DingDaError::NotFound`] 实例。
     pub fn not_found(resource: impl Into<String>, detail: impl Into<String>) -> Self {
         Self::NotFound {
             resource: resource.into(),
@@ -170,7 +170,7 @@ impl OpenDeskError {
     /// - `err` — 源错误（`Display` 文案写入 `Internal`）
     ///
     /// # 返回值
-    /// [`OpenDeskError::Internal`]
+    /// [`DingDaError::Internal`]
     pub fn wrap<E: std::fmt::Display>(err: E) -> Self {
         Self::Internal(err.to_string())
     }
@@ -195,19 +195,19 @@ impl OpenDeskError {
     }
 }
 
-impl From<String> for OpenDeskError {
+impl From<String> for DingDaError {
     fn from(value: String) -> Self {
         Self::Internal(value)
     }
 }
 
-impl From<&str> for OpenDeskError {
+impl From<&str> for DingDaError {
     fn from(value: &str) -> Self {
         Self::Internal(value.to_string())
     }
 }
 
-impl Serialize for OpenDeskError {
+impl Serialize for DingDaError {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -216,7 +216,7 @@ impl Serialize for OpenDeskError {
     }
 }
 
-/// 将 [`OpenDeskError`] 转为 [`anyhow::Error`]，便于壳层日志链与 `.context()`。
+/// 将 [`DingDaError`] 转为 [`anyhow::Error`]，便于壳层日志链与 `.context()`。
 ///
 /// 作者：Xiaoman
 /// 创建时间：2026-08-18
@@ -226,16 +226,16 @@ impl Serialize for OpenDeskError {
 ///
 /// # 返回值
 /// 可继续用 `anyhow` 追加上下文的错误对象。
-pub fn to_anyhow(err: OpenDeskError) -> anyhow::Error {
+pub fn to_anyhow(err: DingDaError) -> anyhow::Error {
     anyhow::Error::from(err)
 }
 
-/// 将 [`anyhow::Error`] 收拢为 [`OpenDeskError::Internal`]（丢失类型信息，仅用于最外层出口）。
+/// 将 [`anyhow::Error`] 收拢为 [`DingDaError::Internal`]（丢失类型信息，仅用于最外层出口）。
 ///
 /// 作者：Xiaoman
 /// 创建时间：2026-08-18
-pub fn from_anyhow(err: anyhow::Error) -> OpenDeskError {
-    OpenDeskError::Internal(err.to_string())
+pub fn from_anyhow(err: anyhow::Error) -> DingDaError {
+    DingDaError::Internal(err.to_string())
 }
 
 /// 为 `Result` 附加上下文；失败时将原错误与 `context` 合并为 `Internal`。
@@ -256,22 +256,22 @@ mod tests {
 
     #[test]
     fn display_not_found() {
-        let err = OpenDeskError::not_found("account", "id=42");
+        let err = DingDaError::not_found("account", "id=42");
         assert_eq!(err.to_string(), "not found: account (id=42)");
     }
 
     #[test]
     fn json_error_from() {
         let json_err = serde_json::from_str::<serde_json::Value>("not-json").unwrap_err();
-        let err = OpenDeskError::from(json_err);
-        assert!(matches!(err, OpenDeskError::Json(_)));
+        let err = DingDaError::from(json_err);
+        assert!(matches!(err, DingDaError::Json(_)));
     }
 
     #[test]
     fn anyhow_roundtrip() {
-        let original = OpenDeskError::validation("bad cookie");
+        let original = DingDaError::validation("bad cookie");
         let anyhow_err = to_anyhow(original);
         let restored = from_anyhow(anyhow_err);
-        assert!(matches!(restored, OpenDeskError::Internal(_)));
+        assert!(matches!(restored, DingDaError::Internal(_)));
     }
 }

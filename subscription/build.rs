@@ -64,7 +64,7 @@ fn write_obfuscated_public_key(out_dir: &PathBuf, pem_bytes: &[u8]) {
 
 /// 由公钥派生稳定的 `.key` 混淆盐（同公钥跨构建保持一致）。
 fn write_key_file_salt(out_dir: &PathBuf, pem_bytes: &[u8]) {
-    let digest = sha256_bytes(b"opendesk.license.key.salt.v1", pem_bytes);
+    let digest = sha256_bytes(b"dingda.license.key.salt.v1", pem_bytes);
     let mut rust = String::from("pub static KEY_FILE_OBFUSCATION_SALT: &[u8] = &[");
     for (i, byte) in digest.iter().enumerate() {
         if i > 0 {
@@ -78,7 +78,7 @@ fn write_key_file_salt(out_dir: &PathBuf, pem_bytes: &[u8]) {
 
 /// 派生 attestation HMAC 密钥，并同步到 adapter/generated 供主程序嵌入。
 fn write_attestation_key(out_dir: &PathBuf, manifest_dir: &PathBuf, pem_bytes: &[u8]) {
-    let digest = sha256_bytes(b"opendesk.license.attest.v1", pem_bytes);
+    let digest = sha256_bytes(b"dingda.license.attest.v1", pem_bytes);
     let hex: String = digest.iter().map(|b| format!("{b:02x}")).collect();
 
     let mut rust = String::from("pub static ATTESTATION_KEY: &[u8] = &[");

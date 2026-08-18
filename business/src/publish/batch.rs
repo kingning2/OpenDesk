@@ -5,7 +5,7 @@
 //! - 提交创建任务（pending = 账号数 × 素材数），后台逐条执行；
 //! - 按账号统计进度（成功/失败/进行中/待处理）+ 发布后商品同步状态。
 
-use common::OpenDeskResult;
+use common::DingDaResult;
 use serde::{Deserialize, Serialize};
 
 /// 单账号发布统计 + 商品同步状态。
@@ -138,13 +138,13 @@ impl BatchTask {
 /// 批量任务存储 Port。
 pub trait BatchStore: Send + Sync {
     /// 创建任务（同 batch_id 覆盖）。
-    fn create_task(&self, task: &BatchTask) -> OpenDeskResult<()>;
+    fn create_task(&self, task: &BatchTask) -> DingDaResult<()>;
 
     /// 按归属查询任务。
-    fn get_task(&self, owner_id: i64, batch_id: &str) -> OpenDeskResult<Option<BatchTask>>;
+    fn get_task(&self, owner_id: i64, batch_id: &str) -> DingDaResult<Option<BatchTask>>;
 
     /// 更新任务进度。
-    fn update_task(&self, task: &BatchTask) -> OpenDeskResult<()>;
+    fn update_task(&self, task: &BatchTask) -> DingDaResult<()>;
 }
 
 /// 批量发布服务。
@@ -164,7 +164,7 @@ impl<'a> BatchService<'a> {
         owner_id: i64,
         account_ids: &[String],
         material_ids: &[i64],
-    ) -> OpenDeskResult<BatchTask> {
+    ) -> DingDaResult<BatchTask> {
         if account_ids.is_empty() {
             return Err("请至少选择一个账号".to_string().into());
         }
@@ -177,7 +177,7 @@ impl<'a> BatchService<'a> {
     }
 
     /// 查询任务进度。
-    pub fn status(&self, owner_id: i64, batch_id: &str) -> OpenDeskResult<Option<BatchTask>> {
+    pub fn status(&self, owner_id: i64, batch_id: &str) -> DingDaResult<Option<BatchTask>> {
         self.store.get_task(owner_id, batch_id)
     }
 }
@@ -193,14 +193,14 @@ mod tests {
     }
 
     impl BatchStore for MockStore {
-        fn create_task(&self, task: &BatchTask) -> OpenDeskResult<()> {
+        fn create_task(&self, task: &BatchTask) -> DingDaResult<()> {
             self.tasks
                 .lock()
                 .expect("lock")
                 .insert(task.batch_id.clone(), task.clone());
             Ok(())
         }
-        fn get_task(&self, owner_id: i64, batch_id: &str) -> OpenDeskResult<Option<BatchTask>> {
+        fn get_task(&self, owner_id: i64, batch_id: &str) -> DingDaResult<Option<BatchTask>> {
             Ok(self
                 .tasks
                 .lock()
@@ -209,7 +209,7 @@ mod tests {
                 .filter(|task| task.owner_id == owner_id)
                 .cloned())
         }
-        fn update_task(&self, task: &BatchTask) -> OpenDeskResult<()> {
+        fn update_task(&self, task: &BatchTask) -> DingDaResult<()> {
             self.tasks
                 .lock()
                 .expect("lock")

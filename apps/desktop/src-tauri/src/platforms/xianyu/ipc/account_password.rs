@@ -9,7 +9,7 @@ use crate::shared::ipc::IpcResponse;
 use crate::shared::state::AppState;
 use app::account::{AccountService, AccountStore, AccountUpdate, LoginMethod, XianyuAccount};
 use common::contracts::ChannelCookie;
-use opendesk_macros::timed;
+use dingda_macros::timed;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, State};
 
@@ -57,12 +57,12 @@ pub async fn account_password_login(
     accounts: State<'_, AccountHandle>,
     dispatcher: State<'_, std::sync::Arc<ChannelDispatcher>>,
     request: AccountPasswordLoginRequest,
-) -> common::OpenDeskResult<IpcResponse<AccountPasswordLoginResponse>> {
+) -> common::DingDaResult<IpcResponse<AccountPasswordLoginResponse>> {
     state
         .license
         .ensure_licensed()
         .await
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
 
     let sidecar_request = SidecarPasswordLoginRequest {
         login_id: request.login_id.clone(),
@@ -78,7 +78,7 @@ pub async fn account_password_login(
     let response: SidecarPasswordLoginResponse = sidecar
         .post_json("/v1/channel/password_login", &sidecar_request)
         .await
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
 
     if response.status != "success" || !response.ok {
         return Ok(IpcResponse::ok(AccountPasswordLoginResponse {
@@ -133,12 +133,12 @@ pub async fn account_password_login(
                         ..Default::default()
                     },
                 )
-                .map_err(common::OpenDeskError::wrap)?;
+                .map_err(common::DingDaError::wrap)?;
         }
         _ => {
             service
                 .create(1, &account)
-                .map_err(common::OpenDeskError::wrap)?;
+                .map_err(common::DingDaError::wrap)?;
         }
     }
 
@@ -147,7 +147,7 @@ pub async fn account_password_login(
     dispatcher
         .connect(&channel_account)
         .await
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
 
     Ok(IpcResponse::ok(AccountPasswordLoginResponse {
         ok: true,

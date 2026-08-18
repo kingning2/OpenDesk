@@ -6,7 +6,7 @@
 //! 创建时间：2026-08-18
 
 use crate::rate::{RateGateway, RateResult};
-use crate::OpenDeskResult;
+use crate::DingDaResult;
 use async_trait::async_trait;
 use platform::xianyu::mtop::{MtopClient, MtopRequest};
 use serde_json::json;
@@ -21,7 +21,7 @@ pub struct MtopRateGateway {
 
 impl MtopRateGateway {
     /// 用账号 cookie 构造 mtop 客户端。
-    pub fn new(cookie_str: &str) -> OpenDeskResult<Self> {
+    pub fn new(cookie_str: &str) -> DingDaResult<Self> {
         Ok(Self {
             mtop: MtopClient::new(cookie_str)?,
         })
@@ -30,7 +30,7 @@ impl MtopRateGateway {
 
 #[async_trait]
 impl RateGateway for MtopRateGateway {
-    async fn rate_buyer(&self, trade_id: &str, feedback: &str) -> OpenDeskResult<RateResult> {
+    async fn rate_buyer(&self, trade_id: &str, feedback: &str) -> DingDaResult<RateResult> {
         let request = MtopRequest::new(
             RATE_API,
             RATE_API_VERSION,
@@ -57,8 +57,8 @@ impl RateGateway for MtopRateGateway {
         }
     }
 
-    async fn update_rated(&self, _order_no: &str, _is_rated: bool) -> OpenDeskResult<bool> {
-        Err(common::OpenDeskError::internal(
+    async fn update_rated(&self, _order_no: &str, _is_rated: bool) -> DingDaResult<bool> {
+        Err(common::DingDaError::internal(
             "订单评价状态更新需接入存储实现",
         ))
     }

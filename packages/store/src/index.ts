@@ -1,5 +1,5 @@
 /**
- * `@desk/store` — OpenDesk 通用状态底座（Zustand）。
+ * `@desk/store` — DingDa 通用状态底座（Zustand）。
  *
  * 只提供创建 store 的基础设施；业务状态放在各 Feature / 壳层模块。
  *

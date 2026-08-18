@@ -1,7 +1,7 @@
 [project]
-name = "opendesk"
+name = "dingda"
 version = "0.1.0"
-description = "OpenDesk AI customer service desktop platform"
+description = "DingDa AI customer service desktop platform"
 readme = "README.md"
 requires-python = ">=3.13"
 

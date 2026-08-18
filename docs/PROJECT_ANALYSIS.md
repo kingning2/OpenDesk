@@ -1,8 +1,8 @@
-# OpenDesk 项目说明
+# DingDa 项目说明
 
 ## 项目是什么
 
-OpenDesk 是 **本地优先的 AI Agent 智能客服** 桌面应用：AI 提供客服场景的回复建议与交互，核心能力经 Rust 唯一协调者编排，Python Sidecar 承担 AI 推理。
+DingDa 是 **本地优先的 AI Agent 智能客服** 桌面应用：AI 提供客服场景的回复建议与交互，核心能力经 Rust 唯一协调者编排，Python Sidecar 承担 AI 推理。
 
 > 当前处于 **Architecture Skeleton + 基础切片** 阶段。UI Shell、Rust Agent 组装、Python Sidecar ping 已有。
 
@@ -41,14 +41,14 @@ React  →  Rust  →  Python
 pnpm install
 pnpm tauri dev
 pnpm lint
-python skills/opendesk/scripts/check_architecture.py
+python skills/dingda/scripts/check_architecture.py
 ```
 
 ## 其他文档
 
 - [`README.md`](../README.md) — 工程入口
 - [`docs/architecture/`](architecture/) — 架构文档与 ADR
-- [`skills/opendesk/`](../skills/opendesk/) — AI 开发知识库
+- [`skills/dingda/`](../skills/dingda/) — AI 开发知识库
 
 ---
 

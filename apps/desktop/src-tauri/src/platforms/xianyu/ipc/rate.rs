@@ -4,7 +4,7 @@ use crate::platforms::xianyu::adapter::MtopRateGateway;
 use crate::shared::ipc::IpcResponse;
 use app::rate::{FeedbackConfig, RateResult, RateService};
 use common;
-use opendesk_macros::timed;
+use dingda_macros::timed;
 use serde::Deserialize;
 
 /// 评价买家请求。
@@ -23,7 +23,7 @@ pub struct RateBuyerRequest {
 #[timed]
 pub async fn rate_buyer(
     request: RateBuyerRequest,
-) -> common::OpenDeskResult<IpcResponse<RateResult>> {
+) -> common::DingDaResult<IpcResponse<RateResult>> {
     let gateway = MtopRateGateway::new(&request.cookie)?;
     let service = RateService::new(&gateway);
     let result = service
@@ -42,14 +42,14 @@ pub fn rate_feedback_resolve(config: FeedbackConfig) -> IpcResponse<Option<Strin
             &self,
             _trade_id: &str,
             _feedback: &str,
-        ) -> common::OpenDeskResult<RateResult> {
+        ) -> common::DingDaResult<RateResult> {
             Err("noop".into())
         }
         async fn update_rated(
             &self,
             _order_no: &str,
             _is_rated: bool,
-        ) -> common::OpenDeskResult<bool> {
+        ) -> common::DingDaResult<bool> {
             Ok(true)
         }
     }

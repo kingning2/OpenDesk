@@ -12,7 +12,7 @@ use app::xianyu::{
     InMemoryPublishGateway, InMemoryPublishLogStore, InMemoryPublishMaterialStore,
     InMemoryRiskStore, InMemoryUserSettingStore, SqliteBusinessDb,
 };
-use common::OpenDeskResult;
+use common::DingDaResult;
 use platform::dispatcher::ChannelDispatcher;
 use platform::protocol::ChannelProtocol;
 use platform::xianyu::XianyuChannel;
@@ -36,7 +36,7 @@ use tauri::Manager;
 pub fn register_business(
     app: &tauri::AppHandle,
     config_dir: &Path,
-) -> OpenDeskResult<Arc<SqliteBusinessDb>> {
+) -> DingDaResult<Arc<SqliteBusinessDb>> {
     let business_dir = config_dir.join("business");
     std::fs::create_dir_all(&business_dir).map_err(|error| error.to_string())?;
     let db = SqliteBusinessDb::open(

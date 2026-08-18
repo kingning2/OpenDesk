@@ -44,7 +44,7 @@ pub struct KeywordDeleteRequest {
 pub fn keyword_list(
     state: State<'_, KeywordHandle>,
     request: KeywordListRequest,
-) -> common::OpenDeskResult<IpcResponse<Vec<KeywordRule>>> {
+) -> common::DingDaResult<IpcResponse<Vec<KeywordRule>>> {
     let service = KeywordService::new(state.store.as_ref());
     let result = service.list(&request.account_id)?;
     Ok(IpcResponse::ok(result))
@@ -55,7 +55,7 @@ pub fn keyword_list(
 pub fn keyword_replace(
     state: State<'_, KeywordHandle>,
     request: KeywordReplaceRequest,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = KeywordService::new(state.store.as_ref());
     service.replace(&request.account_id, &request.keywords)?;
     Ok(IpcResponse::ok(()))
@@ -66,7 +66,7 @@ pub fn keyword_replace(
 pub fn keyword_add(
     state: State<'_, KeywordHandle>,
     request: KeywordAddRequest,
-) -> common::OpenDeskResult<IpcResponse<KeywordRule>> {
+) -> common::DingDaResult<IpcResponse<KeywordRule>> {
     let service = KeywordService::new(state.store.as_ref());
     let result = service.add(&request.account_id, request.rule)?;
     Ok(IpcResponse::ok(result))
@@ -77,7 +77,7 @@ pub fn keyword_add(
 pub fn keyword_delete(
     state: State<'_, KeywordHandle>,
     request: KeywordDeleteRequest,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = KeywordService::new(state.store.as_ref());
     service.delete(request.rule_id)?;
     Ok(IpcResponse::ok(()))

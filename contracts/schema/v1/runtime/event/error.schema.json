@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "opendesk://runtime/event/error/v1",
+  "$id": "dingda://runtime/event/error/v1",
   "title": "runtime/event/error",
   "type": "object",
   "required": ["event_id", "occurred_at", "kind", "message"],

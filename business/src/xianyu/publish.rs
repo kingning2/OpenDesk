@@ -16,7 +16,7 @@ use crate::publish::{
 };
 use crate::AccountStore;
 use async_trait::async_trait;
-use common::OpenDeskError;
+use common::DingDaError;
 
 use super::stores::{append_log, update_log, InMemoryAccountStore, InMemoryPublishLogStore};
 
@@ -47,7 +47,7 @@ impl PublishGateway for InMemoryPublishGateway {
         &self,
         user_id: i64,
         account_id: &str,
-    ) -> crate::OpenDeskResult<Option<String>> {
+    ) -> crate::DingDaResult<Option<String>> {
         let account = self.accounts.get_account(user_id, account_id)?;
         Ok(account
             .filter(|account: &XianyuAccount| !account.cookie.is_empty())
@@ -58,7 +58,7 @@ impl PublishGateway for InMemoryPublishGateway {
         &self,
         _account_id: &str,
         item: &serde_json::Value,
-    ) -> crate::OpenDeskResult<serde_json::Value> {
+    ) -> crate::DingDaResult<serde_json::Value> {
         Ok(item.clone())
     }
 
@@ -67,7 +67,7 @@ impl PublishGateway for InMemoryPublishGateway {
         account_id: &str,
         _cookie: &str,
         user_id: i64,
-    ) -> crate::OpenDeskResult<AccountCapability> {
+    ) -> crate::DingDaResult<AccountCapability> {
         let exists = self.accounts.get_account(user_id, account_id)?.is_some();
         if !exists {
             return Ok(AccountCapability {
@@ -91,7 +91,7 @@ impl PublishGateway for InMemoryPublishGateway {
         _cookie: &str,
         _account_id: &str,
         _user_id: i64,
-    ) -> crate::OpenDeskResult<PublishResult> {
+    ) -> crate::DingDaResult<PublishResult> {
         let title = item
             .get("title")
             .and_then(serde_json::Value::as_str)
@@ -116,15 +116,15 @@ impl PublishGateway for InMemoryPublishGateway {
         _cookie: &str,
         _account_id: &str,
         _user_id: i64,
-    ) -> crate::OpenDeskResult<PublishResult> {
+    ) -> crate::DingDaResult<PublishResult> {
         self.publish_fish_shop(item, "", "", 0).await
     }
 
-    fn create_log(&self, entry: &PublishLogEntry, status: &str) -> crate::OpenDeskResult<i64> {
+    fn create_log(&self, entry: &PublishLogEntry, status: &str) -> crate::DingDaResult<i64> {
         let mut next = self
             .next_log_id
             .lock()
-            .map_err(|error| OpenDeskError::internal(error.to_string()))?;
+            .map_err(|error| DingDaError::internal(error.to_string()))?;
         *next += 1;
         let log_id = *next;
         let log = PublishLog {
@@ -152,7 +152,7 @@ impl PublishGateway for InMemoryPublishGateway {
         item_url: Option<&str>,
         item_id: Option<&str>,
         error_message: Option<&str>,
-    ) -> crate::OpenDeskResult<()> {
+    ) -> crate::DingDaResult<()> {
         update_log(
             &self.logs,
             log_id,
@@ -167,7 +167,7 @@ impl PublishGateway for InMemoryPublishGateway {
         &self,
         _account_id: &str,
         _cookie: &str,
-    ) -> crate::OpenDeskResult<SyncInfo> {
+    ) -> crate::DingDaResult<SyncInfo> {
         Ok(SyncInfo {
             sync_status: "skipped".to_string(),
             sync_message: "内存网关：商品同步由 sidecar 执行".to_string(),

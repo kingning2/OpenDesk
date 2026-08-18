@@ -99,6 +99,6 @@ impl DashboardHandle {
 pub fn dashboard_stats(
     state: State<'_, DashboardHandle>,
     owner_id: i64,
-) -> common::OpenDeskResult<IpcResponse<DashboardStats>> {
+) -> common::DingDaResult<IpcResponse<DashboardStats>> {
     Ok(IpcResponse::ok(state.stats(owner_id)))
 }

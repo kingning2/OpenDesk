@@ -445,7 +445,7 @@ impl LicenseGate for VerifierProcessLicense {
 }
 
 fn resolve_data_dir() -> Result<PathBuf, LicenseError> {
-    if let Ok(path) = std::env::var("OPENDESK_LICENSE_DIR") {
+    if let Ok(path) = std::env::var("DINGDA_LICENSE_DIR") {
         return Ok(PathBuf::from(path));
     }
     let base = std::env::var_os("APPDATA")
@@ -454,7 +454,7 @@ fn resolve_data_dir() -> Result<PathBuf, LicenseError> {
         .ok_or_else(|| LicenseError::DataDirUnavailable {
             detail: "APPDATA/HOME not set".into(),
         })?;
-    Ok(base.join("OpenDesk"))
+    Ok(base.join("DingDa"))
 }
 
 fn resolve_verifier_path() -> Result<PathBuf, LicenseError> {
@@ -528,7 +528,7 @@ fn verifier_candidate_names() -> Vec<String> {
     names.push(bundled_verifier_filename());
     // 本机开发：若 TARGET 被映射为 msvc，仍兼容常见 x86_64 产物名。
     if cfg!(target_os = "windows") {
-        let triple = env!("OPENDESK_LICENSE_TARGET_TRIPLE");
+        let triple = env!("DINGDA_LICENSE_TARGET_TRIPLE");
         if triple != "x86_64-pc-windows-msvc" {
             names.push("license-verifier-x86_64-pc-windows-msvc.exe".into());
         }
@@ -546,7 +546,7 @@ fn verifier_bin_name() -> &'static str {
 }
 
 fn bundled_verifier_filename() -> String {
-    let triple = env!("OPENDESK_LICENSE_TARGET_TRIPLE");
+    let triple = env!("DINGDA_LICENSE_TARGET_TRIPLE");
     let base = format!("license-verifier-{triple}");
     if cfg!(target_os = "windows") {
         format!("{base}.exe")
@@ -563,7 +563,7 @@ mod tests {
     #[test]
     fn verify_args_prefers_key_file_and_appends_nonce() {
         let data_dir =
-            std::env::temp_dir().join(format!("opendesk-license-test-key-{}", std::process::id()));
+            std::env::temp_dir().join(format!("dingda-license-test-key-{}", std::process::id()));
         let _ = fs::remove_dir_all(&data_dir);
         fs::create_dir_all(&data_dir).expect("mkdir");
         let key_path = data_dir.join("license.key");
@@ -604,12 +604,12 @@ mod tests {
     fn parse_verify_rejects_missing_attestation() {
         let gate = VerifierProcessLicense::new(
             PathBuf::from("unused"),
-            std::env::temp_dir().join("opendesk-license-test-parse"),
+            std::env::temp_dir().join("dingda-license-test-parse"),
         );
         let stdout = r#"{
             "valid": true,
             "reason": null,
-            "product": "opendesk",
+            "product": "dingda",
             "localMachineCode": "abc",
             "tokenExpiredAt": 1
         }"#;

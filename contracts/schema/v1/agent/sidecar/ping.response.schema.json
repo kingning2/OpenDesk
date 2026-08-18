@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "opendesk://agent/sidecar/ping.response/v1",
+  "$id": "dingda://agent/sidecar/ping.response/v1",
   "title": "agent/sidecar/ping.response",
   "type": "object",
   "required": [

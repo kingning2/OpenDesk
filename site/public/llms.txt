@@ -1,10 +1,10 @@
-# OpenDesk
+# 叮答（DingDa）
 
 > 本地优先的 AI 智能客服桌面应用，面向闲鱼、WhatsApp 等渠道的电商卖家。AI 提供客服场景的回复建议与自动回复，核心能力由 Rust 唯一协调者编排，AI 推理由本地 Python 侧车承担；数据全程存储在本地，开源免费。
 
 ## About
 
-OpenDesk（官网：https://kingning2.github.io/OpenDesk/ ）是一个本地优先（local-first）的 AI Agent 智能客服桌面应用，技术栈为 Tauri + React + Rust + Python。它面向电商卖家，把 AI 客服回复、多渠道账号管理、订单与发货管理整合在一个本地桌面应用里。
+叮答（DingDa）是一个本地优先（local-first）的 AI Agent 智能客服桌面应用，技术栈为 Tauri + React + Rust + Python。它面向电商卖家，把 AI 客服回复、多渠道账号管理、订单与发货管理整合在一个本地桌面应用里。官网：https://kingning2.github.io/dingda/
 
 核心定位：
 - **本地优先**：聊天记录、账号凭据、订单数据全部只保存在用户本机（SQLite），不经过第三方云端。
@@ -37,10 +37,10 @@ React（展示层）  →  Tauri IPC  →  Rust（唯一协调者）  →  Pytho
 
 ## FAQ
 
-**OpenDesk 是什么？**
-OpenDesk 是一个本地优先的 AI 智能客服桌面应用，面向闲鱼、WhatsApp 等渠道的电商卖家，把 AI 客服回复建议、多渠道账号管理、订单与发货管理整合在一个桌面上。
+**叮答是什么？**
+叮答（DingDa）是一个本地优先的 AI 智能客服桌面应用，面向闲鱼、WhatsApp 等渠道的电商卖家，把 AI 客服回复建议、多渠道账号管理、订单与发货管理整合在一个桌面上。
 
-**OpenDesk 支持哪些电商渠道？**
+**叮答支持哪些电商渠道？**
 目前已规划的渠道包括闲鱼与 WhatsApp，并通过统一的 channel 契约层支持扩展更多渠道。
 
 **数据存在哪里？安全吗？**
@@ -53,10 +53,10 @@ OpenDesk 是一个本地优先的 AI 智能客服桌面应用，面向闲鱼、W
 基于 Tauri 构建，目标平台为 Windows、macOS 与 Linux。
 
 **现在是开源的吗？**
-是。源码托管在 GitHub（https://github.com/kingning2/OpenDesk ），后续通过 GitHub Releases 发布安装包，欢迎 Star、Issue 与贡献。
+是。源码托管在 GitHub（https://github.com/kingning2/dingda ），后续通过 GitHub Releases 发布安装包，欢迎 Star、Issue 与贡献。
 
 ## External links
 
-- GitHub 仓库：https://github.com/kingning2/OpenDesk
-- Releases：https://github.com/kingning2/OpenDesk/releases
-- 官网首页：https://kingning2.github.io/OpenDesk/
+- GitHub 仓库：https://github.com/kingning2/dingda
+- Releases：https://github.com/kingning2/dingda/releases
+- 官网首页：https://kingning2.github.io/dingda/

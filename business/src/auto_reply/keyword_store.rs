@@ -6,21 +6,21 @@
 //! - 新增前查重（keyword + item_id 组合）。
 
 use super::keyword::KeywordRule;
-use common::OpenDeskResult;
+use common::DingDaResult;
 
 /// 关键词存储 Port。
 pub trait KeywordStore: Send + Sync {
     /// 按账号查询全部关键词。
-    fn list_keywords(&self, account_id: &str) -> OpenDeskResult<Vec<KeywordRule>>;
+    fn list_keywords(&self, account_id: &str) -> DingDaResult<Vec<KeywordRule>>;
 
     /// 按账号整表替换。
-    fn replace_keywords(&self, account_id: &str, rules: &[KeywordRule]) -> OpenDeskResult<()>;
+    fn replace_keywords(&self, account_id: &str, rules: &[KeywordRule]) -> DingDaResult<()>;
 
     /// 新增关键词（返回带 id 的规则）。
-    fn add_keyword(&self, rule: &KeywordRule) -> OpenDeskResult<KeywordRule>;
+    fn add_keyword(&self, rule: &KeywordRule) -> DingDaResult<KeywordRule>;
 
     /// 删除关键词。
-    fn delete_keyword(&self, rule_id: i64) -> OpenDeskResult<()>;
+    fn delete_keyword(&self, rule_id: i64) -> DingDaResult<()>;
 }
 
 /// 关键词服务。
@@ -34,17 +34,17 @@ impl<'a> KeywordService<'a> {
     }
 
     /// 按账号查询。
-    pub fn list(&self, account_id: &str) -> OpenDeskResult<Vec<KeywordRule>> {
+    pub fn list(&self, account_id: &str) -> DingDaResult<Vec<KeywordRule>> {
         self.store.list_keywords(account_id)
     }
 
     /// 整表替换（保存）。
-    pub fn replace(&self, account_id: &str, rules: &[KeywordRule]) -> OpenDeskResult<()> {
+    pub fn replace(&self, account_id: &str, rules: &[KeywordRule]) -> DingDaResult<()> {
         self.store.replace_keywords(account_id, rules)
     }
 
     /// 新增（keyword + item_id 组合查重）。
-    pub fn add(&self, account_id: &str, mut rule: KeywordRule) -> OpenDeskResult<KeywordRule> {
+    pub fn add(&self, account_id: &str, mut rule: KeywordRule) -> DingDaResult<KeywordRule> {
         rule.account_id = account_id.to_string();
         rule.keyword = rule.keyword.trim().to_string();
         if rule.keyword.is_empty() {
@@ -61,7 +61,7 @@ impl<'a> KeywordService<'a> {
     }
 
     /// 删除。
-    pub fn delete(&self, rule_id: i64) -> OpenDeskResult<()> {
+    pub fn delete(&self, rule_id: i64) -> DingDaResult<()> {
         self.store.delete_keyword(rule_id)
     }
 }
@@ -87,7 +87,7 @@ mod tests {
     }
 
     impl KeywordStore for MockStore {
-        fn list_keywords(&self, account_id: &str) -> OpenDeskResult<Vec<KeywordRule>> {
+        fn list_keywords(&self, account_id: &str) -> DingDaResult<Vec<KeywordRule>> {
             Ok(self
                 .rules
                 .lock()
@@ -97,7 +97,7 @@ mod tests {
                 .cloned()
                 .collect())
         }
-        fn replace_keywords(&self, account_id: &str, rules: &[KeywordRule]) -> OpenDeskResult<()> {
+        fn replace_keywords(&self, account_id: &str, rules: &[KeywordRule]) -> DingDaResult<()> {
             let mut all = self.rules.lock().expect("lock");
             all.retain(|r| r.account_id != account_id);
             for rule in rules {
@@ -107,7 +107,7 @@ mod tests {
             }
             Ok(())
         }
-        fn add_keyword(&self, rule: &KeywordRule) -> OpenDeskResult<KeywordRule> {
+        fn add_keyword(&self, rule: &KeywordRule) -> DingDaResult<KeywordRule> {
             let mut rule = rule.clone();
             let mut next = self.next_id.lock().expect("lock");
             *next += 1;
@@ -115,7 +115,7 @@ mod tests {
             self.rules.lock().expect("lock").push(rule.clone());
             Ok(rule)
         }
-        fn delete_keyword(&self, rule_id: i64) -> OpenDeskResult<()> {
+        fn delete_keyword(&self, rule_id: i64) -> DingDaResult<()> {
             self.rules.lock().expect("lock").retain(|r| r.id != rule_id);
             Ok(())
         }

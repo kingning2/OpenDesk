@@ -2,7 +2,7 @@
 
 use async_trait::async_trait;
 use common::contracts::{AgentSidecarPingRequest, AgentSidecarPingResponse};
-use common::OpenDeskResult;
+use common::DingDaResult;
 use ports::sidecar::AgentSidecarGateway;
 use runtime::sidecar::client::SidecarClient;
 use runtime::sidecar::routes::agent_ping;
@@ -22,9 +22,9 @@ impl AgentSidecarGateway for RuntimeAgentSidecar {
     async fn ping(
         &self,
         request: AgentSidecarPingRequest,
-    ) -> OpenDeskResult<AgentSidecarPingResponse> {
+    ) -> DingDaResult<AgentSidecarPingResponse> {
         agent_ping::call(&self.client, request)
             .await
-            .map_err(|error| common::OpenDeskError::Internal(error.to_string()))
+            .map_err(|error| common::DingDaError::Internal(error.to_string()))
     }
 }

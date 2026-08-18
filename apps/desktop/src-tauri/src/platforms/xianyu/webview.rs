@@ -9,7 +9,7 @@
 //! 创建时间：2026-08-13
 
 use common::contracts::{ChannelAccount, ChannelCookie};
-use common::OpenDeskResult;
+use common::DingDaResult;
 use tauri::webview::cookie::Cookie;
 use tauri::webview::WebviewBuilder;
 use tauri::{LogicalPosition, LogicalSize, Manager, Webview, WebviewUrl};
@@ -41,7 +41,7 @@ pub fn open_xianyu_site(
     y: f64,
     width: f64,
     height: f64,
-) -> OpenDeskResult<()> {
+) -> DingDaResult<()> {
     if width < 8.0 || height < 8.0 {
         return Err("内嵌区域过小".into());
     }
@@ -132,7 +132,7 @@ pub fn open_xianyu_site(
 ///
 /// # 返回值
 /// 成功或不存在时返回 `Ok(())`。
-pub fn close_xianyu_site(app: &tauri::AppHandle) -> OpenDeskResult<()> {
+pub fn close_xianyu_site(app: &tauri::AppHandle) -> DingDaResult<()> {
     if let Some(webview) = app.get_webview(XIANYU_WEBVIEW_LABEL) {
         webview
             .close()
@@ -150,7 +150,7 @@ fn apply_bounds(
     webview: &Webview,
     position: LogicalPosition<f64>,
     size: LogicalSize<f64>,
-) -> OpenDeskResult<()> {
+) -> DingDaResult<()> {
     webview
         .set_position(position)
         .map_err(|error| format!("更新闲鱼位置失败: {error}"))?;
@@ -165,7 +165,7 @@ fn cookie_matches_goofish(cookie: &ChannelCookie) -> bool {
     domain.is_empty() || domain.contains(common::constants::xianyu::COOKIE_DOMAIN)
 }
 
-fn inject_cookie(webview: &Webview, cookie: &ChannelCookie) -> OpenDeskResult<()> {
+fn inject_cookie(webview: &Webview, cookie: &ChannelCookie) -> DingDaResult<()> {
     let base = Cookie::new(cookie.name.clone(), cookie.value.clone());
     let mut builder = Cookie::build(base);
 

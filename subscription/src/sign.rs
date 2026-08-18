@@ -208,7 +208,7 @@ mod tests {
         let public_pem = EmbeddedMaterials::new()
             .public_key_pem()
             .expect("public pem");
-        let message = b"opendesk|1|machine|123";
+        let message = b"dingda|1|machine|123";
         let crypto = OpenSslRsaPss::new();
         let sig = crypto.sign(message, &pem).expect("sign");
         crypto.verify(message, &sig, &public_pem).expect("verify");
@@ -226,7 +226,7 @@ mod tests {
             ExpiryPolicy::DurationFromActivation {
                 duration_secs: 3 * 86400,
             },
-            "opendesk".into(),
+            "dingda".into(),
             "1".into(),
             private_path.to_string_lossy().into(),
         )

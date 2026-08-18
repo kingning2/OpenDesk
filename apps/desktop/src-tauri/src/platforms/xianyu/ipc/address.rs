@@ -41,7 +41,7 @@ pub struct AddressBatchDeleteRequest {
 pub fn address_list(
     state: State<'_, AddressHandle>,
     request: AddressListRequest,
-) -> common::OpenDeskResult<IpcResponse<(Vec<PublishAddress>, u32)>> {
+) -> common::DingDaResult<IpcResponse<(Vec<PublishAddress>, u32)>> {
     let service = AddressService::new(state.store.as_ref());
     let query = AddressQuery {
         page: request.page,
@@ -58,11 +58,11 @@ pub fn address_create(
     state: State<'_, AddressHandle>,
     owner_id: i64,
     address: PublishAddress,
-) -> common::OpenDeskResult<IpcResponse<PublishAddress>> {
+) -> common::DingDaResult<IpcResponse<PublishAddress>> {
     let service = AddressService::new(state.store.as_ref());
     let result = service
         .create(owner_id, address)
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(result))
 }
 
@@ -71,11 +71,11 @@ pub fn address_update(
     state: State<'_, AddressHandle>,
     owner_id: i64,
     address: PublishAddress,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = AddressService::new(state.store.as_ref());
     service
         .update(owner_id, &address)
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(()))
 }
 
@@ -83,7 +83,7 @@ pub fn address_update(
 pub fn address_delete(
     state: State<'_, AddressHandle>,
     request: AddressDeleteRequest,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = AddressService::new(state.store.as_ref());
     service.delete(request.owner_id, request.address_id)?;
     Ok(IpcResponse::ok(()))
@@ -93,7 +93,7 @@ pub fn address_delete(
 pub fn address_batch_delete(
     state: State<'_, AddressHandle>,
     request: AddressBatchDeleteRequest,
-) -> common::OpenDeskResult<IpcResponse<usize>> {
+) -> common::DingDaResult<IpcResponse<usize>> {
     let service = AddressService::new(state.store.as_ref());
     let result = service.batch_delete(request.owner_id, &request.address_ids)?;
     Ok(IpcResponse::ok(result))

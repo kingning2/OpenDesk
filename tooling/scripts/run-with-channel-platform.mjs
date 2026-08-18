@@ -1,5 +1,5 @@
 /**
- * 在指定渠道平台环境下运行子命令（跨平台设置 OPENDESK_CHANNEL_PLATFORM）。
+ * 在指定渠道平台环境下运行子命令（跨平台设置 DINGDA_CHANNEL_PLATFORM）。
  *
  * 用法：`node tooling/scripts/run-with-channel-platform.mjs <platform> <command...>`
  * 示例：`node tooling/scripts/run-with-channel-platform.mjs xianyu vite`
@@ -28,7 +28,7 @@ if (!valid.includes(platform)) {
   process.exit(1);
 }
 
-process.env.OPENDESK_CHANNEL_PLATFORM = platform;
+process.env.DINGDA_CHANNEL_PLATFORM = platform;
 
 const child = spawn(command[0], command.slice(1), {
   stdio: "inherit",

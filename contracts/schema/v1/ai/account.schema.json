@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "opendesk://ai/account/v1",
+  "$id": "dingda://ai/account/v1",
   "title": "ai/account",
   "type": "object",
   "required": ["id", "provider_id", "name", "api_key"],

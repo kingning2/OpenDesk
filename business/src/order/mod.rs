@@ -6,7 +6,7 @@
 //! - 买家维度查询（待发货订单，供自动发货/评价联动）；
 //! - 归属校验（owner_id）+ 批量删除。
 
-use common::OpenDeskResult;
+use common::DingDaResult;
 use serde::{Deserialize, Serialize};
 
 #[cfg(test)]
@@ -156,10 +156,10 @@ impl Order {
 /// 订单存储 Port。
 pub trait OrderStore: Send + Sync {
     /// 按订单号查询。
-    fn get_order(&self, order_no: &str) -> OpenDeskResult<Option<Order>>;
+    fn get_order(&self, order_no: &str) -> DingDaResult<Option<Order>>;
 
     /// 按订单号 + 归属查询。
-    fn get_order_by_no(&self, owner_id: i64, order_no: &str) -> OpenDeskResult<Option<Order>>;
+    fn get_order_by_no(&self, owner_id: i64, order_no: &str) -> DingDaResult<Option<Order>>;
 
     /// 按买家查询待发货订单（自动发货/评价联动）。
     fn get_pending_order_by_buyer(
@@ -168,7 +168,7 @@ pub trait OrderStore: Send + Sync {
         account_id: &str,
         buyer_id: &str,
         item_id: Option<&str>,
-    ) -> OpenDeskResult<Option<Order>>;
+    ) -> DingDaResult<Option<Order>>;
 
     /// 分页查询订单。
     fn list_orders(
@@ -178,35 +178,35 @@ pub trait OrderStore: Send + Sync {
         page_size: u32,
         status: Option<OrderStatus>,
         keyword: &str,
-    ) -> OpenDeskResult<(Vec<Order>, u32)>;
+    ) -> DingDaResult<(Vec<Order>, u32)>;
 
     /// 更新订单状态。
-    fn update_status(&self, order_no: &str, status: OrderStatus) -> OpenDeskResult<bool>;
+    fn update_status(&self, order_no: &str, status: OrderStatus) -> DingDaResult<bool>;
 
     /// 更新订单 chat_id。
-    fn update_chat_id(&self, order_no: &str, chat_id: &str) -> OpenDeskResult<bool>;
+    fn update_chat_id(&self, order_no: &str, chat_id: &str) -> DingDaResult<bool>;
 
     /// 更新发货信息（状态/方式/内容/失败原因）。
     fn update_delivery_info(
         &self,
         order_no: &str,
         update: &DeliveryInfoUpdate,
-    ) -> OpenDeskResult<bool>;
+    ) -> DingDaResult<bool>;
 
     /// 更新发货失败原因。
-    fn update_delivery_fail_reason(&self, order_no: &str, reason: &str) -> OpenDeskResult<bool>;
+    fn update_delivery_fail_reason(&self, order_no: &str, reason: &str) -> DingDaResult<bool>;
 
     /// 更新评价状态。
-    fn update_rated(&self, order_no: &str, is_rated: bool) -> OpenDeskResult<bool>;
+    fn update_rated(&self, order_no: &str, is_rated: bool) -> DingDaResult<bool>;
 
     /// 新建订单。
-    fn create_order(&self, order: &Order) -> OpenDeskResult<Order>;
+    fn create_order(&self, order: &Order) -> DingDaResult<Order>;
 
     /// 删除订单（归属校验）。
-    fn delete_order(&self, owner_id: i64, order_id: i64) -> OpenDeskResult<bool>;
+    fn delete_order(&self, owner_id: i64, order_id: i64) -> DingDaResult<bool>;
 
     /// 批量删除订单（归属校验）。
-    fn batch_delete_orders(&self, owner_id: i64, order_ids: &[i64]) -> OpenDeskResult<u32>;
+    fn batch_delete_orders(&self, owner_id: i64, order_ids: &[i64]) -> DingDaResult<u32>;
 }
 
 /// 订单服务。
@@ -220,12 +220,12 @@ impl<'a> OrderService<'a> {
     }
 
     /// 按订单号查询（内部，无归属过滤）。
-    pub fn get_order(&self, order_no: &str) -> OpenDeskResult<Option<Order>> {
+    pub fn get_order(&self, order_no: &str) -> DingDaResult<Option<Order>> {
         self.store.get_order(order_no)
     }
 
     /// 按订单号 + 归属查询。
-    pub fn get_order_by_no(&self, owner_id: i64, order_no: &str) -> OpenDeskResult<Option<Order>> {
+    pub fn get_order_by_no(&self, owner_id: i64, order_no: &str) -> DingDaResult<Option<Order>> {
         self.store.get_order_by_no(owner_id, order_no)
     }
 
@@ -236,7 +236,7 @@ impl<'a> OrderService<'a> {
         account_id: &str,
         buyer_id: &str,
         item_id: Option<&str>,
-    ) -> OpenDeskResult<Option<Order>> {
+    ) -> DingDaResult<Option<Order>> {
         self.store
             .get_pending_order_by_buyer(owner_id, account_id, buyer_id, item_id)
     }
@@ -249,18 +249,18 @@ impl<'a> OrderService<'a> {
         page_size: u32,
         status: Option<OrderStatus>,
         keyword: &str,
-    ) -> OpenDeskResult<(Vec<Order>, u32)> {
+    ) -> DingDaResult<(Vec<Order>, u32)> {
         self.store
             .list_orders(owner_id, page, page_size, status, keyword)
     }
 
     /// 更新状态。
-    pub fn update_status(&self, order_no: &str, status: OrderStatus) -> OpenDeskResult<bool> {
+    pub fn update_status(&self, order_no: &str, status: OrderStatus) -> DingDaResult<bool> {
         self.store.update_status(order_no, status)
     }
 
     /// 更新 chat_id（空值拒绝）。
-    pub fn update_chat_id(&self, order_no: &str, chat_id: &str) -> OpenDeskResult<bool> {
+    pub fn update_chat_id(&self, order_no: &str, chat_id: &str) -> DingDaResult<bool> {
         if chat_id.trim().is_empty() {
             return Err("chat_id 不能为空".to_string().into());
         }
@@ -272,7 +272,7 @@ impl<'a> OrderService<'a> {
         &self,
         order_no: &str,
         mut update: DeliveryInfoUpdate,
-    ) -> OpenDeskResult<bool> {
+    ) -> DingDaResult<bool> {
         if let Some(content) = &update.delivery_content {
             update.delivery_content = Some(Order::normalize_delivery_content(content));
         }
@@ -280,31 +280,27 @@ impl<'a> OrderService<'a> {
     }
 
     /// 记录发货失败原因。
-    pub fn update_delivery_fail_reason(
-        &self,
-        order_no: &str,
-        reason: &str,
-    ) -> OpenDeskResult<bool> {
+    pub fn update_delivery_fail_reason(&self, order_no: &str, reason: &str) -> DingDaResult<bool> {
         self.store.update_delivery_fail_reason(order_no, reason)
     }
 
     /// 更新评价状态。
-    pub fn update_rated(&self, order_no: &str, is_rated: bool) -> OpenDeskResult<bool> {
+    pub fn update_rated(&self, order_no: &str, is_rated: bool) -> DingDaResult<bool> {
         self.store.update_rated(order_no, is_rated)
     }
 
     /// 新建订单。
-    pub fn create(&self, order: &Order) -> OpenDeskResult<Order> {
+    pub fn create(&self, order: &Order) -> DingDaResult<Order> {
         self.store.create_order(order)
     }
 
     /// 删除订单（归属校验）。
-    pub fn delete(&self, owner_id: i64, order_id: i64) -> OpenDeskResult<bool> {
+    pub fn delete(&self, owner_id: i64, order_id: i64) -> DingDaResult<bool> {
         self.store.delete_order(owner_id, order_id)
     }
 
     /// 批量删除（归属校验）。
-    pub fn batch_delete(&self, owner_id: i64, order_ids: &[i64]) -> OpenDeskResult<u32> {
+    pub fn batch_delete(&self, owner_id: i64, order_ids: &[i64]) -> DingDaResult<u32> {
         self.store.batch_delete_orders(owner_id, order_ids)
     }
 }

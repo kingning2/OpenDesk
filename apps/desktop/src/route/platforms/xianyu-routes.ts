@@ -1,7 +1,7 @@
 /**
  * 闲鱼编译期静态路由 — 路由段、页面加载器、侧栏导航。
  *
- * 仅 `OPENDESK_CHANNEL_PLATFORM=xianyu` 构建时通过 `@platform-routes` 引入。
+ * 仅 `DINGDA_CHANNEL_PLATFORM=xianyu` 构建时通过 `@platform-routes` 引入。
  *
  * @author Xiaoman
  * @created 2026-08-18

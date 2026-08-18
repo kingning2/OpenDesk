@@ -1,7 +1,7 @@
 /**
  * 读取编译期渠道平台配置 — 供 Vite / Node 构建脚本复用。
  *
- * 环境变量 `OPENDESK_CHANNEL_PLATFORM` 优先；缺省时使用 JSON 中的 `default`。
+ * 环境变量 `DINGDA_CHANNEL_PLATFORM` 优先；缺省时使用 JSON 中的 `default`。
  *
  * 注意：本文件为 `.mjs`（纯 JavaScript），类型仅用 JSDoc 描述，不可写 TS 语法。
  *
@@ -59,12 +59,12 @@ export function readChannelPlatformsConfig() {
  */
 export function resolveChannelPlatform(env = process.env) {
   const config = readChannelPlatformsConfig();
-  const requested = env.OPENDESK_CHANNEL_PLATFORM ?? config.default;
+  const requested = env.DINGDA_CHANNEL_PLATFORM ?? config.default;
   const valid = config.platforms.map((item) => item.id);
 
   if (!valid.includes(requested)) {
     throw new Error(
-      `未知 OPENDESK_CHANNEL_PLATFORM=${requested}，可选: ${valid.join(", ")}`,
+      `未知 DINGDA_CHANNEL_PLATFORM=${requested}，可选: ${valid.join(", ")}`,
     );
   }
 
@@ -83,6 +83,6 @@ export function resolveChannelPlatform(env = process.env) {
 export function channelPlatformDefine(env = process.env) {
   const platform = resolveChannelPlatform(env);
   return {
-    __OPENDESK_CHANNEL_PLATFORM__: JSON.stringify(platform),
+    __DINGDA_CHANNEL_PLATFORM__: JSON.stringify(platform),
   };
 }

@@ -4,7 +4,7 @@
 //! 创建时间：2026-07-21
 
 use common::contracts::{AgentIpcPingRequest, AgentIpcPingResponse, AgentSidecarPingRequest};
-use common::OpenDeskResult;
+use common::DingDaResult;
 use ports::sidecar::AgentSidecarGateway;
 
 /// PingAgent：把 IPC ping 请求转发给 sidecar 网关。
@@ -28,7 +28,7 @@ impl PingAgent {
     pub async fn execute<G: AgentSidecarGateway + ?Sized>(
         gateway: &G,
         request: AgentIpcPingRequest,
-    ) -> OpenDeskResult<AgentIpcPingResponse> {
+    ) -> DingDaResult<AgentIpcPingResponse> {
         let sidecar_request = AgentSidecarPingRequest {
             trace_id: request.trace_id,
         };

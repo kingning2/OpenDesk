@@ -3,7 +3,7 @@
 //! 业务层（Tauri 壳 / 未来 Web 服务）实现这些接口注入，
 //! 规则本身保持纯逻辑、可单测。查询异常返回 `Err`（规则层 fail-open 放行）。
 
-use common::OpenDeskResult;
+use common::DingDaResult;
 /// 黑名单命中记录。
 #[derive(Debug, Clone)]
 pub struct BlacklistRecord {
@@ -33,7 +33,7 @@ pub trait DeliveryDataSource: Send + Sync {
         buyer_id: &str,
         exclude_order_no: &str,
         item_id: Option<&str>,
-    ) -> OpenDeskResult<u32>;
+    ) -> DingDaResult<u32>;
 
     /// 统计买家在指定用户名下所有账号的订单数（排除当前订单号）。
     fn count_owner_orders(
@@ -42,7 +42,7 @@ pub trait DeliveryDataSource: Send + Sync {
         buyer_id: &str,
         exclude_order_no: &str,
         item_id: Option<&str>,
-    ) -> OpenDeskResult<u32>;
+    ) -> DingDaResult<u32>;
 
     /// 统计买家未确认收货订单数（已发货未收货）。
     fn count_unconfirmed_orders(
@@ -51,7 +51,7 @@ pub trait DeliveryDataSource: Send + Sync {
         buyer_id: &str,
         exclude_order_no: &str,
         item_id: Option<&str>,
-    ) -> OpenDeskResult<u32>;
+    ) -> DingDaResult<u32>;
 
     /// 查询买家个人黑名单（三级匹配：商品级 > 账户级 > 用户级）。
     fn find_blacklist(
@@ -60,9 +60,9 @@ pub trait DeliveryDataSource: Send + Sync {
         account_id: &str,
         buyer_id: &str,
         item_id: Option<&str>,
-    ) -> OpenDeskResult<Option<BlacklistRecord>>;
+    ) -> DingDaResult<Option<BlacklistRecord>>;
 
     /// 查询买家被评价总数（`mtop.idle.web.trade.rate.list`）。
     /// 接口异常返回 `Err`（规则 fail-open）。
-    fn fetch_buyer_rate_count(&self, buyer_id: &str) -> OpenDeskResult<u32>;
+    fn fetch_buyer_rate_count(&self, buyer_id: &str) -> DingDaResult<u32>;
 }

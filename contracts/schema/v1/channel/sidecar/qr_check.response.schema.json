@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "opendesk://channel/sidecar/qr_check.response/v1",
+  "$id": "dingda://channel/sidecar/qr_check.response/v1",
   "title": "channel/sidecar/qr_check.response",
   "type": "object",
   "required": ["ok", "status"],

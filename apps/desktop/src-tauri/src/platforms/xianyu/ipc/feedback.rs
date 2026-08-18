@@ -34,7 +34,7 @@ pub struct FeedbackDeleteRequest {
 pub fn feedback_list(
     state: State<'_, FeedbackHandle>,
     request: FeedbackListRequest,
-) -> common::OpenDeskResult<IpcResponse<(Vec<Feedback>, u32)>> {
+) -> common::DingDaResult<IpcResponse<(Vec<Feedback>, u32)>> {
     let service = FeedbackService::new(state.store.as_ref());
     let query = FeedbackQuery {
         page: request.page,
@@ -51,11 +51,11 @@ pub fn feedback_create(
     state: State<'_, FeedbackHandle>,
     owner_id: i64,
     feedback: Feedback,
-) -> common::OpenDeskResult<IpcResponse<Feedback>> {
+) -> common::DingDaResult<IpcResponse<Feedback>> {
     let service = FeedbackService::new(state.store.as_ref());
     let result = service
         .create(owner_id, feedback)
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(result))
 }
 
@@ -63,7 +63,7 @@ pub fn feedback_create(
 pub fn feedback_delete(
     state: State<'_, FeedbackHandle>,
     request: FeedbackDeleteRequest,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = FeedbackService::new(state.store.as_ref());
     service.delete(request.owner_id, request.feedback_id)?;
     Ok(IpcResponse::ok(()))

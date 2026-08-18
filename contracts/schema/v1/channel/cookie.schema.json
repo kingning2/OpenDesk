@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "opendesk://channel/cookie/v1",
+  "$id": "dingda://channel/cookie/v1",
   "title": "channel/cookie",
   "type": "object",
   "required": ["name", "value", "domain", "path"],

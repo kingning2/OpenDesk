@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "opendesk://runtime/log/entry/v1",
+  "$id": "dingda://runtime/log/entry/v1",
   "title": "runtime/log/entry",
   "description": "One JSON Lines log entry emitted by the Python sidecar to stdout.",
   "type": "object",

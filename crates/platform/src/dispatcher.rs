@@ -7,7 +7,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 use super::protocol::{ChannelAccount, ChannelKind, ChannelProtocol, ConnectionState};
-use common::OpenDeskResult;
+use common::DingDaResult;
 
 /// 调度器错误。
 #[derive(Debug, thiserror::Error)]
@@ -53,18 +53,18 @@ impl ChannelDispatcher {
     async fn protocol_for(
         &self,
         account: &ChannelAccount,
-    ) -> OpenDeskResult<Arc<dyn ChannelProtocol>> {
+    ) -> DingDaResult<Arc<dyn ChannelProtocol>> {
         let kind = ChannelKind::from_str(&account.kind).ok_or_else(|| {
-            common::OpenDeskError::validation(format!("unsupported channel kind: {}", account.kind))
+            common::DingDaError::validation(format!("unsupported channel kind: {}", account.kind))
         })?;
         let map = self.protocols.read().await;
         map.get(&kind)
             .cloned()
-            .ok_or_else(|| common::OpenDeskError::not_found("channel protocol", kind.to_string()))
+            .ok_or_else(|| common::DingDaError::not_found("channel protocol", kind.to_string()))
     }
 
     /// 连接账号。
-    pub async fn connect(&self, account: &ChannelAccount) -> OpenDeskResult<()> {
+    pub async fn connect(&self, account: &ChannelAccount) -> DingDaResult<()> {
         let protocol = self.protocol_for(account).await?;
         protocol.connect(account).await?;
         self.active
@@ -75,7 +75,7 @@ impl ChannelDispatcher {
     }
 
     /// 断开账号。
-    pub async fn disconnect(&self, account_id: &str) -> OpenDeskResult<()> {
+    pub async fn disconnect(&self, account_id: &str) -> DingDaResult<()> {
         if let Some(protocol) = self.active.write().await.remove(account_id) {
             protocol.disconnect().await?;
         }
@@ -83,12 +83,7 @@ impl ChannelDispatcher {
     }
 
     /// 发送消息；`peer_id` 为平台侧会话/对方 id。
-    pub async fn send(
-        &self,
-        account_id: &str,
-        peer_id: &str,
-        text: &str,
-    ) -> OpenDeskResult<String> {
+    pub async fn send(&self, account_id: &str, peer_id: &str, text: &str) -> DingDaResult<String> {
         let protocol = self
             .active
             .read()
@@ -96,7 +91,7 @@ impl ChannelDispatcher {
             .get(account_id)
             .cloned()
             .ok_or_else(|| {
-                common::OpenDeskError::not_found("active channel", account_id.to_string())
+                common::DingDaError::not_found("active channel", account_id.to_string())
             })?;
         protocol.send(peer_id, text).await
     }

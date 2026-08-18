@@ -1,8 +1,8 @@
 // 编译期渠道平台 cfg 注入 — 供各 crate 的 `build.rs` 通过 `include!` 复用。
 //
-// 读取环境变量 `OPENDESK_CHANNEL_PLATFORM`（缺省见 `tooling/config/channel-platforms.json`），
+// 读取环境变量 `DINGDA_CHANNEL_PLATFORM`（缺省见 `tooling/config/channel-platforms.json`），
 // 校验后向 Cargo 输出：
-// - `cargo:rustc-env=OPENDESK_CHANNEL_PLATFORM=<id>`
+// - `cargo:rustc-env=DINGDA_CHANNEL_PLATFORM=<id>`
 // - `cargo:rustc-cfg=platform_<id>`（如 `platform_xianyu`）
 //
 // 作者：Xiaoman
@@ -56,7 +56,7 @@ fn load_config(config_path: &str) -> ChannelPlatformsConfig {
     }
 
     println!("cargo:rerun-if-changed={}", path.display());
-    println!("cargo:rerun-if-env-changed=OPENDESK_CHANNEL_PLATFORM");
+    println!("cargo:rerun-if-env-changed=DINGDA_CHANNEL_PLATFORM");
 
     ChannelPlatformsConfig { default, platforms }
 }
@@ -75,15 +75,15 @@ pub fn emit_channel_platform_cfg(config_rel_to_manifest: &str) {
     for id in &config.platforms {
         println!("cargo:rustc-check-cfg=cfg({})", cfg_key(id));
     }
-    let requested = env::var("OPENDESK_CHANNEL_PLATFORM").unwrap_or(config.default);
+    let requested = env::var("DINGDA_CHANNEL_PLATFORM").unwrap_or(config.default);
 
     if !config.platforms.iter().any(|id| id == &requested) {
         panic!(
-            "未知 OPENDESK_CHANNEL_PLATFORM={requested:?}，可选: {}",
+            "未知 DINGDA_CHANNEL_PLATFORM={requested:?}，可选: {}",
             config.platforms.join(", ")
         );
     }
 
-    println!("cargo:rustc-env=OPENDESK_CHANNEL_PLATFORM={requested}");
+    println!("cargo:rustc-env=DINGDA_CHANNEL_PLATFORM={requested}");
     println!("cargo:rustc-cfg={}", cfg_key(&requested));
 }

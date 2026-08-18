@@ -77,7 +77,7 @@ fn resolve_effective_expiry(
 ) -> Result<(i64, Option<i64>, bool), String> {
     if let Some(duration_secs) = claims.duration_secs {
         let dir = state_dir.ok_or_else(|| {
-            "duration-based license requires --state-dir (OpenDesk passes app data dir)".to_string()
+            "duration-based license requires --state-dir (DingDa passes app data dir)".to_string()
         })?;
         let store = ActivationStateStore::new(dir);
         let (activated_at, expires_at) = store.resolve_expiry(token, duration_secs, now)?;
@@ -198,14 +198,14 @@ mod tests {
         }
 
         // 绕过真机码：直接测 ActivationStateStore + claims 逻辑用 store。
-        let dir = std::env::temp_dir().join(format!("opendesk-act-state-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("dingda-act-state-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).expect("mkdir");
 
         let token = generate_activation_token_with_policy(
             "test-machine".into(),
             ExpiryPolicy::DurationFromActivation { duration_secs: 10 },
-            "opendesk".into(),
+            "dingda".into(),
             "1".into(),
             private_path.to_string_lossy().into(),
         )

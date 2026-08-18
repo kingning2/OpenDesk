@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "opendesk://channel/account/v1",
+  "$id": "dingda://channel/account/v1",
   "title": "channel/account",
   "type": "object",
   "required": ["id", "kind", "name", "credential", "enabled"],

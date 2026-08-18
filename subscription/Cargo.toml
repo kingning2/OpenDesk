@@ -24,7 +24,7 @@ required-features = ["gui"]
 
 [features]
 default = []
-# 管理员本机 GUI；OpenDesk 打 verifier 时不要开此 feature，避免拖慢构建。
+# 管理员本机 GUI；DingDa 打 verifier 时不要开此 feature，避免拖慢构建。
 gui = ["dep:slint", "dep:slint-build"]
 
 [dependencies]

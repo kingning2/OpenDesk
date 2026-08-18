@@ -1,5 +1,5 @@
 /**
- * OpenDesk 桌面壳窗口标题栏（无边框窗口拖拽 + 系统窗口控制）。
+ * DingDa 桌面壳窗口标题栏（无边框窗口拖拽 + 系统窗口控制）。
  *
  * 仅供 `apps/desktop` 壳层使用，不放入 `@desk/ui`。
  *
@@ -191,7 +191,7 @@ export function TitleBar({
   const brand = (
     <img
       src="/logo.png"
-      alt="OpenDesk"
+      alt="DingDa"
       className="size-5 shrink-0 rounded-[var(--radius-sm)] object-cover"
     />
   );

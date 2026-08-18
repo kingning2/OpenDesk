@@ -51,7 +51,7 @@ pub struct BlacklistDeleteRequest {
 pub fn blacklist_personal_list(
     state: State<'_, BlacklistHandle>,
     request: PersonalBlacklistListRequest,
-) -> common::OpenDeskResult<IpcResponse<(Vec<PersonalBlacklistItem>, u32)>> {
+) -> common::DingDaResult<IpcResponse<(Vec<PersonalBlacklistItem>, u32)>> {
     let service = BlacklistService::new(state.store.as_ref());
     let query = BlacklistQuery {
         page: request.page,
@@ -61,7 +61,7 @@ pub fn blacklist_personal_list(
     };
     let result = service
         .list_personal(request.owner_id, &query)
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(result))
 }
 
@@ -69,11 +69,11 @@ pub fn blacklist_personal_list(
 pub fn blacklist_platform_list(
     state: State<'_, BlacklistHandle>,
     owner_id: i64,
-) -> common::OpenDeskResult<IpcResponse<(Vec<PlatformBlacklistItem>, u32)>> {
+) -> common::DingDaResult<IpcResponse<(Vec<PlatformBlacklistItem>, u32)>> {
     let service = BlacklistService::new(state.store.as_ref());
     let result = service
         .list_platform(owner_id, &BlacklistQuery::default())
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(result))
 }
 
@@ -81,7 +81,7 @@ pub fn blacklist_platform_list(
 pub fn blacklist_personal_create(
     state: State<'_, BlacklistHandle>,
     request: PersonalBlacklistCreateRequest,
-) -> common::OpenDeskResult<IpcResponse<Vec<PersonalBlacklistItem>>> {
+) -> common::DingDaResult<IpcResponse<Vec<PersonalBlacklistItem>>> {
     let service = BlacklistService::new(state.store.as_ref());
     let ids: Vec<&str> = request
         .buyer_ids
@@ -102,7 +102,7 @@ pub fn blacklist_personal_create(
                 request.item_id.as_deref(),
                 request.reason.as_deref(),
             )
-            .map_err(common::OpenDeskError::wrap)?;
+            .map_err(common::DingDaError::wrap)?;
         created.push(item);
     }
     Ok(IpcResponse::ok(created))
@@ -112,11 +112,11 @@ pub fn blacklist_personal_create(
 pub fn blacklist_set_enabled(
     state: State<'_, BlacklistHandle>,
     request: BlacklistEnabledRequest,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = BlacklistService::new(state.store.as_ref());
     service
         .set_enabled(request.owner_id, request.id, request.enabled)
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(()))
 }
 
@@ -124,10 +124,10 @@ pub fn blacklist_set_enabled(
 pub fn blacklist_delete(
     state: State<'_, BlacklistHandle>,
     request: BlacklistDeleteRequest,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = BlacklistService::new(state.store.as_ref());
     service
         .delete(request.owner_id, request.id)
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(()))
 }

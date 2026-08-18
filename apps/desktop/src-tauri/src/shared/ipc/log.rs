@@ -34,10 +34,10 @@ pub fn log_write(message: String, level: Option<String>) -> IpcResponse<()> {
         return IpcResponse::ok(());
     }
     match level {
-        "ERROR" => tracing::error!(target: "opendesk.lifecycle", "{message}"),
-        "WARN" => tracing::warn!(target: "opendesk.lifecycle", "{message}"),
-        "DEBUG" | "TRACE" => tracing::debug!(target: "opendesk.lifecycle", "{message}"),
-        _ => tracing::info!(target: "opendesk.lifecycle", "{message}"),
+        "ERROR" => tracing::error!(target: "dingda.lifecycle", "{message}"),
+        "WARN" => tracing::warn!(target: "dingda.lifecycle", "{message}"),
+        "DEBUG" | "TRACE" => tracing::debug!(target: "dingda.lifecycle", "{message}"),
+        _ => tracing::info!(target: "dingda.lifecycle", "{message}"),
     }
     IpcResponse::ok(())
 }

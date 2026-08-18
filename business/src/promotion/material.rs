@@ -7,7 +7,7 @@
 //!   不存在则新建；
 //! - 更新 / 删除需校验归属。
 
-use common::OpenDeskResult;
+use common::DingDaResult;
 use serde::{Deserialize, Serialize};
 
 /// 素材发布状态。
@@ -107,16 +107,16 @@ pub trait MaterialStore: Send + Sync {
         &self,
         owner_id: i64,
         query: &MaterialQuery,
-    ) -> OpenDeskResult<(Vec<Material>, u32)>;
+    ) -> DingDaResult<(Vec<Material>, u32)>;
 
     /// 取单条（校验归属用）。
-    fn get_material(&self, owner_id: i64, material_id: i64) -> OpenDeskResult<Option<Material>>;
+    fn get_material(&self, owner_id: i64, material_id: i64) -> DingDaResult<Option<Material>>;
 
     /// 更新素材字段。
-    fn update_material(&self, material: &Material) -> OpenDeskResult<()>;
+    fn update_material(&self, material: &Material) -> DingDaResult<()>;
 
     /// 删除素材。
-    fn delete_material(&self, material_id: i64) -> OpenDeskResult<()>;
+    fn delete_material(&self, material_id: i64) -> DingDaResult<()>;
 
     /// 查询该用户/账号下已存在的素材（按 item_id / title 索引，供去重）。
     fn existing_materials(
@@ -125,10 +125,10 @@ pub trait MaterialStore: Send + Sync {
         account_id: &str,
         item_ids: &[String],
         titles: &[String],
-    ) -> OpenDeskResult<Vec<Material>>;
+    ) -> DingDaResult<Vec<Material>>;
 
     /// 新建素材。
-    fn create_material(&self, material: &Material) -> OpenDeskResult<Material>;
+    fn create_material(&self, material: &Material) -> DingDaResult<Material>;
 }
 
 /// 素材服务。
@@ -142,11 +142,7 @@ impl<'a> MaterialService<'a> {
     }
 
     /// 分页查询。
-    pub fn list(
-        &self,
-        owner_id: i64,
-        query: &MaterialQuery,
-    ) -> OpenDeskResult<(Vec<Material>, u32)> {
+    pub fn list(&self, owner_id: i64, query: &MaterialQuery) -> DingDaResult<(Vec<Material>, u32)> {
         self.store.list_materials(owner_id, query)
     }
 
@@ -156,7 +152,7 @@ impl<'a> MaterialService<'a> {
         owner_id: i64,
         material_id: i64,
         apply: impl FnOnce(&mut Material),
-    ) -> OpenDeskResult<()> {
+    ) -> DingDaResult<()> {
         let Some(mut material) = self.store.get_material(owner_id, material_id)? else {
             return Err("素材不存在或无权限".to_string().into());
         };
@@ -165,7 +161,7 @@ impl<'a> MaterialService<'a> {
     }
 
     /// 删除素材（校验归属）。
-    pub fn delete(&self, owner_id: i64, material_id: i64) -> OpenDeskResult<()> {
+    pub fn delete(&self, owner_id: i64, material_id: i64) -> DingDaResult<()> {
         if self.store.get_material(owner_id, material_id)?.is_none() {
             return Err("素材不存在或无权限".to_string().into());
         }
@@ -184,7 +180,7 @@ impl<'a> MaterialService<'a> {
         account_id: &str,
         rule_id: i64,
         items: &[MaterialItem],
-    ) -> OpenDeskResult<BatchWriteResult> {
+    ) -> DingDaResult<BatchWriteResult> {
         // 1. 规范化 + 去重。
         let unique = Self::normalize_items(items);
         if unique.is_empty() {
@@ -335,15 +331,11 @@ mod tests {
             &self,
             _owner_id: i64,
             _query: &MaterialQuery,
-        ) -> OpenDeskResult<(Vec<Material>, u32)> {
+        ) -> DingDaResult<(Vec<Material>, u32)> {
             let list = self.materials.lock().expect("lock").clone();
             Ok((list.clone(), list.len() as u32))
         }
-        fn get_material(
-            &self,
-            owner_id: i64,
-            material_id: i64,
-        ) -> OpenDeskResult<Option<Material>> {
+        fn get_material(&self, owner_id: i64, material_id: i64) -> DingDaResult<Option<Material>> {
             Ok(self
                 .materials
                 .lock()
@@ -352,14 +344,14 @@ mod tests {
                 .find(|m| m.id == material_id && m.owner_id == owner_id)
                 .cloned())
         }
-        fn update_material(&self, material: &Material) -> OpenDeskResult<()> {
+        fn update_material(&self, material: &Material) -> DingDaResult<()> {
             let mut list = self.materials.lock().expect("lock");
             if let Some(existing) = list.iter_mut().find(|m| m.id == material.id) {
                 *existing = material.clone();
             }
             Ok(())
         }
-        fn delete_material(&self, material_id: i64) -> OpenDeskResult<()> {
+        fn delete_material(&self, material_id: i64) -> DingDaResult<()> {
             self.materials
                 .lock()
                 .expect("lock")
@@ -372,7 +364,7 @@ mod tests {
             _account_id: &str,
             item_ids: &[String],
             titles: &[String],
-        ) -> OpenDeskResult<Vec<Material>> {
+        ) -> DingDaResult<Vec<Material>> {
             Ok(self
                 .materials
                 .lock()
@@ -385,7 +377,7 @@ mod tests {
                 .cloned()
                 .collect())
         }
-        fn create_material(&self, material: &Material) -> OpenDeskResult<Material> {
+        fn create_material(&self, material: &Material) -> DingDaResult<Material> {
             let mut material = material.clone();
             material.id = (self.materials.lock().expect("lock").len() + 1) as i64;
             self.materials.lock().expect("lock").push(material.clone());

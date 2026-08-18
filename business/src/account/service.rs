@@ -7,7 +7,7 @@
 //! - 代理与自动化配置更新。
 
 use super::{AccountStatus, AccountUpdate, XianyuAccount};
-use common::OpenDeskResult;
+use common::DingDaResult;
 use thiserror::Error;
 
 /// 账号服务错误。
@@ -26,23 +26,22 @@ pub enum AccountServiceError {
 /// 账号存储 Port。
 pub trait AccountStore: Send + Sync {
     /// 按 owner + account_id 查询（归属校验）。
-    fn get_account(&self, owner_id: i64, account_id: &str)
-        -> OpenDeskResult<Option<XianyuAccount>>;
+    fn get_account(&self, owner_id: i64, account_id: &str) -> DingDaResult<Option<XianyuAccount>>;
 
     /// 查询用户全部账号。
-    fn list_accounts(&self, owner_id: i64) -> OpenDeskResult<Vec<XianyuAccount>>;
+    fn list_accounts(&self, owner_id: i64) -> DingDaResult<Vec<XianyuAccount>>;
 
     /// 新建账号（返回带 id 的账号）。
-    fn create_account(&self, account: &XianyuAccount) -> OpenDeskResult<XianyuAccount>;
+    fn create_account(&self, account: &XianyuAccount) -> DingDaResult<XianyuAccount>;
 
     /// 更新账号。
-    fn update_account(&self, account: &XianyuAccount) -> OpenDeskResult<()>;
+    fn update_account(&self, account: &XianyuAccount) -> DingDaResult<()>;
 
     /// 删除账号。
-    fn delete_account(&self, owner_id: i64, account_id: &str) -> OpenDeskResult<()>;
+    fn delete_account(&self, owner_id: i64, account_id: &str) -> DingDaResult<()>;
 
     /// 按 account_id 全局查询（唯一性校验）。
-    fn find_by_account_id(&self, account_id: &str) -> OpenDeskResult<Option<XianyuAccount>>;
+    fn find_by_account_id(&self, account_id: &str) -> DingDaResult<Option<XianyuAccount>>;
 }
 
 /// 账号服务。
@@ -228,7 +227,7 @@ mod tests {
             &self,
             owner_id: i64,
             account_id: &str,
-        ) -> OpenDeskResult<Option<XianyuAccount>> {
+        ) -> DingDaResult<Option<XianyuAccount>> {
             Ok(self
                 .accounts
                 .lock()
@@ -237,7 +236,7 @@ mod tests {
                 .find(|a| a.owner_id == owner_id && a.account_id == account_id)
                 .cloned())
         }
-        fn list_accounts(&self, owner_id: i64) -> OpenDeskResult<Vec<XianyuAccount>> {
+        fn list_accounts(&self, owner_id: i64) -> DingDaResult<Vec<XianyuAccount>> {
             Ok(self
                 .accounts
                 .lock()
@@ -247,27 +246,27 @@ mod tests {
                 .cloned()
                 .collect())
         }
-        fn create_account(&self, account: &XianyuAccount) -> OpenDeskResult<XianyuAccount> {
+        fn create_account(&self, account: &XianyuAccount) -> DingDaResult<XianyuAccount> {
             let mut account = account.clone();
             account.id = (self.accounts.lock().expect("lock").len() + 1) as i64;
             self.accounts.lock().expect("lock").push(account.clone());
             Ok(account)
         }
-        fn update_account(&self, account: &XianyuAccount) -> OpenDeskResult<()> {
+        fn update_account(&self, account: &XianyuAccount) -> DingDaResult<()> {
             let mut list = self.accounts.lock().expect("lock");
             if let Some(existing) = list.iter_mut().find(|a| a.id == account.id) {
                 *existing = account.clone();
             }
             Ok(())
         }
-        fn delete_account(&self, owner_id: i64, account_id: &str) -> OpenDeskResult<()> {
+        fn delete_account(&self, owner_id: i64, account_id: &str) -> DingDaResult<()> {
             self.accounts
                 .lock()
                 .expect("lock")
                 .retain(|a| !(a.owner_id == owner_id && a.account_id == account_id));
             Ok(())
         }
-        fn find_by_account_id(&self, account_id: &str) -> OpenDeskResult<Option<XianyuAccount>> {
+        fn find_by_account_id(&self, account_id: &str) -> DingDaResult<Option<XianyuAccount>> {
             Ok(self
                 .accounts
                 .lock()

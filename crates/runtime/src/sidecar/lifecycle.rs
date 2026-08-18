@@ -37,17 +37,17 @@ pub struct SidecarConfig {
     pub python_executable: String,
     pub startup_timeout: Duration,
     pub max_restart_attempts: u32,
-    /// Frozen sidecar executable (release / OPENDESK_SIDECAR_BIN). When set, takes precedence over dev spawn.
+    /// Frozen sidecar executable (release / DINGDA_SIDECAR_BIN). When set, takes precedence over dev spawn.
     pub bundled_executable: Option<PathBuf>,
 }
 
 impl SidecarConfig {
     pub fn from_env() -> Self {
-        let port = std::env::var("OPENDESK_SIDECAR_PORT")
+        let port = std::env::var("DINGDA_SIDECAR_PORT")
             .ok()
             .and_then(|value| value.parse().ok())
             .unwrap_or(8787);
-        let max_restart_attempts = std::env::var("OPENDESK_SIDECAR_MAX_RESTARTS")
+        let max_restart_attempts = std::env::var("DINGDA_SIDECAR_MAX_RESTARTS")
             .ok()
             .and_then(|value| value.parse().ok())
             .unwrap_or(5);
@@ -55,10 +55,10 @@ impl SidecarConfig {
         Self {
             port,
             sidecar_dir: resolve_sidecar_dir(),
-            use_uv: std::env::var("OPENDESK_USE_UV")
+            use_uv: std::env::var("DINGDA_USE_UV")
                 .map(|value| value != "0")
                 .unwrap_or(true),
-            python_executable: std::env::var("OPENDESK_PYTHON")
+            python_executable: std::env::var("DINGDA_PYTHON")
                 .unwrap_or_else(|_| "python".to_string()),
             startup_timeout: Duration::from_secs(15),
             max_restart_attempts,
@@ -315,7 +315,7 @@ impl SidecarLifecycle {
 }
 
 fn resolve_sidecar_dir() -> PathBuf {
-    if let Ok(dir) = std::env::var("OPENDESK_SIDECAR_DIR") {
+    if let Ok(dir) = std::env::var("DINGDA_SIDECAR_DIR") {
         return PathBuf::from(dir);
     }
 
@@ -385,7 +385,7 @@ fn build_spawn_command(config: &SidecarConfig) -> Result<Command, SidecarLifecyc
     }
 
     Err(SidecarLifecycleError::SpawnFailed(
-        "PATH 中未找到 Python 运行时（请安装 uv，或确保 python/py 可用；也可设置 OPENDESK_PYTHON）"
+        "PATH 中未找到 Python 运行时（请安装 uv，或确保 python/py 可用；也可设置 DINGDA_PYTHON）"
             .into(),
     ))
 }
@@ -409,7 +409,7 @@ fn configure_stdio(mut command: Command) -> Command {
 }
 
 fn resolve_bundled_executable() -> Option<PathBuf> {
-    if let Ok(path) = std::env::var("OPENDESK_SIDECAR_BIN") {
+    if let Ok(path) = std::env::var("DINGDA_SIDECAR_BIN") {
         let path = PathBuf::from(path);
         if path.is_file() {
             return Some(path);
@@ -437,7 +437,7 @@ fn bundled_executable_candidate() -> PathBuf {
 }
 
 pub fn bundled_sidecar_filename() -> String {
-    let base = format!("sidecar-{}", env!("OPENDESK_TARGET_TRIPLE"));
+    let base = format!("sidecar-{}", env!("DINGDA_TARGET_TRIPLE"));
     if cfg!(target_os = "windows") {
         format!("{base}.exe")
     } else {

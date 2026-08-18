@@ -23,7 +23,7 @@ pub mod registry;
 pub mod xianyu;
 
 pub use capabilities::{PlatformCapabilities, PlatformCapability, PlatformDescriptor};
-pub use common::OpenDeskResult;
+pub use common::DingDaResult;
 pub use compile::{active_kind, is_active, is_active_id, ACTIVE_PLATFORM};
 pub use dispatcher::{ChannelDispatcher, DispatcherError};
 pub use protocol::{

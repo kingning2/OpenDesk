@@ -24,7 +24,7 @@ from gateway.login.playwright_common import (
     to_serializable_cookies,
 )
 
-logger = logging.getLogger("opendesk.sidecar.qr")
+logger = logging.getLogger("dingda.sidecar.qr")
 
 QR_WAIT_TIMEOUT_MS = 15000
 

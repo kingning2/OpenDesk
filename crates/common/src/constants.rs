@@ -1,6 +1,6 @@
 //! 各平台 API 域名与 Feature Flags 常量。
 //!
-//! 集中维护 OpenDesk 支持的平台基址，避免在 `platform` / `business` / 壳层重复硬编码。
+//! 集中维护 DingDa 支持的平台基址，避免在 `platform` / `business` / 壳层重复硬编码。
 //! Feature Flags 可通过环境变量或编译期 cfg 覆盖。
 //!
 //! 作者：Xiaoman
@@ -75,16 +75,16 @@ impl FeatureFlags {
     /// 创建时间：2026-08-18
     ///
     /// # 环境变量
-    /// - `OPENDESK_DEBUG` — `1` / `true` / `yes` 开启调试
-    /// - `OPENDESK_MOCK_PUBLISH` — 开启 Mock 发布
-    /// - `OPENDESK_SKIP_LICENSE` — 跳过 License（仅 debug 构建读取）
-    /// - `OPENDESK_CHANNEL_AUTO_RECONNECT` — `0` / `false` 关闭自动重连
+    /// - `DINGDA_DEBUG` — `1` / `true` / `yes` 开启调试
+    /// - `DINGDA_MOCK_PUBLISH` — 开启 Mock 发布
+    /// - `DINGDA_SKIP_LICENSE` — 跳过 License（仅 debug 构建读取）
+    /// - `DINGDA_CHANNEL_AUTO_RECONNECT` — `0` / `false` 关闭自动重连
     pub fn from_env() -> Self {
         Self {
-            debug_mode: cfg!(debug_assertions) || env_truthy("OPENDESK_DEBUG"),
-            mock_publish: env_truthy("OPENDESK_MOCK_PUBLISH"),
-            skip_license_check: cfg!(debug_assertions) && env_truthy("OPENDESK_SKIP_LICENSE"),
-            channel_auto_reconnect: !env_falsy("OPENDESK_CHANNEL_AUTO_RECONNECT"),
+            debug_mode: cfg!(debug_assertions) || env_truthy("DINGDA_DEBUG"),
+            mock_publish: env_truthy("DINGDA_MOCK_PUBLISH"),
+            skip_license_check: cfg!(debug_assertions) && env_truthy("DINGDA_SKIP_LICENSE"),
+            channel_auto_reconnect: !env_falsy("DINGDA_CHANNEL_AUTO_RECONNECT"),
         }
     }
 

@@ -9,8 +9,8 @@
 //! 创建时间：2026-08-18
 
 use crate::contracts::ChannelMessage;
-use crate::errors::OpenDeskError;
-use crate::OpenDeskResult;
+use crate::errors::DingDaError;
+use crate::DingDaResult;
 use serde::{Deserialize, Serialize};
 
 /// 应用事件 topic 前缀。
@@ -211,7 +211,7 @@ pub trait EventSink: Send + Sync {
     /// # 参数
     /// - `topic` — 订阅主题
     /// - `payload` — 已序列化的 JSON 字节
-    fn publish(&self, topic: &str, payload: &[u8]) -> OpenDeskResult<()>;
+    fn publish(&self, topic: &str, payload: &[u8]) -> DingDaResult<()>;
 }
 
 /// 统一 emit：序列化 [`AppEvent`] 并发布到对应 topic。
@@ -224,16 +224,16 @@ pub trait EventSink: Send + Sync {
 /// - `event` — 待广播的应用事件
 ///
 /// # 返回值
-/// 成功返回 `()`；序列化或发布失败返回 [`OpenDeskError`]。
+/// 成功返回 `()`；序列化或发布失败返回 [`DingDaError`]。
 ///
 /// # 示例
 /// ```ignore
 /// use common::events::{emit, AppEvent, MessageAction, MessageEvent};
 /// emit(&event_bus, &AppEvent::Message(MessageEvent { /* ... */ }))?;
 /// ```
-pub fn emit(sink: &dyn EventSink, event: &AppEvent) -> OpenDeskResult<()> {
+pub fn emit(sink: &dyn EventSink, event: &AppEvent) -> DingDaResult<()> {
     let payload = serde_json::to_vec(event).map_err(|error| {
-        OpenDeskError::Serialization(format!("AppEvent serialize failed: {error}"))
+        DingDaError::Serialization(format!("AppEvent serialize failed: {error}"))
     })?;
     sink.publish(event.topic(), &payload)
 }
@@ -250,10 +250,10 @@ mod tests {
     }
 
     impl EventSink for RecordingSink {
-        fn publish(&self, topic: &str, payload: &[u8]) -> OpenDeskResult<()> {
+        fn publish(&self, topic: &str, payload: &[u8]) -> DingDaResult<()> {
             self.records
                 .lock()
-                .map_err(|error| OpenDeskError::Internal(error.to_string()))?
+                .map_err(|error| DingDaError::Internal(error.to_string()))?
                 .push((topic.to_string(), payload.to_vec()));
             Ok(())
         }

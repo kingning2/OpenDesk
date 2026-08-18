@@ -14,7 +14,7 @@ use common::contracts::{
     ChannelIpcQrCheckResponse, ChannelIpcQrStartResponse, ChannelSidecarQrCancelRequest,
     ChannelSidecarQrCheckRequest, ChannelSidecarQrStartRequest,
 };
-use opendesk_macros::timed;
+use dingda_macros::timed;
 use serde::Deserialize;
 use std::sync::Arc;
 use tauri::{AppHandle, Manager, State};
@@ -38,12 +38,12 @@ pub struct AccountQrStartRequest {
 pub async fn account_qr_start(
     state: State<'_, AppState>,
     request: AccountQrStartRequest,
-) -> common::OpenDeskResult<IpcResponse<ChannelIpcQrStartResponse>> {
+) -> common::DingDaResult<IpcResponse<ChannelIpcQrStartResponse>> {
     state
         .license
         .ensure_licensed()
         .await
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
 
     let sidecar_request = ChannelSidecarQrStartRequest {
         account_id: String::new(),
@@ -57,7 +57,7 @@ pub async fn account_qr_start(
     let sidecar = state.lifecycle.client();
     let response = runtime::sidecar::routes::channel_qr_start::call(sidecar, sidecar_request)
         .await
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
 
     Ok(IpcResponse::ok(ChannelIpcQrStartResponse {
         ok: response.ok,
@@ -76,12 +76,12 @@ pub async fn account_qr_check(
     app: AppHandle,
     dispatcher: State<'_, Arc<ChannelDispatcher>>,
     request: ChannelIpcQrCheckRequest,
-) -> common::OpenDeskResult<IpcResponse<ChannelIpcQrCheckResponse>> {
+) -> common::DingDaResult<IpcResponse<ChannelIpcQrCheckResponse>> {
     state
         .license
         .ensure_licensed()
         .await
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
 
     let sidecar_request = ChannelSidecarQrCheckRequest {
         session_id: request.session_id.clone(),
@@ -90,7 +90,7 @@ pub async fn account_qr_check(
     let sidecar = state.lifecycle.client();
     let response = runtime::sidecar::routes::channel_qr_check::call(sidecar, sidecar_request)
         .await
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
 
     // 登录成功：写入业务账号层（自动创建账号），并自动建立渠道连接
     if response.status == "success" {
@@ -113,12 +113,12 @@ pub async fn account_qr_check(
                                 ..Default::default()
                             },
                         )
-                        .map_err(common::OpenDeskError::wrap)?;
+                        .map_err(common::DingDaError::wrap)?;
                 }
                 _ => {
                     service
                         .create(1, &account)
-                        .map_err(common::OpenDeskError::wrap)?;
+                        .map_err(common::DingDaError::wrap)?;
                 }
             }
 
@@ -128,7 +128,7 @@ pub async fn account_qr_check(
             dispatcher
                 .connect(&channel_account)
                 .await
-                .map_err(common::OpenDeskError::wrap)?;
+                .map_err(common::DingDaError::wrap)?;
         }
     }
 
@@ -148,12 +148,12 @@ pub async fn account_qr_check(
 pub async fn account_qr_cancel(
     state: State<'_, AppState>,
     request: ChannelIpcQrCancelRequest,
-) -> common::OpenDeskResult<IpcResponse<ChannelIpcQrCancelResponse>> {
+) -> common::DingDaResult<IpcResponse<ChannelIpcQrCancelResponse>> {
     state
         .license
         .ensure_licensed()
         .await
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
 
     let sidecar_request = ChannelSidecarQrCancelRequest {
         session_id: request.session_id.clone(),
@@ -162,7 +162,7 @@ pub async fn account_qr_cancel(
     let sidecar = state.lifecycle.client();
     let response = runtime::sidecar::routes::channel_qr_cancel::call(sidecar, sidecar_request)
         .await
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
 
     Ok(IpcResponse::ok(ChannelIpcQrCancelResponse {
         ok: response.ok,

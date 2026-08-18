@@ -4,8 +4,8 @@
 //! ?????2026-07-21
 
 use common::contracts::{AgentIpcPingRequest, AgentIpcPingResponse};
-use common::OpenDeskResult;
-use opendesk_macros::timed;
+use common::DingDaResult;
+use dingda_macros::timed;
 
 use crate::agent::PingAgent;
 use crate::shared::ipc::IpcResponse;
@@ -27,7 +27,7 @@ use crate::state::AppState;
 pub async fn agent_ping(
     state: tauri::State<'_, AppState>,
     request: AgentIpcPingRequest,
-) -> OpenDeskResult<IpcResponse<AgentIpcPingResponse>> {
+) -> DingDaResult<IpcResponse<AgentIpcPingResponse>> {
     state
         .license
         .ensure_licensed()

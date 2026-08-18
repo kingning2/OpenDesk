@@ -1,4 +1,4 @@
-# OpenDesk
+# DingDa
 
 本地优先的 **AI Agent 智能客服** 桌面应用。
 
@@ -54,13 +54,13 @@ pnpm lint:fix          # 自动修复（前端 + rust fmt + python）
 
 ## 文档
 
-- [`skills/opendesk/`](skills/opendesk/) — AI 开发知识库
-- [`.cursor/skills/opendesk/SKILL.md`](.cursor/skills/opendesk/SKILL.md) — Cursor Skill 入口
+- [`skills/dingda/`](skills/dingda/) — AI 开发知识库
+- [`.cursor/skills/dingda/SKILL.md`](.cursor/skills/dingda/SKILL.md) — Cursor Skill 入口
 - [`.cursor/rules/master.md`](.cursor/rules/master.md) — 全局架构约束
 - [`docs/architecture/`](docs/architecture/) — 架构文档与 ADR
 
 ### 架构检查
 
 ```bash
-python skills/opendesk/scripts/check_architecture.py
+python skills/dingda/scripts/check_architecture.py
 ```

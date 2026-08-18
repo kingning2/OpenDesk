@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "opendesk://llm/ipc/chat.response/v1",
+  "$id": "dingda://llm/ipc/chat.response/v1",
   "title": "llm/ipc/chat.response",
   "type": "object",
   "required": ["reply"],

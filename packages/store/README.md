@@ -1,6 +1,6 @@
 # @desk/store
 
-OpenDesk **通用** 客户端状态底座，基于 [Zustand](https://github.com/pmndrs/zustand)。
+DingDa **通用** 客户端状态底座，基于 [Zustand](https://github.com/pmndrs/zustand)。
 
 ## 边界
 

@@ -77,7 +77,7 @@ cargo run --bin activation-gen -- generate-activation-code `
   --out license.key
 ```
 
-`--days` 签发的 token 会带 `durationSecs`；本机首次校验成功时写入 `%APPDATA%/OpenDesk/license.activated_at.json`，之后过期时间 = `activatedAt + durationSecs`。  
+`--days` 签发的 token 会带 `durationSecs`；本机首次校验成功时写入 `%APPDATA%/DingDa/license.activated_at.json`，之后过期时间 = `activatedAt + durationSecs`。  
 **未激活前，计时器不走。** 旧版只含绝对 `exp`、没有 `durationSecs` 的 key 仍按签发时写死的截止时间校验，需用新工具重新签发。
 
 私钥默认读取 `./keys/private_key.pem`，也可用 `--private-key` 指定。
@@ -91,8 +91,8 @@ cargo run --bin activation-gen -- generate-activation-code `
 cargo run --bin license-verifier -- gen-machine-code
 
 # 完整校验（--days 授权必须带 --state-dir）
-cargo run --bin license-verifier -- verify --key-file license.key --state-dir %APPDATA%\OpenDesk
-cargo run --bin license-verifier -- verify --token <activationToken> --state-dir %APPDATA%\OpenDesk
+cargo run --bin license-verifier -- verify --key-file license.key --state-dir %APPDATA%\DingDa
+cargo run --bin license-verifier -- verify --token <activationToken> --state-dir %APPDATA%\DingDa
 ```
 
 退出码：`0` 通过，`1` 未通过，`2` 运行错误。stdout 为一行 JSON（含 `tokenExpiredAt`、可选 `activatedAt`）。

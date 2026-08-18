@@ -1,7 +1,7 @@
 /**
- * 编译期渠道平台工具 — 与 Vite `define` / Rust `OPENDESK_CHANNEL_PLATFORM` 对齐。
+ * 编译期渠道平台工具 — 与 Vite `define` / Rust `DINGDA_CHANNEL_PLATFORM` 对齐。
  *
- * 构建参数 `OPENDESK_CHANNEL_PLATFORM` 在打包时被替换为字面量，
+ * 构建参数 `DINGDA_CHANNEL_PLATFORM` 在打包时被替换为字面量，
  * Rollup 可 dead-code eliminate 未选中平台的分支与动态 import。
  *
  * @author Xiaoman
@@ -11,7 +11,7 @@
 /** 渠道平台 id（与契约 / Rust `ChannelKind` 对齐）。 */
 export type ChannelPlatformId = "xianyu" | "xiaohongshu" | "douyin";
 
-declare const __OPENDESK_CHANNEL_PLATFORM__: ChannelPlatformId;
+declare const __DINGDA_CHANNEL_PLATFORM__: ChannelPlatformId;
 
 /**
  * 当前构建选定的渠道平台 id（编译期常量）。
@@ -19,8 +19,8 @@ declare const __OPENDESK_CHANNEL_PLATFORM__: ChannelPlatformId;
  * 由 Vite `define` 注入；未注入时回退 `xianyu`（仅 dev 预览容错）。
  */
 export const ACTIVE_CHANNEL_PLATFORM: ChannelPlatformId =
-  typeof __OPENDESK_CHANNEL_PLATFORM__ !== "undefined"
-    ? __OPENDESK_CHANNEL_PLATFORM__
+  typeof __DINGDA_CHANNEL_PLATFORM__ !== "undefined"
+    ? __DINGDA_CHANNEL_PLATFORM__
     : "xianyu";
 
 /** 全部已知平台 id。 */

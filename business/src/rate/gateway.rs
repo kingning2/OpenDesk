@@ -4,7 +4,7 @@
 //! 平台 API 为异步调用，故 trait 使用 async。
 
 use async_trait::async_trait;
-use common::OpenDeskResult;
+use common::DingDaResult;
 use serde::{Deserialize, Serialize};
 
 /// 评价结果。
@@ -18,10 +18,10 @@ pub struct RateResult {
 #[async_trait]
 pub trait RateGateway: Send + Sync {
     /// 评价买家（好评）。
-    async fn rate_buyer(&self, trade_id: &str, feedback: &str) -> OpenDeskResult<RateResult>;
+    async fn rate_buyer(&self, trade_id: &str, feedback: &str) -> DingDaResult<RateResult>;
 
     /// 更新订单评价状态（本地订单表）。
-    async fn update_rated(&self, order_no: &str, is_rated: bool) -> OpenDeskResult<bool>;
+    async fn update_rated(&self, order_no: &str, is_rated: bool) -> DingDaResult<bool>;
 }
 
 #[cfg(test)]

@@ -19,7 +19,7 @@ from gateway.handlers import (
 )
 from sidecar.routes import ROUTES
 
-logger = logging.getLogger("opendesk.sidecar")
+logger = logging.getLogger("dingda.sidecar")
 
 HANDLERS = {
     "handle_password_login": handle_password_login,
@@ -116,7 +116,7 @@ class SidecarHandler(BaseHTTPRequestHandler):
             self._send_json(200, {"routes": list(ROUTES.keys())})
             return
         if self.path == "/metrics":
-            self._send_text(200, "# opendesk sidecar metrics (skeleton)\n")
+            self._send_text(200, "# dingda sidecar metrics (skeleton)\n")
             return
         self._send_json(404, {"code": "not_found", "message": "route not found"})
 

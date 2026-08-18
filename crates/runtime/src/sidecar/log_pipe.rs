@@ -25,7 +25,7 @@ pub fn emit_line(stream: &str, line: &str) {
     }
 
     info!(
-        target: "opendesk.sidecar",
+        target: "dingda.sidecar",
         stream,
         message = trimmed,
         "侧车日志（非结构化）"
@@ -56,19 +56,19 @@ fn emit_structured(parsed: &PythonLogLine) {
 
     match level.as_str() {
         "ERROR" | "CRITICAL" => error!(
-            target: "opendesk.sidecar",
+            target: "dingda.sidecar",
             message = %message,
         ),
         "WARNING" | "WARN" => warn!(
-            target: "opendesk.sidecar",
+            target: "dingda.sidecar",
             message = %message,
         ),
         "DEBUG" => debug!(
-            target: "opendesk.sidecar",
+            target: "dingda.sidecar",
             message = %message,
         ),
         _ => info!(
-            target: "opendesk.sidecar",
+            target: "dingda.sidecar",
             message = %message,
         ),
     }

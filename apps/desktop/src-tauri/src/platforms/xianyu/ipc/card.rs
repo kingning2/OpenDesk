@@ -42,7 +42,7 @@ pub struct CardDeleteRequest {
 pub fn card_list(
     state: State<'_, CardHandle>,
     request: CardListRequest,
-) -> common::OpenDeskResult<IpcResponse<(Vec<Card>, u32)>> {
+) -> common::DingDaResult<IpcResponse<(Vec<Card>, u32)>> {
     let service = CardService::new(state.store.as_ref());
     let query = CardQuery {
         page: request.page,
@@ -59,11 +59,11 @@ pub fn card_create(
     state: State<'_, CardHandle>,
     owner_id: i64,
     card: Card,
-) -> common::OpenDeskResult<IpcResponse<Card>> {
+) -> common::DingDaResult<IpcResponse<Card>> {
     let service = CardService::new(state.store.as_ref());
     let result = service
         .create(owner_id, card)
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(result))
 }
 
@@ -72,11 +72,11 @@ pub fn card_update(
     state: State<'_, CardHandle>,
     owner_id: i64,
     card: Card,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = CardService::new(state.store.as_ref());
     service
         .update(owner_id, &card)
-        .map_err(common::OpenDeskError::wrap)?;
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(()))
 }
 
@@ -84,7 +84,7 @@ pub fn card_update(
 pub fn card_set_enabled(
     state: State<'_, CardHandle>,
     request: CardEnabledRequest,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = CardService::new(state.store.as_ref());
     service.set_enabled(request.owner_id, request.card_id, request.enabled)?;
     Ok(IpcResponse::ok(()))
@@ -94,7 +94,7 @@ pub fn card_set_enabled(
 pub fn card_delete(
     state: State<'_, CardHandle>,
     request: CardDeleteRequest,
-) -> common::OpenDeskResult<IpcResponse<()>> {
+) -> common::DingDaResult<IpcResponse<()>> {
     let service = CardService::new(state.store.as_ref());
     service.delete(request.owner_id, request.card_id)?;
     Ok(IpcResponse::ok(()))

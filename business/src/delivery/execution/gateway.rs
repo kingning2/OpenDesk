@@ -3,7 +3,7 @@
 use async_trait::async_trait;
 
 use super::card::Card;
-use common::OpenDeskResult;
+use common::DingDaResult;
 
 /// 确认发货结果。
 #[derive(Debug, Clone)]
@@ -23,7 +23,7 @@ pub trait DeliveryGateway: Send + Sync {
     async fn confirm_shipping(&self, order_id: &str) -> ConfirmResult;
 
     /// 发送文本到会话（ws 消息）。
-    async fn send_text(&self, chat_id: &str, buyer_id: &str, text: &str) -> OpenDeskResult<()>;
+    async fn send_text(&self, chat_id: &str, buyer_id: &str, text: &str) -> DingDaResult<()>;
 
     /// 更新订单发货信息（状态/方式/内容/失败原因）。
     async fn update_order_delivery(
@@ -33,7 +33,7 @@ pub trait DeliveryGateway: Send + Sync {
         delivery_method: &str,
         content: &str,
         fail_reason: &str,
-    ) -> OpenDeskResult<()>;
+    ) -> DingDaResult<()>;
 
     /// 按商品 ID 获取候选卡券（业务层从存储加载）。
     fn cards_for_item(&self, item_id: &str) -> Vec<Card>;
