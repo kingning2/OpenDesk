@@ -45,5 +45,6 @@ export type { LlmIpcClassifyRequest } from "./llm_ipc_classify_request";
 export type { LlmIpcClassifyResponse } from "./llm_ipc_classify_response";
 export type { LlmMessage } from "./llm_message";
 export type { LlmProvider } from "./llm_provider";
+export type { RuntimeEventError } from "./runtime_event_error";
 export type { RuntimeEventSidecarRestarted } from "./runtime_event_sidecar_restarted";
 export type { RuntimeLogEntry } from "./runtime_log_entry";

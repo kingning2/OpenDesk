@@ -1,0 +1,11 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RuntimeEventError {
+    pub event_id: String,
+    pub occurred_at: String,
+    pub kind: String,
+    pub stage: Option<String>,
+    pub message: String,
+    pub detail: Option<String>,
+}

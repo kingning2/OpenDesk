@@ -90,6 +90,8 @@ pub mod llm_message;
 pub use llm_message::LlmMessage;
 pub mod llm_provider;
 pub use llm_provider::LlmProvider;
+pub mod runtime_event_error;
+pub use runtime_event_error::RuntimeEventError;
 pub mod runtime_event_sidecar_restarted;
 pub use runtime_event_sidecar_restarted::RuntimeEventSidecarRestarted;
 pub mod runtime_log_entry;

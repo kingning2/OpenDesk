@@ -45,6 +45,7 @@ from .llm_ipc_classify_request import LlmIpcClassifyRequest
 from .llm_ipc_classify_response import LlmIpcClassifyResponse
 from .llm_message import LlmMessage
 from .llm_provider import LlmProvider
+from .runtime_event_error import RuntimeEventError
 from .runtime_event_sidecar_restarted import RuntimeEventSidecarRestarted
 from .runtime_log_entry import RuntimeLogEntry
 
@@ -94,6 +95,7 @@ __all__ = [
     "LlmIpcClassifyResponse",
     "LlmMessage",
     "LlmProvider",
+    "RuntimeEventError",
     "RuntimeEventSidecarRestarted",
     "RuntimeLogEntry",
 ]

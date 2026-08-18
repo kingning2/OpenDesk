@@ -1,0 +1,8 @@
+export interface RuntimeEventError {
+  event_id: string;
+  occurred_at: string;
+  kind: string;
+  stage?: string;
+  message: string;
+  detail?: string;
+}
