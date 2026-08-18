@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" role="img" aria-label="粘土微缩场景：订单包裹与发货">
+  <defs>
+    <radialGradient id="glow" cx="0.72" cy="0.18" r="0.7" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FFF4DD" stop-opacity="0.95"/>
+      <stop offset="0.5" stop-color="#F6E5C0" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#F5EDE0" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="boxTop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E9DBB2"/>
+      <stop offset="1" stop-color="#DFCE9E"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1920" height="1080" fill="#F5EDE0"/>
+  <rect width="1920" height="1080" fill="url(#glow)"/>
+
+  <!-- 背景 -->
+  <path d="M0 520 Q 520 400 1100 490 T 1920 450 V 1080 H 0 Z" fill="#ECDFC4"/>
+  <path d="M0 660 Q 680 560 1380 630 T 1920 610 V 1080 H 0 Z" fill="#E4D3B2"/>
+
+  <!-- 蜿蜒发货路径 -->
+  <path d="M 160 1080 Q 520 920 980 900 T 1920 840" fill="none" stroke="#E0CEA6" stroke-width="90" stroke-linecap="round" opacity="0.75"/>
+
+  <!-- 小货车 -->
+  <g>
+    <ellipse cx="1150" cy="856" rx="150" ry="20" fill="#C9AE7E" opacity="0.4"/>
+    <rect x="1020" y="740" width="210" height="96" rx="18" fill="#D3BC8D"/>
+    <rect x="1230" y="712" width="110" height="124" rx="16" fill="#CBB487"/>
+    <path d="M 1218 728 q -8 -18 6 -22 l 96 -18 q 16 -4 20 12 v 26 q 2 16 -16 18 Z" fill="#C2A878"/>
+    <rect x="1054" y="788" width="120" height="26" rx="13" fill="#C9704C"/>
+    <circle cx="1068" cy="856" r="26" fill="#8A7661"/>
+    <circle cx="1068" cy="856" r="10" fill="#E4D3B2"/>
+    <circle cx="1300" cy="856" r="26" fill="#8A7661"/>
+    <circle cx="1300" cy="856" r="10" fill="#E4D3B2"/>
+  </g>
+
+  <!-- 包裹堆 -->
+  <g>
+    <ellipse cx="1560" cy="856" rx="190" ry="20" fill="#C9AE7E" opacity="0.4"/>
+
+    <!-- 大包裹 -->
+    <rect x="1400" y="712" width="240" height="140" rx="16" fill="#E7D8AE"/>
+    <rect x="1400" y="712" width="240" height="22" rx="11" fill="#C9704C"/>
+    <rect x="1488" y="740" width="64" height="112" fill="#C9704C" opacity="0.9"/>
+    <path d="M 1400 782 h 240" stroke="#C9704C" stroke-width="18" stroke-linecap="round" opacity="0.9"/>
+
+    <!-- 小包裹（右上） -->
+    <g>
+      <path d="M 1540 612 L 1690 592 L 1720 676 L 1570 696 Z" fill="url(#boxTop)"/>
+      <rect x="1570" y="612" width="150" height="88" rx="12" fill="#E1D0A2"/>
+      <path d="M 1644 630 L 1644 696" stroke="#C9704C" stroke-width="12" stroke-linecap="round"/>
+    </g>
+
+    <!-- 中包裹（左上） -->
+    <g>
+      <path d="M 1412 700 L 1548 682 L 1578 764 L 1442 782 Z" fill="url(#boxTop)"/>
+      <rect x="1442" y="700" width="136" height="84" rx="12" fill="#EBDCB4"/>
+      <path d="M 1508 716 L 1508 784 M 1476 750 L 1544 750" stroke="#C9704C" stroke-width="11" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <!-- 发货单（前景） -->
+  <g>
+    <rect x="760" y="712" width="190" height="260" rx="18" fill="#F2E9CC"/>
+    <rect x="800" y="744" width="110" height="34" rx="12" fill="#E2D2A8"/>
+    <rect x="812" y="752" width="86" height="18" rx="9" fill="#CBB487"/>
+    <rect x="800" y="824" width="150" height="26" rx="13" fill="#E5D6B4"/>
+    <rect x="800" y="866" width="122" height="26" rx="13" fill="#E5D6B4"/>
+    <path d="M 822 952 l 30 30 l 58 -66" fill="none" stroke="#C9704C" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="746" y="690" width="218" height="26" rx="10" fill="#C9704C"/>
+  </g>
+
+  <!-- 前景地面 -->
+  <ellipse cx="980" cy="1060" rx="820" ry="100" fill="#E0CEA6" opacity="0.5"/>
+
+  <!-- 尘埃光斑 -->
+  <circle cx="330" cy="340" r="7" fill="#E8D6AC" opacity="0.6"/>
+  <circle cx="560" cy="600" r="6" fill="#E8D6AC" opacity="0.5"/>
+  <circle cx="1720" cy="420" r="6" fill="#E8D6AC" opacity="0.5"/>
+  <circle cx="240" cy="760" r="8" fill="#E8D6AC" opacity="0.45"/>
+</svg>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+  <rect x="4" y="4" width="88" height="88" rx="14" fill="#C8372A"/>
+  <rect x="11" y="11" width="74" height="74" rx="8" fill="none" stroke="#FFFDF6" stroke-opacity="0.6" stroke-width="2.5"/>
+  <text x="48" y="49" text-anchor="middle" dominant-baseline="central"
+        font-family="'Noto Serif SC','Songti SC','STSong','SimSun',serif"
+        font-size="50" font-weight="700" fill="#FFFDF6">开</text>
+</svg>

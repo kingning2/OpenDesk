@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" role="img" aria-label="粘土微缩场景：AI 理解对话并给出回复建议">
+  <defs>
+    <radialGradient id="glow" cx="0.72" cy="0.2" r="0.7" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FFF4DD" stop-opacity="0.95"/>
+      <stop offset="0.5" stop-color="#F6E5C0" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#F5EDE0" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="core" cx="0.5" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#8FAC7E"/>
+      <stop offset="1" stop-color="#6E8A5F"/>
+    </radialGradient>
+    <radialGradient id="aurora" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#A7C293" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#A7C293" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1920" height="1080" fill="#F5EDE0"/>
+  <rect width="1920" height="1080" fill="url(#glow)"/>
+
+  <!-- 背景 -->
+  <path d="M0 520 Q 520 400 1100 490 T 1920 450 V 1080 H 0 Z" fill="#ECDFC4"/>
+  <path d="M0 660 Q 680 560 1380 630 T 1920 610 V 1080 H 0 Z" fill="#E4D3B2"/>
+
+  <!-- AI 核心光晕 -->
+  <circle cx="1330" cy="540" r="260" fill="url(#aurora)"/>
+
+  <!-- 传入消息气泡（左） -->
+  <g>
+    <ellipse cx="760" cy="560" rx="96" ry="16" fill="#C9AE7E" opacity="0.35"/>
+    <rect x="668" y="432" width="220" height="150" rx="26" fill="#E7D9B4"/>
+    <rect x="694" y="462" width="130" height="26" rx="13" fill="#D9C499"/>
+    <rect x="694" y="500" width="104" height="26" rx="13" fill="#D9C499"/>
+    <rect x="694" y="538" width="72" height="26" rx="13" fill="#D9C499"/>
+  </g>
+
+  <!-- AI 建议气泡（右，鼠尾草绿） -->
+  <g>
+    <ellipse cx="1560" cy="760" rx="110" ry="17" fill="#C9AE7E" opacity="0.35"/>
+    <rect x="1440" y="620" width="240" height="150" rx="26" fill="#DDE8CE"/>
+    <rect x="1466" y="646" width="96" height="24" rx="12" fill="#7C9A6D"/>
+    <rect x="1466" y="688" width="168" height="26" rx="13" fill="#C4D4B2"/>
+    <rect x="1466" y="726" width="140" height="26" rx="13" fill="#C4D4B2"/>
+  </g>
+
+  <!-- AI 核心（芯片） -->
+  <g>
+    <ellipse cx="1330" cy="700" rx="120" ry="22" fill="#C9AE7E" opacity="0.4"/>
+    <path d="M 1230 540 L 1330 470 L 1430 540 L 1430 660 L 1330 730 L 1230 660 Z" fill="url(#core)"/>
+    <path d="M 1254 552 L 1330 494 L 1406 552 L 1406 648 L 1330 706 L 1254 648 Z" fill="#8FAC7E"/>
+    <rect x="1294" y="560" width="72" height="14" rx="7" fill="#E3EDD4"/>
+    <rect x="1294" y="586" width="72" height="14" rx="7" fill="#E3EDD4"/>
+    <rect x="1294" y="612" width="44" height="14" rx="7" fill="#E3EDD4"/>
+    <circle cx="1330" cy="640" r="7" fill="#F4EAC8"/>
+  </g>
+
+  <!-- 火花 -->
+  <g stroke="#C9A24B" stroke-width="6" stroke-linecap="round">
+    <path d="M 1460 480 l 14 26 l -14 26"/>
+    <path d="M 1490 470 l 6 16"/>
+    <path d="M 1180 620 l 10 20"/>
+    <path d="M 1540 560 l 8 14"/>
+  </g>
+
+  <!-- 知识库书堆 -->
+  <g>
+    <rect x="1120" y="846" width="160" height="26" rx="10" fill="#7C9A6D"/>
+    <rect x="1136" y="824" width="132" height="26" rx="10" fill="#6E8A5F"/>
+    <rect x="1152" y="802" width="102" height="26" rx="10" fill="#7C9A6D"/>
+  </g>
+
+  <!-- 前景地面 -->
+  <ellipse cx="1020" cy="1040" rx="840" ry="110" fill="#E0CEA6" opacity="0.5"/>
+
+  <!-- 尘埃光斑 -->
+  <circle cx="340" cy="300" r="7" fill="#E8D6AC" opacity="0.6"/>
+  <circle cx="600" cy="820" r="6" fill="#E8D6AC" opacity="0.5"/>
+  <circle cx="1680" cy="320" r="6" fill="#E8D6AC" opacity="0.5"/>
+  <circle cx="250" cy="700" r="8" fill="#E8D6AC" opacity="0.45"/>
+</svg>

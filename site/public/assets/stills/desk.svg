@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" role="img" aria-label="粘土微缩场景：卖家的桌面工作台">
+  <defs>
+    <radialGradient id="glow" cx="0.76" cy="0.16" r="0.68" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FFF4DC" stop-opacity="0.95"/>
+      <stop offset="0.5" stop-color="#F7E6C0" stop-opacity="0.42"/>
+      <stop offset="1" stop-color="#F5EDE0" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="deskTop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EBDCB5"/>
+      <stop offset="1" stop-color="#E0CE9F"/>
+    </linearGradient>
+    <radialGradient id="window" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFF4D7"/>
+      <stop offset="1" stop-color="#F0DCAE"/>
+    </radialGradient>
+    <radialGradient id="lampglow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FCE3B6" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FCE3B6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1920" height="1080" fill="#F5EDE0"/>
+  <rect width="1920" height="1080" fill="url(#glow)"/>
+
+  <!-- 背景远丘 -->
+  <path d="M0 540 Q 500 400 1040 500 T 1920 470 V 1080 H 0 Z" fill="#ECDFC4"/>
+  <path d="M0 660 Q 660 540 1320 610 T 1920 590 V 1080 H 0 Z" fill="#E4D3B2"/>
+
+  <!-- 暖窗光晕 -->
+  <ellipse cx="1500" cy="330" rx="360" ry="220" fill="url(#window)" opacity="0.9"/>
+
+  <!-- 桌面 -->
+  <path d="M 720 1080 Q 706 866 740 830 L 1540 742 Q 1576 737 1602 764 L 1692 856 Q 1718 884 1706 922 L 1676 1080 Z" fill="#D9C499"/>
+  <path d="M 740 830 L 1540 742 Q 1576 737 1602 764 L 1680 850 L 760 932 Q 738 870 740 830 Z" fill="url(#deskTop)"/>
+
+  <!-- 桌面上的投影 -->
+  <ellipse cx="1310" cy="836" rx="150" ry="22" fill="#C9AE7E" opacity="0.35"/>
+
+  <!-- 显示器 -->
+  <g>
+    <path d="M 1172 762 Q 1166 748 1178 742 L 1300 736 Q 1312 734 1316 746 L 1322 762 Q 1324 776 1310 782 L 1192 788 Q 1176 790 1172 762 Z" fill="#C2A87A"/>
+    <path d="M 1186 560 Q 1180 548 1194 546 L 1464 528 Q 1480 527 1482 544 L 1490 692 Q 1492 710 1476 714 L 1204 728 Q 1188 731 1186 716 Z" fill="#CBB487"/>
+    <path d="M 1204 574 Q 1198 566 1212 564 L 1446 548 Q 1460 547 1462 562 L 1468 688 Q 1470 702 1456 705 L 1220 716 Q 1208 719 1206 706 Z" fill="#FAF3E1"/>
+    <!-- 聊天气泡 -->
+    <rect x="1222" y="586" width="116" height="34" rx="17" fill="#E5D6B4"/>
+    <rect x="1342" y="632" width="128" height="34" rx="17" fill="#EFE4C2"/>
+    <rect x="1222" y="672" width="104" height="30" rx="15" fill="#E5D6B4"/>
+    <rect x="1292" y="692" width="96" height="24" rx="12" fill="#C8372A"/>
+  </g>
+  <rect x="1304" y="748" width="26" height="34" rx="9" fill="#C0A878"/>
+  <rect x="1268" y="778" width="98" height="14" rx="7" fill="#C0A878"/>
+
+  <!-- 红色台灯（朱砂） -->
+  <ellipse cx="1120" cy="842" rx="120" ry="44" fill="url(#lampglow)"/>
+  <path d="M 1076 796 Q 1072 784 1086 782 L 1160 776 Q 1174 775 1174 789 L 1176 806 Q 1178 822 1162 824 L 1088 830 Q 1074 831 1076 796 Z" fill="#C8372A"/>
+  <rect x="1118" y="628" width="12" height="150" rx="6" fill="#C9B184"/>
+  <rect x="1078" y="802" width="92" height="15" rx="7" fill="#BFA87E"/>
+
+  <!-- 咖啡杯 -->
+  <rect x="1576" y="800" width="52" height="40" rx="14" fill="#C9B184"/>
+  <path d="M 1628 808 q 26 0 26 20 q 0 20 -26 20" fill="none" stroke="#C9B184" stroke-width="11" stroke-linecap="round"/>
+  <ellipse cx="1602" cy="800" rx="28" ry="9" fill="#DCC79B"/>
+
+  <!-- 印章（品牌） -->
+  <rect x="988" y="770" width="70" height="70" rx="14" fill="#C8372A"/>
+  <rect x="995" y="777" width="56" height="56" rx="9" fill="none" stroke="#FFFDF6" stroke-opacity="0.65" stroke-width="4"/>
+  <text x="1023" y="822" text-anchor="middle" font-family="'Noto Serif SC','Songti SC','SimSun',serif" font-size="40" font-weight="700" fill="#FFFDF6">开</text>
+
+  <!-- 前景地面 -->
+  <ellipse cx="1040" cy="1050" rx="860" ry="120" fill="#E0CEA6" opacity="0.55"/>
+  <ellipse cx="920" cy="1050" rx="420" ry="70" fill="#D9C499" opacity="0.5"/>
+
+  <!-- 暖光尘埃 -->
+  <circle cx="340" cy="300" r="7" fill="#E8D6AC" opacity="0.6"/>
+  <circle cx="520" cy="470" r="5" fill="#E8D6AC" opacity="0.5"/>
+  <circle cx="180" cy="620" r="9" fill="#E8D6AC" opacity="0.5"/>
+  <circle cx="1700" cy="520" r="6" fill="#E8D6AC" opacity="0.55"/>
+  <circle cx="1840" cy="380" r="8" fill="#E8D6AC" opacity="0.5"/>
+</svg>
