@@ -6,6 +6,7 @@ dependencies = [
   "shared",
   "openai>=1.40",
   "playwright>=1.40",
+  "playwright-stealth>=2.0.3",
 ]
 
 [build-system]

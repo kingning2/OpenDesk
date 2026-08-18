@@ -5,6 +5,7 @@
 
 pub mod account;
 pub mod account_connection;
+pub mod account_password;
 pub mod account_qr;
 pub mod address;
 pub mod auto_reply_log;
@@ -30,6 +31,7 @@ pub use account::{
     account_create, account_delete, account_list, account_set_status, account_update,
 };
 pub use account_connection::{account_connect, account_connection_state, account_disconnect};
+pub use account_password::account_password_login;
 pub use account_qr::{account_qr_cancel, account_qr_check, account_qr_start};
 pub use address::{
     address_batch_delete, address_create, address_delete, address_list, address_update,

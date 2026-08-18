@@ -7,8 +7,6 @@
  * @created 2026-08-18
  */
 
-import { CHANNEL_WORKBENCH_PATH } from "@desk/platform/compile";
-
 /**
  * 判断路径是否需占满高度并由内部自管滚动（关闭外层 ScrollArea）。
  *
@@ -19,9 +17,6 @@ import { CHANNEL_WORKBENCH_PATH } from "@desk/platform/compile";
  * @returns 需 fill 布局且关闭外层滚动时为 `true`
  */
 export function needsFillLayout(path: string): boolean {
-  if (path === CHANNEL_WORKBENCH_PATH || path.startsWith(`${CHANNEL_WORKBENCH_PATH}/`)) {
-    return true;
-  }
   if (path.endsWith("/tutorial")) {
     return true;
   }

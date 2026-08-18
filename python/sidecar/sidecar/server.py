@@ -12,9 +12,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, ClassVar
 
 from gateway.handlers import (
-    handle_agent_ping,
-    handle_llm_chat,
-    handle_llm_classify,
+    handle_password_login,
     handle_qr_cancel,
     handle_qr_check,
     handle_qr_start,
@@ -24,16 +22,14 @@ from sidecar.routes import ROUTES
 logger = logging.getLogger("opendesk.sidecar")
 
 HANDLERS = {
-    "handle_agent_ping": handle_agent_ping,
+    "handle_password_login": handle_password_login,
     "handle_qr_start": handle_qr_start,
     "handle_qr_check": handle_qr_check,
     "handle_qr_cancel": handle_qr_cancel,
-    "handle_llm_chat": handle_llm_chat,
-    "handle_llm_classify": handle_llm_classify,
 }
 
-# 高频探测/轮询：正常且够快时只打 DEBUG，避免刷屏。
-_QUIET_PATHS = frozenset({"/v1/agent/ping", "/v1/channel/qr_check"})
+# 高频轮询：正常且够快时只打 DEBUG，避免刷屏。
+_QUIET_PATHS = frozenset({"/v1/channel/qr_check"})
 _QUIET_SLOW_MS = 500
 
 

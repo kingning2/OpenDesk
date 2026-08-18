@@ -191,6 +191,8 @@ fn account_from_cookies(cookies: &[ChannelCookie]) -> XianyuAccount {
             unb.clone()
         },
         display_name: String::new(),
+        login_id: String::new(),
+        login_password: String::new(),
         unb,
         cookie: cookie_str,
         login_method: LoginMethod::Qr,

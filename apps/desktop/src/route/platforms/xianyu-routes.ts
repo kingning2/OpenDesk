@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 闲鱼编译期静态路由 — 路由段、页面加载器、侧栏导航。
  *
  * 仅 `OPENDESK_CHANNEL_PLATFORM=xianyu` 构建时通过 `@platform-routes` 引入。
@@ -10,10 +10,9 @@
 import type { ComponentType } from "react";
 import {
   CHANNEL_MANAGE_ROOT,
-  CHANNEL_WORKBENCH_PATH,
   managePath,
 } from "@desk/platform/compile";
-import { LayoutDashboard, MessageSquare, Package, ShoppingCart, Users } from "@desk/ui/icons";
+import { LayoutDashboard, Package, ShoppingCart, Users } from "@desk/ui/icons";
 
 import {
   MANAGE_NAV,
@@ -43,7 +42,6 @@ function toRouteSegment(fullPath: string): string {
 
 /** 编译期静态路由段（无 `:platform` / `:view`）。 */
 export const routeSegments = [
-  { path: toRouteSegment(CHANNEL_WORKBENCH_PATH) },
   { path: toRouteSegment(CHANNEL_MANAGE_ROOT) },
   ...MANAGE_NAV.map((item) => ({ path: toRouteSegment(managePath(item.key)) })),
 ];
@@ -93,20 +91,7 @@ export const sidebarNavItems: NavItem[] = [
     icon: ShoppingCart,
     requiredCapabilities: ["manage"],
   },
-  {
-    id: "channel-workbench",
-    path: CHANNEL_WORKBENCH_PATH,
-    label: "会话工作台",
-    icon: MessageSquare,
-    end: true,
-    requiredCapabilities: ["chat"],
-  },
 ];
-
-const loadWorkbench: PageLoader = async () => {
-  const { ChannelWorkbench } = await import("@feature/channel/channel-workbench");
-  return ChannelWorkbench;
-};
 
 const loadManageConsole: PageLoader = async () => {
   const { XianyuManageConsole } = await import("@feature/xianyu/manage-console");
@@ -115,7 +100,6 @@ const loadManageConsole: PageLoader = async () => {
 
 /** 静态路径 → 页面加载器映射。 */
 export const pageLoaders: Record<string, PageLoader> = {
-  [CHANNEL_WORKBENCH_PATH]: loadWorkbench,
   [CHANNEL_MANAGE_ROOT]: loadManageConsole,
   ...Object.fromEntries(
     MANAGE_NAV.map((item) => [managePath(item.key), loadManageConsole]),

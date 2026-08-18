@@ -1,9 +1,7 @@
-"""闲鱼扫码登录会话管理 — Playwright 打开登录页，截图二维码，轮询扫码状态。
+"""扫码登录会话管理（qrcode）— 按平台配置生成二维码并轮询登录状态。
 
-闲鱼/淘宝网页版登录为阿里统一二维码登录：
-- 打开 goofish.com → 未登录跳转淘宝登录页（显示二维码）
-- 用户用 App 扫码 → 浏览器写入 cookies → 跳回原页
-本模块跨 HTTP 请求保存 Playwright 会话，供 start/check/cancel 使用。
+作者：Xiaoman
+创建时间：2026-08-18
 """
 
 from __future__ import annotations
@@ -16,47 +14,19 @@ import time
 import uuid
 from typing import Any
 
+from gateway.login.platform_config import get_platform_config, normalize_platform
+from gateway.login.playwright_common import (
+    LAUNCH_ARGS,
+    apply_stealth,
+    async_playwright,
+    resolve_proxy,
+    resolve_user_agent,
+    to_serializable_cookies,
+)
+
 logger = logging.getLogger("opendesk.sidecar.qr")
 
-try:  # playwright 为可选运行时依赖；缺失或损坏时降级。
-    from playwright.async_api import Browser, BrowserContext, Page, async_playwright
-except Exception:  # pragma: no cover — ImportError / 损坏扩展（如 greenlet）
-    async_playwright = None  # type: ignore[assignment]
-    Browser = Any  # type: ignore[assignment,misc]
-    BrowserContext = Any  # type: ignore[assignment,misc]
-    Page = Any  # type: ignore[assignment,misc]
-
-# 登录入口：闲鱼自己的 passport 登录页（二维码可被闲鱼 App 扫码）。
-# goofish 反爬会拦截无真实 UA 的 headless，必须带真实 Chrome 桌面 UA。
-LOGIN_ENTRY_URL = (
-    "https://passport.goofish.com/mini_login.htm"
-    "?lang=zh_cn&appName=xianyu&appEntrance=web&styleType=vertical"
-    "&isMobile=false&qrCodeFirst=true&notKeepLogin=false"
-)
-# 真实 Chrome 桌面 UA，用于绕过 goofish 的 headless 检测。
-CHROME_DESKTOP_UA = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
-)
-# 二维码元素选择器（闲鱼 passport 登录页通用，合并为单个定位器）。
-# 注意：二维码渲染在 canvas 上（div.qrcode-img 容器内），不是 img；
-# 且合并列表里不能混入宽泛选择器，否则会卡在 DOM 里更靠前、隐藏的匹配元素上。
-QR_SELECTORS = [
-    "div.qrcode-img",
-    "#qrcode-img",
-    "canvas",
-    "img.qrcode-img",
-]
-# 合并后的 CSS 定位器：一次等待任一二维码可见，命中即返回。
-QR_LOCATOR = ", ".join(QR_SELECTORS)
 QR_WAIT_TIMEOUT_MS = 15000
-
-LAUNCH_ARGS = [
-    "--disable-blink-features=AutomationControlled",
-    "--disable-dev-shm-usage",
-    "--no-sandbox",
-    "--disable-setuid-sandbox",
-]
 
 # 扫码状态机。
 STATUS_GENERATING = "generating"
@@ -78,11 +48,12 @@ QR_EXPIRE_SECONDS = 300
 class QrSession:
     """一次扫码登录的 Playwright 会话。"""
 
-    def __init__(self, session_id: str) -> None:
+    def __init__(self, session_id: str, platform: str) -> None:
         self.session_id = session_id
-        self.browser: Browser | None = None
-        self.context: BrowserContext | None = None
-        self.page: Page | None = None
+        self.platform = platform
+        self.browser: Any | None = None
+        self.context: Any | None = None
+        self.page: Any | None = None
         self.status = STATUS_GENERATING
         self.started_at = time.monotonic()
         self.last_refresh_at = time.monotonic()
@@ -107,24 +78,6 @@ class QrSession:
 QR_SESSIONS: dict[str, QrSession] = {}
 
 
-def _to_serializable_cookies(cookies: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """把 Playwright cookie 对象转换为可序列化结构。"""
-    return [
-        {
-            "name": c.get("name", ""),
-            "value": c.get("value", ""),
-            "domain": c.get("domain", ""),
-            "path": c.get("path", ""),
-            "expires": c.get("expires"),
-            "httpOnly": c.get("httpOnly", False),
-            "secure": c.get("secure", False),
-            "sameSite": c.get("sameSite") or "Lax",
-        }
-        for c in cookies
-        if c.get("name") and c.get("value")
-    ]
-
-
 def _to_base64(screenshot: bytes) -> str:
     """截图字节 → data URL。"""
     return "data:image/png;base64," + base64.b64encode(screenshot).decode("ascii")
@@ -132,28 +85,48 @@ def _to_base64(screenshot: bytes) -> str:
 
 async def start_qr_login() -> tuple[bool, str, dict[str, Any]]:
     """启动扫码登录：打开登录页，截图二维码。返回 (ok, detail, payload)。"""
+    return await start_qr_login_by_platform(platform="xianyu")
+
+
+async def start_qr_login_by_platform(platform: str = "xianyu") -> tuple[bool, str, dict[str, Any]]:
+    """按平台启动扫码登录。"""
     if async_playwright is None:
         msg = "playwright 未安装：请运行 uv add playwright 并执行 playwright install chromium"
         return False, msg, {"status": STATUS_FAILED}
 
+    platform_name = normalize_platform(platform)
+    config = get_platform_config(platform_name)
+    qr_locator = ", ".join(config.qr_selectors)
     session_id = str(uuid.uuid4())
-    session = QrSession(session_id)
+    session = QrSession(session_id, platform_name)
 
     try:
+        user_agent = resolve_user_agent(platform_name)
+        proxy = resolve_proxy(platform_name)
         logger.info("启动 Playwright 引擎…")
         playwright = await async_playwright().start()
-        logger.info("正在打开 Chromium 浏览器…")
-        browser = await playwright.chromium.launch(headless=True, args=LAUNCH_ARGS)
+        logger.info(
+            "正在打开 Chromium 浏览器… platform=%s proxy_enabled=%s",
+            platform_name,
+            bool(proxy),
+        )
+        launch_kwargs: dict[str, Any] = {
+            "headless": True,
+            "args": LAUNCH_ARGS,
+        }
+        if proxy:
+            launch_kwargs["proxy"] = proxy
+        browser = await playwright.chromium.launch(**launch_kwargs)
         # 真实 Chrome 桌面 UA + 桌面视口，否则 goofish 反爬直接拦截（非法访问）。
-        # 不再注入移动端风格反检测脚本：它让二维码渲染变慢（~14s）且指纹不一致，
-        # 实测仅靠真实 UA 即可正常加载（~1.6s）。
+        # 在现有参数基础上补充 playwright-stealth，让常见自动化指纹在页面脚本执行前被覆盖。
         context = await browser.new_context(
-            user_agent=CHROME_DESKTOP_UA,
+            user_agent=user_agent,
             viewport={"width": 1280, "height": 800},
             is_mobile=False,
             locale="zh-CN",
             timezone_id="Asia/Shanghai",
         )
+        await apply_stealth(context, logger)
         page = await context.new_page()
 
         session.browser = browser
@@ -162,11 +135,15 @@ async def start_qr_login() -> tuple[bool, str, dict[str, Any]]:
         session.status = STATUS_GENERATING
 
         # 登录页加载：慢网络/风控限流下可能超时，加大超时并重试。
-        logger.info("正在加载闲鱼登录页…")
+        logger.info("正在加载登录页… platform=%s", platform_name)
         loaded = False
         for attempt in range(3):
             try:
-                await page.goto(LOGIN_ENTRY_URL, wait_until="domcontentloaded", timeout=40000)
+                await page.goto(
+                    config.login_entry_url,
+                    wait_until="domcontentloaded",
+                    timeout=40000,
+                )
                 loaded = True
                 break
             except Exception as error:  # noqa: BLE001
@@ -180,7 +157,7 @@ async def start_qr_login() -> tuple[bool, str, dict[str, Any]]:
         qr_element = None
         try:
             qr_element = await page.wait_for_selector(
-                QR_LOCATOR, state="visible", timeout=QR_WAIT_TIMEOUT_MS
+                qr_locator, state="visible", timeout=QR_WAIT_TIMEOUT_MS
             )
         except Exception:  # noqa: BLE001
             qr_element = None
@@ -231,13 +208,15 @@ async def start_qr_login() -> tuple[bool, str, dict[str, Any]]:
 
 async def _refresh_qr(session: QrSession) -> str | None:
     """原地刷新二维码：重新加载登录页，等新二维码渲染后截图。失败时记录原因。"""
+    config = get_platform_config(session.platform)
+    qr_locator = ", ".join(config.qr_selectors)
     page = session.page
     if page is None:
         logger.warning("二维码刷新失败：浏览器会话已关闭")
         return None
     try:
-        await page.goto(LOGIN_ENTRY_URL, wait_until="domcontentloaded", timeout=40000)
-        element = await page.wait_for_selector(QR_LOCATOR, state="visible", timeout=15000)
+        await page.goto(config.login_entry_url, wait_until="domcontentloaded", timeout=40000)
+        element = await page.wait_for_selector(qr_locator, state="visible", timeout=15000)
         screenshot = await element.screenshot()
         return _to_base64(screenshot)
     except Exception as error:  # noqa: BLE001
@@ -255,22 +234,21 @@ async def _finish_success(session: QrSession, session_id: str) -> tuple[bool, st
     导出失败/为空时重试；**`_m_h5_tk` 缺失时补访首页再导出**（缺失会导致后续
     Rust 侧 mtop 签名 token 为空 → 被风控拦截）。持续失败则返回确认态让下一轮再试，不破坏会话。
     """
+    config = get_platform_config(session.platform)
     page = session.page
     if page is not None:
         with contextlib.suppress(Exception):
             url = page.url.lower()
-            # 已登录的 goofish 页面（非 passport）则跳过。
-            if not ("goofish.com" in url and "passport" not in url):
-                await page.goto(
-                    "https://www.goofish.com/", wait_until="domcontentloaded", timeout=40000
-                )
+            # 已登录的平台页面（非 passport）则跳过。
+            if not (config.cookie_domain_keyword in url and "passport" not in url):
+                await page.goto(config.home_url, wait_until="domcontentloaded", timeout=40000)
                 # 等首页 h5 mtop 调用落盘 _m_h5_tk 等会话 cookie。
                 await page.wait_for_timeout(3000)
 
     for attempt in range(3):
         try:
             cookies = await session.context.cookies()
-            exported = _to_serializable_cookies(cookies)
+            exported = to_serializable_cookies(cookies)
             if exported:
                 has_m_h5_tk = any(c.get("name") == "_m_h5_tk" for c in exported)
                 if not has_m_h5_tk:
@@ -282,7 +260,7 @@ async def _finish_success(session: QrSession, session_id: str) -> tuple[bool, st
                     if attempt == 0 and page is not None:
                         with contextlib.suppress(Exception):
                             await page.goto(
-                                "https://www.goofish.com/",
+                                config.home_url,
                                 wait_until="domcontentloaded",
                                 timeout=40000,
                             )
@@ -306,9 +284,21 @@ async def _finish_success(session: QrSession, session_id: str) -> tuple[bool, st
 
 async def check_qr_login(session_id: str) -> tuple[bool, str, dict[str, Any]]:
     """轮询扫码状态。已扫码/登录成功优先判定，二维码仅在纯等待态刷新。"""
+    return await check_qr_login_by_platform(session_id, platform="xianyu")
+
+
+async def check_qr_login_by_platform(
+    session_id: str,
+    *,
+    platform: str = "xianyu",
+) -> tuple[bool, str, dict[str, Any]]:
+    """按平台轮询扫码状态。"""
+    platform_name = normalize_platform(platform)
     session = QR_SESSIONS.get(session_id)
     if session is None:
         return False, "会话不存在或已过期", {"status": STATUS_FAILED}
+    if session.platform != platform_name:
+        return False, "平台与会话不匹配", {"status": STATUS_FAILED}
 
     # 串行化：共享事件循环下并发轮询会损坏 Playwright 上下文。
     async with session.lock:
@@ -324,16 +314,20 @@ async def check_qr_login(session_id: str) -> tuple[bool, str, dict[str, Any]]:
                 return True, "等待中", {"status": STATUS_WAITING}
 
             url = page.url.lower()
+            config = get_platform_config(session.platform)
 
-            # 1. 登录成功：URL 回到 goofish.com 且不含登录跳转，或 goofish 域已有登录 cookie。
-            logged_in = "goofish.com" in url and "login" not in url and "passport" not in url
+            # 1. 登录成功：URL 回到平台域且不含登录跳转，或平台域已有登录 cookie。
+            logged_in = (
+                config.cookie_domain_keyword in url and "login" not in url and "passport" not in url
+            )
             if not logged_in:
-                # passport 页登录后可能不自动跳转；用 goofish 域名的登录 cookie（unb=用户昵称，
+                # passport 页登录后可能不自动跳转；用平台域登录 cookie（如 unb）兜底。
                 # 登录成功后才写入）兜底判断。注意不能用 _tb_token_/cookie2，登录页也会写入。
                 with contextlib.suppress(Exception):
                     cookies = await session.context.cookies()
                     logged_in = any(
-                        c.get("name") == "unb" and "goofish.com" in str(c.get("domain", ""))
+                        c.get("name") == config.login_cookie_name
+                        and config.cookie_domain_keyword in str(c.get("domain", ""))
                         for c in cookies
                     )
 
@@ -362,7 +356,7 @@ async def check_qr_login(session_id: str) -> tuple[bool, str, dict[str, Any]]:
             # 3. 刷新：仅在真正等待扫码时（到刷新周期或二维码元素消失）。
             qr_missing = False
             with contextlib.suppress(Exception):
-                qr_missing = await page.locator("div.qrcode-img").count() == 0
+                qr_missing = await page.locator(config.qr_selectors[0]).count() == 0
             if qr_missing or time.monotonic() - session.last_refresh_at > QR_REFRESH_SECONDS:
                 new_qr = await _refresh_qr(session)
                 if new_qr is not None:
@@ -382,8 +376,21 @@ async def check_qr_login(session_id: str) -> tuple[bool, str, dict[str, Any]]:
 
 async def cancel_qr_login(session_id: str) -> tuple[bool, str, dict[str, Any]]:
     """取消扫码登录：关闭浏览器，清理会话。"""
+    return await cancel_qr_login_by_platform(session_id, platform="xianyu")
+
+
+async def cancel_qr_login_by_platform(
+    session_id: str,
+    *,
+    platform: str = "xianyu",
+) -> tuple[bool, str, dict[str, Any]]:
+    """按平台取消扫码登录。"""
+    platform_name = normalize_platform(platform)
     session = QR_SESSIONS.pop(session_id, None)
     if session is None:
         return True, "会话不存在", {"ok": True}
+    if session.platform != platform_name:
+        QR_SESSIONS[session_id] = session
+        return False, "平台与会话不匹配", {"ok": False}
     await session.close()
     return True, "已取消", {"ok": True}

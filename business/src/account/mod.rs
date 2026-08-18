@@ -122,6 +122,10 @@ pub struct XianyuAccount {
     /// 账号标识（全局唯一）。
     pub account_id: String,
     pub display_name: String,
+    /// 登录账号（手机号 / 用户名 / 邮箱）。
+    pub login_id: String,
+    /// 登录密码（当前按明文持久化；后续可替换为加密存储）。
+    pub login_password: String,
     /// UNB 标识。
     pub unb: String,
     pub cookie: String,
@@ -169,6 +173,8 @@ pub struct AccountUpdate {
     pub display_name: Option<String>,
     pub remark: Option<String>,
     pub status: Option<AccountStatus>,
+    pub login_id: Option<String>,
+    pub login_password: Option<String>,
     /// 更新登录凭据（扫码重登 / Cookie 刷新）。
     pub cookie: Option<String>,
     /// 更新 UNB 标识。
@@ -192,6 +198,8 @@ mod tests {
             owner_id: 1,
             account_id: "acc-1".to_string(),
             display_name: "账号".to_string(),
+            login_id: String::new(),
+            login_password: String::new(),
             unb: unb.to_string(),
             cookie: cookie.to_string(),
             login_method: LoginMethod::Qr,

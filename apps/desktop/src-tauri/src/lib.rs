@@ -40,9 +40,9 @@ use platforms::xianyu::bootstrap::register_active_platform;
 #[cfg(platform_xianyu)]
 use platforms::xianyu::ipc::{
     account_connect, account_connection_state, account_create, account_delete, account_disconnect,
-    account_list, account_qr_cancel, account_qr_check, account_qr_start, account_set_status,
-    account_update, address_batch_delete, address_create, address_delete, address_list,
-    address_update, auto_reply_log_list, blacklist_delete, blacklist_personal_create,
+    account_list, account_password_login, account_qr_cancel, account_qr_check, account_qr_start,
+    account_set_status, account_update, address_batch_delete, address_create, address_delete,
+    address_list, address_update, auto_reply_log_list, blacklist_delete, blacklist_personal_create,
     blacklist_personal_list, blacklist_platform_list, blacklist_set_enabled, card_create,
     card_delete, card_list, card_set_enabled, card_update, channel_close_site, channel_open_site,
     dashboard_stats, feedback_create, feedback_delete, feedback_list, filter_create, filter_delete,
@@ -80,6 +80,7 @@ macro_rules! base_invoke_handler {
                 account_update,
                 account_set_status,
                 account_delete,
+                account_password_login,
                 account_qr_start,
                 account_qr_check,
                 account_qr_cancel,

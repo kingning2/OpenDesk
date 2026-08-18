@@ -5,4 +5,5 @@
 | Change ID | 状态 | 优先级 | 主领域 | 负责人 | 父任务 | 阻塞 |
 |---|---|---|---|---|---|---|
 | CHG-20260813-009-xianyu-frontend-migration | in_progress | P1 | channel | agent | CHG-20260813-008 | none |
+| CHG-20260818-012-xianyu-password-login | in_progress | P1 | channel | agent | CHG-20260813-009-xianyu-frontend-migration | none |
 | CHG-20260818-007-business-extract | in_progress | P2 | rust | Xiaoman | none | none |

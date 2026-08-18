@@ -19,6 +19,8 @@ export interface XianyuAccount {
   /** 账号标识（全局唯一）。 */
   account_id: string;
   display_name: string;
+  login_id: string;
+  login_password: string;
   unb: string;
   cookie: string;
   /** qr / password。 */
@@ -33,6 +35,8 @@ export interface AccountUpdate {
   display_name?: string;
   remark?: string;
   status?: AccountStatus;
+  login_id?: string;
+  login_password?: string;
 }
 
 /** 查询账号列表。 */
@@ -114,6 +118,41 @@ export function accountQrCheck(sessionId: string): Promise<AccountQrCheckResult>
 export function accountQrCancel(sessionId: string): Promise<void> {
   return call<void>("account_qr_cancel", {
     request: { session_id: sessionId },
+  });
+}
+
+// ========== 业务账号密码登录（Playwright 真实浏览器上下文登录，成功后自动创建/更新账号） ==========
+
+/** 账号密码登录响应。 */
+export interface AccountPasswordLoginResult {
+  ok: boolean;
+  status: string;
+  account_id: string | null;
+  detail: string | null;
+}
+
+/**
+ * 使用账号密码登录业务账号。
+ *
+ * @author Xiaoman
+ * @created 2026-08-18
+ *
+ * @param loginId - 登录账号（手机号/用户名/邮箱）
+ * @param password - 登录密码
+ * @param name - 可选展示名
+ * @returns 登录结果；成功时返回自动创建/更新后的账号标识
+ */
+export function accountPasswordLogin(
+  loginId: string,
+  password: string,
+  name?: string,
+): Promise<AccountPasswordLoginResult> {
+  return call<AccountPasswordLoginResult>("account_password_login", {
+    request: {
+      login_id: loginId,
+      password,
+      name: name ?? null,
+    },
   });
 }
 

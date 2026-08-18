@@ -7,7 +7,6 @@
 
 import {
   CHANNEL_MANAGE_ROOT,
-  CHANNEL_WORKBENCH_PATH,
 } from "@desk/platform/compile";
 import { manageTitleFromPath } from "@platform-routes";
 
@@ -36,10 +35,6 @@ const pageMetaByPath: Record<string, PageMeta> = {
   "/features/chat": {
     title: "Chat",
     description: "客户会话工作区",
-  },
-  [CHANNEL_WORKBENCH_PATH]: {
-    title: "会话工作台",
-    description: "买家会话、人工回复与渠道连接",
   },
   [CHANNEL_MANAGE_ROOT]: {
     title: "管理后台",

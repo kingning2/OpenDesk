@@ -124,6 +124,12 @@ impl<'a> AccountService<'a> {
         if let Some(remark) = &patch.remark {
             account.remark = remark.clone();
         }
+        if let Some(login_id) = &patch.login_id {
+            account.login_id = login_id.clone();
+        }
+        if let Some(login_password) = &patch.login_password {
+            account.login_password = login_password.clone();
+        }
         if let Some(status) = patch.status {
             account.status = status;
         }
@@ -278,6 +284,8 @@ mod tests {
             owner_id: owner,
             account_id: account_id.to_string(),
             display_name: "账号".to_string(),
+            login_id: String::new(),
+            login_password: String::new(),
             unb: String::new(),
             cookie: cookie.to_string(),
             login_method: LoginMethod::Qr,
