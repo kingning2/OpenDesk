@@ -5,6 +5,12 @@
  * @created 2026-07-20
  */
 
+import {
+  CHANNEL_MANAGE_ROOT,
+  CHANNEL_WORKBENCH_PATH,
+} from "@desk/platform/compile";
+import { manageTitleFromPath } from "@platform-routes";
+
 /**
  * 页面元信息。
  *
@@ -31,9 +37,13 @@ const pageMetaByPath: Record<string, PageMeta> = {
     title: "Chat",
     description: "客户会话工作区",
   },
-  "/features/channel": {
-    title: "客服",
-    description: "多渠道智能客服工作区",
+  [CHANNEL_WORKBENCH_PATH]: {
+    title: "会话工作台",
+    description: "买家会话、人工回复与渠道连接",
+  },
+  [CHANNEL_MANAGE_ROOT]: {
+    title: "管理后台",
+    description: "平台业务管理控制台",
   },
   "/features/knowledge": {
     title: "Knowledge",
@@ -51,11 +61,13 @@ const pageMetaByPath: Record<string, PageMeta> = {
  * @returns 元信息；未知路径回退到应用名
  */
 export function getPageMeta(pathname: string): PageMeta {
-  if (pathname.startsWith("/features/channel/")) {
+  const manageTitle = manageTitleFromPath(pathname);
+  if (manageTitle) {
     return {
-      title: "客服工作区",
-      description: "多渠道智能客服工作区",
+      title: manageTitle,
+      description: "平台管理业务子页面",
     };
   }
+
   return pageMetaByPath[pathname] ?? { title: "OpenDesk" };
 }

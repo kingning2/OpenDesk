@@ -350,10 +350,10 @@ function ProviderCard({
   return (
     <Card className="w-full">
       <div className="flex items-center gap-3 px-4 py-3">
-        <button
-          type="button"
+        <Button
+          variant="ghost"
           onClick={onToggle}
-          className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 text-left"
+          className="h-auto min-w-0 flex-1 justify-start gap-2.5 px-0 py-0 text-left font-normal"
         >
           {expanded ? (
             <ChevronDown className="size-4 shrink-0 opacity-60" aria-hidden />
@@ -370,7 +370,7 @@ function ProviderCard({
               {accounts.length} 账号
             </span>
           ) : null}
-        </button>
+        </Button>
         {!provider.authless ? (
           <div className="flex shrink-0 items-center gap-1">
             <Button size="sm" variant="ghost" onClick={onAddAccount}>

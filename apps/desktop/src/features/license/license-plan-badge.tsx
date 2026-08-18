@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useState } from "react";
-import { cn } from "@desk/ui";
+import { Button, cn } from "@desk/ui";
 import { Lock } from "@desk/ui/icons";
 import {
   formatLicenseRemaining,
@@ -59,16 +59,16 @@ export function LicensePlanBadge() {
   return (
     <>
       <div className="mt-auto w-full px-1.5 pb-2">
-        <button
-          type="button"
+        <Button
+          variant="ghost"
           onClick={() => setOpen(true)}
           className={cn(
-            "flex w-full cursor-pointer flex-col items-center gap-0.5 rounded-[var(--radius-md)] px-1 py-2 text-[10px] leading-none transition-colors",
+            "h-auto w-full flex-col items-center gap-0.5 px-1 py-2 text-[10px] leading-none",
             remaining.expired
               ? "text-destructive hover:bg-destructive/10"
               : remaining.urgent
                 ? "text-amber-200 hover:bg-amber-500/10"
-                : "text-muted-foreground hover:bg-muted/40 hover:text-foreground",
+                : "text-muted-foreground",
           )}
           aria-haspopup="dialog"
           aria-expanded={open}
@@ -77,7 +77,7 @@ export function LicensePlanBadge() {
           <Lock className="size-[1.125rem] shrink-0" strokeWidth={1.5} aria-hidden />
           <span className="max-w-full truncate">套餐</span>
           <span className="max-w-full truncate font-medium">{shortLabel}</span>
-        </button>
+        </Button>
       </div>
 
       <LicensePlanDialog

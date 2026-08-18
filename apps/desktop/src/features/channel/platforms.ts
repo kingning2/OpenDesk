@@ -1,12 +1,13 @@
 /**
- * 渠道平台注册表 — 新平台在此登记。
+ * 渠道平台注册表 — 编译期仅暴露当前构建平台。
  *
- * 每个平台有独立的 `path`（工作区路由）与展示信息。
- * 平台工作区在 `channel-workbench.tsx` 中按 `kind` 渲染同一套「配置 + 会话」布局。
+ * @author coisini
+ * @created 2026-07-20
  */
 
-import { MessageSquare, Users, Store } from "@desk/ui/icons";
+import { MessageSquare, Store } from "@desk/ui/icons";
 import type { LucideIcon } from "@desk/ui/icons";
+import { getActiveChannelPlatform } from "@desk/platform/compile";
 
 export interface ChannelPlatform {
   /** 平台类型标识（与契约 `channel.account.kind` 对齐）。 */
@@ -15,14 +16,14 @@ export interface ChannelPlatform {
   name: string;
   /** 一句话描述。 */
   description: string;
-  /** 工作区路径（相对 `/features/channel`）。 */
+  /** 工作区路径段（相对 `/features/channel`）。 */
   path: string;
   /** 图标。 */
   icon: LucideIcon;
 }
 
-/** 已支持平台。接入新平台：在此追加一条即可。 */
-export const CHANNEL_PLATFORMS: ChannelPlatform[] = [
+/** 全部平台元数据（编译期仅当前项生效）。 */
+const ALL_PLATFORMS: ChannelPlatform[] = [
   {
     kind: "xianyu",
     name: "闲鱼",
@@ -30,27 +31,28 @@ export const CHANNEL_PLATFORMS: ChannelPlatform[] = [
     path: "xianyu",
     icon: Store,
   },
-];
-
-/** 占位平台（架构预留，尚未实现协议）。 */
-export const CHANNEL_PLATFORM_COMING_SOON: ChannelPlatform[] = [
   {
-    kind: "wechat",
-    name: "微信",
-    description: "微信个人号客服（规划中）",
-    path: "wechat",
+    kind: "xiaohongshu",
+    name: "小红书",
+    description: "小红书客服（协议实现待接入）",
+    path: "xiaohongshu",
     icon: MessageSquare,
   },
   {
-    kind: "whatsapp",
-    name: "WhatsApp",
-    description: "WhatsApp 客服（规划中）",
-    path: "whatsapp",
-    icon: Users,
+    kind: "douyin",
+    name: "抖音",
+    description: "抖音客服（协议实现待接入）",
+    path: "douyin",
+    icon: MessageSquare,
   },
 ];
 
+/** 当前编译平台（单元素列表，供渠道选择页等使用）。 */
+export const CHANNEL_PLATFORMS: ChannelPlatform[] = ALL_PLATFORMS.filter(
+  (platform) => platform.kind === getActiveChannelPlatform(),
+);
+
 /** 按 kind 查平台；未知返回 `null`。 */
 export function getChannelPlatform(kind: string): ChannelPlatform | null {
-  return CHANNEL_PLATFORMS.find((platform) => platform.kind === kind) ?? null;
+  return ALL_PLATFORMS.find((platform) => platform.kind === kind) ?? null;
 }

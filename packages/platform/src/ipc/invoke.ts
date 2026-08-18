@@ -13,7 +13,7 @@
 import { invoke as tauriInvoke } from "@tauri-apps/api/core";
 
 /** 完全静默：日志面板自身轮询，再打日志会自反馈刷屏。 */
-const SILENT_COMMANDS = new Set(["log_recent", "log_clear"]);
+const SILENT_COMMANDS = new Set(["log_recent", "log_clear", "log_write"]);
 
 /** 高频探测/轮询命令：正常且够快时只打 debug。 */
 const QUIET_COMMANDS = new Set([

@@ -5,15 +5,7 @@
  * @created 2026-07-16
  */
 
-import { useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  cn,
-} from "@desk/ui";
-import { X } from "@desk/ui/icons";
+import { Button, Dialog, DialogContent, cn } from "@desk/ui";
 import type { LicenseStatus } from "@desk/platform/ipc/license";
 import {
   formatLicenseExpiresAt,
@@ -71,16 +63,7 @@ export function LicensePlanDialog({
   remaining,
   nowSec,
 }: LicensePlanDialogProps) {
-  useEffect(() => {
-    if (!open) return;
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose]);
-
-  if (!open || status.expiresAt == null) {
+  if (status.expiresAt == null) {
     return null;
   }
 
@@ -101,71 +84,41 @@ export function LicensePlanDialog({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/50 p-4 backdrop-blur-sm"
-      role="presentation"
-      onClick={onClose}
-    >
-      <Card
-        variant="glass"
-        className="relative w-full max-w-md"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="license-plan-dialog-title"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-3 top-3 rounded-[var(--radius-md)] p-1 text-muted-foreground transition hover:bg-muted/40 hover:text-foreground"
-          aria-label="关闭"
+    <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
+      <DialogContent title="套餐与授权" closeLabel="关闭">
+        <dl className="space-y-3">
+          <DetailRow label="产品" value={product} />
+          <DetailRow label="授权状态" value={authStatus} />
+          <DetailRow label="剩余时长" value={detailedRemaining} />
+          <DetailRow label="到期时间" value={expiresLabel} />
+          <div className="space-y-1">
+            <dt className="text-[length:var(--text-sm)] text-muted-foreground">设备码</dt>
+            <dd className="flex items-start gap-2">
+              <span className="min-w-0 flex-1 break-all font-mono text-[length:var(--text-sm)] text-foreground">
+                {machineCode}
+              </span>
+              {status.machineCode?.trim() ? (
+                <Button variant="secondary" size="sm" onClick={() => void copyMachineCode()}>
+                  复制
+                </Button>
+              ) : null}
+            </dd>
+          </div>
+        </dl>
+
+        <p
+          className={cn(
+            "rounded-[var(--radius-md)] border px-3 py-2 text-center text-[length:var(--text-sm)]",
+            remaining.expired
+              ? "border-destructive/40 bg-destructive/10 text-destructive"
+              : remaining.urgent
+                ? "border-amber-500/40 bg-amber-500/10 text-amber-100"
+                : "border-border/60 bg-muted/20 text-muted-foreground",
+          )}
         >
-          <X className="size-4" aria-hidden />
-        </button>
-
-        <CardHeader className="pr-10">
-          <CardTitle id="license-plan-dialog-title">套餐与授权</CardTitle>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          <dl className="space-y-3">
-            <DetailRow label="产品" value={product} />
-            <DetailRow label="授权状态" value={authStatus} />
-            <DetailRow label="剩余时长" value={detailedRemaining} />
-            <DetailRow label="到期时间" value={expiresLabel} />
-            <div className="space-y-1">
-              <dt className="text-[length:var(--text-sm)] text-muted-foreground">设备码</dt>
-              <dd className="flex items-start gap-2">
-                <span className="min-w-0 flex-1 break-all font-mono text-[length:var(--text-sm)] text-foreground">
-                  {machineCode}
-                </span>
-                {status.machineCode?.trim() ? (
-                  <button
-                    type="button"
-                    onClick={() => void copyMachineCode()}
-                    className="shrink-0 rounded-[var(--radius-md)] bg-secondary px-2 py-1 text-[length:var(--text-sm)]"
-                  >
-                    复制
-                  </button>
-                ) : null}
-              </dd>
-            </div>
-          </dl>
-
-          <p
-            className={cn(
-              "rounded-[var(--radius-md)] border px-3 py-2 text-center text-[length:var(--text-sm)]",
-              remaining.expired
-                ? "border-destructive/40 bg-destructive/10 text-destructive"
-                : remaining.urgent
-                  ? "border-amber-500/40 bg-amber-500/10 text-amber-100"
-                  : "border-border/60 bg-muted/20 text-muted-foreground",
-            )}
-          >
-            {remaining.text}
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+          {remaining.text}
+        </p>
+      </DialogContent>
+    </Dialog>
   );
 }

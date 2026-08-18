@@ -20,7 +20,8 @@ import {
 import { LicensePlanBadge } from "@feature/license";
 import { LogPanel, useLogStore } from "@feature/log";
 import { SettingsDialogProvider, useSettingsDialog } from "@feature/setting";
-import { navItems } from "../route/nav-registry";
+import { usePlatformNav } from "../route/use-platform-nav";
+import { useRouteChange, useStartApp } from "../lifecycle";
 import {
   AppLayout,
   MainPanel,
@@ -43,10 +44,14 @@ import { WorkspaceOutlet } from "./workspace-outlet";
  */
 function AppShellInner() {
   const platform = getPlatform();
+  const { visibleNavItems } = usePlatformNav();
   const [isMaximized, setIsMaximized] = useState(false);
   const { openSettings } = useSettingsDialog();
   const toggleLogPanel = useLogStore((state) => state.toggle);
   const { tabs, activePath, openPaths, ensureTab, selectTab, closeTab, addTab } = useWorkspaceTabs();
+
+  useRouteChange();
+  useStartApp();
 
   useEffect(() => {
     let cancelled = false;
@@ -113,7 +118,7 @@ function AppShellInner() {
         sidebar={
           <NavRail className="h-full min-h-0">
             <NavRailNav>
-              {navItems.map((item) => {
+              {visibleNavItems.map((item) => {
                 const Icon = item.icon;
                 const label = item.label;
                 return (

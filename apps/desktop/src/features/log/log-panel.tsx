@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useMemo, useRef } from "react";
-import { IconButton } from "@desk/ui";
+import { Button, IconButton } from "@desk/ui";
 import { Terminal, Trash2, X } from "@desk/ui/icons";
 import { logRecent } from "@desk/platform/ipc/log";
 import { useLogStore, type LogLevelFilter } from "./use-log-store";
@@ -154,18 +154,15 @@ export function LogPanel() {
         </span>
         <div className="flex items-center gap-1">
           {FILTER_OPTIONS.map((option) => (
-            <button
+            <Button
               key={option.value}
-              type="button"
+              size="sm"
+              variant={levelFilter === option.value ? "secondary" : "ghost"}
               onClick={() => setLevelFilter(option.value)}
-              className={`rounded-[var(--radius-sm)] px-2 py-0.5 text-[length:var(--text-xs)] transition-colors ${
-                levelFilter === option.value
-                  ? "bg-muted/70 text-foreground"
-                  : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-              }`}
+              className="h-6 px-2 text-[length:var(--text-xs)]"
             >
               {option.label}
-            </button>
+            </Button>
           ))}
         </div>
         <div className="ml-auto flex items-center gap-1">

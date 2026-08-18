@@ -10,6 +10,7 @@ import { useLocation, useNavigate } from "react-router";
 
 import { navItems } from "../route/nav-registry";
 import { getPageMeta } from "../route/page-meta";
+import { getTabGroup } from "@desk/platform/compile";
 import type { TabBarItem } from "./layout";
 
 /**
@@ -29,7 +30,19 @@ export function useWorkspaceTabs() {
     if (path === "/settings") {
       return;
     }
-    setOpenPaths((current) => (current.includes(path) ? current : [...current, path]));
+    setOpenPaths((current) => {
+      if (current.includes(path)) {
+        return current;
+      }
+      const group = getTabGroup(path);
+      const groupIndex = current.findIndex((tabPath) => getTabGroup(tabPath) === group);
+      if (groupIndex !== -1) {
+        const next = [...current];
+        next[groupIndex] = path;
+        return next;
+      }
+      return [...current, path];
+    });
   }, []);
 
   useEffect(() => {

@@ -1,7 +1,7 @@
 /**
  * 渠道平台工作区（二级页）— 平台内配置（扫码登录 / 自动回复 / 连接）与会话工作区一体。
  *
- * 由 `/features/channel/:platform` 路由进入；通过 `kind` 读取平台注册表。
+ * 由编译期静态路径进入（`OPENDESK_CHANNEL_PLATFORM`）；通过 `kind` 读取平台注册表。
  * 本页聚合了该平台的全部操作：账号配置（扫码登录）、自动回复开关、连接、会话列表、消息流、人工发送；
  * 并可在主窗口右侧内嵌闲鱼站点（子 WebView + cookie）。
  *
@@ -10,9 +10,10 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link } from "react-router";
+import { CHANNEL_WORKBENCH_PATH, getActiveChannelPlatform, managePath } from "@desk/platform/compile";
 import { ChevronRight, Plus, Trash2 } from "@desk/ui/icons";
-import { Button, Input, PageScaffold } from "@desk/ui";
+import { Button, Input, ScrollArea, Switch, Textarea } from "@desk/ui";
 import {
   channelCloseSite,
   channelConnect,
@@ -130,8 +131,7 @@ function MessageBubble({ message }: { message: ChannelMessage }) {
 export function ChannelWorkbench() {
   useChannelEvents();
 
-  const { platform: platformPath } = useParams<{ platform: string }>();
-  const platform = getChannelPlatform(platformPath ?? "");
+  const platform = getChannelPlatform(getActiveChannelPlatform());
 
   const accounts = useChannelStore((state) => state.accounts);
   const conversations = useChannelStore((state) => state.conversations);
@@ -264,17 +264,18 @@ export function ChannelWorkbench() {
   // 未知平台路径 → 引导回选择页。
   if (!platform) {
     return (
-      <PageScaffold subtitle="未知平台">
-        <p className="text-[length:var(--text-sm)] text-muted-foreground">
+      <>
+      <p className="text-(length:--text-sm) text-muted-foreground">未知平台</p>
+      <p className="text-[length:var(--text-sm)] text-muted-foreground">
           未找到该平台。请返回渠道首页选择。
         </p>
         <Link
-          to="/features/channel"
+          to={CHANNEL_WORKBENCH_PATH}
           className="mt-3 inline-block rounded-[var(--radius-md)] bg-primary px-4 py-2 text-[length:var(--text-sm)] text-primary-foreground"
         >
-          返回平台选择
+          返回会话工作台
         </Link>
-      </PageScaffold>
+    </>
     );
   }
 
@@ -350,12 +351,22 @@ export function ChannelWorkbench() {
   const Icon = platform.icon;
 
   return (
-    <PageScaffold subtitle={`${platform.name} 客服工作区`}>
-      {/* 面包屑 + 平台标题 */}
+    <>
+      <p className="text-(length:--text-sm) text-muted-foreground">{`${platform.name} 会话工作台`}</p>
+      {/* 平台标题 + 管理后台入口 */}
       <div className="mb-4 flex items-center gap-1.5 text-[length:var(--text-sm)] text-muted-foreground">
-        <Link to="/features/channel" className="hover:text-foreground">渠道</Link>
-        <ChevronRight className="size-3.5" aria-hidden />
         <span className="font-medium text-foreground">{platform.name}</span>
+        {platform.kind === "xianyu" ? (
+          <>
+            <ChevronRight className="size-3.5" aria-hidden />
+            <Link
+              to={managePath("dashboard")}
+              className="hover:text-foreground"
+            >
+              业务管理
+            </Link>
+          </>
+        ) : null}
       </div>
 
       <div
@@ -478,44 +489,44 @@ export function ChannelWorkbench() {
                     入站消息由 AI 自动回复；关闭后仅生成建议。
                   </p>
                 </div>
-                <label className="relative inline-flex cursor-pointer items-center">
-                  <input
-                    type="checkbox"
-                    className="peer sr-only"
-                    checked={settings.auto_reply}
-                    onChange={(event) => setAutoReply(event.target.checked)}
-                  />
-                  <span className="h-5 w-9 rounded-full bg-border transition-colors peer-checked:bg-primary peer-focus-visible:ring-2 peer-focus-visible:ring-ring" />
-                </label>
+                <Switch
+                  checked={settings.auto_reply}
+                  onCheckedChange={setAutoReply}
+                  aria-label="自动回复"
+                />
               </div>
             </div>
           </section>
 
           {/* 会话列表 */}
-          <section className="min-h-0 flex-1 overflow-y-auto rounded-[var(--radius-xl)] border border-border/70 bg-card">
+          <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[var(--radius-xl)] border border-border/70 bg-card">
+            <ScrollArea className="min-h-0 flex-1">
             {conversations.length === 0 ? (
               <p className="p-4 text-[length:var(--text-sm)] text-muted-foreground">
                 暂无会话。连接后入站消息会出现在这里。
               </p>
             ) : (
               conversations.map((conversation) => (
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
                   key={conversation.id}
                   onClick={() => selectConversation(conversation.id)}
-                  className={`block w-full border-b border-border/50 px-3 py-2.5 text-left transition-colors hover:bg-muted/40 ${
+                  className={`h-auto w-full justify-start rounded-none border-b border-border/50 px-3 py-2.5 text-left font-normal ${
                     activeConversationId === conversation.id ? "bg-muted/60" : ""
                   }`}
                 >
-                  <p className="truncate text-[length:var(--text-sm)] font-medium">
-                    {conversation.peer_name || conversation.peer_id}
-                  </p>
-                  <p className="truncate text-[length:var(--text-xs)] text-muted-foreground">
-                    {conversation.item_title || `商品 ${conversation.item_id ?? "?"}`}
-                  </p>
-                </button>
+                  <span className="block min-w-0">
+                    <span className="block truncate text-[length:var(--text-sm)] font-medium">
+                      {conversation.peer_name || conversation.peer_id}
+                    </span>
+                    <span className="block truncate text-[length:var(--text-xs)] text-muted-foreground">
+                      {conversation.item_title || `商品 ${conversation.item_id ?? "?"}`}
+                    </span>
+                  </span>
+                </Button>
               ))
             )}
+            </ScrollArea>
           </section>
         </aside>
 
@@ -527,7 +538,8 @@ export function ChannelWorkbench() {
             </p>
           ) : null}
 
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
+          <ScrollArea className="min-h-0 flex-1">
+            <div className="space-y-3 p-4">
             {!activeConversation ? (
               <p className="py-10 text-center text-[length:var(--text-sm)] text-muted-foreground">
                 选择一个会话查看消息。
@@ -541,45 +553,46 @@ export function ChannelWorkbench() {
                 <MessageBubble key={message.id} message={message} />
               ))
             )}
-          </div>
+            </div>
+          </ScrollArea>
 
           {suggestion ? (
             <div className="flex items-center justify-between border-t border-border/70 px-4 py-2">
               <p className="min-w-0 flex-1 truncate text-[length:var(--text-sm)] text-muted-foreground">
                 AI 建议：{suggestion}
               </p>
-              <button
-                type="button"
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={() => {
                   if (activeConversation) {
                     setDraft(suggestion);
                   }
                   setSuggestion(null);
                 }}
-                className="ml-3 shrink-0 rounded-[var(--radius-md)] border border-border px-2.5 py-1 text-[length:var(--text-xs)]"
+                className="ml-3 shrink-0"
               >
                 使用
-              </button>
+              </Button>
             </div>
           ) : null}
 
           <div className="flex items-center gap-2 border-t border-border/70 p-3">
-            <textarea
+            <Textarea
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
               placeholder={activeConversation ? "输入回复…" : "先选择会话"}
               disabled={!activeConversation}
               rows={2}
-              className="min-h-0 flex-1 resize-none rounded-[var(--radius-md)] border border-border bg-background px-3 py-2 text-[length:var(--text-sm)] outline-none focus:ring-2 focus:ring-ring"
+              className="min-h-0 flex-1 resize-none"
             />
-            <button
-              type="button"
+            <Button
               disabled={!draft.trim() || !activeConversation || sending}
               onClick={handleSend}
-              className="shrink-0 rounded-[var(--radius-md)] bg-primary px-4 py-2 text-[length:var(--text-sm)] text-primary-foreground disabled:opacity-50"
+              className="shrink-0"
             >
               {sending ? "发送中…" : "发送"}
-            </button>
+            </Button>
           </div>
         </section>
 
@@ -613,6 +626,6 @@ export function ChannelWorkbench() {
           void load();
         }}
       />
-    </PageScaffold>
+    </>
   );
 }

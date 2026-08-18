@@ -1,12 +1,12 @@
 import { MessageSquare } from "@desk/ui/icons";
 
 export const channelFeature = {
-  id: "channel",
-  path: "/features/channel",
+  id: "channel-workbench",
+  path: "/features/channel/xianyu",
   navItem: {
-    id: "channel",
-    path: "/features/channel",
-    label: "客服",
+    id: "channel-workbench",
+    path: "/features/channel/xianyu",
+    label: "会话工作台",
     icon: MessageSquare,
   },
 };

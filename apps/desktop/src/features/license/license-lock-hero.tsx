@@ -7,7 +7,7 @@
  * @created 2026-07-16
  */
 
-import { cn } from "@desk/ui";
+import { Button, cn } from "@desk/ui";
 import { LicenseLockGlyph, type LicenseLockAnim } from "./license-lock-glyph";
 
 /**
@@ -65,12 +65,12 @@ export function LicenseLockHero({
   return (
     <div className="flex flex-col items-center gap-4">
       {interactive ? (
-        <button
-          type="button"
+        <Button
+          variant="ghost"
           onClick={onLockClick}
           disabled={disabled}
           className={cn(
-            "relative flex size-28 items-center justify-center rounded-full border border-border/60 bg-card/80 shadow-lg transition hover:bg-card",
+            "relative size-28 rounded-full border border-border/60 bg-card/80 p-0 shadow-lg",
             isFailure && "border-foreground/50",
             isSuccess && "border-transparent bg-card/40",
             disabled && "cursor-default",
@@ -79,7 +79,7 @@ export function LicenseLockHero({
           aria-label={expanded ? "收起激活面板" : "打开激活面板"}
         >
           {lockShell}
-        </button>
+        </Button>
       ) : (
         <div
           className={cn(

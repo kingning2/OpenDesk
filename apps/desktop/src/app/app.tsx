@@ -7,7 +7,7 @@
 
 import { useCallback } from "react";
 import { RouterProvider } from "react-router";
-import { Toaster } from "@desk/ui";
+import { Button, Toaster } from "@desk/ui";
 import { appRouter } from "../route";
 import {
   LicenseGateProvider,
@@ -53,13 +53,7 @@ function AppChrome() {
             <div className="max-w-md space-y-3 rounded-[var(--radius-lg)] border border-border bg-card p-6 text-center shadow-lg">
               <p className="text-destructive">授权状态读取失败</p>
               <p className="text-[length:var(--text-sm)] text-muted-foreground">{gate.error}</p>
-              <button
-                type="button"
-                onClick={() => void gate.refresh()}
-                className="rounded-[var(--radius-md)] bg-primary px-4 py-2 text-primary-foreground"
-              >
-                重试
-              </button>
+              <Button onClick={() => void gate.refresh()}>重试</Button>
             </div>
           </div>
         ) : null}

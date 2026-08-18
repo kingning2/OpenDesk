@@ -48,3 +48,16 @@ export function logRecent(limit = 500): Promise<LogEntry[]> {
 export function logClear(): Promise<void> {
   return call<void>("log_clear");
 }
+
+/**
+ * 写入一条日志到 Rust tracing 缓冲（生命周期 / 主动上报）。
+ *
+ * @author Xiaoman
+ * @created 2026-08-18
+ *
+ * @param message - 日志正文
+ * @param level - 级别，默认 INFO
+ */
+export function logWrite(message: string, level = "INFO"): Promise<void> {
+  return call<void>("log_write", { message, level });
+}
