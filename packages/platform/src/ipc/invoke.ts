@@ -12,6 +12,23 @@
 
 import { invoke as tauriInvoke } from "@tauri-apps/api/core";
 
+/**
+ * IPC 统一响应体（仿 HTTP 风格）。
+ *
+ * @author Xiaoman
+ * @created 2026-08-18
+ *
+ * @typeParam T - 业务数据类型
+ */
+export interface IpcResponse<T> {
+  /** 业务状态码（成功固定 200）。 */
+  code: number;
+  /** 响应消息。 */
+  message: string;
+  /** 业务数据。 */
+  data: T;
+}
+
 /** 完全静默：日志面板自身轮询，再打日志会自反馈刷屏。 */
 const SILENT_COMMANDS = new Set(["log_recent", "log_clear", "log_write"]);
 
@@ -41,7 +58,41 @@ export async function call<T>(
 ): Promise<T> {
   const started = performance.now();
   try {
-    const result = await tauriInvoke<T>(command, payload);
+    const result = await tauriInvoke<T | IpcResponse<T>>(command, payload);
+    const durationMs = Math.max(0, Math.round(performance.now() - started));
+    if (!SILENT_COMMANDS.has(command)) {
+      logIpcCompleted(command, durationMs, true);
+    }
+    if (isIpcResponse<T>(result)) {
+      return result.data;
+    }
+    return result;
+  } catch (error) {
+    const durationMs = Math.max(0, Math.round(performance.now() - started));
+    // 静默命令失败仍要可见，否则面板拉取异常无从排查。
+    logIpcCompleted(command, durationMs, false, error);
+    throw error;
+  }
+}
+
+/**
+ * 调用 Tauri command，并返回统一响应结构。
+ *
+ * @author Xiaoman
+ * @created 2026-08-18
+ *
+ * @typeParam T - 响应 data 类型
+ * @param command - Tauri command 名
+ * @param payload - 可选参数对象
+ * @returns `{ code, message, data }` 响应
+ */
+export async function callRequest<T>(
+  command: string,
+  payload?: Record<string, unknown>,
+): Promise<IpcResponse<T>> {
+  const started = performance.now();
+  try {
+    const result = await tauriInvoke<IpcResponse<T>>(command, payload);
     const durationMs = Math.max(0, Math.round(performance.now() - started));
     if (!SILENT_COMMANDS.has(command)) {
       logIpcCompleted(command, durationMs, true);
@@ -49,7 +100,6 @@ export async function call<T>(
     return result;
   } catch (error) {
     const durationMs = Math.max(0, Math.round(performance.now() - started));
-    // 静默命令失败仍要可见，否则面板拉取异常无从排查。
     logIpcCompleted(command, durationMs, false, error);
     throw error;
   }
@@ -110,4 +160,26 @@ function stringifyError(error: unknown): string {
   } catch {
     return String(error);
   }
+}
+
+/**
+ * 判断对象是否为统一响应结构。
+ *
+ * @author Xiaoman
+ * @created 2026-08-18
+ *
+ * @typeParam T - data 类型
+ * @param value - 待判断值
+ * @returns 命中统一响应体结构返回 true
+ */
+function isIpcResponse<T>(value: unknown): value is IpcResponse<T> {
+  if (value === null || typeof value !== "object") {
+    return false;
+  }
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.code === "number" &&
+    typeof candidate.message === "string" &&
+    Object.prototype.hasOwnProperty.call(candidate, "data")
+  );
 }

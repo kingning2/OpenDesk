@@ -480,8 +480,12 @@ export function XianyuAccountsPage() {
         passwordValue,
         passwordDisplayName.trim() || undefined,
       );
-      if (!result.ok || result.status !== "success") {
-        toast.error(result.detail || "账号密码登录失败");
+      if (result.code !== 200) {
+        toast.error(result.message || "账号密码登录失败");
+        return;
+      }
+      if (!result.data.ok || result.data.status !== "success") {
+        toast.error(result.data.detail || "账号密码登录失败");
         return;
       }
       toast.success("登录成功，账号已写入");
