@@ -3,6 +3,7 @@
 //! 壳层组合：`InMemoryRiskStore` → `app::risk::RiskService`。
 
 use crate::platforms::xianyu::persist::InMemoryRiskStore;
+use crate::shared::ipc::IpcResponse;
 use app::risk::{RiskConfig, RiskLogPage, RiskLogQuery, RiskService};
 use common;
 use serde::Deserialize;
@@ -62,7 +63,7 @@ pub struct RiskConfigSaveRequest {
 pub fn risk_log_list(
     state: State<'_, RiskHandle>,
     request: RiskListRequest,
-) -> common::OpenDeskResult<RiskLogPage> {
+) -> common::OpenDeskResult<IpcResponse<RiskLogPage>> {
     let service = RiskService::new(state.store.as_ref());
     let query = RiskLogQuery {
         page: request.page,
@@ -74,7 +75,8 @@ pub fn risk_log_list(
         call_type: request.call_type,
         call_user: request.call_user,
     };
-    service.list(request.owner_id, &query)
+    let result = service.list(request.owner_id, &query)?;
+    Ok(IpcResponse::ok(result))
 }
 
 /// 查询指定日期风控处理成功率。
@@ -82,9 +84,10 @@ pub fn risk_log_list(
 pub fn risk_log_today_rate(
     state: State<'_, RiskHandle>,
     request: RiskRateRequest,
-) -> common::OpenDeskResult<app::risk::RiskTodaySuccessRate> {
+) -> common::OpenDeskResult<IpcResponse<app::risk::RiskTodaySuccessRate>> {
     let service = RiskService::new(state.store.as_ref());
-    service.today_success_rate(request.owner_id, &request.date)
+    let result = service.today_success_rate(request.owner_id, &request.date)?;
+    Ok(IpcResponse::ok(result))
 }
 
 /// 清空风控日志（可按账号过滤）。
@@ -92,9 +95,10 @@ pub fn risk_log_today_rate(
 pub fn risk_log_clear(
     state: State<'_, RiskHandle>,
     request: RiskClearRequest,
-) -> common::OpenDeskResult<()> {
+) -> common::OpenDeskResult<IpcResponse<()>> {
     let service = RiskService::new(state.store.as_ref());
-    service.clear(request.owner_id, &request.account_id)
+    service.clear(request.owner_id, &request.account_id)?;
+    Ok(IpcResponse::ok(()))
 }
 
 /// 清空处理中状态的风控日志。
@@ -102,9 +106,10 @@ pub fn risk_log_clear(
 pub fn risk_log_clear_processing(
     state: State<'_, RiskHandle>,
     owner_id: i64,
-) -> common::OpenDeskResult<()> {
+) -> common::OpenDeskResult<IpcResponse<()>> {
     let service = RiskService::new(state.store.as_ref());
-    service.clear_processing(owner_id)
+    service.clear_processing(owner_id)?;
+    Ok(IpcResponse::ok(()))
 }
 
 /// 读取风控配置。
@@ -112,9 +117,10 @@ pub fn risk_log_clear_processing(
 pub fn risk_config_get(
     state: State<'_, RiskHandle>,
     owner_id: i64,
-) -> common::OpenDeskResult<RiskConfig> {
+) -> common::OpenDeskResult<IpcResponse<RiskConfig>> {
     let service = RiskService::new(state.store.as_ref());
-    service.get_config(owner_id)
+    let result = service.get_config(owner_id)?;
+    Ok(IpcResponse::ok(result))
 }
 
 /// 保存风控配置。
@@ -122,9 +128,10 @@ pub fn risk_config_get(
 pub fn risk_config_set(
     state: State<'_, RiskHandle>,
     request: RiskConfigSaveRequest,
-) -> common::OpenDeskResult<()> {
+) -> common::OpenDeskResult<IpcResponse<()>> {
     let service = RiskService::new(state.store.as_ref());
     service
         .save_config(request.owner_id, &request.config)
-        .map_err(common::OpenDeskError::wrap)
+        .map_err(common::OpenDeskError::wrap)?;
+    Ok(IpcResponse::ok(()))
 }

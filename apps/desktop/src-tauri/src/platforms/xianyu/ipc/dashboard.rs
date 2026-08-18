@@ -5,6 +5,7 @@ use crate::platforms::xianyu::persist::InMemoryCardStore;
 use crate::platforms::xianyu::persist::InMemoryItemStore;
 use crate::platforms::xianyu::persist::InMemoryKeywordStore;
 use crate::platforms::xianyu::persist::InMemoryOrderStore;
+use crate::shared::ipc::IpcResponse;
 use app::account::AccountStore;
 use app::auto_reply::KeywordStore;
 use app::card::{CardQuery, CardStore};
@@ -98,6 +99,6 @@ impl DashboardHandle {
 pub fn dashboard_stats(
     state: State<'_, DashboardHandle>,
     owner_id: i64,
-) -> common::OpenDeskResult<DashboardStats> {
-    Ok(state.stats(owner_id))
+) -> common::OpenDeskResult<IpcResponse<DashboardStats>> {
+    Ok(IpcResponse::ok(state.stats(owner_id)))
 }

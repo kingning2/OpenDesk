@@ -1,6 +1,7 @@
 //! 卡券管理 Tauri commands。
 
 use crate::platforms::xianyu::persist::InMemoryCardStore;
+use crate::shared::ipc::IpcResponse;
 use app::card::{CardQuery, CardService};
 use app::delivery::execution::card::Card;
 use common;
@@ -41,7 +42,7 @@ pub struct CardDeleteRequest {
 pub fn card_list(
     state: State<'_, CardHandle>,
     request: CardListRequest,
-) -> common::OpenDeskResult<(Vec<Card>, u32)> {
+) -> common::OpenDeskResult<IpcResponse<(Vec<Card>, u32)>> {
     let service = CardService::new(state.store.as_ref());
     let query = CardQuery {
         page: request.page,
@@ -49,7 +50,8 @@ pub fn card_list(
         keyword: request.keyword,
         card_type: request.card_type,
     };
-    service.list(request.owner_id, &query)
+    let result = service.list(request.owner_id, &query)?;
+    Ok(IpcResponse::ok(result))
 }
 
 #[tauri::command]
@@ -57,11 +59,12 @@ pub fn card_create(
     state: State<'_, CardHandle>,
     owner_id: i64,
     card: Card,
-) -> common::OpenDeskResult<Card> {
+) -> common::OpenDeskResult<IpcResponse<Card>> {
     let service = CardService::new(state.store.as_ref());
-    service
+    let result = service
         .create(owner_id, card)
-        .map_err(common::OpenDeskError::wrap)
+        .map_err(common::OpenDeskError::wrap)?;
+    Ok(IpcResponse::ok(result))
 }
 
 #[tauri::command]
@@ -69,27 +72,30 @@ pub fn card_update(
     state: State<'_, CardHandle>,
     owner_id: i64,
     card: Card,
-) -> common::OpenDeskResult<()> {
+) -> common::OpenDeskResult<IpcResponse<()>> {
     let service = CardService::new(state.store.as_ref());
     service
         .update(owner_id, &card)
-        .map_err(common::OpenDeskError::wrap)
+        .map_err(common::OpenDeskError::wrap)?;
+    Ok(IpcResponse::ok(()))
 }
 
 #[tauri::command]
 pub fn card_set_enabled(
     state: State<'_, CardHandle>,
     request: CardEnabledRequest,
-) -> common::OpenDeskResult<()> {
+) -> common::OpenDeskResult<IpcResponse<()>> {
     let service = CardService::new(state.store.as_ref());
-    service.set_enabled(request.owner_id, request.card_id, request.enabled)
+    service.set_enabled(request.owner_id, request.card_id, request.enabled)?;
+    Ok(IpcResponse::ok(()))
 }
 
 #[tauri::command]
 pub fn card_delete(
     state: State<'_, CardHandle>,
     request: CardDeleteRequest,
-) -> common::OpenDeskResult<()> {
+) -> common::OpenDeskResult<IpcResponse<()>> {
     let service = CardService::new(state.store.as_ref());
-    service.delete(request.owner_id, request.card_id)
+    service.delete(request.owner_id, request.card_id)?;
+    Ok(IpcResponse::ok(()))
 }

@@ -15,6 +15,7 @@ use uuid::Uuid;
 use crate::shared::channel::coordinator::ChannelCoordinator;
 use crate::shared::channel::dispatcher::ChannelDispatcher;
 use crate::shared::channel::ChannelRepo;
+use crate::shared::ipc::IpcResponse;
 use common::OpenDeskResult;
 use opendesk_macros::timed;
 
@@ -35,7 +36,7 @@ fn qr_account_map() -> &'static Mutex<HashMap<String, QrTarget>> {
 #[tauri::command]
 pub async fn channel_state_get(
     repo: State<'_, Arc<ChannelRepo>>,
-) -> OpenDeskResult<ChannelIpcStateResponse> {
+) -> OpenDeskResult<IpcResponse<ChannelIpcStateResponse>> {
     let accounts = repo.list_accounts().map_err(|error| error.to_string())?;
     let conversations = repo
         .list_conversations()
@@ -44,12 +45,12 @@ pub async fn channel_state_get(
         .list_all_messages()
         .map_err(|error| error.to_string())?;
     let settings = repo.get_settings().map_err(|error| error.to_string())?;
-    Ok(ChannelIpcStateResponse {
+    Ok(IpcResponse::ok(ChannelIpcStateResponse {
         accounts,
         conversations,
         messages,
         settings,
-    })
+    }))
 }
 
 /// 保存渠道配置（账号 + 设置）。
@@ -58,7 +59,7 @@ pub async fn channel_state_get(
 pub async fn channel_state_set(
     repo: State<'_, Arc<ChannelRepo>>,
     request: ChannelIpcStateRequest,
-) -> OpenDeskResult<ChannelIpcStateResponse> {
+) -> OpenDeskResult<IpcResponse<ChannelIpcStateResponse>> {
     for account in &request.accounts {
         repo.upsert_account(account)
             .map_err(|error| error.to_string())?;
@@ -78,7 +79,7 @@ pub async fn channel_connect(
     repo: State<'_, Arc<ChannelRepo>>,
     dispatcher: State<'_, Arc<ChannelDispatcher>>,
     account_id: String,
-) -> OpenDeskResult<ChannelIpcConnectResponse> {
+) -> OpenDeskResult<IpcResponse<ChannelIpcConnectResponse>> {
     state
         .license
         .ensure_licensed()
@@ -104,11 +105,11 @@ pub async fn channel_connect(
         .await
         .as_str()
         .to_string();
-    Ok(ChannelIpcConnectResponse {
+    Ok(IpcResponse::ok(ChannelIpcConnectResponse {
         ok: true,
         state,
         detail: None,
-    })
+    }))
 }
 
 /// 断开渠道账号。
@@ -119,7 +120,7 @@ pub async fn channel_disconnect(
     state: tauri::State<'_, crate::shared::state::AppState>,
     dispatcher: State<'_, Arc<ChannelDispatcher>>,
     account_id: String,
-) -> OpenDeskResult<ChannelIpcDisconnectResponse> {
+) -> OpenDeskResult<IpcResponse<ChannelIpcDisconnectResponse>> {
     state
         .license
         .ensure_licensed()
@@ -129,7 +130,7 @@ pub async fn channel_disconnect(
         .disconnect(&account_id)
         .await
         .map_err(|error| error.to_string())?;
-    Ok(ChannelIpcDisconnectResponse { ok: true })
+    Ok(IpcResponse::ok(ChannelIpcDisconnectResponse { ok: true }))
 }
 
 /// 人工发送消息。
@@ -141,7 +142,7 @@ pub async fn channel_send(
     coordinator: State<'_, Arc<ChannelCoordinator>>,
     repo: State<'_, Arc<ChannelRepo>>,
     request: ChannelIpcSendRequest,
-) -> OpenDeskResult<ChannelIpcSendResponse> {
+) -> OpenDeskResult<IpcResponse<ChannelIpcSendResponse>> {
     state
         .license
         .ensure_licensed()
@@ -160,11 +161,11 @@ pub async fn channel_send(
         .await
         .map_err(|error| error.to_string())?;
 
-    Ok(ChannelIpcSendResponse {
+    Ok(IpcResponse::ok(ChannelIpcSendResponse {
         ok: true,
         message_id,
         detail: None,
-    })
+    }))
 }
 
 /// 启动扫码登录：调 Python Playwright 打开登录页，截图二维码。
@@ -176,7 +177,7 @@ pub async fn channel_qr_start(
     state: tauri::State<'_, crate::shared::state::AppState>,
     repo: State<'_, Arc<ChannelRepo>>,
     request: ChannelIpcQrStartRequest,
-) -> OpenDeskResult<ChannelIpcQrStartResponse> {
+) -> OpenDeskResult<IpcResponse<ChannelIpcQrStartResponse>> {
     state
         .license
         .ensure_licensed()
@@ -222,13 +223,13 @@ pub async fn channel_qr_start(
         map.insert(session_id, target);
     }
 
-    Ok(ChannelIpcQrStartResponse {
+    Ok(IpcResponse::ok(ChannelIpcQrStartResponse {
         ok: response.ok,
         status: response.status,
         session_id: response.session_id,
         qr_base64: response.qr_base64,
         detail: response.detail,
-    })
+    }))
 }
 
 /// 轮询扫码状态；登录成功时更新账号凭据并连接。
@@ -240,7 +241,7 @@ pub async fn channel_qr_check(
     repo: State<'_, Arc<ChannelRepo>>,
     dispatcher: State<'_, Arc<ChannelDispatcher>>,
     request: ChannelIpcQrCheckRequest,
-) -> OpenDeskResult<ChannelIpcQrCheckResponse> {
+) -> OpenDeskResult<IpcResponse<ChannelIpcQrCheckResponse>> {
     state
         .license
         .ensure_licensed()
@@ -291,14 +292,14 @@ pub async fn channel_qr_check(
         }
     }
 
-    Ok(ChannelIpcQrCheckResponse {
+    Ok(IpcResponse::ok(ChannelIpcQrCheckResponse {
         ok: response.ok,
         status: response.status,
         session_id: response.session_id,
         cookies: response.cookies,
         detail: response.detail,
         qr_base64: response.qr_base64,
-    })
+    }))
 }
 
 /// 取消扫码登录。
@@ -308,7 +309,7 @@ pub async fn channel_qr_check(
 pub async fn channel_qr_cancel(
     state: tauri::State<'_, crate::shared::state::AppState>,
     request: ChannelIpcQrCancelRequest,
-) -> OpenDeskResult<ChannelIpcQrCancelResponse> {
+) -> OpenDeskResult<IpcResponse<ChannelIpcQrCancelResponse>> {
     state
         .license
         .ensure_licensed()
@@ -324,8 +325,8 @@ pub async fn channel_qr_cancel(
         .await
         .map_err(|error| error.to_string())?;
 
-    Ok(ChannelIpcQrCancelResponse {
+    Ok(IpcResponse::ok(ChannelIpcQrCancelResponse {
         ok: response.ok,
         detail: response.detail,
-    })
+    }))
 }

@@ -4,6 +4,8 @@ use common::OpenDeskResult;
 use platform::registry::PlatformRegistry;
 use serde::Serialize;
 
+use crate::shared::ipc::IpcResponse;
+
 /// ?????IPC ???? ? ???????????
 
 #[derive(Debug, Clone, Serialize)]
@@ -16,7 +18,7 @@ pub struct PlatformDescriptorDto {
 /// ?????????????
 
 #[tauri::command]
-pub fn platform_descriptors() -> OpenDeskResult<Vec<PlatformDescriptorDto>> {
+pub fn platform_descriptors() -> OpenDeskResult<IpcResponse<Vec<PlatformDescriptorDto>>> {
     let registry = PlatformRegistry::new();
     let descriptors = registry
         .descriptors()
@@ -27,5 +29,5 @@ pub fn platform_descriptors() -> OpenDeskResult<Vec<PlatformDescriptorDto>> {
             capabilities: descriptor.capabilities.as_strings(),
         })
         .collect();
-    Ok(descriptors)
+    Ok(IpcResponse::ok(descriptors))
 }

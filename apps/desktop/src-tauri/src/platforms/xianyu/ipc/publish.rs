@@ -3,6 +3,7 @@
 //! 壳层组合：`InMemoryPublishGateway` → `app::publish::PublishService`。
 
 use crate::platforms::xianyu::adapter::InMemoryPublishGateway;
+use crate::shared::ipc::IpcResponse;
 use app::publish::gateway::AccountCapability;
 use app::publish::{PublishGateway, PublishRequest, PublishService, PublishServiceResult};
 use common;
@@ -35,22 +36,23 @@ pub struct SinglePublishRequest {
 pub async fn publish_capability(
     state: State<'_, PublishHandle>,
     request: CapabilityRequest,
-) -> common::OpenDeskResult<AccountCapability> {
+) -> common::OpenDeskResult<IpcResponse<AccountCapability>> {
     let cookie = state
         .gateway
         .account_cookie(request.user_id, &request.account_id)?;
     let Some(cookie) = cookie else {
-        return Ok(AccountCapability {
+        return Ok(IpcResponse::ok(AccountCapability {
             success: false,
             is_fish_shop: false,
             cookies_str: None,
             message: "账号不存在或缺少 Cookie，无法发布".to_string(),
-        });
+        }));
     };
-    state
+    let result = state
         .gateway
         .detect_capability(&request.account_id, &cookie, request.user_id)
-        .await
+        .await?;
+    Ok(IpcResponse::ok(result))
 }
 
 /// 执行单品发布。
@@ -58,7 +60,7 @@ pub async fn publish_capability(
 pub async fn publish_single(
     state: State<'_, PublishHandle>,
     request: SinglePublishRequest,
-) -> common::OpenDeskResult<PublishServiceResult> {
+) -> common::OpenDeskResult<IpcResponse<PublishServiceResult>> {
     let service = PublishService::new(state.gateway.as_ref());
     let publish_request = PublishRequest {
         user_id: request.user_id,
@@ -66,5 +68,5 @@ pub async fn publish_single(
         item: request.item,
         material_id: request.material_id,
     };
-    Ok(service.execute(&publish_request).await)
+    Ok(IpcResponse::ok(service.execute(&publish_request).await))
 }

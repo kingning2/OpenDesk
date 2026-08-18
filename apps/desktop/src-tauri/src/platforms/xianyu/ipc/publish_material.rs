@@ -1,6 +1,7 @@
 //! 商品发布素材 Tauri commands — 素材 CRUD + 批量删除。
 
 use crate::platforms::xianyu::persist::InMemoryPublishMaterialStore;
+use crate::shared::ipc::IpcResponse;
 use app::publish::{PublishMaterial, PublishMaterialQuery, PublishMaterialService};
 use common;
 use serde::Deserialize;
@@ -43,7 +44,7 @@ pub struct MaterialBatchDeleteRequest {
 pub fn publish_material_list(
     state: State<'_, PublishMaterialHandle>,
     request: MaterialListRequest,
-) -> common::OpenDeskResult<(Vec<PublishMaterial>, u32)> {
+) -> common::OpenDeskResult<IpcResponse<(Vec<PublishMaterial>, u32)>> {
     let service = PublishMaterialService::new(state.store.as_ref());
     let query = PublishMaterialQuery {
         page: request.page,
@@ -53,7 +54,8 @@ pub fn publish_material_list(
         condition: request.condition,
         platform_category_id: request.platform_category_id,
     };
-    service.list(request.owner_id, &query)
+    let result = service.list(request.owner_id, &query)?;
+    Ok(IpcResponse::ok(result))
 }
 
 #[tauri::command]
@@ -61,11 +63,12 @@ pub fn publish_material_create(
     state: State<'_, PublishMaterialHandle>,
     owner_id: i64,
     material: PublishMaterial,
-) -> common::OpenDeskResult<PublishMaterial> {
+) -> common::OpenDeskResult<IpcResponse<PublishMaterial>> {
     let service = PublishMaterialService::new(state.store.as_ref());
-    service
+    let result = service
         .create(owner_id, material)
-        .map_err(common::OpenDeskError::wrap)
+        .map_err(common::OpenDeskError::wrap)?;
+    Ok(IpcResponse::ok(result))
 }
 
 #[tauri::command]
@@ -73,27 +76,30 @@ pub fn publish_material_update(
     state: State<'_, PublishMaterialHandle>,
     owner_id: i64,
     material: PublishMaterial,
-) -> common::OpenDeskResult<()> {
+) -> common::OpenDeskResult<IpcResponse<()>> {
     let service = PublishMaterialService::new(state.store.as_ref());
     service
         .update(owner_id, &material)
-        .map_err(common::OpenDeskError::wrap)
+        .map_err(common::OpenDeskError::wrap)?;
+    Ok(IpcResponse::ok(()))
 }
 
 #[tauri::command]
 pub fn publish_material_delete(
     state: State<'_, PublishMaterialHandle>,
     request: MaterialDeleteRequest,
-) -> common::OpenDeskResult<()> {
+) -> common::OpenDeskResult<IpcResponse<()>> {
     let service = PublishMaterialService::new(state.store.as_ref());
-    service.delete(request.owner_id, request.material_id)
+    service.delete(request.owner_id, request.material_id)?;
+    Ok(IpcResponse::ok(()))
 }
 
 #[tauri::command]
 pub fn publish_material_batch_delete(
     state: State<'_, PublishMaterialHandle>,
     request: MaterialBatchDeleteRequest,
-) -> common::OpenDeskResult<usize> {
+) -> common::OpenDeskResult<IpcResponse<usize>> {
     let service = PublishMaterialService::new(state.store.as_ref());
-    service.batch_delete(request.owner_id, &request.material_ids)
+    let result = service.batch_delete(request.owner_id, &request.material_ids)?;
+    Ok(IpcResponse::ok(result))
 }

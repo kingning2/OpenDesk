@@ -9,6 +9,7 @@ pub mod channel;
 pub mod license;
 pub mod log;
 pub mod platform;
+pub mod response;
 
 pub use agent::agent_ping;
 pub use ai::{ai_config_get, ai_config_set, ai_test_api_key};
@@ -19,3 +20,4 @@ pub use channel::{
 pub use license::{license_activate, license_machine_code, license_status};
 pub use log::{log_clear, log_recent, log_write};
 pub use platform::platform_descriptors;
+pub use response::IpcResponse;

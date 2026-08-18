@@ -1,6 +1,7 @@
 //! 评价相关 Tauri commands。
 
 use crate::platforms::xianyu::adapter::MtopRateGateway;
+use crate::shared::ipc::IpcResponse;
 use app::rate::{FeedbackConfig, RateResult, RateService};
 use common;
 use opendesk_macros::timed;
@@ -20,17 +21,20 @@ pub struct RateBuyerRequest {
 /// 评价买家。
 #[tauri::command]
 #[timed]
-pub async fn rate_buyer(request: RateBuyerRequest) -> common::OpenDeskResult<RateResult> {
+pub async fn rate_buyer(
+    request: RateBuyerRequest,
+) -> common::OpenDeskResult<IpcResponse<RateResult>> {
     let gateway = MtopRateGateway::new(&request.cookie)?;
     let service = RateService::new(&gateway);
-    service
+    let result = service
         .rate_buyer(&request.trade_id, &request.feedback)
-        .await
+        .await?;
+    Ok(IpcResponse::ok(result))
 }
 
 /// 解析评价内容（不发请求）。
 #[tauri::command]
-pub fn rate_feedback_resolve(config: FeedbackConfig) -> Option<String> {
+pub fn rate_feedback_resolve(config: FeedbackConfig) -> IpcResponse<Option<String>> {
     struct NoopGateway;
     #[async_trait::async_trait]
     impl app::rate::RateGateway for NoopGateway {
@@ -50,5 +54,5 @@ pub fn rate_feedback_resolve(config: FeedbackConfig) -> Option<String> {
         }
     }
     let service = RateService::new(&NoopGateway);
-    service.resolve_feedback(&config)
+    IpcResponse::ok(service.resolve_feedback(&config))
 }

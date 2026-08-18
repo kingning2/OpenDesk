@@ -5,6 +5,7 @@
 
 use crate::platforms::xianyu::webview;
 use crate::shared::channel::ChannelRepo;
+use crate::shared::ipc::IpcResponse;
 use crate::shared::state::AppState;
 use common::contracts::{
     ChannelIpcCloseSiteResponse, ChannelIpcOpenSiteRequest, ChannelIpcOpenSiteResponse,
@@ -33,7 +34,7 @@ pub async fn channel_open_site(
     repo: State<'_, Arc<ChannelRepo>>,
     app: AppHandle,
     request: ChannelIpcOpenSiteRequest,
-) -> common::OpenDeskResult<ChannelIpcOpenSiteResponse> {
+) -> common::OpenDeskResult<IpcResponse<ChannelIpcOpenSiteResponse>> {
     state
         .license
         .ensure_licensed()
@@ -55,10 +56,10 @@ pub async fn channel_open_site(
         request.width,
         request.height,
     )?;
-    Ok(ChannelIpcOpenSiteResponse {
+    Ok(IpcResponse::ok(ChannelIpcOpenSiteResponse {
         ok: true,
         detail: None,
-    })
+    }))
 }
 
 /// 关闭主窗口内嵌的闲鱼子 WebView。
@@ -78,12 +79,12 @@ pub async fn channel_open_site(
 pub async fn channel_close_site(
     state: State<'_, AppState>,
     app: AppHandle,
-) -> common::OpenDeskResult<ChannelIpcCloseSiteResponse> {
+) -> common::OpenDeskResult<IpcResponse<ChannelIpcCloseSiteResponse>> {
     state
         .license
         .ensure_licensed()
         .await
         .map_err(common::OpenDeskError::wrap)?;
     webview::close_xianyu_site(&app)?;
-    Ok(ChannelIpcCloseSiteResponse { ok: true })
+    Ok(IpcResponse::ok(ChannelIpcCloseSiteResponse { ok: true }))
 }

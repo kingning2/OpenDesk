@@ -3,6 +3,7 @@
 //! 壳层组合：`InMemoryOrderStore` → `app::order::OrderService`。
 
 use crate::platforms::xianyu::persist::InMemoryOrderStore;
+use crate::shared::ipc::IpcResponse;
 use app::order::{DeliveryInfoUpdate, Order, OrderService, OrderStatus};
 use common;
 use serde::Deserialize;
@@ -43,10 +44,10 @@ pub struct OrderDeliveryRequest {
 pub fn order_list(
     state: State<'_, OrderHandle>,
     request: OrderListRequest,
-) -> common::OpenDeskResult<(Vec<Order>, u32)> {
+) -> common::OpenDeskResult<IpcResponse<(Vec<Order>, u32)>> {
     let service = OrderService::new(state.store.as_ref());
     let status = request.status.as_deref().map(OrderStatus::from_str);
-    service
+    let result = service
         .list(
             request.owner_id,
             request.page,
@@ -54,7 +55,8 @@ pub fn order_list(
             status,
             &request.keyword,
         )
-        .map_err(common::OpenDeskError::wrap)
+        .map_err(common::OpenDeskError::wrap)?;
+    Ok(IpcResponse::ok(result))
 }
 
 #[tauri::command]
@@ -62,30 +64,32 @@ pub fn order_get(
     state: State<'_, OrderHandle>,
     owner_id: i64,
     order_no: String,
-) -> common::OpenDeskResult<Option<Order>> {
+) -> common::OpenDeskResult<IpcResponse<Option<Order>>> {
     let service = OrderService::new(state.store.as_ref());
-    service
+    let result = service
         .get_order_by_no(owner_id, &order_no)
-        .map_err(common::OpenDeskError::wrap)
+        .map_err(common::OpenDeskError::wrap)?;
+    Ok(IpcResponse::ok(result))
 }
 
 #[tauri::command]
 pub fn order_update_status(
     state: State<'_, OrderHandle>,
     request: OrderStatusRequest,
-) -> common::OpenDeskResult<bool> {
+) -> common::OpenDeskResult<IpcResponse<bool>> {
     let service = OrderService::new(state.store.as_ref());
     let status = OrderStatus::from_str(&request.status);
-    service
+    let result = service
         .update_status(&request.order_no, status)
-        .map_err(common::OpenDeskError::wrap)
+        .map_err(common::OpenDeskError::wrap)?;
+    Ok(IpcResponse::ok(result))
 }
 
 #[tauri::command]
 pub fn order_update_delivery(
     state: State<'_, OrderHandle>,
     request: OrderDeliveryRequest,
-) -> common::OpenDeskResult<bool> {
+) -> common::OpenDeskResult<IpcResponse<bool>> {
     let service = OrderService::new(state.store.as_ref());
     let update = DeliveryInfoUpdate {
         status: OrderStatus::from_str(&request.status),
@@ -93,15 +97,22 @@ pub fn order_update_delivery(
         delivery_content: request.delivery_content.clone(),
         buyer_fish_nick: None,
     };
-    service
+    let result = service
         .update_delivery_info(&request.order_no, update)
-        .map_err(common::OpenDeskError::wrap)
+        .map_err(common::OpenDeskError::wrap)?;
+    Ok(IpcResponse::ok(result))
 }
 
 #[tauri::command]
-pub fn order_create(state: State<'_, OrderHandle>, order: Order) -> common::OpenDeskResult<Order> {
+pub fn order_create(
+    state: State<'_, OrderHandle>,
+    order: Order,
+) -> common::OpenDeskResult<IpcResponse<Order>> {
     let service = OrderService::new(state.store.as_ref());
-    service.create(&order).map_err(common::OpenDeskError::wrap)
+    let result = service
+        .create(&order)
+        .map_err(common::OpenDeskError::wrap)?;
+    Ok(IpcResponse::ok(result))
 }
 
 #[tauri::command]
@@ -109,9 +120,10 @@ pub fn order_delete(
     state: State<'_, OrderHandle>,
     owner_id: i64,
     order_id: i64,
-) -> common::OpenDeskResult<bool> {
+) -> common::OpenDeskResult<IpcResponse<bool>> {
     let service = OrderService::new(state.store.as_ref());
-    service
+    let result = service
         .delete(owner_id, order_id)
-        .map_err(common::OpenDeskError::wrap)
+        .map_err(common::OpenDeskError::wrap)?;
+    Ok(IpcResponse::ok(result))
 }

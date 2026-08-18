@@ -2,6 +2,7 @@
 
 use crate::platforms::xianyu::adapter::InMemoryPublishGateway;
 use crate::platforms::xianyu::persist::InMemoryBatchStore;
+use crate::shared::ipc::IpcResponse;
 use app::publish::{BatchService, BatchStore, BatchTask, PublishRequest, PublishService};
 use common;
 use serde::Deserialize;
@@ -30,7 +31,7 @@ pub struct BatchStatusRequest {
 pub async fn publish_batch_submit(
     state: State<'_, BatchPublishHandle>,
     request: BatchSubmitRequest,
-) -> common::OpenDeskResult<BatchTask> {
+) -> common::OpenDeskResult<IpcResponse<BatchTask>> {
     let batch_id = format!("batch-{}", uuid_fragment());
     let service = BatchService::new(state.store.as_ref());
     let task = service.submit(
@@ -81,16 +82,17 @@ pub async fn publish_batch_submit(
         let _ = store.update_task(&task);
     });
 
-    Ok(task)
+    Ok(IpcResponse::ok(task))
 }
 
 #[tauri::command]
 pub fn publish_batch_status(
     state: State<'_, BatchPublishHandle>,
     request: BatchStatusRequest,
-) -> common::OpenDeskResult<Option<BatchTask>> {
+) -> common::OpenDeskResult<IpcResponse<Option<BatchTask>>> {
     let service = BatchService::new(state.store.as_ref());
-    service.status(request.owner_id, &request.batch_id)
+    let result = service.status(request.owner_id, &request.batch_id)?;
+    Ok(IpcResponse::ok(result))
 }
 
 fn uuid_fragment() -> String {

@@ -5,6 +5,7 @@
 
 use crate::platforms::xianyu::ipc::account::AccountHandle;
 use crate::shared::channel::dispatcher::ChannelDispatcher;
+use crate::shared::ipc::IpcResponse;
 use crate::shared::state::AppState;
 use app::account::{AccountService, AccountStore, AccountUpdate, LoginMethod, XianyuAccount};
 use common::contracts::ChannelCookie;
@@ -56,7 +57,7 @@ pub async fn account_password_login(
     accounts: State<'_, AccountHandle>,
     dispatcher: State<'_, std::sync::Arc<ChannelDispatcher>>,
     request: AccountPasswordLoginRequest,
-) -> common::OpenDeskResult<AccountPasswordLoginResponse> {
+) -> common::OpenDeskResult<IpcResponse<AccountPasswordLoginResponse>> {
     state
         .license
         .ensure_licensed()
@@ -80,21 +81,21 @@ pub async fn account_password_login(
         .map_err(common::OpenDeskError::wrap)?;
 
     if response.status != "success" || !response.ok {
-        return Ok(AccountPasswordLoginResponse {
+        return Ok(IpcResponse::ok(AccountPasswordLoginResponse {
             ok: response.ok,
             status: response.status,
             account_id: None,
             detail: response.detail,
-        });
+        }));
     }
 
     let Some(cookies) = response.cookies else {
-        return Ok(AccountPasswordLoginResponse {
+        return Ok(IpcResponse::ok(AccountPasswordLoginResponse {
             ok: false,
             status: "failed".to_string(),
             account_id: None,
             detail: Some("登录成功但未导出 cookies".to_string()),
-        });
+        }));
     };
 
     let mut account = account_from_cookies(&cookies);
@@ -148,12 +149,12 @@ pub async fn account_password_login(
         .await
         .map_err(common::OpenDeskError::wrap)?;
 
-    Ok(AccountPasswordLoginResponse {
+    Ok(IpcResponse::ok(AccountPasswordLoginResponse {
         ok: true,
         status: "success".to_string(),
         account_id: Some(account.account_id),
         detail: response.detail,
-    })
+    }))
 }
 
 /// 从 cookies 构造业务账号：unb 作为 account_id，cookie 序列化为字符串。

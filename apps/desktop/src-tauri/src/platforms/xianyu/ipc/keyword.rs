@@ -1,6 +1,7 @@
 //! 自动回复关键词 Tauri commands — 关键词 CRUD 与整表替换。
 
 use crate::platforms::xianyu::persist::InMemoryKeywordStore;
+use crate::shared::ipc::IpcResponse;
 use app::auto_reply::{KeywordRule, KeywordService};
 use common;
 use serde::Deserialize;
@@ -43,9 +44,10 @@ pub struct KeywordDeleteRequest {
 pub fn keyword_list(
     state: State<'_, KeywordHandle>,
     request: KeywordListRequest,
-) -> common::OpenDeskResult<Vec<KeywordRule>> {
+) -> common::OpenDeskResult<IpcResponse<Vec<KeywordRule>>> {
     let service = KeywordService::new(state.store.as_ref());
-    service.list(&request.account_id)
+    let result = service.list(&request.account_id)?;
+    Ok(IpcResponse::ok(result))
 }
 
 /// 整表替换保存。
@@ -53,9 +55,10 @@ pub fn keyword_list(
 pub fn keyword_replace(
     state: State<'_, KeywordHandle>,
     request: KeywordReplaceRequest,
-) -> common::OpenDeskResult<()> {
+) -> common::OpenDeskResult<IpcResponse<()>> {
     let service = KeywordService::new(state.store.as_ref());
-    service.replace(&request.account_id, &request.keywords)
+    service.replace(&request.account_id, &request.keywords)?;
+    Ok(IpcResponse::ok(()))
 }
 
 /// 新增关键词。
@@ -63,9 +66,10 @@ pub fn keyword_replace(
 pub fn keyword_add(
     state: State<'_, KeywordHandle>,
     request: KeywordAddRequest,
-) -> common::OpenDeskResult<KeywordRule> {
+) -> common::OpenDeskResult<IpcResponse<KeywordRule>> {
     let service = KeywordService::new(state.store.as_ref());
-    service.add(&request.account_id, request.rule)
+    let result = service.add(&request.account_id, request.rule)?;
+    Ok(IpcResponse::ok(result))
 }
 
 /// 删除关键词。
@@ -73,7 +77,8 @@ pub fn keyword_add(
 pub fn keyword_delete(
     state: State<'_, KeywordHandle>,
     request: KeywordDeleteRequest,
-) -> common::OpenDeskResult<()> {
+) -> common::OpenDeskResult<IpcResponse<()>> {
     let service = KeywordService::new(state.store.as_ref());
-    service.delete(request.rule_id)
+    service.delete(request.rule_id)?;
+    Ok(IpcResponse::ok(()))
 }

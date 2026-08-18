@@ -1,6 +1,7 @@
 //! 发布地址 Tauri commands — 地址 CRUD + 批量删除。
 
 use crate::platforms::xianyu::persist::InMemoryAddressStore;
+use crate::shared::ipc::IpcResponse;
 use app::publish::{AddressQuery, AddressService, PublishAddress};
 use common;
 use serde::Deserialize;
@@ -40,7 +41,7 @@ pub struct AddressBatchDeleteRequest {
 pub fn address_list(
     state: State<'_, AddressHandle>,
     request: AddressListRequest,
-) -> common::OpenDeskResult<(Vec<PublishAddress>, u32)> {
+) -> common::OpenDeskResult<IpcResponse<(Vec<PublishAddress>, u32)>> {
     let service = AddressService::new(state.store.as_ref());
     let query = AddressQuery {
         page: request.page,
@@ -48,7 +49,8 @@ pub fn address_list(
         keyword: request.keyword,
         address_type: request.address_type,
     };
-    service.list(request.owner_id, &query)
+    let result = service.list(request.owner_id, &query)?;
+    Ok(IpcResponse::ok(result))
 }
 
 #[tauri::command]
@@ -56,11 +58,12 @@ pub fn address_create(
     state: State<'_, AddressHandle>,
     owner_id: i64,
     address: PublishAddress,
-) -> common::OpenDeskResult<PublishAddress> {
+) -> common::OpenDeskResult<IpcResponse<PublishAddress>> {
     let service = AddressService::new(state.store.as_ref());
-    service
+    let result = service
         .create(owner_id, address)
-        .map_err(common::OpenDeskError::wrap)
+        .map_err(common::OpenDeskError::wrap)?;
+    Ok(IpcResponse::ok(result))
 }
 
 #[tauri::command]
@@ -68,27 +71,30 @@ pub fn address_update(
     state: State<'_, AddressHandle>,
     owner_id: i64,
     address: PublishAddress,
-) -> common::OpenDeskResult<()> {
+) -> common::OpenDeskResult<IpcResponse<()>> {
     let service = AddressService::new(state.store.as_ref());
     service
         .update(owner_id, &address)
-        .map_err(common::OpenDeskError::wrap)
+        .map_err(common::OpenDeskError::wrap)?;
+    Ok(IpcResponse::ok(()))
 }
 
 #[tauri::command]
 pub fn address_delete(
     state: State<'_, AddressHandle>,
     request: AddressDeleteRequest,
-) -> common::OpenDeskResult<()> {
+) -> common::OpenDeskResult<IpcResponse<()>> {
     let service = AddressService::new(state.store.as_ref());
-    service.delete(request.owner_id, request.address_id)
+    service.delete(request.owner_id, request.address_id)?;
+    Ok(IpcResponse::ok(()))
 }
 
 #[tauri::command]
 pub fn address_batch_delete(
     state: State<'_, AddressHandle>,
     request: AddressBatchDeleteRequest,
-) -> common::OpenDeskResult<usize> {
+) -> common::OpenDeskResult<IpcResponse<usize>> {
     let service = AddressService::new(state.store.as_ref());
-    service.batch_delete(request.owner_id, &request.address_ids)
+    let result = service.batch_delete(request.owner_id, &request.address_ids)?;
+    Ok(IpcResponse::ok(result))
 }

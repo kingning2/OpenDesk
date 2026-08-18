@@ -1,6 +1,7 @@
 //! 黑名单管理 Tauri commands。
 
 use crate::platforms::xianyu::persist::InMemoryBlacklistStore;
+use crate::shared::ipc::IpcResponse;
 use app::blacklist::{
     BlacklistQuery, BlacklistService, PersonalBlacklistItem, PlatformBlacklistItem,
 };
@@ -50,7 +51,7 @@ pub struct BlacklistDeleteRequest {
 pub fn blacklist_personal_list(
     state: State<'_, BlacklistHandle>,
     request: PersonalBlacklistListRequest,
-) -> common::OpenDeskResult<(Vec<PersonalBlacklistItem>, u32)> {
+) -> common::OpenDeskResult<IpcResponse<(Vec<PersonalBlacklistItem>, u32)>> {
     let service = BlacklistService::new(state.store.as_ref());
     let query = BlacklistQuery {
         page: request.page,
@@ -58,27 +59,29 @@ pub fn blacklist_personal_list(
         buyer_id: request.buyer_id,
         buyer_nick: request.buyer_nick,
     };
-    service
+    let result = service
         .list_personal(request.owner_id, &query)
-        .map_err(common::OpenDeskError::wrap)
+        .map_err(common::OpenDeskError::wrap)?;
+    Ok(IpcResponse::ok(result))
 }
 
 #[tauri::command]
 pub fn blacklist_platform_list(
     state: State<'_, BlacklistHandle>,
     owner_id: i64,
-) -> common::OpenDeskResult<(Vec<PlatformBlacklistItem>, u32)> {
+) -> common::OpenDeskResult<IpcResponse<(Vec<PlatformBlacklistItem>, u32)>> {
     let service = BlacklistService::new(state.store.as_ref());
-    service
+    let result = service
         .list_platform(owner_id, &BlacklistQuery::default())
-        .map_err(common::OpenDeskError::wrap)
+        .map_err(common::OpenDeskError::wrap)?;
+    Ok(IpcResponse::ok(result))
 }
 
 #[tauri::command]
 pub fn blacklist_personal_create(
     state: State<'_, BlacklistHandle>,
     request: PersonalBlacklistCreateRequest,
-) -> common::OpenDeskResult<Vec<PersonalBlacklistItem>> {
+) -> common::OpenDeskResult<IpcResponse<Vec<PersonalBlacklistItem>>> {
     let service = BlacklistService::new(state.store.as_ref());
     let ids: Vec<&str> = request
         .buyer_ids
@@ -102,27 +105,29 @@ pub fn blacklist_personal_create(
             .map_err(common::OpenDeskError::wrap)?;
         created.push(item);
     }
-    Ok(created)
+    Ok(IpcResponse::ok(created))
 }
 
 #[tauri::command]
 pub fn blacklist_set_enabled(
     state: State<'_, BlacklistHandle>,
     request: BlacklistEnabledRequest,
-) -> common::OpenDeskResult<()> {
+) -> common::OpenDeskResult<IpcResponse<()>> {
     let service = BlacklistService::new(state.store.as_ref());
     service
         .set_enabled(request.owner_id, request.id, request.enabled)
-        .map_err(common::OpenDeskError::wrap)
+        .map_err(common::OpenDeskError::wrap)?;
+    Ok(IpcResponse::ok(()))
 }
 
 #[tauri::command]
 pub fn blacklist_delete(
     state: State<'_, BlacklistHandle>,
     request: BlacklistDeleteRequest,
-) -> common::OpenDeskResult<()> {
+) -> common::OpenDeskResult<IpcResponse<()>> {
     let service = BlacklistService::new(state.store.as_ref());
     service
         .delete(request.owner_id, request.id)
-        .map_err(common::OpenDeskError::wrap)
+        .map_err(common::OpenDeskError::wrap)?;
+    Ok(IpcResponse::ok(()))
 }

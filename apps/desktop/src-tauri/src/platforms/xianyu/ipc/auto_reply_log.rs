@@ -1,6 +1,7 @@
 //! 自动回复日志 Tauri commands。
 
 use crate::platforms::xianyu::persist::InMemoryAutoReplyLogStore;
+use crate::shared::ipc::IpcResponse;
 use app::auto_reply::{AutoReplyLogPage, AutoReplyLogQuery, AutoReplyLogService};
 use common;
 use serde::Deserialize;
@@ -37,7 +38,7 @@ pub struct LogListRequest {
 pub fn auto_reply_log_list(
     state: State<'_, AutoReplyLogHandle>,
     request: LogListRequest,
-) -> common::OpenDeskResult<AutoReplyLogPage> {
+) -> common::OpenDeskResult<IpcResponse<AutoReplyLogPage>> {
     let service = AutoReplyLogService::new(state.store.as_ref());
     let query = AutoReplyLogQuery {
         page: request.page,
@@ -49,5 +50,6 @@ pub fn auto_reply_log_list(
         send_status: request.send_status,
         message_type: request.message_type,
     };
-    service.list(request.owner_id, &query)
+    let result = service.list(request.owner_id, &query)?;
+    Ok(IpcResponse::ok(result))
 }

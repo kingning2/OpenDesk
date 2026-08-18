@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 use crate::ai_config::AiConfigStore;
+use crate::shared::ipc::IpcResponse;
 
 /// API Key ????????
 ///
@@ -34,8 +35,9 @@ pub struct AiApiKeyTestResult {
 #[timed]
 pub async fn ai_config_get(
     state: tauri::State<'_, Arc<AiConfigStore>>,
-) -> OpenDeskResult<AiIpcConfigResponse> {
-    state.get().await
+) -> OpenDeskResult<IpcResponse<AiIpcConfigResponse>> {
+    let result = state.get().await?;
+    Ok(IpcResponse::ok(result))
 }
 
 /// ?? AI ?? IPC(????)?
@@ -54,8 +56,9 @@ pub async fn ai_config_get(
 pub async fn ai_config_set(
     state: tauri::State<'_, Arc<AiConfigStore>>,
     config: AiIpcConfigRequest,
-) -> OpenDeskResult<AiIpcConfigResponse> {
-    state.set(config).await
+) -> OpenDeskResult<IpcResponse<AiIpcConfigResponse>> {
+    let result = state.set(config).await?;
+    Ok(IpcResponse::ok(result))
 }
 
 /// ?? API Key ?????
@@ -77,7 +80,7 @@ pub async fn ai_config_set(
 pub async fn ai_test_api_key(
     base_url: String,
     api_key: String,
-) -> OpenDeskResult<AiApiKeyTestResult> {
+) -> OpenDeskResult<IpcResponse<AiApiKeyTestResult>> {
     let url = format!("{}/user/balance", base_url.trim_end_matches('/'));
     let response = reqwest::Client::new()
         .get(url)
@@ -101,12 +104,12 @@ pub async fn ai_test_api_key(
         .and_then(serde_json::Value::as_array)
         .is_some_and(|infos| !infos.is_empty());
 
-    Ok(AiApiKeyTestResult {
+    Ok(IpcResponse::ok(AiApiKeyTestResult {
         ok: has_price,
         message: if has_price {
             "API Key ??".to_string()
         } else {
             "???????".to_string()
         },
-    })
+    }))
 }

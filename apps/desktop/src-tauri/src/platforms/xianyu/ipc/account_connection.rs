@@ -5,6 +5,7 @@
 
 use crate::platforms::xianyu::ipc::account::AccountHandle;
 use crate::shared::channel::dispatcher::ChannelDispatcher;
+use crate::shared::ipc::IpcResponse;
 use crate::shared::state::AppState;
 use app::account::AccountStore;
 use common::contracts::ChannelAccount;
@@ -43,7 +44,7 @@ pub async fn account_connect(
     accounts: State<'_, AccountHandle>,
     dispatcher: State<'_, Arc<ChannelDispatcher>>,
     request: AccountConnectRequest,
-) -> common::OpenDeskResult<String> {
+) -> common::OpenDeskResult<IpcResponse<String>> {
     state
         .license
         .ensure_licensed()
@@ -65,11 +66,13 @@ pub async fn account_connect(
         .connect(&channel_account)
         .await
         .map_err(common::OpenDeskError::wrap)?;
-    Ok(dispatcher
-        .connection_state(&request.account_id)
-        .await
-        .as_str()
-        .to_string())
+    Ok(IpcResponse::ok(
+        dispatcher
+            .connection_state(&request.account_id)
+            .await
+            .as_str()
+            .to_string(),
+    ))
 }
 
 /// 断开业务账号的渠道连接。
@@ -79,7 +82,7 @@ pub async fn account_disconnect(
     state: State<'_, AppState>,
     dispatcher: State<'_, Arc<ChannelDispatcher>>,
     request: AccountConnectRequest,
-) -> common::OpenDeskResult<()> {
+) -> common::OpenDeskResult<IpcResponse<()>> {
     state
         .license
         .ensure_licensed()
@@ -91,7 +94,7 @@ pub async fn account_disconnect(
         .disconnect(&request.account_id)
         .await
         .map_err(common::OpenDeskError::wrap)?;
-    Ok(())
+    Ok(IpcResponse::ok(()))
 }
 
 /// 查询业务账号的渠道连接状态。
@@ -100,16 +103,18 @@ pub async fn account_connection_state(
     state: State<'_, AppState>,
     dispatcher: State<'_, Arc<ChannelDispatcher>>,
     request: AccountConnectRequest,
-) -> common::OpenDeskResult<String> {
+) -> common::OpenDeskResult<IpcResponse<String>> {
     state
         .license
         .ensure_licensed()
         .await
         .map_err(common::OpenDeskError::wrap)?;
 
-    Ok(dispatcher
-        .connection_state(&request.account_id)
-        .await
-        .as_str()
-        .to_string())
+    Ok(IpcResponse::ok(
+        dispatcher
+            .connection_state(&request.account_id)
+            .await
+            .as_str()
+            .to_string(),
+    ))
 }

@@ -6,6 +6,7 @@
 
 use crate::platforms::xianyu::persist::InMemoryAccountStore;
 use crate::shared::channel::dispatcher::ChannelDispatcher;
+use crate::shared::ipc::IpcResponse;
 use crate::shared::state::AppState;
 use app::account::{AccountService, AccountStore, AccountUpdate, LoginMethod, XianyuAccount};
 use common::contracts::{
@@ -37,7 +38,7 @@ pub struct AccountQrStartRequest {
 pub async fn account_qr_start(
     state: State<'_, AppState>,
     request: AccountQrStartRequest,
-) -> common::OpenDeskResult<ChannelIpcQrStartResponse> {
+) -> common::OpenDeskResult<IpcResponse<ChannelIpcQrStartResponse>> {
     state
         .license
         .ensure_licensed()
@@ -58,13 +59,13 @@ pub async fn account_qr_start(
         .await
         .map_err(common::OpenDeskError::wrap)?;
 
-    Ok(ChannelIpcQrStartResponse {
+    Ok(IpcResponse::ok(ChannelIpcQrStartResponse {
         ok: response.ok,
         status: response.status,
         session_id: response.session_id,
         qr_base64: response.qr_base64,
         detail: response.detail,
-    })
+    }))
 }
 
 /// 轮询扫码状态；登录成功后自动创建业务账号。
@@ -75,7 +76,7 @@ pub async fn account_qr_check(
     app: AppHandle,
     dispatcher: State<'_, Arc<ChannelDispatcher>>,
     request: ChannelIpcQrCheckRequest,
-) -> common::OpenDeskResult<ChannelIpcQrCheckResponse> {
+) -> common::OpenDeskResult<IpcResponse<ChannelIpcQrCheckResponse>> {
     state
         .license
         .ensure_licensed()
@@ -131,14 +132,14 @@ pub async fn account_qr_check(
         }
     }
 
-    Ok(ChannelIpcQrCheckResponse {
+    Ok(IpcResponse::ok(ChannelIpcQrCheckResponse {
         ok: response.ok,
         status: response.status,
         session_id: response.session_id,
         cookies: response.cookies,
         detail: response.detail,
         qr_base64: response.qr_base64,
-    })
+    }))
 }
 
 /// 取消业务账号扫码登录。
@@ -147,7 +148,7 @@ pub async fn account_qr_check(
 pub async fn account_qr_cancel(
     state: State<'_, AppState>,
     request: ChannelIpcQrCancelRequest,
-) -> common::OpenDeskResult<ChannelIpcQrCancelResponse> {
+) -> common::OpenDeskResult<IpcResponse<ChannelIpcQrCancelResponse>> {
     state
         .license
         .ensure_licensed()
@@ -163,10 +164,10 @@ pub async fn account_qr_cancel(
         .await
         .map_err(common::OpenDeskError::wrap)?;
 
-    Ok(ChannelIpcQrCancelResponse {
+    Ok(IpcResponse::ok(ChannelIpcQrCancelResponse {
         ok: response.ok,
         detail: response.detail,
-    })
+    }))
 }
 
 /// 从 cookies 构造业务账号：unb 作为 account_id，cookie 序列化为字符串。

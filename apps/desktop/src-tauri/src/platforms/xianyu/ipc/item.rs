@@ -1,6 +1,7 @@
 //! 商品管理 Tauri commands。
 
 use crate::platforms::xianyu::persist::InMemoryItemStore;
+use crate::shared::ipc::IpcResponse;
 use app::item::{Item, ItemQuery, ItemService};
 use common;
 use serde::Deserialize;
@@ -35,7 +36,7 @@ pub struct ItemUpdateRequest {
 pub fn item_list(
     state: State<'_, ItemHandle>,
     request: ItemListRequest,
-) -> common::OpenDeskResult<(Vec<Item>, u32)> {
+) -> common::OpenDeskResult<IpcResponse<(Vec<Item>, u32)>> {
     let service = ItemService::new(state.store.as_ref());
     let query = ItemQuery {
         page: request.page,
@@ -45,9 +46,10 @@ pub fn item_list(
         is_polished: request.is_polished,
         is_multi_spec: request.is_multi_spec,
     };
-    service
+    let result = service
         .list(request.owner_id, &query)
-        .map_err(common::OpenDeskError::wrap)
+        .map_err(common::OpenDeskError::wrap)?;
+    Ok(IpcResponse::ok(result))
 }
 
 #[tauri::command]
@@ -55,18 +57,19 @@ pub fn item_get(
     state: State<'_, ItemHandle>,
     owner_id: i64,
     item_id: String,
-) -> common::OpenDeskResult<Option<Item>> {
+) -> common::OpenDeskResult<IpcResponse<Option<Item>>> {
     let service = ItemService::new(state.store.as_ref());
-    service
+    let result = service
         .get(owner_id, &item_id)
-        .map_err(common::OpenDeskError::wrap)
+        .map_err(common::OpenDeskError::wrap)?;
+    Ok(IpcResponse::ok(result))
 }
 
 #[tauri::command]
 pub fn item_update(
     state: State<'_, ItemHandle>,
     request: ItemUpdateRequest,
-) -> common::OpenDeskResult<()> {
+) -> common::OpenDeskResult<IpcResponse<()>> {
     let service = ItemService::new(state.store.as_ref());
     service
         .update(request.owner_id, &request.item_id, |item| {
@@ -74,5 +77,6 @@ pub fn item_update(
                 item.ai_prompt = ai_prompt.clone();
             }
         })
-        .map_err(common::OpenDeskError::wrap)
+        .map_err(common::OpenDeskError::wrap)?;
+    Ok(IpcResponse::ok(()))
 }

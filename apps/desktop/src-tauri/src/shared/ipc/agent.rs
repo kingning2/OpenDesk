@@ -8,6 +8,7 @@ use common::OpenDeskResult;
 use opendesk_macros::timed;
 
 use crate::agent::PingAgent;
+use crate::shared::ipc::IpcResponse;
 use crate::state::AppState;
 
 /// Agent ping IPC????????????????
@@ -26,7 +27,7 @@ use crate::state::AppState;
 pub async fn agent_ping(
     state: tauri::State<'_, AppState>,
     request: AgentIpcPingRequest,
-) -> OpenDeskResult<AgentIpcPingResponse> {
+) -> OpenDeskResult<IpcResponse<AgentIpcPingResponse>> {
     state
         .license
         .ensure_licensed()
@@ -37,5 +38,6 @@ pub async fn agent_ping(
         .ensure_running()
         .await
         .map_err(|error| error.to_string())?;
-    PingAgent::execute(state.gateway.as_ref(), request).await
+    let result = PingAgent::execute(state.gateway.as_ref(), request).await?;
+    Ok(IpcResponse::ok(result))
 }

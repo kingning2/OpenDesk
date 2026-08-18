@@ -1,6 +1,7 @@
 //! 消息过滤规则 Tauri commands。
 
 use crate::platforms::xianyu::persist::InMemoryFilterStore;
+use crate::shared::ipc::IpcResponse;
 use app::auto_reply::filter::FilterRule;
 use app::auto_reply::FilterService;
 use common;
@@ -49,45 +50,50 @@ pub struct FilterDeleteRequest {
 pub fn filter_list(
     state: State<'_, FilterHandle>,
     request: FilterListRequest,
-) -> common::OpenDeskResult<Vec<FilterRule>> {
+) -> common::OpenDeskResult<IpcResponse<Vec<FilterRule>>> {
     let service = FilterService::new(state.store.as_ref());
-    service.list(request.owner_id, &request.account_id)
+    let result = service.list(request.owner_id, &request.account_id)?;
+    Ok(IpcResponse::ok(result))
 }
 
 #[tauri::command]
 pub fn filter_create(
     state: State<'_, FilterHandle>,
     request: FilterCreateRequest,
-) -> common::OpenDeskResult<FilterRule> {
+) -> common::OpenDeskResult<IpcResponse<FilterRule>> {
     let service = FilterService::new(state.store.as_ref());
-    service.create(request.owner_id, &request.account_id, request.rule)
+    let result = service.create(request.owner_id, &request.account_id, request.rule)?;
+    Ok(IpcResponse::ok(result))
 }
 
 #[tauri::command]
 pub fn filter_update(
     state: State<'_, FilterHandle>,
     request: FilterUpdateRequest,
-) -> common::OpenDeskResult<()> {
+) -> common::OpenDeskResult<IpcResponse<()>> {
     let service = FilterService::new(state.store.as_ref());
     service
         .update(request.owner_id, &request.rule)
-        .map_err(common::OpenDeskError::wrap)
+        .map_err(common::OpenDeskError::wrap)?;
+    Ok(IpcResponse::ok(()))
 }
 
 #[tauri::command]
 pub fn filter_set_enabled(
     state: State<'_, FilterHandle>,
     request: FilterEnabledRequest,
-) -> common::OpenDeskResult<()> {
+) -> common::OpenDeskResult<IpcResponse<()>> {
     let service = FilterService::new(state.store.as_ref());
-    service.set_enabled(request.owner_id, request.rule_id, request.enabled)
+    service.set_enabled(request.owner_id, request.rule_id, request.enabled)?;
+    Ok(IpcResponse::ok(()))
 }
 
 #[tauri::command]
 pub fn filter_delete(
     state: State<'_, FilterHandle>,
     request: FilterDeleteRequest,
-) -> common::OpenDeskResult<()> {
+) -> common::OpenDeskResult<IpcResponse<()>> {
     let service = FilterService::new(state.store.as_ref());
-    service.delete(request.owner_id, request.rule_id)
+    service.delete(request.owner_id, request.rule_id)?;
+    Ok(IpcResponse::ok(()))
 }

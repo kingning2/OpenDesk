@@ -3,6 +3,7 @@
 //! 壳层组合：`InMemoryPublishLogStore` → `app::publish::PublishLogService`。
 
 use crate::platforms::xianyu::persist::InMemoryPublishLogStore;
+use crate::shared::ipc::IpcResponse;
 use app::publish::{PublishLog, PublishLogQuery, PublishLogService};
 use common;
 use serde::Deserialize;
@@ -40,7 +41,7 @@ pub struct PublishLogClearRequest {
 pub fn publish_log_list(
     state: State<'_, PublishLogHandle>,
     request: PublishLogListRequest,
-) -> common::OpenDeskResult<(Vec<PublishLog>, u32)> {
+) -> common::OpenDeskResult<IpcResponse<(Vec<PublishLog>, u32)>> {
     let service = PublishLogService::new(state.store.as_ref());
     let query = PublishLogQuery {
         page: request.page,
@@ -48,7 +49,8 @@ pub fn publish_log_list(
         account_id: request.account_id,
         status: request.status,
     };
-    service.list(request.owner_id, &query)
+    let result = service.list(request.owner_id, &query)?;
+    Ok(IpcResponse::ok(result))
 }
 
 /// 清空早于指定天数的发布日志。
@@ -56,7 +58,8 @@ pub fn publish_log_list(
 pub fn publish_log_clear(
     state: State<'_, PublishLogHandle>,
     request: PublishLogClearRequest,
-) -> common::OpenDeskResult<()> {
+) -> common::OpenDeskResult<IpcResponse<()>> {
     let service = PublishLogService::new(state.store.as_ref());
-    service.clear_older_than(request.owner_id, request.days)
+    service.clear_older_than(request.owner_id, request.days)?;
+    Ok(IpcResponse::ok(()))
 }
