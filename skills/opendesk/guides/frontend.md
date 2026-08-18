@@ -127,7 +127,7 @@ apps/desktop
 |------|-----|------|
 | `TitleBar` / `AppLayout` / `NavRail` / `MainPanel` / `TabBar` | `apps/desktop/src/app` | 桌面窗口壳与工作区装配 |
 | `ThemeToggle` / `IconButton` / `Button` / `Card` | `@desk/ui` | 通用交互与展示控件 |
-| `PageScaffold` / `PageContainer` | `@desk/ui` | Feature 页面统一内边距与宽度 |
+| `PageScaffold` / `PageContainer` | `@desk/ui` | Feature 页面统一内边距、宽度，以及 ScrollArea 滚动 |
 | `nav-registry.ts` | `apps/desktop` | 聚合各 Feature 的 `navItem` |
 | `page-meta.ts` | `apps/desktop` | 路由 → 页面标题映射（中文文案） |
 

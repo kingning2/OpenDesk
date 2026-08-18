@@ -7,7 +7,6 @@ import argparse
 import importlib.util
 import logging
 import re
-import sys
 from pathlib import Path
 
 from _common import ROOT, setup_logging
@@ -17,6 +16,8 @@ SCRIPTS_DIR = Path(__file__).resolve().parent
 # React → Python heuristics
 REACT_ROOT = ROOT / "apps" / "desktop" / "src"
 PYTHON_URL = re.compile(r"https?://(?:127\.0\.0\.1|localhost):\d+")
+# Ollama 本地模型基址（LLM provider 合法端口，非 Python sidecar）。
+OLLAMA_PORT = re.compile(r"localhost:11434")
 WEBSOCKET = re.compile(r"new\s+WebSocket\s*\(")
 
 # Rust unwrap heuristic
@@ -42,7 +43,9 @@ def check_react_python() -> list[str]:
         if path.suffix not in (".ts", ".tsx"):
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
-        if PYTHON_URL.search(text):
+        # 去掉 Ollama 本地模型基址后再检测（避免误报）。
+        text_no_ollama = OLLAMA_PORT.sub("", text)
+        if PYTHON_URL.search(text_no_ollama):
             violations.append(f"{path}: possible direct localhost HTTP to Python")
         if WEBSOCKET.search(text):
             violations.append(f"{path}: possible WebSocket bypass")
@@ -58,8 +61,21 @@ def check_rust_unwrap() -> list[str]:
             if "tests" in path.parts:
                 continue
             text = path.read_text(encoding="utf-8", errors="replace")
-            if UNWRAP.search(text):
-                violations.append(f"{path}: unwrap/expect/panic detected")
+            # 跳过 `#[cfg(test)]` 内联测试模块：测试断言中的 expect 属断言语义，
+            # 不是生产崩溃路径；仅检查生产代码。
+            lines = text.splitlines()
+            in_test = False
+            for lineno, line in enumerate(lines, start=1):
+                if "#[cfg(test)]" in line:
+                    in_test = True
+                    continue
+                if in_test:
+                    # 仅顶格右括号视为模块结束（函数体/impl 内缩进的 `}` 不退出）。
+                    if line == "}":
+                        in_test = False
+                    continue
+                if UNWRAP.search(line):
+                    violations.append(f"{path}:{lineno}: unwrap/expect/panic detected")
     return violations
 
 
