@@ -12,18 +12,23 @@ default = []
 license-lock = []
 
 [build-dependencies]
+serde_json = { workspace = true }
 tauri-build = { workspace = true }
 
 [dependencies]
 adapter = { path = "../../../crates/adapter" }
+app = { package = "opendesk-business", path = "../../../business" }
+agent = { path = "../../../crates/agent" }
 async-trait = { workspace = true }
 common = { path = "../../../crates/common" }
 base64 = "0.22"
+chrono = { workspace = true }
 diesel = { workspace = true }
 futures-util = { workspace = true }
 kernel = { path = "../../../crates/kernel" }
 md-5 = { workspace = true }
 opendesk-macros = { path = "../../../crates/opendesk-macros" }
+platform = { path = "../../../crates/platform" }
 ports = { path = "../../../crates/ports" }
 rand = { workspace = true }
 reqwest = { workspace = true }

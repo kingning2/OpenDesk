@@ -129,9 +129,8 @@ impl LicenseHostSecurity {
                     .into(),
             });
         }
-        let expected = self
-            .sign_attestation(nonce, valid, product, token_expired_at, local_machine_code)
-            .map_err(|detail| LicenseError::AttestationFailed { detail })?;
+        let expected =
+            self.sign_attestation(nonce, valid, product, token_expired_at, local_machine_code)?;
         if expected.eq_ignore_ascii_case(attestation_hex.trim()) {
             Ok(())
         } else {
@@ -148,10 +147,13 @@ impl LicenseHostSecurity {
         product: &str,
         token_expired_at: i64,
         local_machine_code: &str,
-    ) -> Result<String, String> {
+    ) -> Result<String, LicenseError> {
         let payload = format!("{nonce}|{valid}|{product}|{token_expired_at}|{local_machine_code}");
-        let mut mac = HmacSha256::new_from_slice(&self.attest_key)
-            .map_err(|error| format!("HMAC init failed: {error}"))?;
+        let mut mac = HmacSha256::new_from_slice(&self.attest_key).map_err(|error| {
+            LicenseError::AttestationFailed {
+                detail: format!("HMAC init failed: {error}"),
+            }
+        })?;
         mac.update(payload.as_bytes());
         Ok(hex_encode(mac.finalize().into_bytes()))
     }
@@ -171,18 +173,23 @@ fn hex_encode(bytes: impl AsRef<[u8]>) -> String {
         .collect()
 }
 
-fn decode_hex(input: &str) -> Result<Vec<u8>, String> {
+fn decode_hex(input: &str) -> Result<Vec<u8>, LicenseError> {
     if input.is_empty() {
         return Ok(Vec::new());
     }
     if !input.len().is_multiple_of(2) {
-        return Err("hex length must be even".into());
+        return Err(LicenseError::AttestationFailed {
+            detail: "hex length must be even".into(),
+        });
     }
     (0..input.len())
         .step_by(2)
         .map(|index| {
-            u8::from_str_radix(&input[index..index + 2], 16)
-                .map_err(|error| format!("invalid hex: {error}"))
+            u8::from_str_radix(&input[index..index + 2], 16).map_err(|error| {
+                LicenseError::AttestationFailed {
+                    detail: format!("invalid hex: {error}"),
+                }
+            })
         })
         .collect()
 }

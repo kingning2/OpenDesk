@@ -11,7 +11,7 @@ fn main() {
     let target = license_target_triple();
     println!("cargo:rustc-env=OPENDESK_LICENSE_TARGET_TRIPLE={target}");
 
-    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR"));
+    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap_or_default());
     let generated = manifest_dir.join("generated");
     println!(
         "cargo:rerun-if-changed={}",

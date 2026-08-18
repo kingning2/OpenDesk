@@ -1,7 +1,14 @@
+mod channel_platform_cfg {
+    include!("../../../tooling/build/channel_platform_cfg.rs");
+}
+
 use std::fs;
 use std::path::PathBuf;
 
 fn main() {
+    channel_platform_cfg::emit_channel_platform_cfg(
+        "../../../tooling/config/channel-platforms.json",
+    );
     ensure_external_bin_stub_for_dev("sidecar");
     ensure_external_bin_stub_for_dev("license-verifier");
     tauri_build::build();
@@ -25,7 +32,10 @@ fn ensure_external_bin_stub_for_dev(base_name: &str) {
         return;
     }
 
-    fs::create_dir_all(&binaries_dir).expect("create binaries directory");
+    if let Err(error) = fs::create_dir_all(&binaries_dir) {
+        println!("cargo:warning=create binaries dir failed: {error}");
+        return;
+    }
 
     #[cfg(unix)]
     write_unix_stub(&binary_path);
@@ -54,12 +64,16 @@ fn write_unix_stub(path: &PathBuf) {
     use std::os::unix::fs::PermissionsExt;
 
     const STUB: &[u8] = b"#!/bin/sh\nexit 0\n";
-    fs::write(path, STUB).expect("write externalBin stub");
-    let mut permissions = fs::metadata(path)
-        .expect("externalBin stub metadata")
-        .permissions();
-    permissions.set_mode(0o755);
-    fs::set_permissions(path, permissions).expect("chmod externalBin stub");
+    let write_result = fs::write(path, STUB).and_then(|_| {
+        fs::metadata(path).and_then(|metadata| {
+            let mut permissions = metadata.permissions();
+            permissions.set_mode(0o755);
+            fs::set_permissions(path, permissions)
+        })
+    });
+    if let Err(error) = write_result {
+        println!("cargo:warning=write externalBin stub failed: {error}");
+    }
 }
 
 #[cfg(windows)]
@@ -68,11 +82,12 @@ fn write_windows_stub(path: &PathBuf) {
         let donor = PathBuf::from(system_root)
             .join("System32")
             .join("where.exe");
-        if donor.is_file() {
-            fs::copy(donor, path).expect("copy externalBin stub");
+        if donor.is_file() && fs::copy(donor, path).is_ok() {
             return;
         }
     }
 
-    fs::write(path, [0]).expect("write externalBin stub");
+    if fs::write(path, [0]).is_err() {
+        println!("cargo:warning=write externalBin stub failed");
+    }
 }
