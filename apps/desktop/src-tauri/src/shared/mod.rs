@@ -15,6 +15,7 @@
 
 pub mod channel;
 pub mod compile;
+pub mod event_bridge;
 pub mod event_sink;
 pub mod ipc;
 pub mod lifecycle;
@@ -27,6 +28,7 @@ pub use app::ai_config;
 pub use app::auto_reply_handle as auto_reply;
 pub use app::logging;
 pub use app::timing;
+pub use event_bridge::BusToTauri;
 pub use event_sink::TauriEventSink;
 
 #[allow(unused_imports)]

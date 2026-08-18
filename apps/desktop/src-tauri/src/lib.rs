@@ -19,7 +19,9 @@ pub use shared::{agent, ai_config, logging, state, timing};
 
 use adapter::agent_sidecar::RuntimeAgentSidecar;
 use kernel::event::{EventBus, InMemoryEventBus};
-use runtime::sidecar::lifecycle::{SidecarConfig, SidecarLifecycle};
+use runtime::sidecar::lifecycle::{
+    SidecarConfig, SidecarLifecycle, RUNTIME_ERROR_TOPIC, SIDECAR_RESTARTED_TOPIC,
+};
 use shared::channel::coordinator::ChannelCoordinator;
 use shared::channel::dispatcher::ChannelDispatcher;
 use shared::channel::ChannelRepo;
@@ -268,6 +270,19 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
 
             let event_sink: Arc<dyn common::events::EventSink> =
                 Arc::new(shared::TauriEventSink::new(app.handle().clone()));
+            // 把进程内 EventBus 上的 runtime.* 事件转发到前端（错误 / 重启）。
+            {
+                let forwarder = shared::BusToTauri::new(app.handle().clone());
+                for topic in [RUNTIME_ERROR_TOPIC, SIDECAR_RESTARTED_TOPIC] {
+                    if let Err(error) = app
+                        .state::<AppState>()
+                        .event_bus
+                        .subscribe(topic, Box::new(forwarder.clone()))
+                    {
+                        tracing::error!(%error, %topic, "runtime 事件转发订阅失败");
+                    }
+                }
+            }
             let coordinator = Arc::new(ChannelCoordinator::new(
                 repo,
                 dispatcher.clone(),

@@ -30,7 +30,7 @@ pub struct AppState {
     pub gateway: Arc<RuntimeAgentSidecar>,
     /// License 闸门（无锁 stub 或 verifier / fail-closed）。
     pub license: Arc<dyn LicenseGate>,
-    #[allow(dead_code)]
+    /// 进程内事件总线（runtime.* 事件经 BusToTauri 转发到前端）。
     pub event_bus: Arc<InMemoryEventBus>,
 }
 

@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
-use common::contracts::RuntimeEventSidecarRestarted;
+use common::contracts::{RuntimeEventError, RuntimeEventSidecarRestarted};
 use kernel::event::EventBus;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{Child, Command};
@@ -15,6 +15,7 @@ use super::client::SidecarClient;
 use super::log_pipe;
 
 pub const SIDECAR_RESTARTED_TOPIC: &str = "runtime.sidecar.restarted";
+pub const RUNTIME_ERROR_TOPIC: &str = "runtime.error";
 
 #[derive(Debug, thiserror::Error)]
 pub enum SidecarLifecycleError {
@@ -128,10 +129,12 @@ impl SidecarLifecycle {
         };
 
         if attempt > self.config.max_restart_attempts {
-            return Err(SidecarLifecycleError::SpawnFailed(format!(
+            let err = SidecarLifecycleError::SpawnFailed(format!(
                 "超过最大重启次数（{}）",
                 self.config.max_restart_attempts
-            )));
+            ));
+            self.publish_error("network", "restart", err.to_string());
+            return Err(err);
         }
 
         self.stop().await?;
@@ -161,15 +164,28 @@ impl SidecarLifecycle {
         }
 
         if self.config.bundled_executable.is_none() && !self.config.sidecar_dir.exists() {
-            return Err(SidecarLifecycleError::SidecarDirNotFound(
+            let err = SidecarLifecycleError::SidecarDirNotFound(
                 self.config.sidecar_dir.display().to_string(),
-            ));
+            );
+            self.publish_error("network", "startup", err.to_string());
+            return Err(err);
         }
 
-        let mut command = build_spawn_command(&self.config)?;
-        let mut child = command
-            .spawn()
-            .map_err(|error| SidecarLifecycleError::SpawnFailed(error.to_string()))?;
+        let mut command = match build_spawn_command(&self.config) {
+            Ok(command) => command,
+            Err(err) => {
+                self.publish_error("network", "startup", err.to_string());
+                return Err(err);
+            }
+        };
+        let mut child = match command.spawn() {
+            Ok(child) => child,
+            Err(error) => {
+                let err = SidecarLifecycleError::SpawnFailed(error.to_string());
+                self.publish_error("network", "startup", err.to_string());
+                return Err(err);
+            }
+        };
 
         if let Some(stdout) = child.stdout.take() {
             tokio::spawn(pipe_logs(stdout, "stdout"));
@@ -244,19 +260,57 @@ impl SidecarLifecycle {
         }
     }
 
+    /// 发布运行时错误事件（前端订阅标记后端不可用）。
+    ///
+    /// 作者：Xiaoman
+    /// 创建时间：2026-08-18
+    ///
+    /// # 参数
+    /// - `kind` — 错误分类（`network` / `ipc` / `code`，Rust 侧恒为 `network`）
+    /// - `stage` — 发生阶段（`startup` / `health` / `restart`）
+    /// - `message` — 错误消息
+    fn publish_error(&self, kind: &str, stage: &str, message: String) {
+        let millis = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|duration| duration.as_millis())
+            .unwrap_or(0);
+        let payload = RuntimeEventError {
+            event_id: format!("evt-{millis}"),
+            occurred_at: millis.to_string(),
+            kind: kind.to_string(),
+            stage: Some(stage.to_string()),
+            message,
+            detail: None,
+        };
+
+        let Ok(bytes) = serde_json::to_vec(&payload) else {
+            warn!("运行时错误事件序列化失败");
+            return;
+        };
+
+        if let Err(error) = self.event_bus.publish(RUNTIME_ERROR_TOPIC, &bytes) {
+            warn!(%error, "运行时错误事件发布失败");
+        }
+    }
+
     async fn wait_until_healthy(&self) -> Result<(), SidecarLifecycleError> {
         let deadline = Instant::now() + self.config.startup_timeout;
         while Instant::now() < deadline {
-            if self.health_check().await? {
-                return Ok(());
+            match self.health_check().await {
+                Ok(true) => return Ok(()),
+                Ok(false) => {}
+                Err(err) => {
+                    self.publish_error("network", "health", err.to_string());
+                    return Err(err);
+                }
             }
             tokio::time::sleep(Duration::from_millis(200)).await;
         }
 
         let _ = self.stop().await;
-        Err(SidecarLifecycleError::StartupTimeout(
-            self.config.startup_timeout,
-        ))
+        let err = SidecarLifecycleError::StartupTimeout(self.config.startup_timeout);
+        self.publish_error("network", "startup", err.to_string());
+        Err(err)
     }
 }
 
@@ -433,6 +487,22 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use kernel::event::{EventError, EventHandler, InMemoryEventBus};
+    use std::sync::{Arc, Mutex};
+
+    type Records = Arc<Mutex<Vec<(String, Vec<u8>)>>>;
+
+    struct RecordingHandler(Records);
+
+    impl EventHandler for RecordingHandler {
+        fn handle(&self, topic: &str, payload: &[u8]) -> Result<(), EventError> {
+            self.0
+                .lock()
+                .map_err(|error| EventError::PublishFailed(error.to_string()))?
+                .push((topic.to_string(), payload.to_vec()));
+            Ok(())
+        }
+    }
 
     #[test]
     fn bundled_sidecar_filename_matches_target_triple() {
@@ -443,5 +513,37 @@ mod tests {
         } else {
             assert!(!filename.ends_with(".exe"));
         }
+    }
+
+    #[test]
+    fn publish_error_emits_runtime_error_event() {
+        let bus = Arc::new(InMemoryEventBus::new());
+        let config = SidecarConfig {
+            port: 0,
+            sidecar_dir: PathBuf::from("."),
+            use_uv: false,
+            python_executable: "python".to_string(),
+            startup_timeout: Duration::from_secs(1),
+            max_restart_attempts: 3,
+            bundled_executable: None,
+        };
+        let lifecycle = SidecarLifecycle::new(config, bus.clone() as Arc<dyn EventBus>);
+        let records: Records = Arc::new(Mutex::new(Vec::new()));
+        bus.subscribe(
+            RUNTIME_ERROR_TOPIC,
+            Box::new(RecordingHandler(records.clone())),
+        )
+        .expect("subscribe");
+
+        lifecycle.publish_error("network", "startup", "侧车启动失败".to_string());
+
+        let events = records.lock().expect("lock");
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].0, RUNTIME_ERROR_TOPIC);
+        let payload: RuntimeEventError = serde_json::from_slice(&events[0].1).expect("parse");
+        assert_eq!(payload.kind, "network");
+        assert_eq!(payload.stage.as_deref(), Some("startup"));
+        assert_eq!(payload.message, "侧车启动失败");
+        assert!(!payload.event_id.is_empty());
     }
 }
