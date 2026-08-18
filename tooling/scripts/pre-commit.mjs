@@ -91,7 +91,8 @@ function restage(files) {
   run("git", ["add", "--", ...files]);
 }
 
-const tsFiles = stagedFiles(/\.(ts|tsx)$/);
+const siteFile = (file) => file.replaceAll("\\", "/").startsWith("site/");
+const tsFiles = stagedFiles(/\.(ts|tsx)$/).filter((file) => !siteFile(file));
 const rsFiles = stagedFiles(/\.rs$/);
 const pyFiles = stagedFiles(/\.py$/);
 const allStaged = stagedFiles();

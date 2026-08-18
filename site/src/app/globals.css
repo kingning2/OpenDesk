@@ -118,6 +118,82 @@ body {
   padding: 0.1em 0.4em;
 }
 
+/* ---------- 功能全景 ---------- */
+.post-inner-wide {
+  max-width: 1060px;
+}
+.post-sub {
+  margin: 0 0 40px;
+  color: var(--ink-soft);
+  font-size: 1.05rem;
+  max-width: 60ch;
+}
+.feature-groups {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+.feature-group {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 24px;
+}
+.feature-group-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.feature-seal {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--sw-accent);
+  color: #fff;
+  font-family: var(--sw-font-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+  flex: none;
+}
+.feature-group-title {
+  margin: 0;
+  font-family: var(--sw-font-display);
+  font-weight: 700;
+  font-size: 1.14rem;
+  color: var(--ink);
+}
+.feature-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.feature-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.feature-list strong {
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+.feature-list span {
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+@media (max-width: 900px) {
+  .feature-groups { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 620px) {
+  .feature-groups { grid-template-columns: 1fr; }
+}
+
 /* ---------- 页脚 ---------- */
 .site-footer {
   position: relative;

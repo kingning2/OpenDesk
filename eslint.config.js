@@ -14,6 +14,7 @@ export default tseslint.config(
       "**/pnpm-lock.yaml",
       "tooling/strawberry-perl/**",
       "plugins/**", // 第三方参照项目（xianyu-auto-reply），非本仓库代码，不参与 lint
+      "site/**", // 独立 Next.js 应用（自带 next build 类型检查与 lint），不参与根 lint
     ],
   },
   js.configs.recommended,

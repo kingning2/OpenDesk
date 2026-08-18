@@ -50,9 +50,9 @@ export const SECTIONS: SwSection[] = [
     scroll: 1.4,
     linger: 0.4,
     eyebrow: '多渠道',
-    title: '所有店铺，一个入口',
-    body: '闲鱼、WhatsApp 多账号集中管理，客服入口不再散落各处。',
-    tags: ['闲鱼', 'WhatsApp', '多账号'],
+    title: '多账号，一个入口',
+    body: '闲鱼、WhatsApp 多账号集中管理；商品与素材跨平台复用，消息实时监听，客服入口不再散落。',
+    tags: ['多账号管理', '多平台商品互通', '实时监听'],
   },
   {
     id: 'ai',
@@ -63,8 +63,8 @@ export const SECTIONS: SwSection[] = [
     linger: 0.4,
     eyebrow: 'AI 智能回复',
     title: 'AI 先替你开口',
-    body: '理解聊天上下文，给出自然回复建议；命中规则自动回复，拍板权始终在你。',
-    tags: ['回复建议', '自动回复', '知识库'],
+    body: 'AI 智能分析对话上下文与买家意图，给出贴合语境的回复建议；命中规则自动回复，拍板权始终在你。',
+    tags: ['AI 智能分析', '回复建议', '自动回复'],
   },
   {
     id: 'orders',

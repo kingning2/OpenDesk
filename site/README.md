@@ -34,6 +34,7 @@ site/
 │   ├── components/
 │   │   ├── ScrollWorld.tsx     # scroll-world 引擎封装（客户端）
 │   │   ├── JsonLd.tsx          # JSON-LD 结构化数据（FAQ 与正文一致）
+│   │   ├── Features.tsx        # 功能全景（6 类 24 项，SSR 可抓取）
 │   │   ├── Faq.tsx / Footer.tsx
 │   └── lib/
 │       ├── scroll-world.js     # scroll-world 引擎（原样移植，MIT）
