@@ -1,15 +1,15 @@
 # 叮答（DingDa）
 
-> 本地优先的 AI 智能客服桌面应用，面向闲鱼、WhatsApp 等渠道的电商卖家。AI 提供客服场景的回复建议与自动回复，核心能力由 Rust 唯一协调者编排，AI 推理由本地 Python 侧车承担；数据全程存储在本地，开源免费。
+> 本地优先的 AI 智能客服桌面应用，面向闲鱼、WhatsApp 等渠道的电商卖家。AI 提供客服场景的回复建议与自动回复，核心能力由 Rust 唯一协调者编排并默认实现；仅当 Rust 生态不够时才使用本机 Python Sidecar。数据全程存储在本地，开源免费。
 
 ## About
 
-叮答（DingDa）是一个本地优先（local-first）的 AI Agent 智能客服桌面应用，技术栈为 Tauri + React + Rust + Python。它面向电商卖家，把 AI 客服回复、多渠道账号管理、订单与发货管理整合在一个本地桌面应用里。官网：https://kingning2.github.io/dingda/
+叮答（DingDa）是一个本地优先（local-first）的 AI Agent 智能客服桌面应用，技术栈为 Tauri + React + Rust；Python 仅在 Rust 生态不够时作为本机 Sidecar。它面向电商卖家，把 AI 客服回复、多渠道账号管理、订单与发货管理整合在一个本地桌面应用里。官网：https://kingning2.github.io/dingda/
 
 核心定位：
 - **本地优先**：聊天记录、账号凭据、订单数据全部只保存在用户本机（SQLite），不经过第三方云端。
 - **AI 只读**：AI 只能通过只读 Query Port 查询数据，不能写库、不能自动发信；写库与发送始终由用户手动操作。
-- **契约驱动**：React、Rust、Python 三端共享同一份 `contracts/` 定义作为唯一真相源，任何跨端变更先改契约再同步生成各端类型。
+- **契约驱动**：跨端共享同一份 `contracts/` 定义作为唯一真相源，任何跨端变更先改契约再同步生成各端类型。
 
 ## Features
 
@@ -25,13 +25,16 @@
 ## Architecture
 
 ```
-React（展示层）  →  Tauri IPC  →  Rust（唯一协调者）  →  Python（AI Runtime / Sidecar）
+React（展示层）  →  Tauri IPC  →  Rust（唯一协调者，默认实现含 AI）
+                                    ↓ 仅当 Rust 生态不够
+                                 Python Sidecar（例外，不是 AI Runtime）
 ```
 
 - React 不知道 Python，Python 不知道 React，两端只通过 Rust 与 `contracts/` 交互。
-- `contracts/` 是三端共享契约目录，是跨端接口的唯一真相源。
+- `contracts/` 是跨端共享契约目录，是跨端接口的唯一真相源。
 - 功能模块（feature）完全独立，跨 Feature 只允许通过 Query Port、Event 与 Contract 通信。
 - 数据存储由 Rust 负责，AI 只读查询，不直接接触数据库。
+- Python 不是默认 AI 层；只在 Rust 生态缺少可用实现时编写。
 
 当前状态：处于架构骨架与基础切片阶段（UI Shell、Rust Agent 组装、Python Sidecar Ping 已就绪），尚未正式发布。
 
@@ -47,7 +50,7 @@ React（展示层）  →  Tauri IPC  →  Rust（唯一协调者）  →  Pytho
 数据保存在本机 SQLite 数据库中，由 Rust 层负责读写。AI 只能通过只读 Query Port 查询数据，不能直接写库或自动发送消息，写库与发送始终由用户手动操作。
 
 **需要联网吗？AI 在哪里运行？**
-基础能力可离线使用。AI 推理由本地 Python Sidecar 承担，OCR 使用本地 Tesseract 模型（按需下载），不强制依赖云端服务。
+基础能力可离线使用。AI 默认由本地 Rust 编排与调用；仅当 Rust 生态缺少可用实现时，才通过本机 Python Sidecar 承担该能力。OCR 使用本地 Tesseract 模型（按需下载），不强制依赖云端服务。
 
 **支持哪些操作系统？**
 基于 Tauri 构建，目标平台为 Windows、macOS 与 Linux。

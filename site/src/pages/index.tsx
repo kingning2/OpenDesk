@@ -82,7 +82,7 @@ const FEATURE_GROUPS: {
 const FAQS: { q: string; a: string }[] = [
   {
     q: "叮答是什么？",
-    a: "叮答（DingDa）是一个本地优先的 AI 智能客服桌面应用，面向闲鱼、WhatsApp 等渠道的电商卖家。它把 AI 客服回复建议、多渠道账号管理、订单与发货管理整合在一个桌面上。核心逻辑由 Rust 编排，AI 推理由本地 Python 侧车承担。",
+    a: "叮答（DingDa）是一个本地优先的 AI 智能客服桌面应用，面向闲鱼、WhatsApp 等渠道的电商卖家。它把 AI 客服回复建议、多渠道账号管理、订单与发货管理整合在一个桌面上。核心逻辑由 Rust 编排并默认实现 AI；仅当 Rust 生态不够时才使用 Python 侧车。",
   },
   {
     q: "叮答支持哪些电商渠道？",
@@ -94,7 +94,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "叮答需要联网吗？AI 在哪里运行？",
-    a: "基础能力可离线使用。AI 推理由本地 Python Sidecar 承担，OCR 使用本地 Tesseract 模型（按需下载），不强制依赖云端服务。",
+    a: "基础能力可离线使用。AI 默认由本地 Rust 编排与调用；仅当 Rust 生态缺少可用实现时，才通过本机 Python Sidecar 承担该能力。OCR 使用本地 Tesseract 模型（按需下载），不强制依赖云端服务。",
   },
   {
     q: "叮答支持哪些操作系统？",
@@ -106,7 +106,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "什么是「契约驱动」？",
-    a: "React、Rust、Python 三端共享同一份 contracts 目录作为唯一真相源。任何跨端变更都先修改契约、再同步生成各端类型，从而保证三端接口严格一致。",
+    a: "跨端共享同一份 contracts 目录作为唯一真相源。任何跨端变更都先修改契约、再同步生成各端类型。Python 只在 Rust 生态不够、必须走 sidecar 时才参与实现。",
   },
   {
     q: "叮答是开源的吗？",
@@ -145,7 +145,7 @@ const jsonLd = {
       softwareVersion: "0.1.0",
       inLanguage: "zh-CN",
       description:
-        "本地优先的 AI 智能客服桌面应用。AI 提供客服场景的回复建议与自动回复，核心能力由 Rust 编排，AI 推理由本地 Python 侧车承担，支持闲鱼、WhatsApp 等多渠道账号与订单发货管理。",
+        "本地优先的 AI 智能客服桌面应用。AI 提供客服场景的回复建议与自动回复，核心能力由 Rust 编排并默认实现；仅 Rust 生态不够时才使用 Python 侧车。支持闲鱼、WhatsApp 等多渠道账号与订单发货管理。",
       url: `${SITE}/`,
       codeRepository: "https://github.com/kingning2/dingda",
       offers: { "@type": "Offer", price: "0", priceCurrency: "CNY", description: "开源免费" },
@@ -358,7 +358,7 @@ const Home: NextPage = () => {
             </nav>
           </div>
           <div className="footer-bottom">
-            <p>© 2026 叮答 DingDa · 本地优先 · 开源 · 由 React + Rust + Python 构建</p>
+            <p>© 2026 叮答 DingDa · 本地优先 · 开源 · 由 React + Rust 构建（Python 仅补生态缺口）</p>
           </div>
         </div>
       </footer>
