@@ -6,7 +6,7 @@
 |---|---|---|---|
 | Runtime / Worker | `crates/runtime/**` | [runtime](../domains/runtime/README.md) | planned |
 | Storage | `crates/storage/**` | [storage](../domains/storage/README.md) | planned |
-| OCR | —（规划中） | [ocr](../domains/ocr/README.md) | planned |
+| OCR | `business/src/config/` · `apps/desktop/src/features/plugin/` | [ocr](../domains/ocr/README.md) | 语言包下载已落地；识别未实现 |
 | Pricing | —（规划中） | [pricing](../domains/pricing/README.md) | planned |
 | Channel | —（规划中） | [channel](../domains/channel/README.md) | planned |
 | Python Sidecar（例外） | `python/**` | [python-runtime](../domains/python-runtime/README.md) | active |

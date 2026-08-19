@@ -18,6 +18,7 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "noUnusedLocals": true,
+    "ignoreDeprecations": "6.0",
     "incremental": true
   },
   "include": [

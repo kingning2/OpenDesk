@@ -27,5 +27,5 @@ Domain 文档描述某个领域的当前事实，不记录逐次开发过程。
 | Python Sidecar（例外） | [python-runtime/README.md](python-runtime/README.md) | 骨架；非 AI Runtime |
 | Runtime/Worker | [runtime/README.md](runtime/README.md) | planned |
 | Storage | [storage/README.md](storage/README.md) | planned |
-| OCR | [ocr/README.md](ocr/README.md) | planned |
+| OCR | [ocr/README.md](ocr/README.md) | 语言包下载已落地；识别未实现 |
 | Contracts | [contracts/README.md](contracts/README.md) | — |

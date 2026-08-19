@@ -63,19 +63,17 @@ flowchart TB
     DB --> OCR
 ```
 
-**tessdata 路径：** `{data_local}/DingDa/tessdata/*.traineddata`
+**tessdata 路径：** `{app_local_data}/plugins/ocr/tessdata/*.traineddata`
 
 ## 入口
 
-| 类型 | 路径（规划） |
-|------|--------------|
-| Rust Feature | `crates/ocr/` |
-| OCR 引擎 | `crates/ocr-engine/`（规划） |
-| Worker | 规划（`dingda-worker` 已移除，重新引入时实现） |
-| Contract | `contracts/schema/v1/ocr/` |
-| React | `apps/desktop/src/features/ocr/` |
+| 类型 | 路径 |
+|------|------|
+| 语言包下载 | `business/src/config/` · Tauri `plugin_*` IPC · 设置弹窗「插件」 |
+| Contract | `contracts/schema/v1/plugin/`（下载）；识别契约仍规划 `ocr/` |
+| React | `apps/desktop/src/features/plugin/` |
+| OCR 引擎 / Worker | 规划（识别未实现） |
 | ADR | [ADR-0002 Worker](../../decisions/runtime/adr-0002-heavy-work-worker-process.md) · [ADR-0003 Tesseract 本地下载](../../decisions/ocr/adr-0003-tesseract-local-model-on-demand-download.md) |
-| Change | [CHG-025 语言包下载](../../changes/2026/07/chg-20260720-025-ocr-tesseract-model-download.md) · [CHG-024 识别管线](../../changes/2026/07/chg-20260720-024-ocr-worker-pipeline.md) · [CHG-028 商务场景](../../changes/2026/07/chg-20260720-028-ocr-business-scenarios.md) |
 
 ## 数据模型（摘要）
 
@@ -97,7 +95,7 @@ flowchart TB
 
 ## 当前状态
 
-**未实现。** OCR 引擎与语言包下载均未做；设计依赖的 `dingda-worker` / `dingda.db` 已移除，重新引入时按新 Change 设计。
+语言包下载已在设置弹窗「插件」页落地：用户点击下载 `eng` + `chi_sim` tessdata 到 `{app_local_data}/plugins/ocr/tessdata/`。卸载删除该插件目录。OCR 识别管线与 Worker 仍未实现。
 
 ## 当前约束
 
