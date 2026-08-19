@@ -67,6 +67,32 @@ def write_text(path: Path, content: str, *, dry_run: bool = False) -> None:
     logging.info("wrote %s", path)
 
 
+def write_text_if_changed(path: Path, content: str, *, dry_run: bool = False) -> bool:
+    """Write file only when content differs. Returns True if written."""
+    if dry_run:
+        if path.exists() and read_text(path) == content:
+            logging.debug("[dry-run] unchanged %s", path)
+            return False
+        logging.info("[dry-run] would write %s", path)
+        return True
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists() and read_text(path) == content:
+        return False
+    path.write_text(content, encoding="utf-8", newline="\n")
+    return True
+
+
+def delete_if_exists(path: Path, *, dry_run: bool = False) -> bool:
+    """Delete file when present. Returns True if deleted."""
+    if not path.exists():
+        return False
+    if dry_run:
+        logging.info("[dry-run] would delete %s", path)
+        return True
+    path.unlink()
+    return True
+
+
 def ensure_workspace_member(crate_name: str, *, dry_run: bool = False) -> None:
     content = read_text(CARGO_TOML)
     entry = f'  "crates/{crate_name}",'

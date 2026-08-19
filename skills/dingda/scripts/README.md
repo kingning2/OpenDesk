@@ -15,7 +15,7 @@ DingDa 脚手架与架构检查脚本。均需从仓库根目录运行。
 | `create_usecase.py` | UseCase 模块 |
 | `create_python_package.py` | Python 包 + uv workspace 注册（须先论证 Rust 生态不够） |
 | `create_rust_python_ipc.py` | Rust ↔ Python sidecar IPC 骨架（仅 ADR-0009 例外） |
-| `sync_contracts.py` | 契约 codegen 占位同步 |
+| `sync_contracts.py` | 契约 codegen（增量：新增 / 更新 / 删除，未变不动） |
 
 ## 检查
 

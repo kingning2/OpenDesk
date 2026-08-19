@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.18
+
+- 新增 `channel/sidecar/cookie_renew`：风控（验证码 / RGV587）时由 Playwright 临时续期 Cookie
+
+## 0.1.17
+
+- 新增 `plugin` 契约：插件条目 DTO、`list` / `install` / `uninstall` IPC、`progress` 事件（设置页 OCR tessdata 按需下载）
+
 ## 0.1.16
 
 - `channel/ipc/open_site.request` 新增必填布局字段 `x` / `y` / `width` / `height`：主窗口内嵌子 WebView 的逻辑像素 bounds

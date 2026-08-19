@@ -33,6 +33,8 @@ from .channel_ipc_state_request import ChannelIpcStateRequest
 from .channel_ipc_state_response import ChannelIpcStateResponse
 from .channel_message import ChannelMessage
 from .channel_settings import ChannelSettings
+from .channel_sidecar_cookie_renew_request import ChannelSidecarCookieRenewRequest
+from .channel_sidecar_cookie_renew_response import ChannelSidecarCookieRenewResponse
 from .channel_sidecar_qr_cancel_request import ChannelSidecarQrCancelRequest
 from .channel_sidecar_qr_cancel_response import ChannelSidecarQrCancelResponse
 from .channel_sidecar_qr_check_request import ChannelSidecarQrCheckRequest
@@ -45,6 +47,13 @@ from .llm_ipc_classify_request import LlmIpcClassifyRequest
 from .llm_ipc_classify_response import LlmIpcClassifyResponse
 from .llm_message import LlmMessage
 from .llm_provider import LlmProvider
+from .plugin_event_progress import PluginEventProgress
+from .plugin_ipc_install_request import PluginIpcInstallRequest
+from .plugin_ipc_install_response import PluginIpcInstallResponse
+from .plugin_ipc_list_response import PluginIpcListResponse
+from .plugin_ipc_uninstall_request import PluginIpcUninstallRequest
+from .plugin_ipc_uninstall_response import PluginIpcUninstallResponse
+from .plugin_item import PluginItem
 from .runtime_event_error import RuntimeEventError
 from .runtime_event_sidecar_restarted import RuntimeEventSidecarRestarted
 from .runtime_log_entry import RuntimeLogEntry
@@ -83,6 +92,8 @@ __all__ = [
     "ChannelIpcStateResponse",
     "ChannelMessage",
     "ChannelSettings",
+    "ChannelSidecarCookieRenewRequest",
+    "ChannelSidecarCookieRenewResponse",
     "ChannelSidecarQrCancelRequest",
     "ChannelSidecarQrCancelResponse",
     "ChannelSidecarQrCheckRequest",
@@ -95,6 +106,13 @@ __all__ = [
     "LlmIpcClassifyResponse",
     "LlmMessage",
     "LlmProvider",
+    "PluginEventProgress",
+    "PluginIpcInstallRequest",
+    "PluginIpcInstallResponse",
+    "PluginIpcListResponse",
+    "PluginIpcUninstallRequest",
+    "PluginIpcUninstallResponse",
+    "PluginItem",
     "RuntimeEventError",
     "RuntimeEventSidecarRestarted",
     "RuntimeLogEntry",
