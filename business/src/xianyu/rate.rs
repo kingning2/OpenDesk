@@ -43,13 +43,13 @@ impl RateGateway for MtopRateGateway {
         );
         let response = self.mtop.call(&request).await?;
         if response.success() {
-            tracing::info!(trade_id, feedback = %feedback, "评价成功");
+            info!(trade_id, feedback = %feedback, "评价成功");
             Ok(RateResult {
                 success: true,
                 message: "评价成功".to_string(),
             })
         } else {
-            tracing::warn!(trade_id, ret = %response.ret, "评价失败");
+            warn!(trade_id, ret = %response.ret, "评价失败");
             Ok(RateResult {
                 success: false,
                 message: response.ret,

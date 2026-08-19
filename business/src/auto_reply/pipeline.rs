@@ -138,7 +138,7 @@ impl AutoReplyPipeline {
         // 3. 去重。
         let dedup_key = DedupKey::new(input.chat_id, message);
         if self.dedup.is_processed(&dedup_key) {
-            tracing::info!(chat = %input.chat_id, "等待时间内已处理过，跳过重复回复");
+            info!(chat = %input.chat_id, "等待时间内已处理过，跳过重复回复");
             return self.notify_only(message, "duplicate_message".to_string());
         }
 
@@ -160,7 +160,7 @@ impl AutoReplyPipeline {
                 return self.notify_only(message, "empty_keyword_reply".to_string());
             }
             self.dedup.mark_processed(&dedup_key);
-            tracing::info!(
+            info!(
                 matched = %matched.matched_keyword,
                 item = ?input.item_id,
                 "关键词匹配成功"

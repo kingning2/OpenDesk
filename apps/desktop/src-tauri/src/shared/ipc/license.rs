@@ -5,7 +5,6 @@
 
 use common::license::{LicenseActivateRequest, LicenseStatus};
 use common::DingDaResult;
-use dingda_macros::timed;
 
 use crate::shared::ipc::IpcResponse;
 use crate::state::AppState;
@@ -21,7 +20,6 @@ use crate::state::AppState;
 /// # ???
 /// ?? [`LicenseStatus`]?
 #[tauri::command]
-#[timed]
 pub async fn license_status(
     state: tauri::State<'_, AppState>,
 ) -> DingDaResult<IpcResponse<LicenseStatus>> {
@@ -45,7 +43,6 @@ pub async fn license_status(
 /// # ???
 /// ???????
 #[tauri::command]
-#[timed]
 pub async fn license_machine_code(
     state: tauri::State<'_, AppState>,
 ) -> DingDaResult<IpcResponse<String>> {
@@ -70,7 +67,6 @@ pub async fn license_machine_code(
 /// # ???
 /// ???? [`LicenseStatus`]?
 #[tauri::command]
-#[timed]
 pub async fn license_activate(
     state: tauri::State<'_, AppState>,
     request: LicenseActivateRequest,

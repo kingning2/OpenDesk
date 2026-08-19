@@ -120,6 +120,9 @@ impl<'a> AccountService<'a> {
         if let Some(display_name) = &patch.display_name {
             account.display_name = display_name.clone();
         }
+        if let Some(avatar_url) = &patch.avatar_url {
+            account.avatar_url = avatar_url.clone();
+        }
         if let Some(remark) = &patch.remark {
             account.remark = remark.clone();
         }
@@ -283,6 +286,7 @@ mod tests {
             owner_id: owner,
             account_id: account_id.to_string(),
             display_name: "账号".to_string(),
+            avatar_url: String::new(),
             login_id: String::new(),
             login_password: String::new(),
             unb: String::new(),

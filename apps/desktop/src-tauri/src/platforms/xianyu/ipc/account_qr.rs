@@ -14,7 +14,6 @@ use common::contracts::{
     ChannelIpcQrCheckResponse, ChannelIpcQrStartResponse, ChannelSidecarQrCancelRequest,
     ChannelSidecarQrCheckRequest, ChannelSidecarQrStartRequest,
 };
-use dingda_macros::timed;
 use serde::Deserialize;
 use std::sync::Arc;
 use tauri::{AppHandle, Manager, State};
@@ -34,7 +33,6 @@ pub struct AccountQrStartRequest {
 
 /// 启动业务账号扫码登录。
 #[tauri::command]
-#[timed]
 pub async fn account_qr_start(
     state: State<'_, AppState>,
     request: AccountQrStartRequest,
@@ -70,7 +68,6 @@ pub async fn account_qr_start(
 
 /// 轮询扫码状态；登录成功后自动创建业务账号。
 #[tauri::command]
-#[timed]
 pub async fn account_qr_check(
     state: State<'_, AppState>,
     app: AppHandle,
@@ -124,11 +121,24 @@ pub async fn account_qr_check(
 
             // 扫码成功后即时连接（用户手动连接仍保留）
             let channel_account = super::account_connection::to_channel_account(1, &account);
-            tracing::info!(account = %account.account_id, "扫码成功，自动连接闲鱼");
+            info!(account = %account.account_id, "扫码成功，自动连接闲鱼");
             dispatcher
                 .connect(&channel_account)
                 .await
                 .map_err(common::DingDaError::wrap)?;
+            if let Err(error) = super::account_connection::sync_account_profile(
+                &handle.store,
+                1,
+                &account.account_id,
+            )
+            .await
+            {
+                warn!(
+                    account = %account.account_id,
+                    %error,
+                    "扫码后拉取闲鱼用户资料失败"
+                );
+            }
         }
     }
 
@@ -144,7 +154,6 @@ pub async fn account_qr_check(
 
 /// 取消业务账号扫码登录。
 #[tauri::command]
-#[timed]
 pub async fn account_qr_cancel(
     state: State<'_, AppState>,
     request: ChannelIpcQrCancelRequest,
@@ -192,6 +201,7 @@ fn account_from_cookies(cookies: &[ChannelCookie]) -> XianyuAccount {
             unb.clone()
         },
         display_name: String::new(),
+        avatar_url: String::new(),
         login_id: String::new(),
         login_password: String::new(),
         unb,

@@ -14,15 +14,15 @@ use crate::DingDaResult;
 use serde::{Deserialize, Serialize};
 
 /// 应用事件 topic 前缀。
-pub const TOPIC_MESSAGE: &str = "app.message";
+pub const TOPIC_MESSAGE: &str = "app/message";
 /// 账号变更 topic。
-pub const TOPIC_ACCOUNT: &str = "app.account";
+pub const TOPIC_ACCOUNT: &str = "app/account";
 /// 任务状态 topic。
-pub const TOPIC_TASK: &str = "app.task";
+pub const TOPIC_TASK: &str = "app/task";
 /// 渠道消息 topic（入站/出站消息 + 建议）。
-pub const TOPIC_CHANNEL_MESSAGE: &str = "channel.message";
+pub const TOPIC_CHANNEL_MESSAGE: &str = "channel/message";
 /// 渠道连接状态 topic。
-pub const TOPIC_CHANNEL_STATUS: &str = "channel.status";
+pub const TOPIC_CHANNEL_STATUS: &str = "channel/status";
 
 /// 应用级事件 — 涵盖消息、账号、后台任务状态。
 ///

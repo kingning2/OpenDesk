@@ -9,7 +9,6 @@ use crate::shared::ipc::IpcResponse;
 use crate::shared::state::AppState;
 use app::account::{AccountService, AccountStore, AccountUpdate, LoginMethod, XianyuAccount};
 use common::contracts::ChannelCookie;
-use dingda_macros::timed;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, State};
 
@@ -50,7 +49,6 @@ struct SidecarPasswordLoginResponse {
 
 /// 使用账号密码登录业务账号。
 #[tauri::command]
-#[timed]
 pub async fn account_password_login(
     state: State<'_, AppState>,
     app: AppHandle,
@@ -143,7 +141,7 @@ pub async fn account_password_login(
     }
 
     let channel_account = super::account_connection::to_channel_account(1, &account);
-    tracing::info!(account = %account.account_id, "账号密码登录成功，自动连接闲鱼");
+    info!(account = %account.account_id, "账号密码登录成功，自动连接闲鱼");
     dispatcher
         .connect(&channel_account)
         .await
@@ -179,6 +177,7 @@ fn account_from_cookies(cookies: &[ChannelCookie]) -> XianyuAccount {
             unb.clone()
         },
         display_name: String::new(),
+        avatar_url: String::new(),
         login_id: String::new(),
         login_password: String::new(),
         unb,

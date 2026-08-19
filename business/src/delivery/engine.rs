@@ -132,7 +132,7 @@ impl<'a> DeliveryEngine<'a> {
 
         // 2. 无启用规则 → 放行。
         if enabled.is_empty() {
-            tracing::info!(prefix = %log_prefix, order_no, "无已启用的禁止发货规则，放行");
+            info!(prefix = %log_prefix, order_no, "无已启用的禁止发货规则，放行");
             return EngineResult::allow();
         }
 
@@ -145,7 +145,7 @@ impl<'a> DeliveryEngine<'a> {
                     .iter()
                     .any(|excluded| excluded == item_id)
                 {
-                    tracing::info!(
+                    info!(
                         prefix = %log_prefix,
                         item_id,
                         rule_code = %config.rule_code,
@@ -157,7 +157,7 @@ impl<'a> DeliveryEngine<'a> {
 
             // 3.2 获取规则实例。
             let Some(rule) = DeliveryRuleRegistry::instance(&config.rule_code) else {
-                tracing::warn!(prefix = %log_prefix, rule_code = %config.rule_code, "未注册的规则编码，跳过");
+                warn!(prefix = %log_prefix, rule_code = %config.rule_code, "未注册的规则编码，跳过");
                 continue;
             };
 
@@ -178,7 +178,7 @@ impl<'a> DeliveryEngine<'a> {
             let result = match rule.check(&context) {
                 Ok(result) => result,
                 Err(error) => {
-                    tracing::error!(
+                    error!(
                         prefix = %log_prefix,
                         rule_code = %config.rule_code,
                         %error,
@@ -190,7 +190,7 @@ impl<'a> DeliveryEngine<'a> {
 
             // 3.4 命中 → 返回该规则的配置。
             if result.hit {
-                tracing::warn!(
+                warn!(
                     prefix = %log_prefix,
                     rule_code = %config.rule_code,
                     rule_name = %result.rule_name,
@@ -209,7 +209,7 @@ impl<'a> DeliveryEngine<'a> {
         }
 
         // 4. 全部通过 → 放行。
-        tracing::info!(prefix = %log_prefix, order_no, buyer_id, "所有规则检查通过，放行");
+        info!(prefix = %log_prefix, order_no, buyer_id, "所有规则检查通过，放行");
         EngineResult::allow()
     }
 }

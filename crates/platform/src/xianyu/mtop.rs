@@ -3,8 +3,10 @@
 //! 收敛 Python 版 32 处重复的 mtop 调用模式：
 //! 签名（md5 token&t&appKey&data）→ POST form → set-cookie 写回 → ret 校验 → TOKEN_EXPIRED 重试。
 //! 业务层（评价/订单/发货/关单等）只声明 [`MtopRequest`]，客户端统一处理协议细节。
+//!
+//! 作者：Xiaoman
+//! 创建时间：2026-08-19
 
-use reqwest::header::{HeaderMap, HeaderValue, REFERER, USER_AGENT};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -14,6 +16,7 @@ use common::constants::xianyu;
 use common::DingDaResult;
 
 use super::cookie::{parse_cookies, sign_token};
+use super::http::{build_client, collect_set_cookies};
 use super::sign::generate_sign;
 
 /// mtop 请求（业务层声明）。
@@ -66,26 +69,32 @@ impl MtopResponse {
 }
 
 /// mtop 客户端 — 持有可变 cookie 状态（set-cookie 写回 + 重试）。
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-08-19
 #[derive(Clone)]
 pub struct MtopClient {
-    http: reqwest::Client,
+    http: wreq::Client,
     /// 最新 cookie 字符串（set-cookie 写回后更新）。
     cookie: Arc<RwLock<String>>,
 }
 
 impl MtopClient {
+    /// 用账号 Cookie 构造 mtop 客户端。
+    ///
+    /// 作者：Xiaoman
+    /// 创建时间：2026-08-19
+    ///
+    /// # 参数
+    ///
+    /// * `cookie_str` - 登录导出的 Cookie 原文
+    ///
+    /// # 返回值
+    ///
+    /// 成功返回客户端；HTTP 客户端构建失败返回错误。
     pub fn new(cookie_str: &str) -> DingDaResult<Self> {
-        let mut headers = HeaderMap::new();
-        headers.insert(USER_AGENT, HeaderValue::from_static("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"));
-        headers.insert(REFERER, HeaderValue::from_static(xianyu::WEB_ORIGIN));
-
-        let http = reqwest::Client::builder()
-            .default_headers(headers)
-            .build()
-            .map_err(|error| format!("构建闲鱼 mtop 客户端失败: {error}"))?;
-
         Ok(Self {
-            http,
+            http: build_client()?,
             cookie: Arc::new(RwLock::new(cookie_str.to_string())),
         })
     }
@@ -105,7 +114,7 @@ impl MtopClient {
                 response.ret.contains("TOKEN_EXPIRED") || response.ret.contains("TOKEN_EXOIRED");
             if token_expired && retry < 2 {
                 retry += 1;
-                tracing::info!(
+                info!(
                     api = %request.api,
                     retry,
                     "mtop 令牌过期，已更新 Cookie，重试"
@@ -163,13 +172,7 @@ impl MtopClient {
             .map_err(|error| format!("mtop 请求失败 ({}): {error}", request.api))?;
 
         // 写回 set-cookie（token 过期时服务端下发新 token）。
-        let set_cookies: Vec<String> = response
-            .headers()
-            .get_all(reqwest::header::SET_COOKIE)
-            .iter()
-            .filter_map(|value| value.to_str().ok())
-            .map(|s| s.to_string())
-            .collect();
+        let set_cookies = collect_set_cookies(response.headers());
         if !set_cookies.is_empty() {
             self.merge_set_cookies(&cookie_str, &set_cookies).await;
         }
@@ -210,7 +213,7 @@ impl MtopClient {
             .collect();
         let joined = updated.join("; ");
         if joined != current {
-            tracing::info!(fields = merged.len(), "mtop 响应已更新 Cookie");
+            info!(fields = merged.len(), "mtop 响应已更新 Cookie");
             *self.cookie.write().await = joined;
         }
     }

@@ -14,6 +14,9 @@
 //!   在 `xianyu/` 同构子目录实现 [`protocol::ChannelProtocol`] 并注册进
 //!   [`dispatcher::ChannelDispatcher`] / [`registry::PlatformRegistry`]。
 
+#[macro_use]
+extern crate tracing;
+
 pub mod capabilities;
 pub mod compile;
 pub mod dispatcher;

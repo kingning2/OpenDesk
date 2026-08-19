@@ -43,14 +43,14 @@ impl DeliveryRule for BuyerHasOrderRule {
         ) {
             Ok(count) => count,
             Err(error) => {
-                tracing::error!(prefix = %prefix, %error, "买家已有订单规则：查询异常，放行");
+                error!(prefix = %prefix, %error, "买家已有订单规则：查询异常，放行");
                 return Ok(RuleCheckResult::pass(self.rule_code(), self.rule_name()));
             }
         };
 
         if order_count > 0 {
             let reason = format!("买家已有{order_count}笔其他订单，禁止发货");
-            tracing::info!(
+            info!(
                 prefix = %prefix,
                 buyer_id = %context.buyer_id,
                 order_count,
@@ -64,7 +64,7 @@ impl DeliveryRule for BuyerHasOrderRule {
             );
         }
 
-        tracing::info!(
+        info!(
             prefix = %prefix,
             buyer_id = %context.buyer_id,
             "买家已有订单规则通过"

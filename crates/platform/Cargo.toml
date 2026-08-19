@@ -13,7 +13,8 @@ common = { path = "../common" }
 futures-util = { workspace = true }
 md-5 = { workspace = true }
 rand = { workspace = true }
-reqwest = { workspace = true }
+wreq = { workspace = true }
+wreq-util = { workspace = true }
 rmpv = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

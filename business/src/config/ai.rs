@@ -1,7 +1,4 @@
-//! AI 配置存储 — 本地 JSON 文件读写。
-//!
-//! 存储由 Rust 负责（架构约束）；前端经 IPC 读写，不直接触碰文件。
-//! API Key 骨架阶段以明文落盘，后续可在此处加加密。
+//! AI 配置 JSON 文件读写。
 //!
 //! 作者：Xiaoman
 //! 创建时间：2026-08-11
@@ -30,9 +27,11 @@ impl AiConfigStore {
     /// 创建时间：2026-08-11
     ///
     /// # 参数
-    /// - `config_dir` — 应用配置目录路径
+    ///
+    /// * `config_dir` — 应用配置目录路径
     ///
     /// # 返回值
+    ///
     /// 新建的存储实例。
     pub fn new(config_dir: PathBuf) -> Self {
         Self {
@@ -47,6 +46,7 @@ impl AiConfigStore {
     /// 创建时间：2026-08-11
     ///
     /// # 返回值
+    ///
     /// 配置内容，或错误描述。
     pub async fn get(&self) -> DingDaResult<AiIpcConfigResponse> {
         let _guard = self.lock.lock().await;
@@ -67,9 +67,11 @@ impl AiConfigStore {
     /// 创建时间：2026-08-11
     ///
     /// # 参数
-    /// - `config` — 待写入的完整配置
+    ///
+    /// * `config` — 待写入的完整配置
     ///
     /// # 返回值
+    ///
     /// 持久化后的配置，或错误描述。
     pub async fn set(&self, config: AiIpcConfigRequest) -> DingDaResult<AiIpcConfigResponse> {
         let _guard = self.lock.lock().await;

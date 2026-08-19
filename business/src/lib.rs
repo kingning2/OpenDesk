@@ -16,8 +16,8 @@
 //! | 模块 | 职责 |
 //! |---|---|
 //! | [`logging`] | 应用日志初始化（终端 + 内存环形缓冲） |
-//! | [`timing`] | 异步耗时日志（配合 `#[timed]` 宏） |
-//! | [`ai_config`] | AI 配置 JSON 文件读写 |
+//! | [`timing`] | 异步耗时日志（显式 `#[timed]` 时启用） |
+//! | [`config`] | 应用配置（AI JSON + 插件/OCR tessdata） |
 //! | [`auto_reply`] | 自动回复决策链（分类/过滤/去重/关键词/AI/默认） |
 //! | [`auto_reply_handle`] | 自动回复管线句柄 |
 //! | [`agent`] | PingAgent 业务逻辑 |
@@ -34,13 +34,16 @@
 //! 作者：Xiaoman
 //! 创建时间：2026-08-18
 
+#[macro_use]
+extern crate tracing;
+
 pub use common::DingDaResult;
 
 // --- 原 business 模块 ---
 pub mod agent;
-pub mod ai_config;
 pub mod auto_reply_handle;
 pub mod channel;
+pub mod config;
 pub mod event_sink;
 pub mod logging;
 pub mod state;

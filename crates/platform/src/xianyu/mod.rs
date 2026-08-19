@@ -9,10 +9,15 @@ pub mod api;
 pub mod codec;
 pub mod cookie;
 pub mod cookies;
+pub mod http;
 pub mod message;
 pub mod mtop;
+pub mod profile;
+pub mod risk;
 pub mod sign;
 pub mod ws;
 
 pub use mtop::{MtopClient, MtopRequest, MtopResponse};
+pub use profile::{fetch_user_profile, UserProfile};
+pub use risk::{extract_punish_url, is_risk_control_text};
 pub use ws::XianyuChannel;

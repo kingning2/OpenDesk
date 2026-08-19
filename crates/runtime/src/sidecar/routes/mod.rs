@@ -1,4 +1,5 @@
 pub mod agent_ping;
+pub mod channel_cookie_renew;
 pub mod channel_qr_cancel;
 pub mod channel_qr_check;
 pub mod channel_qr_start;

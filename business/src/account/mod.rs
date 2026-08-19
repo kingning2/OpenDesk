@@ -122,6 +122,9 @@ pub struct XianyuAccount {
     /// 账号标识（全局唯一）。
     pub account_id: String,
     pub display_name: String,
+    /// 头像 URL（连接后从闲鱼接口同步）。
+    #[serde(default)]
+    pub avatar_url: String,
     /// 登录账号（手机号 / 用户名 / 邮箱）。
     pub login_id: String,
     /// 登录密码（当前按明文持久化；后续可替换为加密存储）。
@@ -171,6 +174,8 @@ impl XianyuAccount {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct AccountUpdate {
     pub display_name: Option<String>,
+    /// 头像 URL。
+    pub avatar_url: Option<String>,
     pub remark: Option<String>,
     pub status: Option<AccountStatus>,
     pub login_id: Option<String>,
@@ -198,6 +203,7 @@ mod tests {
             owner_id: 1,
             account_id: "acc-1".to_string(),
             display_name: "账号".to_string(),
+            avatar_url: String::new(),
             login_id: String::new(),
             login_password: String::new(),
             unb: unb.to_string(),

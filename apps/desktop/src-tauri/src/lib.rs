@@ -9,13 +9,16 @@
 //! 作者：Xiaoman
 //! 创建时间：2026-07-16
 
+#[macro_use]
+extern crate tracing;
+
 mod shared;
 
 #[cfg(platform_xianyu)]
 mod platforms;
 
 // `#[timed]` 展开为 `crate::timing`；命令层历史路径 `crate::agent` / `crate::state` 等亦走此 re-export。
-pub use shared::{agent, ai_config, logging, state, timing};
+pub use shared::{agent, config, logging, state, timing};
 
 use adapter::agent_sidecar::RuntimeAgentSidecar;
 use kernel::event::{EventBus, InMemoryEventBus};
@@ -29,7 +32,7 @@ use shared::ipc::{
     agent_ping, ai_config_get, ai_config_set, ai_test_api_key, channel_connect, channel_disconnect,
     channel_qr_cancel, channel_qr_check, channel_qr_start, channel_send, channel_state_get,
     channel_state_set, license_activate, license_machine_code, license_status, log_clear,
-    log_recent, log_write, platform_descriptors,
+    log_recent, log_write, platform_descriptors, plugin_install, plugin_list, plugin_uninstall,
 };
 use shared::lifecycle::{on_exit, on_setup};
 use shared::{build_license_gate, init_tracing, platform_initialization_script, AppState};
@@ -71,6 +74,9 @@ macro_rules! base_invoke_handler {
                 ai_config_get,
                 ai_config_set,
                 ai_test_api_key,
+                plugin_list,
+                plugin_install,
+                plugin_uninstall,
                 address_list,
                 address_create,
                 address_update,
@@ -178,6 +184,9 @@ macro_rules! base_invoke_handler {
                 ai_config_get,
                 ai_config_set,
                 ai_test_api_key,
+                plugin_list,
+                plugin_install,
+                plugin_uninstall,
                 channel_state_get,
                 channel_state_set,
                 channel_connect,
@@ -233,19 +242,29 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             let config_dir = match app.path().app_config_dir() {
                 Ok(dir) => dir,
                 Err(error) => {
-                    tracing::error!(%error, "解析应用配置目录失败；AI 配置已禁用");
+                    error!(%error, "解析应用配置目录失败；AI 配置已禁用");
                     PathBuf::from(".")
                 }
             };
-            app.manage(Arc::new(shared::ai_config::AiConfigStore::new(
+            let data_dir = match app.path().app_local_data_dir() {
+                Ok(dir) => dir,
+                Err(error) => {
+                    error!(%error, "解析本地数据目录失败；插件将写入配置目录");
+                    config_dir.clone()
+                }
+            };
+            app.manage(Arc::new(shared::config::ConfigStore::new(
                 config_dir.clone(),
+                data_dir,
             )));
+            let plugin_tracker = Arc::new(shared::plugin_download::PluginDownloadTracker::new());
+            app.manage(plugin_tracker);
 
             #[cfg(platform_xianyu)]
             if let Err(error) =
                 platforms::xianyu::bootstrap::register_business(app.handle(), &config_dir)
             {
-                tracing::error!(%error, "打开业务数据库失败；闲鱼业务已禁用");
+                error!(%error, "打开业务数据库失败；闲鱼业务已禁用");
                 return Ok(());
             }
 
@@ -257,7 +276,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             ) {
                 Ok(repo) => Arc::new(repo),
                 Err(error) => {
-                    tracing::error!(%error, "打开渠道数据库失败；渠道已禁用");
+                    error!(%error, "打开渠道数据库失败；渠道已禁用");
                     return Ok(());
                 }
             };
@@ -279,7 +298,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
                         .event_bus
                         .subscribe(topic, Box::new(forwarder.clone()))
                     {
-                        tracing::error!(%error, %topic, "runtime 事件转发订阅失败");
+                        error!(%error, %topic, "runtime 事件转发订阅失败");
                     }
                 }
             }
@@ -297,7 +316,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             let lifecycle = app.state::<AppState>().lifecycle.clone();
             tauri::async_runtime::spawn(async move {
                 if let Err(error) = lifecycle.ensure_running().await {
-                    tracing::error!(%error, "侧车启动失败");
+                    error!(%error, "侧车启动失败");
                 }
             });
             on_setup();
@@ -311,7 +330,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
                 let lifecycle = app_handle.state::<AppState>().lifecycle.clone();
                 tauri::async_runtime::block_on(async move {
                     if let Err(error) = lifecycle.stop().await {
-                        tracing::error!(%error, "侧车关闭失败");
+                        error!(%error, "侧车关闭失败");
                     }
                 });
             }

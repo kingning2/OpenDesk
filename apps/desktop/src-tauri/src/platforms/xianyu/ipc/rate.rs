@@ -4,7 +4,6 @@ use crate::platforms::xianyu::adapter::MtopRateGateway;
 use crate::shared::ipc::IpcResponse;
 use app::rate::{FeedbackConfig, RateResult, RateService};
 use common;
-use dingda_macros::timed;
 use serde::Deserialize;
 
 /// 评价买家请求。
@@ -20,7 +19,6 @@ pub struct RateBuyerRequest {
 
 /// 评价买家。
 #[tauri::command]
-#[timed]
 pub async fn rate_buyer(
     request: RateBuyerRequest,
 ) -> common::DingDaResult<IpcResponse<RateResult>> {

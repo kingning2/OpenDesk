@@ -150,11 +150,11 @@ impl ReplyEngine {
             return ReplyOutcome::Disabled;
         }
         if settings.api_key.trim().is_empty() {
-            tracing::warn!("AI 已启用但 api_key 未配置，跳过 AI 回复");
+            warn!("AI 已启用但 api_key 未配置，跳过 AI 回复");
             return ReplyOutcome::Disabled;
         }
         if !settings.in_time_range() {
-            tracing::info!(
+            info!(
                 start = %settings.time_range_start,
                 end = %settings.time_range_end,
                 "当前时间不在 AI 启用时间段内，跳过 AI 回复"
@@ -164,11 +164,11 @@ impl ReplyEngine {
 
         // 2. 意图检测。
         let intent = intent::route_intent(context.user_message);
-        tracing::info!(?intent, "本地意图检测");
+        info!(?intent, "本地意图检测");
 
         // 3. 议价上限检查。
         if intent == Intent::Price && context.bargain_count >= settings.max_bargain_rounds {
-            tracing::info!(
+            info!(
                 bargain_count = context.bargain_count,
                 max = settings.max_bargain_rounds,
                 "议价次数已达上限"
@@ -209,7 +209,7 @@ impl ReplyEngine {
             Ok(provider) => provider,
             Err(error) => return ReplyOutcome::Failed(error.to_string()),
         };
-        tracing::info!(
+        info!(
             provider = provider.kind(),
             model = %settings.model_name,
             "调用 LLM 生成回复"
@@ -217,11 +217,11 @@ impl ReplyEngine {
 
         match Self::complete_with_retry_on_truncation(provider.as_ref(), &request).await {
             Ok(reply) => {
-                tracing::info!(reply = %truncate(&reply, 50), "AI 回复生成成功");
+                info!(reply = %truncate(&reply, 50), "AI 回复生成成功");
                 ReplyOutcome::Generated(reply)
             }
             Err(error) => {
-                tracing::error!(%error, "AI 回复生成失败");
+                error!(%error, "AI 回复生成失败");
                 ReplyOutcome::Failed(error.to_string())
             }
         }
@@ -242,7 +242,7 @@ impl ReplyEngine {
             return Ok(response.reply);
         }
 
-        tracing::warn!("LLM 输出被截断，放大 max_tokens 重试一次");
+        warn!("LLM 输出被截断，放大 max_tokens 重试一次");
         let mut retry = request.clone();
         retry.max_tokens = request.max_tokens.saturating_mul(2).max(1024);
         let retry_response = provider.complete(&retry).await?;

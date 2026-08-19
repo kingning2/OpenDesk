@@ -88,7 +88,7 @@ pub fn open_xianyu_site(
             // close 与重建竞态：标签仍在但 get_webview 曾短暂为空。
             if message.contains("already exists") {
                 if let Some(existing) = app.get_webview(XIANYU_WEBVIEW_LABEL) {
-                    tracing::info!("闲鱼内嵌视图已存在，改为同步布局");
+                    info!("闲鱼内嵌视图已存在，改为同步布局");
                     return apply_bounds(&existing, position, size);
                 }
             }
@@ -104,11 +104,11 @@ pub fn open_xianyu_site(
         match inject_cookie(&webview, cookie) {
             Ok(()) => injected += 1,
             Err(error) => {
-                tracing::warn!(%error, cookie = %cookie.name, "注入 cookie 失败");
+                warn!(%error, cookie = %cookie.name, "注入 cookie 失败");
             }
         }
     }
-    tracing::info!(
+    info!(
         account = %account.id,
         injected,
         total = cookies.len(),
@@ -137,7 +137,7 @@ pub fn close_xianyu_site(app: &tauri::AppHandle) -> DingDaResult<()> {
         webview
             .close()
             .map_err(|error| format!("关闭闲鱼内嵌视图失败: {error}"))?;
-        tracing::info!("已关闭闲鱼内嵌视图");
+        info!("已关闭闲鱼内嵌视图");
     }
     // 兼容：若旧独立窗仍在，一并销毁。
     if let Some(legacy) = app.get_webview_window(XIANYU_WEBVIEW_LABEL) {

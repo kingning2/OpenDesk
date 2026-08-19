@@ -3,6 +3,9 @@
 //! 仅暴露只读健康检查与账号列表，证明业务库可被 Web 层直接复用；
 //! 完整业务 API（订单/发货/评价等）后续按需补齐。
 
+#[macro_use]
+extern crate tracing;
+
 mod state;
 
 use axum::{extract::State, routing::get, Json, Router};
@@ -50,7 +53,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let state = AppState::new();
     let app = router(state);
     let listener = tokio::net::TcpListener::bind("127.0.0.1:8089").await?;
-    tracing::info!("dingda-server listening on http://127.0.0.1:8089");
+    info!("dingda-server listening on http://127.0.0.1:8089");
     axum::serve(listener, app).await?;
     Ok(())
 }

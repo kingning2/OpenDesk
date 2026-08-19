@@ -46,7 +46,7 @@ impl<'a> RateService<'a> {
     /// 解析评价内容：text 取固定文字；api 调用外部接口获取。
     pub fn resolve_feedback(&self, config: &FeedbackConfig) -> Option<String> {
         if !config.enabled {
-            tracing::info!("账号未启用自动评价");
+            info!("账号未启用自动评价");
             return None;
         }
         match config.rate_type.as_str() {
@@ -56,20 +56,20 @@ impl<'a> RateService<'a> {
                 } else {
                     config.text_content.clone()
                 };
-                tracing::info!(content = %content, "使用固定评价内容");
+                info!(content = %content, "使用固定评价内容");
                 Some(content)
             }
             "api" => {
                 if config.api_url.trim().is_empty() {
-                    tracing::warn!("未配置 API 地址，跳过 API 评价内容");
+                    warn!("未配置 API 地址，跳过 API 评价内容");
                     return None;
                 }
                 // API 内容获取由业务层（存储注入方）实现；此处默认回落固定文字。
-                tracing::info!(api_url = %config.api_url, "从 API 获取评价内容（由上层实现）");
+                info!(api_url = %config.api_url, "从 API 获取评价内容（由上层实现）");
                 Some("不错的买家".to_string())
             }
             other => {
-                tracing::warn!(rate_type = %other, "未知的评价类型");
+                warn!(rate_type = %other, "未知的评价类型");
                 None
             }
         }
@@ -81,7 +81,7 @@ impl<'a> RateService<'a> {
         if result.success {
             // 订单号与 trade_id 相同（闲鱼交易号即订单号）。
             if let Err(error) = self.gateway.update_rated(trade_id, true).await {
-                tracing::warn!(%error, trade_id, "评价成功但更新订单状态失败");
+                warn!(%error, trade_id, "评价成功但更新订单状态失败");
             }
         }
         Ok(result)

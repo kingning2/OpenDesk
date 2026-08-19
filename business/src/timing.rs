@@ -1,4 +1,4 @@
-//! 通用异步耗时日志（配合 `#[timed]` 属性宏）。
+//! 通用异步耗时日志（配合 `#[timed]` 属性宏，需显式标注）。
 //!
 //! 作者：Xiaoman
 //! 创建时间：2026-08-13
@@ -6,17 +6,13 @@
 use std::future::Future;
 use std::time::Instant;
 
-/// 高频调用名：正常且够快时只打 DEBUG。
-const QUIET_NAMES: &[&str] = &["agent_ping", "channel_qr_check", "license_status"];
-const QUIET_SLOW_MS: u128 = 500;
-
-/// 执行异步 Future 并记录耗时（由 `#[timed]` 展开调用）。
+/// 执行异步 Future 并记录耗时（由显式 `#[timed]` 展开调用）。
 ///
 /// 作者：Xiaoman
 /// 创建时间：2026-08-13
 ///
 /// # 参数
-/// - `name` — 调用名（日志字段；默认多为函数名）
+/// - `name` — 中文 command 名（日志字段 `command`）
 /// - `fut` — 返回 `Result` 的异步逻辑
 ///
 /// # 返回值
@@ -32,9 +28,7 @@ where
     result
 }
 
-/// 耗时计时器：完成时输出日志。
-///
-/// 一般通过 `#[timed]` 使用，无需手写。
+/// 耗时计时器：完成时输出日志（通过显式 `#[timed]` 使用）。
 ///
 /// 作者：Xiaoman
 /// 创建时间：2026-08-13
@@ -50,7 +44,7 @@ impl Timer {
     /// 创建时间：2026-08-13
     ///
     /// # 参数
-    /// - `name` — 调用名
+    /// - `name` — 中文调用名
     ///
     /// # 返回值
     /// 计时器；调用 [`finish`](Self::finish) 输出日志。
@@ -72,16 +66,11 @@ impl Timer {
         let duration_ms = self.started.elapsed().as_millis();
         match result {
             Ok(_) => {
-                let quiet = QUIET_NAMES.contains(&self.name) && duration_ms < QUIET_SLOW_MS;
-                if quiet {
-                    tracing::debug!(name = self.name, duration_ms, "调用完成");
-                } else {
-                    tracing::info!(name = self.name, duration_ms, "调用完成");
-                }
+                info!(command = self.name, duration_ms, "调用完成");
             }
             Err(error) => {
-                tracing::warn!(
-                    name = self.name,
+                warn!(
+                    command = self.name,
                     duration_ms,
                     error = %error,
                     "调用失败"

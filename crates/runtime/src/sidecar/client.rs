@@ -8,7 +8,6 @@ use std::time::Instant;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use tracing::{debug, info, warn};
 
 #[derive(Debug, Error)]
 pub enum SidecarClientError {
@@ -26,6 +25,20 @@ struct HealthResponse {
 /// 高频探测/轮询路径：正常且够快时只打 DEBUG。
 const QUIET_PATHS: &[&str] = &["/health", "/v1/agent/ping", "/v1/channel/qr_check"];
 const QUIET_SLOW_MS: u128 = 500;
+
+fn sidecar_path_label(path: &str) -> &'static str {
+    match path {
+        "/health" => "Sidecar 健康检查",
+        "/v1/agent/ping" => "Sidecar Agent 探活",
+        "/v1/channel/qr_start" => "Sidecar 发起扫码",
+        "/v1/channel/qr_check" => "Sidecar 检查扫码",
+        "/v1/channel/qr_cancel" => "Sidecar 取消扫码",
+        "/v1/channel/cookie_renew" => "Sidecar 浏览器续期 Cookie",
+        "/v1/llm/chat" => "Sidecar LLM 对话",
+        "/v1/llm/classify" => "Sidecar LLM 分类",
+        _ => "Sidecar 未命名调用",
+    }
+}
 
 /// HTTP client for the local Python sidecar. Port is assigned by runtime lifecycle.
 ///
@@ -213,22 +226,23 @@ fn log_http_result<T>(
     result: &Result<T, SidecarClientError>,
 ) {
     let duration_ms = started.elapsed().as_millis();
+    let command = sidecar_path_label(path);
     match result {
         Ok(_) => {
             let quiet = QUIET_PATHS.contains(&path) && duration_ms < QUIET_SLOW_MS;
             if quiet {
-                debug!(method, path, duration_ms, "sidecar HTTP 调用完成");
+                debug!(method, command, duration_ms, "Sidecar HTTP 调用完成");
             } else {
-                info!(method, path, duration_ms, "sidecar HTTP 调用完成");
+                info!(method, command, duration_ms, "Sidecar HTTP 调用完成");
             }
         }
         Err(error) => {
             warn!(
                 method,
-                path,
+                command,
                 duration_ms,
                 error = %error,
-                "sidecar HTTP 调用失败"
+                "Sidecar HTTP 调用失败"
             );
         }
     }

@@ -3,7 +3,6 @@
 use std::collections::HashMap;
 
 use serde::Deserialize;
-use tracing::{debug, error, info, warn};
 
 #[derive(Debug, Deserialize)]
 struct PythonLogLine {

@@ -30,7 +30,7 @@ impl DeliveryRule for BuyerHasOrderGlobalRule {
 
         // owner_id / buyer_id 缺失保护：跨账号查询，空值会误拦大量订单，必须放行。
         let (Some(owner_id), false) = (context.owner_id, context.buyer_id.is_empty()) else {
-            tracing::warn!(prefix = %prefix, "同用户已有订单规则：owner_id 或 buyer_id 缺失，放行");
+            warn!(prefix = %prefix, "同用户已有订单规则：owner_id 或 buyer_id 缺失，放行");
             return Ok(RuleCheckResult::pass(self.rule_code(), self.rule_name()));
         };
         let item_id = if same_item_only {
@@ -47,14 +47,14 @@ impl DeliveryRule for BuyerHasOrderGlobalRule {
         ) {
             Ok(count) => count,
             Err(error) => {
-                tracing::error!(prefix = %prefix, %error, "同用户已有订单规则：查询异常，放行");
+                error!(prefix = %prefix, %error, "同用户已有订单规则：查询异常，放行");
                 return Ok(RuleCheckResult::pass(self.rule_code(), self.rule_name()));
             }
         };
 
         if order_count > 0 {
             let reason = format!("买家在您名下其他账号已有{order_count}笔订单，禁止发货");
-            tracing::info!(
+            info!(
                 prefix = %prefix,
                 buyer_id = %context.buyer_id,
                 owner_id,
@@ -69,7 +69,7 @@ impl DeliveryRule for BuyerHasOrderGlobalRule {
             );
         }
 
-        tracing::info!(
+        info!(
             prefix = %prefix,
             buyer_id = %context.buyer_id,
             owner_id,

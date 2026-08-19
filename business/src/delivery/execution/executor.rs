@@ -116,7 +116,7 @@ impl<'a> DeliveryExecutor<'a> {
 
         // 4. 延时。
         if card.delay_seconds > 0 {
-            tracing::info!(card_id = card.id, delay = card.delay_seconds, "发货延时");
+            info!(card_id = card.id, delay = card.delay_seconds, "发货延时");
             tokio::time::sleep(std::time::Duration::from_secs(card.delay_seconds as u64)).await;
         }
 
@@ -140,13 +140,13 @@ impl<'a> DeliveryExecutor<'a> {
                         return DeliveryResult::already_delivered();
                     }
                     if !result.success {
-                        tracing::warn!(order_id, message = %result.message, "确认发货失败");
+                        warn!(order_id, message = %result.message, "确认发货失败");
                         return DeliveryResult::failure(format!(
                             "确认发货失败: {}",
                             result.message
                         ));
                     }
-                    tracing::info!(order_id, "确认发货成功");
+                    info!(order_id, "确认发货成功");
                     Some(result)
                 } else {
                     None
@@ -199,7 +199,7 @@ impl<'a> DeliveryExecutor<'a> {
                 .ok();
         }
 
-        tracing::info!(
+        info!(
             item_id = %request.item_id,
             card_id = card.id,
             card_type = %card.card_type,

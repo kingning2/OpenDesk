@@ -17,7 +17,6 @@ use crate::shared::channel::dispatcher::ChannelDispatcher;
 use crate::shared::channel::ChannelRepo;
 use crate::shared::ipc::IpcResponse;
 use common::DingDaResult;
-use dingda_macros::timed;
 
 /// QR 扫码会话的登录目标：绑定已有账号，或登录成功后自动创建。
 enum QrTarget {
@@ -72,7 +71,6 @@ pub async fn channel_state_set(
 /// 连接渠道账号。
 
 #[tauri::command]
-#[timed]
 pub async fn channel_connect(
     state: tauri::State<'_, crate::shared::state::AppState>,
     coordinator: State<'_, Arc<ChannelCoordinator>>,
@@ -115,7 +113,6 @@ pub async fn channel_connect(
 /// 断开渠道账号。
 
 #[tauri::command]
-#[timed]
 pub async fn channel_disconnect(
     state: tauri::State<'_, crate::shared::state::AppState>,
     dispatcher: State<'_, Arc<ChannelDispatcher>>,
@@ -136,7 +133,6 @@ pub async fn channel_disconnect(
 /// 人工发送消息。
 
 #[tauri::command]
-#[timed]
 pub async fn channel_send(
     state: tauri::State<'_, crate::shared::state::AppState>,
     coordinator: State<'_, Arc<ChannelCoordinator>>,
@@ -172,7 +168,6 @@ pub async fn channel_send(
 /// 无账号（account_id 为空或不存在）时标记为登录成功后自动创建。
 
 #[tauri::command]
-#[timed]
 pub async fn channel_qr_start(
     state: tauri::State<'_, crate::shared::state::AppState>,
     repo: State<'_, Arc<ChannelRepo>>,
@@ -235,7 +230,6 @@ pub async fn channel_qr_start(
 /// 轮询扫码状态；登录成功时更新账号凭据并连接。
 
 #[tauri::command]
-#[timed]
 pub async fn channel_qr_check(
     state: tauri::State<'_, crate::shared::state::AppState>,
     repo: State<'_, Arc<ChannelRepo>>,
@@ -305,7 +299,6 @@ pub async fn channel_qr_check(
 /// 取消扫码登录。
 
 #[tauri::command]
-#[timed]
 pub async fn channel_qr_cancel(
     state: tauri::State<'_, crate::shared::state::AppState>,
     request: ChannelIpcQrCancelRequest,

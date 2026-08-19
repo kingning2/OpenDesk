@@ -12,5 +12,5 @@
 ///
 /// * `message` — 已格式化的访问描述
 pub fn on_route_change(message: &str) {
-    tracing::info!(target: "dingda.lifecycle", "{message}");
+    info!(target: "dingda.lifecycle", "{message}");
 }

@@ -1,11 +1,14 @@
 //! 闲鱼 HTTP 接口 — Cookie 校验与 token 获取。
+//!
+//! 作者：Xiaoman
+//! 创建时间：2026-08-19
 
-use reqwest::header::{HeaderMap, HeaderValue, REFERER, USER_AGENT};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
 use super::cookie::{my_id, parse_cookies, sign_token};
+use super::http::{build_client, collect_set_cookies};
 use super::message::{device_id_from_cookie, now_ms};
 use super::sign::generate_sign;
 
@@ -16,27 +19,32 @@ const TOKEN_URL: &str = xianyu::LOGIN_TOKEN_URL;
 const HAS_LOGIN_URL: &str = xianyu::HAS_LOGIN_URL;
 
 /// 闲鱼 HTTP 客户端。
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-08-19
 #[derive(Clone)]
 pub struct XianyuApi {
-    http: reqwest::Client,
+    http: wreq::Client,
     /// 可变 cookie 状态（响应 set-cookie 写回后更新，供签名重试使用）。
     cookie: Arc<RwLock<String>>,
 }
 
 impl XianyuApi {
+    /// 用账号 Cookie 构造闲鱼 HTTP 客户端。
+    ///
+    /// 作者：Xiaoman
+    /// 创建时间：2026-08-19
+    ///
+    /// # 参数
+    ///
+    /// * `cookie_str` - 登录导出的 Cookie 原文
+    ///
+    /// # 返回值
+    ///
+    /// 成功返回客户端；HTTP 客户端构建失败返回错误。
     pub fn new(cookie_str: &str) -> DingDaResult<Self> {
-        let mut headers = HeaderMap::new();
-        headers.insert(USER_AGENT, HeaderValue::from_static("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"));
-        headers.insert(REFERER, HeaderValue::from_static(xianyu::WEB_ORIGIN));
-
-        let http = reqwest::Client::builder()
-            .default_headers(headers)
-            .cookie_store(true)
-            .build()
-            .map_err(|error| format!("构建闲鱼 HTTP 客户端失败: {error}"))?;
-
         Ok(Self {
-            http,
+            http: build_client()?,
             cookie: Arc::new(RwLock::new(cookie_str.to_string())),
         })
     }
@@ -114,7 +122,7 @@ impl XianyuApi {
 
         // 预热：cookie 缺 _m_h5_tk 时先请求一次，让服务端下发签名 token。
         if current_token.is_empty() {
-            tracing::info!("cookie 缺少 _m_h5_tk，先发起探针请求获取签名 token");
+            info!("cookie 缺少 _m_h5_tk，先发起探针请求获取签名 token");
             let _ = self.fetch_token_once().await;
             current_token = self.sign_token_value().await;
         }
@@ -135,7 +143,7 @@ impl XianyuApi {
                     if refreshed.is_empty() || refreshed == current_token {
                         break;
                     }
-                    tracing::info!(attempt = attempt + 1, "mtop token 已刷新，重新签名重试");
+                    info!(attempt = attempt + 1, "mtop token 已刷新，重新签名重试");
                     current_token = refreshed;
                 }
             }
@@ -197,13 +205,7 @@ impl XianyuApi {
             .map_err(|error| format!("token 请求失败: {error}"))?;
 
         // 写回 set-cookie（token 过期/风控后服务端可能下发新 _m_h5_tk）。
-        let set_cookies: Vec<String> = response
-            .headers()
-            .get_all(reqwest::header::SET_COOKIE)
-            .iter()
-            .filter_map(|value| value.to_str().ok())
-            .map(|s| s.to_string())
-            .collect();
+        let set_cookies = collect_set_cookies(response.headers());
         if !set_cookies.is_empty() {
             self.merge_set_cookies(&cookie_str, &set_cookies).await;
         }
@@ -253,7 +255,7 @@ impl XianyuApi {
             .collect();
         let joined = updated.join("; ");
         if joined != current {
-            tracing::info!(fields = merged.len(), "token 响应已更新 Cookie");
+            info!(fields = merged.len(), "token 响应已更新 Cookie");
             *self.cookie.write().await = joined;
         }
     }

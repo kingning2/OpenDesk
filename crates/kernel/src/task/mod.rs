@@ -7,7 +7,6 @@ use std::time::Duration;
 
 use thiserror::Error;
 use tokio::task::JoinHandle;
-use tracing::info;
 
 pub type TaskId = u64;
 

@@ -39,8 +39,8 @@ type WsStream = WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>;
 /// 判断是否为认证类错误：会话过期 / cookie 失效 / 未登录等，重试无意义，需重新登录。
 ///
 /// 注意：必须**精确匹配**真正的会话过期类错误码；风控类（`FAIL_SYS_USER_VALIDATE` /
-/// `RGV587` / punish / captcha）不是会话过期，由 [`is_risk_control`] 单独识别并走退避重试，
-/// 避免把风控误判为"认证失效"而错误停止自动重连。
+/// `RGV587` / punish / captcha）不是会话过期，由 [`super::risk::is_risk_control_text`]
+/// 单独识别：协调器会拉起浏览器续期，本循环仅作退避兜底。
 fn is_auth_error(error: &ChannelError) -> bool {
     let text = error.to_string();
     [
@@ -57,23 +57,8 @@ fn is_auth_error(error: &ChannelError) -> bool {
 }
 
 /// 判断是否为闲鱼风控拦截（验证码 / 签名异常 / 频率限制）。
-///
-/// 典型响应：`FAIL_SYS_USER_VALIDATE` + `RGV587_ERROR::SM::哎哟喂,被挤爆啦`，
-/// `data.url` 指向 `punish?...action=captcha&pureCaptcha=`。这不是会话过期，
-/// 冷却后重试可能恢复。
 fn is_risk_control(error: &ChannelError) -> bool {
-    let text = error.to_string();
-    [
-        "FAIL_SYS_USER_VALIDATE",
-        "RGV587",
-        "USER_VALIDATE",
-        "punish",
-        "captcha",
-        "被挤爆",
-        "FAIL_SYS_ILLEGAL_ACCESS",
-    ]
-    .iter()
-    .any(|keyword| text.contains(keyword))
+    super::risk::is_risk_control_text(&error.to_string())
 }
 
 /// 风控重试退避：30s → 60s → 120s → 240s → 封顶 300s。
@@ -187,12 +172,12 @@ impl XianyuChannel {
         let device_id = super::cookies::device_id(&cookies)
             .ok_or_else(|| ChannelError::Protocol("cookie 缺少 unb".into()))?;
 
-        tracing::info!(account = %account.id, unb = %unb, device = %device_id, "闲鱼开始连接：正在获取 mtop token");
+        info!(account = %account.id, unb = %unb, device = %device_id, "闲鱼开始连接：正在获取 mtop token");
         let token = api
             .fetch_token()
             .await
             .map_err(|error| ChannelError::Protocol(error.to_string()))?;
-        tracing::info!(account = %account.id, "mtop token 获取成功，正在建立 WebSocket");
+        info!(account = %account.id, "mtop token 获取成功，正在建立 WebSocket");
 
         let (mut sink, mut stream) = connect_async(WS_URL)
             .await
@@ -202,7 +187,7 @@ impl XianyuChannel {
 
         self.inner
             .set_state(ConnectionState::Connected, Some("连接成功".into()));
-        tracing::info!(account = %account.id, "WebSocket 已连接，正在注册设备监听");
+        info!(account = %account.id, "WebSocket 已连接，正在注册设备监听");
 
         let reg = message::register_frame(&device_id, &token);
         sink.send(Message::Text(reg.to_string()))
@@ -212,7 +197,7 @@ impl XianyuChannel {
         sink.send(Message::Text(ack.to_string()))
             .await
             .map_err(|error| ChannelError::Transport(error.to_string()))?;
-        tracing::info!(account = %account.id, "设备注册帧与同步确认已发送，开始监听消息");
+        info!(account = %account.id, "设备注册帧与同步确认已发送，开始监听消息");
 
         let mut last_heartbeat = Instant::now();
         let last_token_refresh = Instant::now();
@@ -225,11 +210,11 @@ impl XianyuChannel {
                         if sink.send(Message::Text(frame.to_string())).await.is_err() {
                             return Ok(());
                         }
-                        tracing::debug!(account = %account.id, "已发送心跳帧");
+                        debug!(account = %account.id, "已发送心跳帧");
                         last_heartbeat = Instant::now();
                     }
                     if last_token_refresh.elapsed() >= TOKEN_REFRESH_INTERVAL {
-                        tracing::info!(account = %account.id, "token 到期，触发重连刷新");
+                        info!(account = %account.id, "token 到期，触发重连刷新");
                         return Ok(()); // 触发重连以刷新 token
                     }
                 }
@@ -292,7 +277,7 @@ impl XianyuChannel {
             return;
         }
 
-        tracing::info!(account = %account_id, peer = %peer_id, item = %item_id, "闲鱼收到入站消息帧");
+        info!(account = %account_id, peer = %peer_id, item = %item_id, "闲鱼收到入站消息帧");
         let inbound = ChannelInboundMessage {
             account_id,
             peer_id,
@@ -337,6 +322,9 @@ impl ChannelProtocol for XianyuChannel {
             .write()
             .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(account.clone());
 
+        self.inner
+            .set_state(ConnectionState::Connecting, Some("正在连接".into()));
+
         self.stop_flag.store(false, Ordering::SeqCst);
         let (tx, mut rx) = mpsc::channel::<String>(64);
         *self.inner.writer.lock().await = Some(tx);
@@ -364,29 +352,29 @@ impl ChannelProtocol for XianyuChannel {
                     consecutive_failures += 1;
                     // 认证类错误（会话过期 / cookie 失效）重试无意义，停止自动重连，等待重新登录。
                     if is_auth_error(&error) {
-                        tracing::error!(account = %account_id_for_log, %error, "闲鱼认证失效（会话过期 / cookie 无效），停止自动重连，请重新登录");
+                        error!(account = %account_id_for_log, %error, "闲鱼认证失效（会话过期 / cookie 无效），停止自动重连，请重新登录");
                         break;
                     }
                     // 风控拦截：非会话过期，指数退避后自动重试。
                     if is_risk_control(&error) {
                         let delay = risk_control_backoff_secs(consecutive_failures);
-                        tracing::warn!(
+                        warn!(
                             account = %account_id_for_log,
                             %error,
                             retry_in_secs = delay,
-                            "闲鱼风控拦截（验证码 / 签名异常），非会话过期，稍后自动重试"
+                            "闲鱼风控拦截（验证码 / 签名异常），将尝试浏览器续期；失败则稍后自动重试"
                         );
                         this.inner
                             .set_state(ConnectionState::Error, Some(error.to_string()));
                         tokio::time::sleep(Duration::from_secs(delay)).await;
                         continue;
                     }
-                    tracing::warn!(account = %account_id_for_log, %error, "闲鱼连接异常，5 秒后重连");
+                    warn!(account = %account_id_for_log, %error, "闲鱼连接异常，5 秒后重连");
                     this.inner
                         .set_state(ConnectionState::Error, Some(error.to_string()));
                 } else {
                     consecutive_failures = 0;
-                    tracing::info!(account = %account_id_for_log, "闲鱼连接已断开，5 秒后重连");
+                    info!(account = %account_id_for_log, "闲鱼连接已断开，5 秒后重连");
                     this.inner.set_state(ConnectionState::Disconnected, None);
                 }
                 tokio::time::sleep(Duration::from_secs(5)).await;
@@ -405,7 +393,7 @@ impl ChannelProtocol for XianyuChannel {
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .as_ref()
         {
-            tracing::info!(account = %account.id, "闲鱼主动断开连接");
+            info!(account = %account.id, "闲鱼主动断开连接");
         }
         self.stop_flag.store(true, Ordering::SeqCst);
         if let Some(task) = self.task.lock().await.take() {

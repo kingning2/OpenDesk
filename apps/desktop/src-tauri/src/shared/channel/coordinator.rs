@@ -102,7 +102,7 @@ impl ChannelCoordinator {
             detail,
         });
         if let Err(e) = emit(self.sink.as_ref(), &event) {
-            tracing::warn!(%e, "emit channel status failed");
+            warn!(%e, "emit channel status failed");
         }
     }
 
@@ -118,7 +118,7 @@ impl ChannelCoordinator {
             suggestion,
         });
         if let Err(e) = emit(self.sink.as_ref(), &event) {
-            tracing::warn!(%e, "emit channel message failed");
+            warn!(%e, "emit channel message failed");
         }
     }
 
@@ -143,7 +143,7 @@ impl ChannelCoordinator {
 #[async_trait::async_trait]
 impl InboundListener for ChannelCoordinator {
     async fn on_message(&self, inbound: ChannelInboundMessage) {
-        tracing::info!(peer = %inbound.peer_id, item = %inbound.item_id, "渠道收到入站消息");
+        info!(peer = %inbound.peer_id, item = %inbound.item_id, "渠道收到入站消息");
 
         let conversation_id = conversation_id_for(&inbound.peer_id, &inbound.item_id);
         let now = self.now_iso();
@@ -158,12 +158,12 @@ impl InboundListener for ChannelCoordinator {
             updated_at: now.clone(),
         };
         if let Err(error) = self.store.upsert_conversation(&conversation) {
-            tracing::warn!(%error, "更新会话失败");
+            warn!(%error, "更新会话失败");
         }
 
         let message = inbound_to_message(&inbound, &conversation_id, &now);
         if let Err(error) = self.store.insert_message(&message) {
-            tracing::warn!(%error, "写入入站消息失败");
+            warn!(%error, "写入入站消息失败");
         }
 
         self.emit_channel_message(&inbound.account_id, message.clone(), None);
@@ -198,7 +198,7 @@ impl InboundListener for ChannelCoordinator {
         let outcome = self.auto_reply.pipeline().handle_message(&input).await;
         let (reply_text, suggestion_only) = match outcome.decision {
             AutoReplyDecision::Skip { reason } => {
-                tracing::info!(%reason, "跳过自动回复");
+                info!(%reason, "跳过自动回复");
                 return;
             }
             AutoReplyDecision::Suggestion(text) => (text, true),
@@ -228,12 +228,12 @@ impl InboundListener for ChannelCoordinator {
                     created_at: self.now_iso(),
                 };
                 if let Err(error) = self.store.insert_message(&outbound) {
-                    tracing::warn!(%error, "写入出站消息失败");
+                    warn!(%error, "写入出站消息失败");
                 }
                 self.emit_channel_message(&inbound.account_id, outbound, None);
             }
             Err(error) => {
-                tracing::warn!(%error, "自动回复发送失败");
+                warn!(%error, "自动回复发送失败");
                 self.emit_channel_message(&inbound.account_id, message, Some(safe_reply));
             }
         }
@@ -242,13 +242,13 @@ impl InboundListener for ChannelCoordinator {
     async fn on_state(&self, account_id: &str, state: ConnectionState, detail: Option<String>) {
         match state {
             ConnectionState::Connected => {
-                tracing::info!(account = %account_id, "已连接到闲鱼");
+                info!(account = %account_id, "已连接到闲鱼");
             }
             ConnectionState::Disconnected => {
-                tracing::info!(account = %account_id, "已断开闲鱼连接");
+                info!(account = %account_id, "已断开闲鱼连接");
             }
             ConnectionState::Error => {
-                tracing::warn!(account = %account_id, detail = ?detail, "闲鱼连接异常");
+                warn!(account = %account_id, detail = ?detail, "闲鱼连接异常");
             }
             ConnectionState::Connecting => {}
         }

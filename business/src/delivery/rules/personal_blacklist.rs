@@ -25,7 +25,7 @@ impl DeliveryRule for PersonalBlacklistRule {
 
         // owner_id 缺失：无法查询用户级黑名单，fail-open 放行。
         let Some(owner_id) = context.owner_id else {
-            tracing::warn!(prefix = %prefix, "个人黑名单规则：owner_id 缺失，放行");
+            warn!(prefix = %prefix, "个人黑名单规则：owner_id 缺失，放行");
             return Ok(RuleCheckResult::pass(self.rule_code(), self.rule_name()));
         };
 
@@ -37,13 +37,13 @@ impl DeliveryRule for PersonalBlacklistRule {
         ) {
             Ok(record) => record,
             Err(error) => {
-                tracing::error!(prefix = %prefix, %error, "个人黑名单规则：查询异常，放行");
+                error!(prefix = %prefix, %error, "个人黑名单规则：查询异常，放行");
                 return Ok(RuleCheckResult::pass(self.rule_code(), self.rule_name()));
             }
         };
 
         let Some(record) = record else {
-            tracing::info!(
+            info!(
                 prefix = %prefix,
                 buyer_id = %context.buyer_id,
                 "个人黑名单规则通过"
@@ -58,7 +58,7 @@ impl DeliveryRule for PersonalBlacklistRule {
             }
             _ => format!("买家在个人黑名单中（{level}）"),
         };
-        tracing::info!(
+        info!(
             prefix = %prefix,
             buyer_id = %context.buyer_id,
             level,

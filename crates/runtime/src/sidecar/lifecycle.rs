@@ -9,13 +9,12 @@ use kernel::event::EventBus;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{Child, Command};
 use tokio::sync::Mutex;
-use tracing::{info, warn};
 
 use super::client::SidecarClient;
 use super::log_pipe;
 
-pub const SIDECAR_RESTARTED_TOPIC: &str = "runtime.sidecar.restarted";
-pub const RUNTIME_ERROR_TOPIC: &str = "runtime.error";
+pub const SIDECAR_RESTARTED_TOPIC: &str = "runtime/sidecar/restarted";
+pub const RUNTIME_ERROR_TOPIC: &str = "runtime/error";
 
 #[derive(Debug, thiserror::Error)]
 pub enum SidecarLifecycleError {

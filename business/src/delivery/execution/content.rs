@@ -102,7 +102,7 @@ impl ContentGenerator {
             "api" => None, // API 拉取由 gateway 层注入（见 `generate_with_api`）
             "image" => None,
             other => {
-                tracing::warn!(card_id = card.id, card_type = %other, "不支持的卡券类型");
+                warn!(card_id = card.id, card_type = %other, "不支持的卡券类型");
                 return None;
             }
         };
@@ -122,7 +122,7 @@ impl ContentGenerator {
             "api" => fetch_api(&card.api_config),
             "image" => None,
             other => {
-                tracing::warn!(card_id = card.id, card_type = %other, "不支持的卡券类型");
+                warn!(card_id = card.id, card_type = %other, "不支持的卡券类型");
                 return None;
             }
         };
@@ -151,7 +151,7 @@ impl ContentGenerator {
 
         // 4. 无任何可发内容 → 失败。
         if text_part.trim().is_empty() && image_urls.is_empty() {
-            tracing::warn!(card_id = card.id, "卡券没有可发货的内容");
+            warn!(card_id = card.id, "卡券没有可发货的内容");
             return None;
         }
 

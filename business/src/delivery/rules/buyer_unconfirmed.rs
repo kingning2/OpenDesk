@@ -43,14 +43,14 @@ impl DeliveryRule for BuyerUnconfirmedRule {
         ) {
             Ok(count) => count,
             Err(error) => {
-                tracing::error!(prefix = %prefix, %error, "未确认收货规则：查询异常，放行");
+                error!(prefix = %prefix, %error, "未确认收货规则：查询异常，放行");
                 return Ok(RuleCheckResult::pass(self.rule_code(), self.rule_name()));
             }
         };
 
         if unconfirmed_count >= min_count {
             let reason = format!("买家有{unconfirmed_count}笔未确认收货订单，禁止发货");
-            tracing::info!(
+            info!(
                 prefix = %prefix,
                 buyer_id = %context.buyer_id,
                 unconfirmed_count,
@@ -64,7 +64,7 @@ impl DeliveryRule for BuyerUnconfirmedRule {
             );
         }
 
-        tracing::info!(
+        info!(
             prefix = %prefix,
             buyer_id = %context.buyer_id,
             unconfirmed_count,

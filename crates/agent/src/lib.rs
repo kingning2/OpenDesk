@@ -12,6 +12,9 @@
 //! - **不感知存储**：通过入参注入，不直接访问数据库。
 //! - 边界情况从简：能 `map` 就不写 `if`；错误一律 `Result` + `tracing`，禁止 `unwrap` 崩。
 
+#[macro_use]
+extern crate tracing;
+
 pub mod intent;
 pub mod knowledge;
 pub mod llm;

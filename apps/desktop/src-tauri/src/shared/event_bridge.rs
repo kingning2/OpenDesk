@@ -1,7 +1,7 @@
 //! kernel EventBus → Tauri emit 转发器。
 //!
-//! 将进程内 `InMemoryEventBus` 上发布的 runtime.* 事件转发到前端
-//! （`runtime.error` / `runtime.sidecar.restarted`），接通 Rust 侧事件推送。
+//! 将进程内 `InMemoryEventBus` 上发布的 runtime/* 事件转发到前端
+//! （`runtime/error` / `runtime/sidecar/restarted`），接通 Rust 侧事件推送。
 //!
 //! 作者：Xiaoman
 //! 创建时间：2026-08-18

@@ -32,7 +32,7 @@ impl DeliveryRule for BuyerCreditRule {
         let total_count = match context.data.fetch_buyer_rate_count(context.buyer_id) {
             Ok(count) => count,
             Err(error) => {
-                tracing::warn!(
+                warn!(
                     prefix = %prefix,
                     buyer_id = %context.buyer_id,
                     %error,
@@ -45,7 +45,7 @@ impl DeliveryRule for BuyerCreditRule {
 
         if total_count <= threshold {
             let reason = format!("买家评价数为{total_count}（阈值{threshold}），已禁止发货");
-            tracing::info!(
+            info!(
                 prefix = %prefix,
                 buyer_id = %context.buyer_id,
                 total_count,
@@ -59,7 +59,7 @@ impl DeliveryRule for BuyerCreditRule {
             );
         }
 
-        tracing::info!(
+        info!(
             prefix = %prefix,
             buyer_id = %context.buyer_id,
             total_count,

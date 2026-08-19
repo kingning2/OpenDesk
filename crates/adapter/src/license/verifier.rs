@@ -13,7 +13,6 @@ use common::license::{LicenseActivateRequest, LicenseStatus};
 use ports::license::{LicenseError, LicenseGate};
 use serde::Deserialize;
 use tokio::process::Command;
-use tracing::{info, warn};
 
 use super::host_security::LicenseHostSecurity;
 

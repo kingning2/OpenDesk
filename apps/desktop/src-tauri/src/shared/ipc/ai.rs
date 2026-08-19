@@ -5,11 +5,10 @@
 
 use common::contracts::{AiIpcConfigRequest, AiIpcConfigResponse};
 use common::DingDaResult;
-use dingda_macros::timed;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-use crate::ai_config::AiConfigStore;
+use crate::config::ConfigStore;
 use crate::shared::ipc::IpcResponse;
 
 /// API Key ????????
@@ -32,11 +31,10 @@ pub struct AiApiKeyTestResult {
 /// # ???
 /// ?????????;??????????
 #[tauri::command]
-#[timed]
 pub async fn ai_config_get(
-    state: tauri::State<'_, Arc<AiConfigStore>>,
+    state: tauri::State<'_, Arc<ConfigStore>>,
 ) -> DingDaResult<IpcResponse<AiIpcConfigResponse>> {
-    let result = state.get().await?;
+    let result = state.ai_get().await?;
     Ok(IpcResponse::ok(result))
 }
 
@@ -52,12 +50,11 @@ pub async fn ai_config_get(
 /// # ???
 /// ????????
 #[tauri::command]
-#[timed]
 pub async fn ai_config_set(
-    state: tauri::State<'_, Arc<AiConfigStore>>,
+    state: tauri::State<'_, Arc<ConfigStore>>,
     config: AiIpcConfigRequest,
 ) -> DingDaResult<IpcResponse<AiIpcConfigResponse>> {
-    let result = state.set(config).await?;
+    let result = state.ai_set(config).await?;
     Ok(IpcResponse::ok(result))
 }
 
@@ -76,7 +73,6 @@ pub async fn ai_config_set(
 /// # ???
 /// ????;`ok` ??????
 #[tauri::command]
-#[timed]
 pub async fn ai_test_api_key(
     base_url: String,
     api_key: String,

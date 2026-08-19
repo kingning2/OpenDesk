@@ -9,6 +9,7 @@ pub mod channel;
 pub mod license;
 pub mod log;
 pub mod platform;
+pub mod plugin;
 pub mod response;
 
 pub use agent::agent_ping;
@@ -20,4 +21,5 @@ pub use channel::{
 pub use license::{license_activate, license_machine_code, license_status};
 pub use log::{log_clear, log_recent, log_write};
 pub use platform::platform_descriptors;
+pub use plugin::{plugin_install, plugin_list, plugin_uninstall};
 pub use response::IpcResponse;

@@ -4,12 +4,13 @@
 //! 创建时间：2026-08-18
 
 use crate::platforms::xianyu::ipc::account::AccountHandle;
+use crate::platforms::xianyu::persist::InMemoryAccountStore;
 use crate::shared::channel::dispatcher::ChannelDispatcher;
 use crate::shared::ipc::IpcResponse;
 use crate::shared::state::AppState;
-use app::account::AccountStore;
+use app::account::{AccountService, AccountStore, AccountUpdate};
 use common::contracts::ChannelAccount;
-use dingda_macros::timed;
+use platform::xianyu::fetch_user_profile;
 use serde::Deserialize;
 use std::sync::Arc;
 use tauri::State;
@@ -36,9 +37,76 @@ pub fn to_channel_account(_owner_id: i64, account: &app::account::XianyuAccount)
     }
 }
 
+/// 连接成功后拉取闲鱼用户资料并写回业务账号（昵称 / 头像 / Cookie）。
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-08-19
+///
+/// # 参数
+///
+/// * `store` — 业务账号存储
+/// * `owner_id` — 归属用户 id
+/// * `account_id` — 账号标识
+///
+/// # 返回值
+///
+/// 成功返回 `()`；拉取或写入失败返回错误文案。
+pub async fn sync_account_profile(
+    store: &InMemoryAccountStore,
+    owner_id: i64,
+    account_id: &str,
+) -> common::DingDaResult<()> {
+    let account = store
+        .get_account(owner_id, account_id)
+        .map_err(common::DingDaError::wrap)?
+        .ok_or_else(|| format!("账号不存在: {account_id}"))?;
+    if !account.has_cookie() {
+        return Err("账号缺少 Cookie".into());
+    }
+
+    let (profile, cookie) = fetch_user_profile(&account.cookie)
+        .await
+        .map_err(common::DingDaError::wrap)?;
+
+    let service = AccountService::new(store);
+    let patch = AccountUpdate {
+        display_name: if profile.display_name.is_empty() {
+            None
+        } else {
+            Some(profile.display_name.clone())
+        },
+        avatar_url: if profile.avatar_url.is_empty() {
+            None
+        } else {
+            Some(profile.avatar_url.clone())
+        },
+        cookie: if cookie != account.cookie {
+            Some(cookie)
+        } else {
+            None
+        },
+        ..Default::default()
+    };
+
+    if patch.display_name.is_none() && patch.avatar_url.is_none() && patch.cookie.is_none() {
+        return Ok(());
+    }
+
+    service
+        .update(owner_id, account_id, &patch)
+        .map_err(common::DingDaError::wrap)?;
+
+    info!(
+        account = %account_id,
+        display_name = %profile.display_name,
+        has_avatar = !profile.avatar_url.is_empty(),
+        "闲鱼用户资料已同步"
+    );
+    Ok(())
+}
+
 /// 连接业务账号（建立渠道 websocket 设备监听）。
 #[tauri::command]
-#[timed]
 pub async fn account_connect(
     state: State<'_, AppState>,
     accounts: State<'_, AccountHandle>,
@@ -61,11 +129,22 @@ pub async fn account_connect(
     }
 
     let channel_account = to_channel_account(request.owner_id, &account);
-    tracing::info!(account = %request.account_id, "开始连接闲鱼并绑定设备监听");
+    info!(account = %request.account_id, "开始连接闲鱼并绑定设备监听");
     dispatcher
         .connect(&channel_account)
         .await
         .map_err(common::DingDaError::wrap)?;
+
+    if let Err(error) =
+        sync_account_profile(&accounts.store, request.owner_id, &request.account_id).await
+    {
+        warn!(
+            account = %request.account_id,
+            %error,
+            "拉取闲鱼用户资料失败，连接仍可用"
+        );
+    }
+
     Ok(IpcResponse::ok(
         dispatcher
             .connection_state(&request.account_id)
@@ -77,7 +156,6 @@ pub async fn account_connect(
 
 /// 断开业务账号的渠道连接。
 #[tauri::command]
-#[timed]
 pub async fn account_disconnect(
     state: State<'_, AppState>,
     dispatcher: State<'_, Arc<ChannelDispatcher>>,
@@ -89,7 +167,7 @@ pub async fn account_disconnect(
         .await
         .map_err(common::DingDaError::wrap)?;
 
-    tracing::info!(account = %request.account_id, "断开闲鱼连接");
+    info!(account = %request.account_id, "断开闲鱼连接");
     dispatcher
         .disconnect(&request.account_id)
         .await

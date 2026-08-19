@@ -19,13 +19,14 @@ pub mod event_bridge;
 pub mod event_sink;
 pub mod ipc;
 pub mod lifecycle;
+pub mod plugin_download;
 pub mod shell_platform;
 pub mod state;
 
 // 从 dingda-business re-export，保持 IPC 层路径不变
 pub use app::agent;
-pub use app::ai_config;
 pub use app::auto_reply_handle as auto_reply;
+pub use app::config;
 pub use app::logging;
 pub use app::timing;
 pub use event_bridge::BusToTauri;
