@@ -42,8 +42,8 @@
       "rule_files": ["frontend.md", "rust.md"]
     },
     "python": {
-      "label": "Python AI Runtime",
-      "description": "Sidecar 与 python/packages；禁止改 React/Rust 业务层。",
+      "label": "Python Sidecar（例外）",
+      "description": "仅 Rust 生态不够时改 python/packages 与 sidecar；禁止改 React/Rust 业务层；禁止把默认 AI 放这里。",
       "branch_prefix": "python",
       "allowed_globs": ["python/**"],
       "optional_globs": ["contracts/**"],
@@ -57,7 +57,7 @@
     },
     "contract": {
       "label": "Contracts — 跨端契约",
-      "description": "仅改 contracts/ 与 codegen 脚本；变更后需同步三端生成物。",
+      "description": "仅改 contracts/ 与 codegen 脚本；变更后需同步受影响端生成物（默认 Rust / TS；涉及 sidecar 才改 Python）。",
       "branch_prefix": "contract",
       "allowed_globs": [
         "contracts/**",

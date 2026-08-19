@@ -6,7 +6,7 @@ DingDa 所有设计必须遵守以下原则。违反即视为架构错误。
 
 ### 1. Contracts First
 
-`contracts/` 是跨端唯一真相源。任何 DTO、IPC、HTTP、Event、Error 字段变更必须先改契约，再 codegen，再改三端实现。
+`contracts/` 是跨端唯一真相源。任何 DTO、IPC、HTTP、Event、Error 字段变更必须先改契约，再 codegen，再改受影响实现端（默认 Rust / React；仅 sidecar 例外才改 Python）。
 
 ### 2. Feature First
 
@@ -45,6 +45,10 @@ Rust 用 trait 组合；React 用 hooks 与组件组合；Python 用协议与依
 ### 9. Explicit over Implicit
 
 错误类型显式（`thiserror`）；IPC 命令显式注册；Event 名称显式定义在契约中。禁止魔法字符串散落代码库。
+
+### 10. Rust First
+
+默认用 Rust 实现能力（含 AI / LLM）。Python Sidecar 只补 Rust 生态缺口，不是 AI Runtime。新增 `python/**` 须在 Change Record 写明缺口。
 
 ## 原则冲突时的优先级
 

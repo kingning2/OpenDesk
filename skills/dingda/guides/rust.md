@@ -9,6 +9,7 @@ Rust 是**唯一业务核心**与**唯一协调者**。
 | 负责 | 禁止 |
 |------|------|
 | Application · Storage · Sidecar 生命周期 | `unwrap()` · `expect()` · `panic!()` |
+| Agent · LLM（默认） | 把新 AI 能力默认放到 Python |
 | Event Bus · Task Scheduler | Feature 间直接 `use` |
 | Permission · Cache · Logging | 阻塞 UI 线程 |
 | Tauri IPC 与事件转发 | 无限循环线程 |

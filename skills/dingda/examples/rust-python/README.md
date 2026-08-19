@@ -1,5 +1,7 @@
 # Rust ↔ Python 通讯示例
 
+仅在 ADR-0009 例外（Rust 生态不够）时走这条路径。默认 AI / 业务在 Rust 完成，不经过 Python。
+
 DingDa 中 **Rust → Python** 走本机 HTTP sidecar；**Python → React** 必须经 Rust 转发。
 
 ## 端到端路径
@@ -39,7 +41,7 @@ python skills/dingda/scripts/create_rust_python_ipc.py --feature agent --action 
 
 ## 流式示例
 
-Agent / LLM token 流：
+Agent / LLM token 流（仅 sidecar 例外）：
 
 ```
 Python yield token

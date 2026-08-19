@@ -1,6 +1,6 @@
 # Python Package Template
 
-`python/packages/<name>/` 标准结构。
+`python/packages/<name>/` 标准结构。仅在 ADR-0009 例外（Rust 生态不够）时新增。
 
 ## 目录结构
 

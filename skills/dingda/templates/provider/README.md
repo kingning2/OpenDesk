@@ -1,6 +1,6 @@
 # Provider Template
 
-Python 外部 API 适配器骨架。
+外部 API 适配器骨架。**默认用 Rust。** 本模板仅用于 ADR-0009 例外（该 provider 在 Rust 生态没有可用实现）。
 
 ## 结构
 

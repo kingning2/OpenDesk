@@ -36,6 +36,8 @@ React  →  platform  →  (Tauri IPC)  →  Rust  →  ports  ←  infrastructu
 
 ## Python 依赖矩阵
 
+Python 包只服务 sidecar 例外能力。不要为默认 AI 增加依赖。
+
 | 包 | 可依赖 | 禁止依赖 |
 |----|--------|----------|
 | `contracts` | pydantic / typing | sqlalchemy, sqlite3 |

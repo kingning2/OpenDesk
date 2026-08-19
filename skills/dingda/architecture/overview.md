@@ -1,6 +1,6 @@
 # Architecture Overview
 
-DingDa 是企业级 AI 智能客服桌面平台，采用固定三层架构与契约驱动开发。
+DingDa 是企业级 AI 智能客服桌面平台，采用契约驱动开发。默认实现语言是 **Rust**；Python Sidecar 只补 Rust 生态缺口，不是 AI Runtime。
 
 ## 系统全景
 
@@ -13,15 +13,15 @@ flowchart TB
     end
 
     subgraph Core["Rust Application Core"]
-        Tauri[apps/desktop/src-tauri\n业务 UseCase + 组装]
+        Tauri[apps/desktop/src-tauri\n业务 UseCase + 组装 + 默认 AI]
         Kernel[kernel - event / task]
         Ports[ports - traits]
         Infra[adapter / storage / runtime]
     end
 
-    subgraph Runtime["Python AI Sidecar"]
-        Sidecar[python/sidecar]
-        Gateway[gateway - agent_ping]
+    subgraph Sidecar["Python Sidecar（例外）"]
+        Process[python/sidecar]
+        Gateway[gateway — 仅生态缺口]
     end
 
     Contracts[(contracts/)]
@@ -30,12 +30,12 @@ flowchart TB
     Platform -->|Tauri IPC| Tauri
     Tauri --> Ports
     Ports --> Infra
-    Tauri -->|lifecycle + IPC| Sidecar
-    Sidecar --> Gateway
+    Tauri -.->|仅 ADR-0009 例外| Process
+    Process --> Gateway
     Tauri -->|Tauri Events| Platform
     Contracts -.->|codegen| Frontend
     Contracts -.->|codegen| Core
-    Contracts -.->|codegen| Runtime
+    Contracts -.->|codegen| Sidecar
 ```
 
 ## 技术栈
@@ -44,13 +44,13 @@ flowchart TB
 |----|------|
 | 桌面壳 | Tauri 2 |
 | 前端 | React · TypeScript · Vite · pnpm workspace |
-| 核心 | Rust Workspace · SQLite（经 storage 抽象） |
-| AI | Python · sidecar · gateway |
+| 核心（默认含 AI） | Rust Workspace · SQLite（经 storage 抽象） |
+| 例外 Sidecar | Python · 仅 Rust 生态不够时 |
 | 契约 | JSON Schema · OpenAPI · codegen |
 
 ## 当前阶段
 
-**Architecture Skeleton** — 允许目录、crate、trait、DTO、Contract、Interface、Mock；禁止业务逻辑与 Demo。
+**Architecture Skeleton** — 允许目录、crate、trait、DTO、Contract、Interface、Mock；禁止业务逻辑与 Demo。现有 Python ping 骨架不表示 AI 必须走 Python。
 
 ## 关键目录
 
@@ -61,13 +61,14 @@ flowchart TB
 | `packages/platform` | IPC · OS API · 窗口 |
 | `packages/contracts` | 前端契约类型（codegen） |
 | `crates/` | Rust 基础设施（业务代码在 src-tauri） |
-| `python/` | AI Sidecar |
-| `contracts/` | 三端共享契约（唯一真相源） |
+| `python/` | 例外 Sidecar（非 AI Runtime） |
+| `contracts/` | 跨端共享契约（唯一真相源） |
 
 ## 数据流（流式 AI 输出）
 
 ```
-Python sidecar  →  Rust（聚合/鉴权/日志）  →  Tauri Events  →  React
+默认：Rust（生成 token）  →  Tauri Events  →  React
+例外：Python sidecar  →  Rust（聚合/鉴权/日志）  →  Tauri Events  →  React
 ```
 
 禁止 Python 直接向 React 推送事件。

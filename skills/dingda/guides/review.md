@@ -13,6 +13,7 @@
 
 ```
 □ 跨层调用检查（React/Python/SQLite）
+□ 新 AI / 业务未默认放到 Python（ADR-0009）
 □ Feature 边界（无直接 import）
 □ Contract 变更顺序正确
 □ 无 unwrap/expect/panic（Rust 生产路径）
@@ -28,7 +29,7 @@
 
 | 级别 | 说明 | 处理 |
 |------|------|------|
-| P0 | 绕架构（React→Python 等） | 必须阻断 |
+| P0 | 绕架构（React→Python、未论证就把 AI 放 Python） | 必须阻断 |
 | P1 | 未先改 Contract | 必须阻断 |
 | P2 | Feature 互 import | 必须修复 |
 | P3 | 命名/风格 | 建议修复 |

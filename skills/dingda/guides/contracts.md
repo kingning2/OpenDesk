@@ -30,7 +30,7 @@ contracts/schema/v1/<feature>/error/<code>.schema.json
 1. 编辑 schema / openapi
 2. 更新 `contracts/CHANGELOG.md`
 3. 运行 `python skills/dingda/scripts/sync_contracts.py`
-4. 更新 Rust / Python / TS 引用（骨架阶段可仅创建类型文件）
+4. 更新受影响端引用（默认 Rust / TS；仅 sidecar 例外才改 Python）
 5. PR：2+ Approve
 
 ## Breaking Change

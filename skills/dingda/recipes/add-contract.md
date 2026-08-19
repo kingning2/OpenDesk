@@ -6,7 +6,7 @@
 2. 编辑 schema 字段
 3. 更新 `contracts/CHANGELOG.md`
 4. `python skills/dingda/scripts/sync_contracts.py`
-5. 更新三端引用（类型导入骨架）
+5. 更新受影响端引用（默认 Rust / TS；涉及 sidecar 才改 Python）
 6. `python skills/dingda/scripts/check_contracts.py`
 
 ## 禁止

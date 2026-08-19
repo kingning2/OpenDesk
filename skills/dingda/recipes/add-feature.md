@@ -30,6 +30,7 @@ pnpm lint
 - 其他 Feature 的内部模块
 - `packages/ui` 中添加 IPC
 - Python 中添加业务持久化
+- 未论证就把 Feature 的 AI 放到 Python（ADR-0009）
 - 跳过 contracts 直接写 IPC 类型
 
 ## 验证

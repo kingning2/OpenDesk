@@ -1,6 +1,6 @@
 # Layer Architecture
 
-## 三层模型
+## 分层模型
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -12,21 +12,21 @@
 └────────────────────────────┬─────────────────────────────┘
                              │ invoke / listen (platform only)
 ┌────────────────────────────▼─────────────────────────────┐
-│ Layer 2: Rust（Application Core）                         │
+│ Layer 2: Rust（Application Core，默认实现含 AI）           │
 │                                                          │
-│  apps/desktop/src-tauri/    Tauri commands · 业务 · 事件转发 │
+│  apps/desktop/src-tauri/    Tauri commands · 业务 · LLM   │
 │  crates/adapter/            基础设施适配器（sidecar gateway）│
 │  crates/kernel/             event bus · task scheduler    │
 │  crates/ports/              共享 Port trait               │
 │  crates/storage/            SQLite 实现                   │
-│  crates/runtime/            Python sidecar 生命周期        │
+│  crates/runtime/            例外 Sidecar 生命周期          │
 └────────────────────────────┬─────────────────────────────┘
-                             │ 本机 IPC（contracts/openapi）
+                             │ 仅当 Rust 生态不够（ADR-0009）
 ┌────────────────────────────▼─────────────────────────────┐
-│ Layer 3: Python（AI Sidecar）                             │
+│ Layer 3: Python Sidecar（例外，不是 AI Runtime）           │
 │                                                          │
 │  python/sidecar/            进程入口 · 管理面 API          │
-│  python/packages/gateway/   请求路由（agent_ping）        │
+│  python/packages/gateway/   请求路由（现有 ping / 缺口能力）│
 │  python/packages/contracts/ 契约实现                      │
 │  python/packages/shared/    共享工具                      │
 └──────────────────────────────────────────────────────────┘
@@ -48,6 +48,7 @@
 |------|------|
 | 业务编排、权限、缓存 | `unwrap()` / `panic!()` |
 | SQLite 读写（经 storage） | Feature 间直接 `use` |
+| Agent / LLM（默认） | 把新 AI 能力默认丢给 Python |
 | Python sidecar 生命周期 | 阻塞 UI 线程 |
 | 结构化日志（tracing） | Python 直连前端事件 |
 | Tauri IPC 命令与事件转发 | |
@@ -56,9 +57,10 @@
 
 | 负责 | 禁止 |
 |------|------|
-| LLM / RAG / OCR / Embedding | GUI、Tauri、React |
-| Agent / MCP / Browser 自动化 | SQLite、业务状态持久化 |
-| Queue / Worker 异步执行 | 未评审的 HTTP Server |
+| 仅 ADR-0009 论证过的生态缺口 | GUI、Tauri、React |
+| 既有 sidecar 探活骨架 | 默认 LLM / RAG / Agent |
+| | SQLite、业务状态持久化 |
+| | 未评审的 HTTP Server |
 
 ## Rust 内部分层（六边形）
 
@@ -79,7 +81,7 @@
 | From \ To | React | Rust | Python | SQLite |
 |-----------|-------|------|--------|--------|
 | React | ✅ | ✅ IPC | ❌ | ❌ |
-| Rust | ✅ Events | ✅ | ✅ IPC | ✅ |
+| Rust | ✅ Events | ✅ | ✅ 仅例外 | ✅ |
 | Python | ❌ | ✅ | ✅ | ❌ |
 
 ## 相关文档

@@ -39,7 +39,7 @@ agent_run_task
 长时 AI 任务：
 
 1. IPC 返回 `task_id`（立即）
-2. Rust 订阅 Python 流
+2. Rust 默认自行产生 token 流；仅 ADR-0009 例外时才订阅 Python 流
 3. Rust 通过 Tauri Event `emit("agent:token", payload)` 推送
 4. React 经 `platform.listen` 订阅
 

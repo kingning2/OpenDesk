@@ -4,29 +4,29 @@
 
 ## 职责
 
-Python 是 **AI Runtime**，不是业务核心。
+Python 是 **例外 Sidecar**，不是 AI Runtime、不是业务核心。
 
-| 允许 | 禁止 |
+默认用 **Rust** 实现能力（含 LLM / Agent）。仅当 Change Record 写明「Rust 生态缺少可用实现」时才编写 Python（[ADR-0009](../../../docs/managed/decisions/python-runtime/adr-0009-python-only-when-rust-insufficient.md)）。例如 Playwright。
+
+| 允许（须先论证生态缺口） | 禁止 |
 |------|------|
-| LLM · RAG · OCR · Embedding | GUI · Tauri · React |
-| MCP · Agent · Browser 自动化 | SQLite · 业务状态持久化 |
-| Queue · Worker · Provider 适配 | 未评审的对外 HTTP Server |
+| 该缺口对应的库与适配（如 Playwright） | GUI · Tauri · React |
+| 既有 sidecar 探活 / 管理面 | SQLite · 业务状态持久化 |
+| | 未论证就把 LLM / RAG / Agent 放到 Python |
+| | 未评审的对外 HTTP Server |
 
 ## 目录结构
 
 ```
 python/
-├── sidecar/           # 进程入口
+├── sidecar/           # 进程入口（Rust 托管生命周期）
 └── packages/
     ├── contracts/     # codegen 类型
-    ├── gateway/       # 请求路由
-    ├── queue/         # 任务队列
-    ├── worker/        # 执行器
-    ├── llm/           # 模型调用
-    ├── rag/           # 检索
-    ├── agent/         # Agent 编排
-    └── provider/      # 外部 API 适配
+    ├── gateway/       # 请求路由（现有 ping 骨架）
+    └── shared/        # 共享工具
 ```
+
+新增 `python/packages/<name>` 前必须有 Change Record 说明为何 Rust 不够。不要为 LLM / RAG / Agent 预建空包。
 
 ## Sidecar 管理面
 
@@ -42,11 +42,13 @@ python/
 
 ## 流式输出路径
 
+若某能力因生态缺口走 sidecar：
+
 ```
 Python generator  →  Rust 聚合  →  Tauri Events  →  React
 ```
 
-禁止 Python 直接向前端推事件。
+默认流式 AI 在 Rust 产生，再经 Tauri Events 到 React。禁止 Python 直接向前端推事件。
 
 ## 包开发
 
@@ -58,4 +60,4 @@ pnpm lint:python
 ## 相关
 
 - [../architecture/layers.md](../architecture/layers.md)
-- [../recipes/add-provider.md](../recipes/add-provider.md)
+- [ADR-0009](../../../docs/managed/decisions/python-runtime/adr-0009-python-only-when-rust-insufficient.md)

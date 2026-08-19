@@ -1,5 +1,7 @@
 # Rust ↔ Python IPC
 
+仅在 [ADR-0009](../../../docs/managed/decisions/python-runtime/adr-0009-python-only-when-rust-insufficient.md) 允许的生态缺口下使用。默认业务与 AI **不要**走这条路径。
+
 Rust Application Core 与 Python Sidecar 之间的**本机 HTTP** 通讯规范。  
 React **禁止**参与此层；流式输出由 Rust 转发为 Tauri Events。
 
@@ -11,19 +13,15 @@ sequenceDiagram
     participant Rust as Rust Core
     participant Py as Python Sidecar
 
-    Note over R,Py: 业务请求
+    Note over R,Py: 默认：Rust 直接完成（含 AI）
+    R->>Rust: Tauri IPC
+    Rust-->>R: IPC / Tauri Event
+
+    Note over R,Py: 例外：仅 Rust 生态不够时才调 sidecar
     R->>Rust: Tauri IPC
     Rust->>Py: HTTP POST /v1/{feature}/{action}
     Py-->>Rust: JSON response
     Rust-->>R: IPC / Tauri Event
-
-    Note over R,Py: 流式 AI（agent/llm）
-    R->>Rust: Tauri IPC (start task)
-    Rust->>Py: HTTP stream
-    loop chunks
-        Py-->>Rust: token chunk
-        Rust-->>R: Tauri Event emit
-    end
 ```
 
 ## 路径约定
@@ -43,7 +41,7 @@ contracts/schema/v1/<feature>/sidecar/<action>.request.schema.json
 contracts/schema/v1/<feature>/sidecar/<action>.response.schema.json
 ```
 
-变更顺序：**Contract → Rust runtime client → Python handler**
+变更顺序：**Contract → Rust runtime client → Python handler**（仅 sidecar 例外能力）
 
 ## 代码位置
 

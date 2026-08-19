@@ -76,7 +76,7 @@ pub trait EventBus: Send + Sync {
 | 定义 | contracts/schema event | contracts IPC event forward |
 | 消费者 | Rust Subscriber | React listener |
 
-流式 AI token：**Python → Rust → Tauri Events → React**，不经过 kernel event bus 直达前端。
+流式 AI token：**默认 Rust → Tauri Events → React**。仅 sidecar 例外时才是 Python → Rust → Tauri Events → React。不经过 kernel event bus 直达前端。
 
 ## 相关文档
 

@@ -15,13 +15,13 @@
 └───────────────────────────┬─────────────────────────────────┘
                             │ Tauri IPC（@desk/platform/ipc）
 ┌───────────────────────────▼─────────────────────────────────┐
-│  Rust Application Core（唯一协调者）                          │
+│  Rust Application Core（唯一协调者，默认实现含 AI）            │
 │  crates/* · apps/desktop/src-tauri                           │
 │  kernel · ports · storage · runtime · feature crates         │
 └───────────────────────────┬─────────────────────────────────┘
-                            │ 本机 IPC（contracts 定义）
+                            │ 仅当 Rust 生态不够（ADR-0009）
 ┌───────────────────────────▼─────────────────────────────────┐
-│  Python AI Runtime                                           │
+│  Python Sidecar（例外，不是 AI Runtime）                       │
 │  python/sidecar · python/packages/*                          │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -30,6 +30,7 @@
 
 | 原则 | 说明 |
 |------|------|
+| **Rust First** | 默认用 Rust 实现（含 AI）；Python 只补生态缺口 |
 | **Contracts First** | `contracts/` 是跨端唯一真相源 |
 | **Hexagonal Architecture** | UseCase → Ports → Infrastructure |
 | **Feature Boundary** | Feature 垂直独立，禁止互相 import |
@@ -45,12 +46,13 @@
 | React → SQLite | 存储由 Rust 负责 |
 | Python → SQLite | 存储由 Rust 负责 |
 | Python → React / Tauri | Python 不知道前端 |
+| 未论证就把 AI 放 Python | 默认用 Rust（ADR-0009） |
 | Feature A → Feature B（直接 import） | 须走 Event 或 Query Port |
 
 ### 跨端变更顺序
 
 ```
-contracts/  →  codegen  →  Rust  →  Python  →  React
+contracts/  →  codegen  → 受影响端（默认 Rust → React；涉及 sidecar 才改 Python）
 ```
 
 ---
@@ -86,10 +88,10 @@ skills/dingda/
 # 生成新 Feature 骨架
 python skills/dingda/scripts/create_feature.py --name myfeature
 
-# 生成新 Python 包并注册 workspace
+# 生成新 Python 包并注册 workspace（须先论证 Rust 生态不够）
 python skills/dingda/scripts/create_python_package.py --name mypackage
 
-# 生成 Rust ↔ Python sidecar IPC 骨架
+# 生成 Rust ↔ Python sidecar IPC 骨架（仅例外能力）
 python skills/dingda/scripts/create_rust_python_ipc.py --feature agent --action ping
 
 # 架构合规检查
@@ -117,7 +119,7 @@ python skills/dingda/scripts/generate_tree.py
 1. **最小修改** — 不一次改多个 Feature
 2. **先分析后动手** — 列出影响范围与职责归属
 3. **禁止臆测** — 不生成未请求代码
-4. **禁止绕架构** — 不为方便直连 Python / SQLite
+4. **禁止绕架构** — 不为方便直连 Python / SQLite；不为方便把 AI 放到 Python
 5. **契约先行** — 跨端字段变更先改 `contracts/`
 
 ### Code Review Checklist

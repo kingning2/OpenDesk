@@ -1,6 +1,6 @@
 # Contracts
 
-`contracts/` 是 DingDa 三端共享的**唯一真相源**。
+`contracts/` 是 DingDa 跨端共享的**唯一真相源**。默认实现端是 Rust 与 React；Python 仅 sidecar 例外时才更新。
 
 ## 目录结构
 
@@ -34,15 +34,8 @@ contracts/
 └──────┬──────┘
        ▼
 ┌─────────────┐
-│ 3. Rust     │  crates + src-tauri
-└──────┬──────┘
-       ▼
-┌─────────────┐
-│ 4. Python   │  python/packages/contracts
-└──────┬──────┘
-       ▼
-┌─────────────┐
-│ 5. React    │  packages/contracts
+│ 3. 实现端   │  默认 Rust → React
+│             │  仅 sidecar 例外才改 Python
 └─────────────┘
 ```
 

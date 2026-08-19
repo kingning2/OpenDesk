@@ -20,7 +20,7 @@ pnpm build
 ## Breaking Change 发布
 
 1. Contract v2 + MIGRATION.md
-2. 三端实现同步迁移
+2. 受影响端实现同步迁移（默认 Rust / React；涉及 sidecar 才改 Python）
 3. 桌面应用 major 版本 bump
 4. 发布说明列出不兼容项
 

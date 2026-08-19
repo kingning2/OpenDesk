@@ -1,6 +1,6 @@
 # Recipe: Add Python Package
 
-新增 Python Runtime 包并注册到 uv workspace。
+仅当 Change Record 写明「Rust 生态缺少可用实现」时新增 Python 包（ADR-0009）。不要为默认 LLM / Agent 建包。
 
 ## 修改顺序
 

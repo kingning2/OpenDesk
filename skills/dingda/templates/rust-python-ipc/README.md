@@ -1,5 +1,7 @@
 # Rust ↔ Python IPC Template
 
+仅在 ADR-0009 例外（Rust 生态不够）时使用。默认 AI / 业务不要走 sidecar。
+
 ## 生成
 
 ```bash

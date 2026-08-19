@@ -1,6 +1,6 @@
 # Recipe: Add Rust ↔ Python IPC
 
-新增一条 Rust 调用 Python sidecar 的 HTTP 接口（骨架）。
+仅当 ADR-0009 例外（Rust 生态不够）时，新增一条 Rust 调用 Python sidecar 的 HTTP 接口。默认 AI / 业务不要走 sidecar。
 
 ## 修改顺序
 
