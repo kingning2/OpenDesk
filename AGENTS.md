@@ -15,7 +15,7 @@ pnpm branch:sync                                # 切换分支后刷新规则
 | 分支模式 | 职责 |
 |----------|------|
 | `frontend/<kind>/<slug>` | React · UI · Tauri · `crates/**` |
-| `python/<kind>/<slug>` | Python sidecar · `python/**` |
+| `python/<kind>/<slug>` | 例外 Sidecar（仅 Rust 生态不够）· `python/**` |
 | `contract/<kind>/<slug>` | `contracts/` + codegen |
 | `main` | 集成分支 |
 
@@ -24,11 +24,14 @@ pnpm branch:sync                                # 切换分支后刷新规则
 ## 架构约束（硬约束）
 
 ```
-React（展示）  →  Tauri IPC  →  Rust（协调者）  →  Python（AI Runtime）
+React（展示）  →  Tauri IPC  →  Rust（协调者，默认实现含 AI）
+                                    ↓ 仅当 Rust 生态不够
+                                 Python Sidecar（例外，不是 AI Runtime）
 ```
 
 - React **不知道** Python；Python **不知道** React
-- `contracts/` 是跨端 **唯一真相源**，变更顺序：Contract → Codegen → Rust → Python → React
+- 默认用 **Rust** 实现能力（含 LLM / Agent）。仅当 Rust 生态缺少可用实现时才编写 `python/**`（[ADR-0009](docs/managed/decisions/python-runtime/adr-0009-python-only-when-rust-insufficient.md)）
+- `contracts/` 是跨端 **唯一真相源**，变更顺序：Contract → Codegen → 受影响端（默认 Rust → React；涉及 sidecar 时才改 Python）
 - Feature 完全独立，跨 Feature 只允许 **Query Port**、**Event**、**Contract**
 
 完整约束：[`.cursor/rules/master.md`](.cursor/rules/master.md)

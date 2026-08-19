@@ -2,12 +2,14 @@
 
 ## 职责
 
-`contracts/` 是 React、Rust、Python 三端 DTO、HTTP、IPC、Event 和 Error 的唯一真相源。
+`contracts/` 是跨端 DTO、HTTP、IPC、Event 和 Error 的唯一真相源。实现端默认是 React 与 Rust；Python 仅在 sidecar 例外能力涉及该契约时才更新。
 
 ## 变更顺序
 
 ```text
-Contract → Codegen → Rust → Python → React
+Contract → Codegen → 受影响实现端
+默认：Rust → React
+仅当该能力必须走 sidecar：再改 Python
 ```
 
 ## 管理规则

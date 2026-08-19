@@ -15,6 +15,8 @@ related:
 
 # AI 纠错记忆（人工规则注入，非模型写库）
 
+> 纠错注入与 prompt 组装**默认在 Rust**。[ADR-0009](../python-runtime/adr-0009-python-only-when-rust-insufficient.md) 之后，不得把「Python 渲染 corrections」当成默认实现。人工创建、Rust 写库、AI 只读的结论不变。
+
 ## Status
 
 Accepted — MVP 必须实现，见 [CHG-030](../../changes/2026/07/chg-20260720-030-ai-correction-feedback.md)。
@@ -98,7 +100,7 @@ AI 生成草稿 → 用户审阅
 - `rule_text` 合计不超过 **3000** 字符
 - 超出时优先保留 customer 级，再 global 最新
 
-Python 将 `corrections` 渲染进 system prompt 固定区块：
+Rust 将 `corrections` 渲染进 system prompt 固定区块（仅 ADR-0009 例外时才由 sidecar 渲染）：
 
 ```text
 ## MUST FOLLOW — Prior corrections (do not repeat these mistakes)
@@ -106,7 +108,7 @@ Python 将 `corrections` 渲染进 system prompt 固定区块：
 ...
 ```
 
-Python **不得**修改、删除 corrections；不得写回 `ai_correction` 表。
+执行端 **不得**修改、删除 corrections；不得写回 `ai_correction` 表。Python sidecar 尤其不得写库。
 
 ### 4. 管理与验证
 

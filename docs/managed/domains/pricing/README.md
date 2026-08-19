@@ -91,4 +91,4 @@ MVP 可支持 **手动 CSV/JSON 导入** 作为快捷方式，但须有 Rust 校
 
 - AI 仅只读访问（ADR-0001）
 - 价目表变更不影响已有 `quote_history` 历史记录
-- 匹配逻辑须在 Rust 实现，Python 不得自行「猜价」
+- 匹配逻辑须在 Rust 实现；Python 不得自行「猜价」（即使走 sidecar 例外）

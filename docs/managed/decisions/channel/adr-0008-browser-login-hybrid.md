@@ -16,6 +16,8 @@ related:
 
 # 闲鱼登录载体换浏览器快照 + 混合收发 + 内嵌 Webview
 
+> Playwright 放 Python 是 [ADR-0009](../python-runtime/adr-0009-python-only-when-rust-insufficient.md) 的典型例外（Rust 无成熟等价库）。自动回复链路中的「Python LLM」已由 ADR-0009 取代为 Rust 默认。
+
 ## Status
 
 Accepted。
@@ -46,7 +48,7 @@ Accepted。
 
 - Playwright 只负责登录、保持会话、导出 cookies。
 - Rust 拿到 cookies 数组后仍走**现有 WebSocket 协议直连**收发（保留已验证的 `xianyu/{api,message,ws}.rs`）。
-- 自动回复链路不变：**Rust 调度 → Python LLM → Rust 安全过滤 → 发送**。
+- 自动回复链路：**Rust 调度 → 默认 Rust LLM → Rust 安全过滤 → 发送**（Python LLM 仅 ADR-0009 例外）。
 
 ### 3. 页面呈现：Tauri 内嵌 Webview 显示闲鱼
 
@@ -57,9 +59,9 @@ Accepted。
 
 Playwright 放 Python sidecar **调整**「Python 不直连渠道协议」约束为：
 
-> Python 可做**登录与浏览器会话管理**，但**不做业务调度、不做 LLM 之外的决策**；消息收发仍由 Rust 经协议完成。
+> Python 可做**登录与浏览器会话管理**（Playwright 生态缺口），但**不做业务调度、不做默认 LLM 决策**；消息收发仍由 Rust 经协议完成。
 
-**Why**：Playwright 是 Python/Node 生态成熟方案（Rust 无等价库），登录载体切换必须依赖它；业务调度与 LLM 决策仍全在 Rust。
+**Why**：Playwright 是 Python/Node 生态成熟方案（Rust 无等价库），登录载体切换必须依赖它；业务调度与 LLM 决策默认全在 Rust（ADR-0009）。
 
 ## Alternatives
 

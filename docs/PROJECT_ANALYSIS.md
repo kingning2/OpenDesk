@@ -2,7 +2,7 @@
 
 ## 项目是什么
 
-DingDa 是 **本地优先的 AI Agent 智能客服** 桌面应用：AI 提供客服场景的回复建议与交互，核心能力经 Rust 唯一协调者编排，Python Sidecar 承担 AI 推理。
+DingDa 是 **本地优先的 AI Agent 智能客服** 桌面应用：AI 提供客服场景的回复建议与交互。核心能力由 Rust 唯一协调者编排并默认实现（含 LLM）。Python Sidecar 只在 Rust 生态缺少可用实现时使用，不是 AI Runtime。
 
 > 当前处于 **Architecture Skeleton + 基础切片** 阶段。UI Shell、Rust Agent 组装、Python Sidecar ping 已有。
 
@@ -15,13 +15,14 @@ DingDa 是 **本地优先的 AI Agent 智能客服** 桌面应用：AI 提供客
 ## 技术架构（不变）
 
 ```
-React  →  Rust  →  Python
-         ↑
-    唯一协调者
+React  →  Rust（默认实现，含 AI）
+            ↓ 仅当 Rust 生态不够
+         Python Sidecar
 ```
 
 - 契约驱动：`contracts/` 为跨端唯一真相源
 - Feature 隔离：跨 Feature 仅 Query Port · Event · Contract
+- Python 例外原则：[ADR-0009](managed/decisions/python-runtime/adr-0009-python-only-when-rust-insufficient.md)
 - 完整约束： [`.cursor/rules/master.md`](../.cursor/rules/master.md)
 
 ## 仓库结构
@@ -30,8 +31,8 @@ React  →  Rust  →  Python
 |------|------|
 | `apps/desktop` | Tauri + React |
 | `crates` | Rust Workspace（仅基建） |
-| `python` | AI Sidecar |
-| `contracts` | 三端共享契约 |
+| `python` | 例外 Sidecar（非 AI Runtime） |
+| `contracts` | 跨端共享契约 |
 | `docs/managed/` | **领域文档与变更协议** |
 | `docs/architecture/` | 架构文档与 ADR |
 

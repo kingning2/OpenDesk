@@ -9,11 +9,8 @@
        ↓
 2. Code Generation（codegen/）
        ↓
-3. Rust 实现
-       ↓
-4. Python 实现
-       ↓
-5. React 实现
+3. 受影响实现端：默认 Rust → React
+   仅当该能力必须走 sidecar 时才改 Python
 ```
 
 **禁止**先改实现再补契约。临时原型须在 PR 标注并尽快补全。

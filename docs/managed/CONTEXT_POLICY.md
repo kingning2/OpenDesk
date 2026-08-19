@@ -27,7 +27,7 @@
 
 ## 路由原则
 
-- `python/**` → `domains/python-runtime/`
+- `python/**` → `domains/python-runtime/`（例外 Sidecar，非默认 AI 层）
 - `contracts/**` → `domains/contracts/`
 - Agent 能力 → `domains/agent/`
 - 无匹配领域时先创建领域入口，不向全局 README 塞正文。

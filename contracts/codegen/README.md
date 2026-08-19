@@ -16,4 +16,4 @@ python skills/dingda/scripts/sync_contracts.py
 | Rust | `crates/common/src/contracts/` |
 | Python | `python/packages/contracts/src/contracts/generated/` |
 
-变更顺序仍为：**Contract → sync_contracts → Rust → Python → React**
+变更顺序仍为：**Contract → sync_contracts → 受影响端**（默认 Rust → React；仅 sidecar 例外才改 Python）

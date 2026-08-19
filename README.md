@@ -2,14 +2,14 @@
 
 本地优先的 **AI Agent 智能客服** 桌面应用。
 
-> **当前阶段：** Architecture Skeleton + 基础切片（UI Shell、Rust Agent 组装、Python Sidecar ping）。
+> **当前阶段：** Architecture Skeleton + 基础切片（UI Shell、Rust Agent 组装、Python Sidecar ping）。Python 不是 AI Runtime；仅 Rust 生态不够时才编写。
 
 ## 架构约束（必读）
 
 ```
-React  →  Rust  →  Python
-         ↑
-    唯一协调者
+React  →  Rust（默认实现，含 AI）
+            ↓ 仅当 Rust 生态不够
+         Python Sidecar
 ```
 
 | 禁止 | 说明 |
@@ -17,6 +17,7 @@ React  →  Rust  →  Python
 | React → Python | 含 localhost HTTP / WebSocket / SSE |
 | React → SQLite | 存储由 Rust 负责 |
 | Python → SQLite | 存储由 Rust 负责；AI 仅只读 Query Port |
+| 把新 AI 能力默认放 Python | 默认用 Rust；Python 只补生态缺口（ADR-0009） |
 | AI 写库 / 自动发信 | 数据与发送仅 UI 人工操作 |
 | Feature 间直接 import | 跨 Feature 只允许 Query Port · Event · Contract |
 | 先改实现再改契约 | 跨端变更须先改 `contracts/` |
@@ -28,8 +29,8 @@ React  →  Rust  →  Python
 - `apps/desktop` — Tauri + React 桌面应用
 - `packages` — 前端共享包（ui · platform · contracts）
 - `crates` — Rust Workspace（仅基建：kernel · common · ports · adapter · runtime · storage）
-- `python` — AI Sidecar（gateway · contracts · shared）
-- `contracts` — 三端共享契约（**唯一真相源**）
+- `python` — 例外 Sidecar（gateway · contracts · shared；仅 Rust 生态不够时扩展）
+- `contracts` — 跨端共享契约（**唯一真相源**）
 - `docs/managed/` — 领域文档、Change Record、ADR
 
 ## 开发

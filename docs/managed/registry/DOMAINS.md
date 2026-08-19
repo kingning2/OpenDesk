@@ -9,7 +9,7 @@
 | OCR | —（规划中） | [ocr](../domains/ocr/README.md) | planned |
 | Pricing | —（规划中） | [pricing](../domains/pricing/README.md) | planned |
 | Channel | —（规划中） | [channel](../domains/channel/README.md) | planned |
-| Python Runtime | `python/**` | [python-runtime](../domains/python-runtime/README.md) | active |
+| Python Sidecar（例外） | `python/**` | [python-runtime](../domains/python-runtime/README.md) | active |
 | Contracts | `contracts/**` | [contracts](../domains/contracts/README.md) | active |
 | Agent | `apps/desktop/src-tauri/src/**` | [agent](../domains/agent/README.md) | active |
 | Documentation | `docs/managed/**` | [documentation](../domains/documentation/README.md) | active |

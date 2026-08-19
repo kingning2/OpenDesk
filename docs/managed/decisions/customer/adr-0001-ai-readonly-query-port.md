@@ -9,6 +9,8 @@ supersedes: none
 
 # AI 只读 Query Port，禁止直连与写库
 
+> 执行端**默认在 Rust**。下图「Python Agent」仅在 [ADR-0009](../python-runtime/adr-0009-python-only-when-rust-insufficient.md) 允许的 sidecar 例外下适用。只读 Query Port、禁止写库的结论不变。
+
 ## Context
 
 DingDa MVP 要求 AI「记得每个客户」：来源渠道、当前报价、合作状态、沟通摘要。同时用户明确要求：
@@ -25,12 +27,12 @@ DingDa MVP 要求 AI「记得每个客户」：来源渠道、当前报价、合
 ### 1. AI 数据访问模型
 
 ```text
-Python Agent
+Agent（默认 Rust；仅例外时为 Python sidecar）
   → 结构化 ToolCall（只读工具名 + 参数）
   → Rust Query Port 校验白名单 + 租户/权限 + 参数
   → 只读 SQL / Repository 查询
   → ToolResult（脱敏后的 DTO）
-  → Python 继续生成
+  → 继续生成
 ```
 
 ### 2. 允许的工具（MVP 白名单）

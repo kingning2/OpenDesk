@@ -14,6 +14,8 @@ related:
 
 # 多渠道通道层：ChannelProtocol trait + Dispatcher
 
+> **部分替代：** 「Python 仅大模型接入」已由 [ADR-0009](../python-runtime/adr-0009-python-only-when-rust-insufficient.md) 取代。LLM 默认在 Rust；Python 只补生态缺口。渠道 trait / Dispatcher / 调度在 Rust 的结论仍有效。
+
 ## Status
 
 Accepted。
@@ -51,16 +53,17 @@ pub trait ChannelProtocol: Send + Sync {
 
 **Why**：单一 trait 让新平台接入成本降到「实现协议细节」，调度/存储/UI 全部复用。
 
-### 2. 业务调度在 Rust，Python 仅大模型接入
+### 2. 业务调度在 Rust，LLM 默认也在 Rust
 
-- Rust 是唯一协调者：收消息 → 归一化 → 入库 → **判断是否回复**（规则 + 上下文）→ 调 Python 生成回复 → 安全过滤 → 发送 → 出站入库。
-- Python sidecar **只暴露渠道无关的 `llm/chat` + `llm/classify` 端点**（openai 库调用 OpenAI 兼容 API），不含任何业务/渠道逻辑。
+- Rust 是唯一协调者：收消息 → 归一化 → 入库 → **判断是否回复**（规则 + 上下文）→ **默认在 Rust 生成回复** → 安全过滤 → 发送 → 出站入库。
+- 仅当 Rust 生态缺少可用实现时，才把该步骤放到 Python sidecar（ADR-0009）。不得把「大模型」预设为 Python 职责。
+- 若走 sidecar，接口须渠道无关，且不含业务/渠道逻辑。
 
 ```text
-入站消息 → Rust(回复决策/意图路由/上下文) → Python(llm/chat) → Rust(安全过滤) → 发送
+入站消息 → Rust(回复决策/意图路由/上下文/默认 LLM) →（仅 ADR-0009 例外）Python → Rust(安全过滤) → 发送
 ```
 
-**Why**：符合「Rust 唯一协调者」「Python 不直连渠道协议」的既有架构；意图路由等业务逻辑放 Rust 可单测、可离线。
+**Why**：符合「Rust 唯一协调者」；意图路由与默认 LLM 在 Rust 可单测、可离线。Python 不直连渠道协议。
 
 ### 3. 全局自动回复（放宽「AI 不自动发信」）
 
@@ -78,7 +81,7 @@ pub trait ChannelProtocol: Send + Sync {
 
 ## Consequences
 
-- **正面**：多渠道扩展成本低；业务调度集中在 Rust 可测；Python 保持极薄。
+- **正面**：多渠道扩展成本低；业务调度与默认 LLM 集中在 Rust 可测；Python 只在生态缺口出现。
 - **成本**：闲鱼协议为逆向非官方，接口可能失效需维护；自动回复需要合规与安全过滤保障。
 - **文档**：`domains/channel/README.md`、`CHG-20260811-001` 需同步修订。
 - **兼容**：沿用 `channel_*` 表命名约定；协议层消息 id 作为幂等键。
