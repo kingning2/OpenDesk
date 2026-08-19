@@ -1,12 +1,16 @@
 import { spawnSync } from "node:child_process";
 import { platform } from "node:os";
+import { ensureNasm } from "./ensure-nasm.mjs";
+import { ensureSccache } from "./ensure-sccache.mjs";
+import { spawnPnpm } from "./spawn-pnpm.mjs";
+import { syncContracts } from "./sync-contracts.mjs";
 import { syncPythonWorkspace } from "./sync-python.mjs";
 
 const args = process.argv.slice(2);
 // pnpm and some wrappers may inject a standalone "--" separator.
 // Tauri CLI doesn't need it; forwarding it can break argument parsing.
 const normalizedArgs = args.filter((arg) => arg !== "--");
-const env = { ...process.env };
+const env = ensureSccache({ ...process.env });
 
 function commandExists(command) {
   const checker = platform() === "win32" ? "where" : "which";
@@ -62,13 +66,17 @@ if (!commandExists("uv")) {
 const cliTarget = parseCliTarget(normalizedArgs);
 let tauriArgs = [...normalizedArgs];
 
-// `pnpm tauri -- dev`：先 sync Python，避免 sidecar 冷启动超过健康检查超时。
+// `pnpm tauri dev|build`：先 sync 契约 codegen，再 sync Python，避免 Rust/TS 缺类型或 sidecar 冷启动超时。
+if (tauriArgs[0] === "dev" || tauriArgs[0] === "build") {
+  syncContracts({ env });
+}
 if (tauriArgs[0] === "dev") {
   syncPythonWorkspace({ env });
 }
 
 // Windows：宿主编译器固定 MSVC；交叉目标以 --target / 已有 CARGO_BUILD_TARGET 为准。
 if (platform() === "win32") {
+  ensureNasm(env);
   env.RUSTUP_TOOLCHAIN =
     env.RUSTUP_TOOLCHAIN || "stable-x86_64-pc-windows-msvc";
   if (cliTarget) {
@@ -90,14 +98,9 @@ if (platform() === "win32") {
   }
 }
 
-const result = spawnSync(
-  "pnpm",
+const result = spawnPnpm(
   ["--filter", "@desk/desktop", "exec", "tauri", ...tauriArgs],
-  {
-    stdio: "inherit",
-    shell: true,
-    env,
-  },
+  { env },
 );
 
 process.exit(result.status ?? 1);

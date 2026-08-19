@@ -9,3 +9,9 @@ rustflags = ["-C", "link-arg=/IGNORE:4099"]
 
 [target.i686-pc-windows-msvc]
 rustflags = ["-C", "link-arg=/IGNORE:4099"]
+
+[profile.dev]
+incremental = true
+
+[profile.release]
+incremental = true

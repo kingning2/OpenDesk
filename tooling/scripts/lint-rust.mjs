@@ -1,8 +1,9 @@
 import { spawnSync } from "node:child_process";
 import { platform } from "node:os";
+import { ensureSccache } from "./ensure-sccache.mjs";
 
 function run(command, args) {
-  const env = { ...process.env };
+  const env = ensureSccache({ ...process.env });
   if (platform() === "win32") {
     env.RUSTUP_TOOLCHAIN = "stable-x86_64-pc-windows-msvc";
   }

@@ -6,12 +6,15 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
+  statSync,
   unlinkSync,
   writeFileSync,
 } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { platform } from "node:os";
+import { ensurePerl } from "./ensure-perl.mjs";
+import { ensureSccache } from "./ensure-sccache.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const subscriptionDir = join(root, "subscription");
@@ -126,31 +129,67 @@ function sha256File(filePath) {
   return hash.digest("hex");
 }
 
+/** subscription 源码是否比产物更新（用于跳过无改动的 release 编 verifier）。 */
+function subscriptionSourcesChanged(sinceMs) {
+  const watchPaths = [
+    join(subscriptionDir, "Cargo.toml"),
+    join(subscriptionDir, "Cargo.lock"),
+    join(subscriptionDir, "build.rs"),
+    join(subscriptionDir, "src"),
+    join(subscriptionDir, "keys"),
+  ];
+  let latest = sinceMs;
+  for (const watchPath of watchPaths) {
+    if (!existsSync(watchPath)) {
+      continue;
+    }
+    const stat = statSync(watchPath);
+    if (stat.isDirectory()) {
+      // 目录 mtime 足够；精细 walk 不必，Cargo 自己会增量。
+      latest = Math.max(latest, stat.mtimeMs);
+      continue;
+    }
+    latest = Math.max(latest, stat.mtimeMs);
+  }
+  return latest > sinceMs;
+}
+
 const { target: targetArg } = parseArgs(process.argv.slice(2));
 
-const env = { ...process.env };
+const env = ensureSccache({ ...process.env });
 if (platform() === "win32") {
   // 宿主编译器固定 MSVC；交叉目标（如 i686）靠 --target，不要改成 gnu。
   env.RUSTUP_TOOLCHAIN =
     env.RUSTUP_TOOLCHAIN ?? "stable-x86_64-pc-windows-msvc";
-  const perlRoot = join(root, "tooling", "strawberry-perl");
-  const perlBin = join(perlRoot, "perl", "bin");
-  const mingwBin = join(perlRoot, "c", "bin");
-  if (existsSync(join(perlBin, "perl.exe"))) {
-    env.Path = `${perlBin};${mingwBin};${env.Path ?? env.PATH ?? ""}`;
-    env.PATH = env.Path;
-  } else {
-    console.warn(
-      "WARNING: tooling/strawberry-perl not found; ensure perl is on PATH for vendored OpenSSL",
-    );
-  }
+  ensurePerl(env);
 }
 
 const buildTriple = resolveBuildTriple(targetArg);
+const destPath = join(binariesDir, artifactName(buildTriple));
+const releaseDir = join(subscriptionDir, "target", buildTriple, "release");
+const sourcePath = join(releaseDir, sourceBinaryName(buildTriple));
 
 if (!existsSync(subscriptionDir)) {
   console.error(`subscription crate missing at ${subscriptionDir}`);
   process.exit(1);
+}
+
+if (
+  process.env.FORCE_LICENSE_VERIFIER_BUILD !== "1" &&
+  existsSync(destPath) &&
+  existsSync(sourcePath) &&
+  statSync(sourcePath).mtimeMs >= statSync(destPath).mtimeMs &&
+  !subscriptionSourcesChanged(statSync(destPath).mtimeMs)
+) {
+  console.log(`Using existing license-verifier: ${destPath}`);
+  const digest = sha256File(destPath);
+  const shaPath = join(adapterGeneratedDir, "license_verifier.sha256");
+  mkdirSync(adapterGeneratedDir, { recursive: true });
+  if (!existsSync(shaPath) || readFileSync(shaPath, "utf8").trim() !== digest) {
+    writeFileSync(shaPath, `${digest}\n`, "utf8");
+    console.log(`sha256 -> ${shaPath} (${digest})`);
+  }
+  process.exit(0);
 }
 
 const cargoArgs = [
@@ -165,8 +204,6 @@ const cargoArgs = [
 console.log(`building license-verifier for ${buildTriple}`);
 run("cargo", cargoArgs, { cwd: subscriptionDir, env });
 
-const releaseDir = join(subscriptionDir, "target", buildTriple, "release");
-const sourcePath = join(releaseDir, sourceBinaryName(buildTriple));
 if (!existsSync(sourcePath)) {
   console.error(`license-verifier binary not found at ${sourcePath}`);
   process.exit(1);
@@ -175,7 +212,6 @@ if (!existsSync(sourcePath)) {
 mkdirSync(binariesDir, { recursive: true });
 mkdirSync(adapterGeneratedDir, { recursive: true });
 
-const destPath = join(binariesDir, artifactName(buildTriple));
 cpSync(sourcePath, destPath);
 if (!buildTriple.includes("windows")) {
   chmodSync(destPath, 0o755);

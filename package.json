@@ -25,7 +25,11 @@
     "lint:python:fix": "node tooling/scripts/lint-python-fix.mjs",
     "branch": "python skills/dingda/scripts/create_branch.py --interactive",
     "branch:create": "python skills/dingda/scripts/create_branch.py",
-    "branch:sync": "python skills/dingda/scripts/sync_branch_rules.py"
+    "branch:sync": "python skills/dingda/scripts/sync_branch_rules.py",
+    "contracts:sync": "node tooling/scripts/sync-contracts.mjs",
+    "sccache:install": "cargo install sccache --locked",
+    "sccache:stats": "sccache --show-stats",
+    "sccache:zero": "sccache --zero-stats"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

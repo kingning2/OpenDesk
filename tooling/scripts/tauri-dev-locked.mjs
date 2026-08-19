@@ -2,10 +2,24 @@ import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { platform } from "node:os";
+import { ensureNasm } from "./ensure-nasm.mjs";
+import { ensureSccache } from "./ensure-sccache.mjs";
+import { spawnPnpm } from "./spawn-pnpm.mjs";
+import { syncContracts } from "./sync-contracts.mjs";
 import { syncPythonWorkspace } from "./sync-python.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const WINDOWS_MSVC_TRIPLE = "x86_64-pc-windows-msvc";
+
+function runPnpm(args, options = {}) {
+  const result = spawnPnpm(args, {
+    cwd: options.cwd ?? root,
+    env: options.env ?? process.env,
+  });
+  if (result.status !== 0) {
+    process.exit(result.status ?? 1);
+  }
+}
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
@@ -35,10 +49,11 @@ function readHostTriple() {
   return match[1].trim();
 }
 
-const env = { ...process.env };
+const env = ensureSccache({ ...process.env });
 /** @type {string | null} */
 let buildTarget = null;
 if (platform() === "win32") {
+  ensureNasm(env);
   env.RUSTUP_TOOLCHAIN =
     env.RUSTUP_TOOLCHAIN ?? "stable-x86_64-pc-windows-msvc";
   buildTarget = env.CARGO_BUILD_TARGET || WINDOWS_MSVC_TRIPLE;
@@ -46,6 +61,7 @@ if (platform() === "win32") {
 }
 
 run("node", ["tooling/scripts/build-license-verifier.mjs"], { env });
+syncContracts({ cwd: root, env });
 syncPythonWorkspace({ cwd: root, env });
 
 const triple =
@@ -63,4 +79,4 @@ const tauriArgs = ["tauri", "dev", "--features", "license-lock"];
 if (buildTarget) {
   tauriArgs.push("--target", buildTarget);
 }
-run("pnpm", tauriArgs, { env });
+runPnpm(tauriArgs, { env });
