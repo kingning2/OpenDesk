@@ -10,22 +10,3 @@ export type { PageContainerProps } from "./page-container";
 
 export { PageScaffold } from "./page-scaffold";
 export type { PageScaffoldProps } from "./page-scaffold";
-
-export {
-  WorkspaceSplit,
-  WorkspaceSplitPane,
-  WorkspaceSplitToolbar,
-  WorkspaceSplitTitle,
-  WorkspaceSplitRow,
-  WorkspaceSplitGrid,
-  WorkspaceSplitCell,
-} from "./workspace-split";
-export type {
-  WorkspaceSplitProps,
-  WorkspaceSplitPaneProps,
-  WorkspaceSplitToolbarProps,
-  WorkspaceSplitTitleProps,
-  WorkspaceSplitRowProps,
-  WorkspaceSplitGridProps,
-  WorkspaceSplitCellProps,
-} from "./workspace-split";

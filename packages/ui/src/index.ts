@@ -1,4 +1,5 @@
 export * from "./components";
+export * from "./query";
 export * from "./motion";
 export { ThemeProvider } from "./theme/provider";
 export { useThemeTransition } from "./theme/theme-transition";

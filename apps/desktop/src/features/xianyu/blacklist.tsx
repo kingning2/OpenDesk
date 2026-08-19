@@ -1,19 +1,30 @@
 /**
  * 闲鱼黑名单管理页（迁移自原前端 `pages/blacklist/PersonalBlacklist.tsx`）。
  *
- * 按原前端核心交互重写：个人黑名单列表 + 买家搜索 + 批量新增 + 启用切换 + 删除。
- * 数据访问走 Tauri IPC（`@desk/platform/ipc/blacklist`），复用 crates/app BlacklistService。
+ * 列表：DataTable + TanStack Query；新增：FormInput / FormTextarea + Zod。
+ * 数据访问走 Tauri IPC（`@desk/platform/ipc/blacklist`）。
  */
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Button,
   ConfirmModal,
+  DataTable,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  Form,
+  FormInput,
+  FormTextarea,
   Input,
-  Loading,
   PageScaffold,
-  Textarea,
   toast,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  z,
+  type ColumnDef,
+  type PaginationState,
 } from "@desk/ui";
 import { Plus, Trash2 } from "@desk/ui/icons";
 import {
@@ -27,138 +38,172 @@ import {
 
 const OWNER_ID = 1; // 桌面单用户；多用户时由登录态注入
 const PAGE_SIZE = 20;
+const BLACKLIST_QUERY_KEY = ["xianyu", "blacklist"] as const;
+
+const createSchema = z.object({
+  buyerIds: z.string().trim().min(1, "买家 ID 不能为空"),
+  reason: z.string().optional(),
+});
 
 /**
  * 闲鱼黑名单管理页。
  *
- * @author agent
- * @created 2026-08-13
+ * @author Xiaoman
+ * @created 2026-08-19
+ *
+ * @returns 黑名单页节点
  */
 export function XianyuBlacklistPage() {
-  const [items, setItems] = useState<PersonalBlacklistItem[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: PAGE_SIZE,
+  });
   const [showForm, setShowForm] = useState(false);
-  const [buyerIds, setBuyerIds] = useState("");
-  const [reason, setReason] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<PersonalBlacklistItem | null>(null);
-  const [saving, setSaving] = useState(false);
 
-  async function load(nextPage = page, nextSearch = search) {
-    setLoading(true);
-    try {
-      const [list, count] = await blacklistPersonalList({
+  const page = pagination.pageIndex + 1;
+  const listQuery = useQuery({
+    queryKey: [...BLACKLIST_QUERY_KEY, OWNER_ID, page, search],
+    queryFn: async () => {
+      const [rows, total] = await blacklistPersonalList({
         owner_id: OWNER_ID,
-        page: nextPage,
-        page_size: PAGE_SIZE,
-        buyer_id: nextSearch.trim() || undefined,
+        page,
+        page_size: pagination.pageSize,
+        buyer_id: search.trim() || undefined,
       });
-      setItems(list);
-      setTotal(count);
-      setPage(nextPage);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : String(error));
-    } finally {
-      setLoading(false);
-    }
-  }
+      return { rows, total };
+    },
+  });
 
-  useEffect(() => {
-    let cancelled = false;
-    void blacklistPersonalList({
-      owner_id: OWNER_ID,
-      page: 1,
-      page_size: PAGE_SIZE,
-      buyer_id: search.trim() || undefined,
-    })
-      .then(([list, count]) => {
-        if (cancelled) return;
-        setItems(list);
-        setTotal(count);
-        setPage(1);
-      })
-      .catch((error) => {
-        if (!cancelled) {
-          toast.error(error instanceof Error ? error.message : String(error));
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-
-  async function handleCreate() {
-    if (!buyerIds.trim()) {
-      toast.error("买家 ID 不能为空");
-      return;
-    }
-    setSaving(true);
-    try {
-      await blacklistPersonalCreate({
+  const createMutation = useMutation({
+    mutationFn: (values: z.infer<typeof createSchema>) =>
+      blacklistPersonalCreate({
         owner_id: OWNER_ID,
-        buyer_ids: buyerIds,
-        reason: reason.trim() || undefined,
-      });
+        buyer_ids: values.buyerIds,
+        reason: values.reason?.trim() || undefined,
+      }),
+    onSuccess: async () => {
       toast.success("已加入黑名单");
       setShowForm(false);
-      setBuyerIds("");
-      setReason("");
-      await load(1);
-    } catch (error) {
+      await queryClient.invalidateQueries({ queryKey: BLACKLIST_QUERY_KEY });
+    },
+    onError: (error: unknown) => {
       toast.error(error instanceof Error ? error.message : String(error));
-    } finally {
-      setSaving(false);
-    }
-  }
+    },
+  });
 
-  async function handleToggle(item: PersonalBlacklistItem) {
-    try {
-      await blacklistSetEnabled(OWNER_ID, item.id, !item.is_enabled);
+  const toggleMutation = useMutation({
+    mutationFn: (item: PersonalBlacklistItem) =>
+      blacklistSetEnabled(OWNER_ID, item.id, !item.is_enabled),
+    onSuccess: async (_void, item) => {
       toast.success(item.is_enabled ? "已停用" : "已启用");
-      await load();
-    } catch (error) {
+      await queryClient.invalidateQueries({ queryKey: BLACKLIST_QUERY_KEY });
+    },
+    onError: (error: unknown) => {
       toast.error(error instanceof Error ? error.message : String(error));
-    }
-  }
+    },
+  });
 
-  async function handleDelete() {
-    if (!deleteTarget) return;
-    try {
-      await blacklistDelete(OWNER_ID, deleteTarget.id);
+  const deleteMutation = useMutation({
+    mutationFn: (item: PersonalBlacklistItem) => blacklistDelete(OWNER_ID, item.id),
+    onSuccess: async () => {
       toast.success("已移除黑名单");
       setDeleteTarget(null);
-      await load();
-    } catch (error) {
+      await queryClient.invalidateQueries({ queryKey: BLACKLIST_QUERY_KEY });
+    },
+    onError: (error: unknown) => {
       toast.error(error instanceof Error ? error.message : String(error));
-    }
+    },
+  });
+
+  function applySearch() {
+    setSearch(searchInput.trim());
+    setPagination((current) => ({ ...current, pageIndex: 0 }));
   }
+
+  const columns: ColumnDef<PersonalBlacklistItem>[] = [
+    {
+      accessorKey: "buyer_id",
+      header: "买家 ID",
+      cell: ({ row }) => <span className="font-mono">{row.original.buyer_id}</span>,
+    },
+    {
+      id: "level",
+      header: "级别",
+      cell: ({ row }) => (
+        <span className="rounded-full bg-muted px-2 py-0.5 text-(length:--text-xs)">
+          {blacklistLevel(row.original)}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "reason",
+      header: "原因",
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">{row.original.reason || "—"}</span>
+      ),
+    },
+    {
+      accessorKey: "is_enabled",
+      header: "状态",
+      cell: ({ row }) =>
+        row.original.is_enabled ? (
+          <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-(length:--text-xs) text-red-500">
+            生效中
+          </span>
+        ) : (
+          <span className="rounded-full bg-muted px-2 py-0.5 text-(length:--text-xs) text-muted-foreground">
+            已停用
+          </span>
+        ),
+    },
+    {
+      id: "actions",
+      header: () => <span className="flex justify-end">操作</span>,
+      cell: ({ row }) => {
+        const item = row.original;
+        return (
+          <div className="flex items-center justify-end gap-1">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={toggleMutation.isPending}
+              onClick={() => toggleMutation.mutate(item)}
+            >
+              {item.is_enabled ? "停用" : "启用"}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-destructive"
+              onClick={() => setDeleteTarget(item)}
+            >
+              <Trash2 className="size-3.5" aria-hidden />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
 
   return (
     <PageScaffold subtitle="闲鱼黑名单管理 — 禁止发货买家">
       <div className="space-y-4">
-        {/* 工具栏 */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Input
               placeholder="搜索买家 ID"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
               onKeyDown={(event) => {
-                if (event.key === "Enter") void load(1);
+                if (event.key === "Enter") applySearch();
               }}
               className="w-56"
             />
-            <Button variant="outline" size="sm" onClick={() => void load(1)}>
+            <Button variant="outline" size="sm" onClick={applySearch}>
               搜索
             </Button>
           </div>
@@ -168,137 +213,63 @@ export function XianyuBlacklistPage() {
           </Button>
         </div>
 
-        {/* 列表 */}
-        {loading ? (
-          <Loading size="lg" text="加载中..." className="py-16" />
-        ) : items.length === 0 ? (
-          <div className="py-16 text-center text-muted-foreground">暂无黑名单记录</div>
-        ) : (
-          <div className="overflow-hidden rounded-xl border border-border">
-            <table className="w-full text-[length:var(--text-sm)]">
-              <thead className="bg-muted/50 text-muted-foreground">
-                <tr>
-                  <th className="px-4 py-2.5 text-left font-medium">买家 ID</th>
-                  <th className="px-4 py-2.5 text-left font-medium">级别</th>
-                  <th className="px-4 py-2.5 text-left font-medium">原因</th>
-                  <th className="px-4 py-2.5 text-left font-medium">状态</th>
-                  <th className="px-4 py-2.5 text-right font-medium">操作</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {items.map((item) => (
-                  <tr key={item.id} className="hover:bg-muted/30">
-                    <td className="px-4 py-2.5 font-mono">{item.buyer_id}</td>
-                    <td className="px-4 py-2.5">
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-[length:var(--text-xs)]">
-                        {blacklistLevel(item)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{item.reason || "—"}</td>
-                    <td className="px-4 py-2.5">
-                      <span
-                        className={
-                          item.is_enabled
-                            ? "rounded-full bg-red-500/15 px-2 py-0.5 text-[length:var(--text-xs)] text-red-500"
-                            : "rounded-full bg-muted px-2 py-0.5 text-[length:var(--text-xs)] text-muted-foreground"
-                        }
-                      >
-                        {item.is_enabled ? "生效中" : "已停用"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2.5 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button size="sm" variant="outline" onClick={() => void handleToggle(item)}>
-                          {item.is_enabled ? "停用" : "启用"}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-destructive"
-                          onClick={() => setDeleteTarget(item)}
-                        >
-                          <Trash2 className="size-3.5" aria-hidden />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* 分页 */}
-        {totalPages > 1 ? (
-          <div className="flex items-center justify-end gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => void load(Math.max(1, page - 1))}
-            >
-              上一页
-            </Button>
-            <span className="text-[length:var(--text-sm)] text-muted-foreground">
-              {page} / {totalPages}
-            </span>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page >= totalPages}
-              onClick={() => void load(Math.min(totalPages, page + 1))}
-            >
-              下一页
-            </Button>
-          </div>
-        ) : null}
+        <DataTable
+          columns={columns}
+          query={listQuery}
+          getRowId={(row) => String(row.id)}
+          emptyText="暂无黑名单记录"
+          pagination={pagination}
+          onPaginationChange={setPagination}
+        />
       </div>
 
-      {/* 新增黑名单弹窗 */}
-      <ConfirmModal
-        isOpen={showForm}
-        title="加入黑名单"
-        message={
-          <div className="space-y-3 text-left">
-            <label className="block space-y-1">
-              <span className="text-[length:var(--text-sm)] text-muted-foreground">
-                买家 ID（支持多行批量）
-              </span>
-              <Textarea
-                value={buyerIds}
-                onChange={(event) => setBuyerIds(event.target.value)}
-                placeholder={"buyer-001\nbuyer-002"}
-                rows={3}
-              />
-            </label>
-            <label className="block space-y-1">
-              <span className="text-[length:var(--text-sm)] text-muted-foreground">原因</span>
-              <Input
-                value={reason}
-                onChange={(event) => setReason(event.target.value)}
-                placeholder="如：恶意退款买家"
-              />
-            </label>
-          </div>
-        }
-        confirmText={saving ? "添加中…" : "添加"}
-        loading={saving}
-        onConfirm={() => void handleCreate()}
-        onCancel={() => {
-          setShowForm(false);
-          setBuyerIds("");
-          setReason("");
-        }}
-      />
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent title="加入黑名单">
+          <Form
+            key={String(showForm)}
+            schema={createSchema}
+            defaultValues={{ buyerIds: "", reason: "" }}
+            onSubmit={async (values) => {
+              try {
+                await createMutation.mutateAsync(values);
+              } catch {
+                // onError 已 toast；吞掉避免 RHF 未处理的 Promise 拒绝
+              }
+            }}
+          >
+            {({ formState }) => (
+              <>
+                <FormTextarea
+                  name="buyerIds"
+                  label="买家 ID（支持多行批量）"
+                  placeholder={"buyer-001\nbuyer-002"}
+                  rows={3}
+                />
+                <FormInput name="reason" label="原因" placeholder="如：恶意退款买家" />
+                <DialogFooter>
+                  <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>
+                    取消
+                  </Button>
+                  <Button type="submit" disabled={formState.isSubmitting}>
+                    {formState.isSubmitting ? "添加中…" : "添加"}
+                  </Button>
+                </DialogFooter>
+              </>
+            )}
+          </Form>
+        </DialogContent>
+      </Dialog>
 
-      {/* 删除确认 */}
       <ConfirmModal
         isOpen={deleteTarget !== null}
         type="danger"
         title="移除黑名单"
         message={`确认将买家「${deleteTarget?.buyer_id ?? ""}」移出黑名单？`}
         confirmText="移除"
-        onConfirm={() => void handleDelete()}
+        loading={deleteMutation.isPending}
+        onConfirm={() => {
+          if (deleteTarget) deleteMutation.mutate(deleteTarget);
+        }}
         onCancel={() => setDeleteTarget(null)}
       />
     </PageScaffold>

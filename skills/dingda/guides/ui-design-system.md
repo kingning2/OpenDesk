@@ -30,9 +30,10 @@ import { Card } from "@desk/ui";
 | 毛玻璃卡片 | `Card variant="glass"` |
 | 页面过渡 | `motion` + `spring.default` |
 | 深色模式 | `ThemeProvider`（next-themes） |
-| 数据表 | `DataTable`（TanStack Table） |
+| 数据表 | `DataTable`（shadcn Table + TanStack Table + 可选 Query） |
 | 长列表 | `VirtualList`（TanStack Virtual） |
-| 表单校验 | `Form` + `zodResolver` |
+| 表单校验 | `Form` + `FormInput`（RHF + Zod） |
+| 服务端缓存 | `QueryProvider` / `useQuery`（Feature 注入 IPC `queryFn`） |
 | 日期显示 | `format` from date-fns via ui helpers |
 | 拖拽排序 | `Sortable`（dnd-kit） |
 | ⌘K 面板 | `Command`（cmdk） |

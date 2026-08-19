@@ -5,8 +5,8 @@
  * @created 2026-07-20
  */
 
-import { type ComponentType, useEffect, useState } from "react";
-import { cn, PageScaffold } from "@desk/ui";
+import { type ComponentType, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { cn, motion, PageScaffold, useAnimation, useReducedMotion } from "@desk/ui";
 import { pageLoaders } from "@platform-routes";
 
 import { needsFillLayout } from "./workspace-layout";
@@ -64,14 +64,23 @@ export interface WorkspaceOutletProps {
 /**
  * 单个标签页：首次打开时懒加载，之后保持挂载。
  *
+ * 切入：从右侧滑入。切出：立刻隐藏，无退场动画。
+ *
  * @author coisini
  * @created 2026-07-21
- *
- * @param props.path - 页面路径
- * @param props.active - 是否为当前激活标签
  */
-function WorkspaceTab({ path, active }: { path: string; active: boolean }) {
+function WorkspaceTab({
+  path,
+  active,
+  reducedMotion,
+}: {
+  path: string;
+  active: boolean;
+  reducedMotion: boolean;
+}) {
   const [Page, setPage] = useState<ComponentType | null>(() => pageCache.get(path) ?? null);
+  const controls = useAnimation();
+  const skipFirstEnter = useRef(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -88,37 +97,51 @@ function WorkspaceTab({ path, active }: { path: string; active: boolean }) {
     };
   }, [path, Page]);
 
-  if (!Page) {
-    return (
-      <div
-        className={cn(
-          "min-h-0 flex-1 items-center justify-center text-muted-foreground",
-          active ? "flex" : "hidden",
-        )}
-        aria-hidden={!active}
-        aria-busy="true"
-        role="status"
-      />
-    );
-  }
+  useLayoutEffect(() => {
+    if (!active) {
+      skipFirstEnter.current = false;
+      void controls.set({ x: 0 });
+      return;
+    }
+    if (reducedMotion || skipFirstEnter.current) {
+      skipFirstEnter.current = false;
+      void controls.set({ x: 0 });
+      return;
+    }
+    void controls.set({ x: "100%" });
+    void controls.start({
+      x: 0,
+      transition: { duration: 0.5, ease: [0.23, 1, 0.32, 1] },
+    });
+  }, [active, controls, reducedMotion]);
 
   return (
-    <div
+    <motion.div
       className={cn(
-        "min-h-0 flex-1 flex-col overflow-hidden",
-        active ? "flex" : "hidden",
+        "absolute inset-0 flex min-h-0 flex-col overflow-hidden will-change-transform",
+        !active && "hidden pointer-events-none",
       )}
+      initial={false}
+      animate={controls}
       aria-hidden={!active}
     >
-      <PageScaffold
-        fill
-        scroll={!needsFillLayout(path)}
-        containerWidth="full"
-        className="min-h-0 flex-1"
-      >
-        <Page />
-      </PageScaffold>
-    </div>
+      {!Page ? (
+        <div
+          className="flex min-h-0 flex-1 items-center justify-center text-muted-foreground"
+          aria-busy="true"
+          role="status"
+        />
+      ) : (
+        <PageScaffold
+          fill
+          scroll={!needsFillLayout(path)}
+          containerWidth="full"
+          className="min-h-0 flex-1"
+        >
+          <Page />
+        </PageScaffold>
+      )}
+    </motion.div>
   );
 }
 
@@ -132,11 +155,19 @@ function WorkspaceTab({ path, active }: { path: string; active: boolean }) {
  * @param props.activePath - 当前激活路径
  */
 export function WorkspaceOutlet({ openPaths, activePath }: WorkspaceOutletProps) {
+  const reducedMotion = useReducedMotion() ?? false;
+  const paths = openPaths.includes(activePath) ? openPaths : [...openPaths, activePath];
+
   return (
-    <>
-      {openPaths.map((path) => (
-        <WorkspaceTab key={path} path={path} active={path === activePath} />
+    <div className="relative min-h-0 flex-1 overflow-hidden">
+      {paths.map((path) => (
+        <WorkspaceTab
+          key={path}
+          path={path}
+          active={path === activePath}
+          reducedMotion={reducedMotion}
+        />
       ))}
-    </>
+    </div>
   );
 }

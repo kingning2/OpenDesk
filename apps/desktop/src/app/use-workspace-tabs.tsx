@@ -5,7 +5,7 @@
  * @created 2026-07-20
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState, createContext, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router";
 
 import { navItems } from "../route/nav-registry";
@@ -72,9 +72,11 @@ export function useWorkspaceTabs() {
   const selectTab = useCallback(
     (path: string) => {
       ensureTab(path);
-      navigate(path);
+      if (path !== pathname) {
+        navigate(path);
+      }
     },
-    [ensureTab, navigate],
+    [ensureTab, navigate, pathname],
   );
 
   const closeTab = useCallback(
@@ -114,4 +116,41 @@ export function useWorkspaceTabs() {
     closeTab,
     addTab,
   };
+}
+
+type WorkspaceNavValue = {
+  selectTab: (path: string) => void;
+};
+
+const WorkspaceNavContext = createContext<WorkspaceNavValue | null>(null);
+
+/**
+ * 向首页等嵌套页面提供带过渡的工作区导航。
+ *
+ * @author coisini
+ * @created 2026-08-19
+ */
+export function WorkspaceNavProvider({
+  selectTab,
+  children,
+}: {
+  selectTab: (path: string) => void;
+  children: ReactNode;
+}) {
+  const value = useMemo(() => ({ selectTab }), [selectTab]);
+  return <WorkspaceNavContext.Provider value={value}>{children}</WorkspaceNavContext.Provider>;
+}
+
+/**
+ * 读取工作区导航（含路由过渡）。
+ *
+ * @author coisini
+ * @created 2026-08-19
+ */
+export function useWorkspaceNav(): WorkspaceNavValue {
+  const context = useContext(WorkspaceNavContext);
+  if (!context) {
+    throw new Error("useWorkspaceNav must be used within WorkspaceNavProvider");
+  }
+  return context;
 }

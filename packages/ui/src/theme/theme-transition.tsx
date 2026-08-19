@@ -2,10 +2,7 @@
 
 import { useTheme } from "next-themes";
 import * as React from "react";
-import { createPortal } from "react-dom";
-
-import { DiagonalReveal } from "../motion/diagonal-reveal";
-import { spring } from "../tokens/motion";
+import { flushSync } from "react-dom";
 
 type Appearance = "light" | "dark";
 
@@ -19,48 +16,38 @@ function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+function applyAppearance(appearance: Appearance) {
+  const root = document.documentElement;
+  root.classList.toggle("dark", appearance === "dark");
+  root.style.colorScheme = appearance;
+}
+
+function startThemeViewTransition(update: () => void) {
+  const start = document.startViewTransition?.bind(document);
+  if (typeof start !== "function" || prefersReducedMotion()) {
+    update();
+    return;
+  }
+
+  try {
+    start(update);
+  } catch {
+    update();
+  }
+}
+
 type ThemeTransitionContextValue = {
   setThemeWithTransition: (theme: string) => void;
 };
 
 const ThemeTransitionContext = React.createContext<ThemeTransitionContextValue | null>(null);
 
-function ThemeTransitionOverlay({
-  appearance,
-  onComplete,
-}: {
-  appearance: Appearance;
-  onComplete: () => void;
-}) {
-  return createPortal(
-    <div
-      className={appearance === "dark" ? "dark" : undefined}
-      aria-hidden
-      onPointerDown={(event) => event.preventDefault()}
-    >
-      <DiagonalReveal
-        transition={spring.smooth}
-        className="fixed inset-0 z-[9999] bg-shell"
-        onAnimationComplete={onComplete}
-      />
-    </div>,
-    document.body,
-  );
-}
-
 export function ThemeTransitionProvider({ children }: { children: React.ReactNode }) {
   const { theme, setTheme } = useTheme();
-  const [overlayAppearance, setOverlayAppearance] = React.useState<Appearance | null>(null);
-  const pendingTheme = React.useRef<string | null>(null);
 
   const setThemeWithTransition = React.useCallback(
     (next: string) => {
       if (typeof window === "undefined") {
-        setTheme(next);
-        return;
-      }
-
-      if (prefersReducedMotion()) {
         setTheme(next);
         return;
       }
@@ -73,26 +60,19 @@ export function ThemeTransitionProvider({ children }: { children: React.ReactNod
         return;
       }
 
-      pendingTheme.current = next;
-      setOverlayAppearance(nextAppearance);
+      startThemeViewTransition(() => {
+        applyAppearance(nextAppearance);
+        flushSync(() => {
+          setTheme(next);
+        });
+      });
     },
     [setTheme, theme],
   );
 
-  const completeTransition = React.useCallback(() => {
-    if (pendingTheme.current) {
-      setTheme(pendingTheme.current);
-      pendingTheme.current = null;
-    }
-    setOverlayAppearance(null);
-  }, [setTheme]);
-
   return (
     <ThemeTransitionContext.Provider value={{ setThemeWithTransition }}>
       {children}
-      {overlayAppearance ? (
-        <ThemeTransitionOverlay appearance={overlayAppearance} onComplete={completeTransition} />
-      ) : null}
     </ThemeTransitionContext.Provider>
   );
 }

@@ -7,7 +7,13 @@ import { ThemeTransitionProvider } from "./theme-transition";
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   return (
-    <NextThemesProvider attribute="class" defaultTheme="system" enableSystem {...props}>
+    <NextThemesProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+      {...props}
+    >
       <ThemeTransitionProvider>{children}</ThemeTransitionProvider>
     </NextThemesProvider>
   );

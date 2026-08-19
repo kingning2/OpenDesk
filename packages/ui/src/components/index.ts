@@ -6,6 +6,31 @@ export { Checkbox } from "./checkbox";
 export type { CheckboxProps } from "./checkbox";
 export { Input } from "./input";
 export type { InputProps } from "./input";
+export { Label } from "./label";
+export type { LabelProps } from "./label";
+export { Form, FormInput, FormTextarea } from "./form";
+export type { FormProps, FormInputProps, FormTextareaProps } from "./form";
+export { useFormContext } from "react-hook-form";
+export { z } from "zod";
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableCaption,
+} from "./table";
+export { DataTable } from "./data-table";
+export type {
+  DataTableProps,
+  DataTablePage,
+  DataTableQueryData,
+  ColumnDef,
+  PaginationState,
+  SortingState,
+} from "./data-table";
 export { Loading, PageLoading } from "./loading";
 export type { LoadingProps } from "./loading";
 export { SafeHtml } from "./safe-html";

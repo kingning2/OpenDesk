@@ -1,2 +1,2 @@
-export { AnimatePresence, LayoutGroup, motion } from "motion/react";
+export { AnimatePresence, LayoutGroup, motion, useAnimation, useReducedMotion } from "motion/react";
 export { DiagonalReveal } from "./diagonal-reveal";

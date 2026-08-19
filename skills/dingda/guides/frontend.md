@@ -12,9 +12,10 @@
 | 样式 | **Tailwind CSS**（令牌在 `@desk/ui/tokens`） |
 | 动画 | **Motion** + Spring 预设 |
 | 图标 | **Lucide React** |
-| 表格 | **TanStack Table** |
+| 表格 | **shadcn Table + TanStack Table + TanStack Query**（`DataTable`） |
 | 虚拟列表 | **TanStack Virtual** |
-| 表单 | **Zod + React Hook Form** |
+| 表单 | **FormInput → Input → React Hook Form → Zod** |
+| 服务端状态 | **TanStack Query**（`QueryProvider` / `useQuery`） |
 | 日期 | **date-fns** |
 | 主题 | **next-themes** |
 | 拖拽 | **dnd-kit** |

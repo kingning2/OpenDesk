@@ -11,7 +11,8 @@ DingDa 设计系统与 **通用** UI 组件库。Feature 层的视觉与交互�
 | Button / Input / Select / Card / ScrollArea | 窗口 TitleBar |
 | IconButton / ThemeToggle / Toaster | NavRail / AppLayout / MainPanel |
 | PageScaffold / PageContainer | 工作区 TabBar |
-| tokens / theme / motion 原语 | 任何 DingDa 桌面壳装配 |
+| DataTable / Form / FormInput / QueryProvider | 任何 DingDa 桌面壳装配 |
+| tokens / theme / motion 原语 | IPC / 业务请求 |
 
 桌面窗口壳在 `apps/desktop/src/app/`。
 
@@ -23,9 +24,10 @@ DingDa 设计系统与 **通用** UI 组件库。Feature 层的视觉与交互�
 | 样式 | Tailwind CSS（令牌在 `src/tokens/`） |
 | 动画 | Motion（Spring） |
 | 图标 | Lucide React |
-| 表格 | TanStack Table |
+| 表格 | shadcn Table + TanStack Table + TanStack Query（`DataTable`） |
 | 虚拟列表 | TanStack Virtual |
-| 表单 | Zod + React Hook Form |
+| 表单 | FormInput → Input → React Hook Form → Zod |
+| 服务端状态 | TanStack Query（`QueryProvider`） |
 | 日期 | date-fns |
 | 主题 | next-themes |
 | 拖拽 | dnd-kit |
@@ -58,17 +60,30 @@ DingDa 设计系统与 **通用** UI 组件库。Feature 层的视觉与交互�
 ```
 
 ```tsx
-import { Card, ThemeProvider, Toaster } from "@desk/ui";
+import { DataTable, Form, FormInput, useQuery, z } from "@desk/ui";
+
+const schema = z.object({
+  name: z.string().min(1, "必填"),
+});
 
 export function Page() {
+  const query = useQuery({
+    queryKey: ["items"],
+    queryFn: fetchItems, // Feature 注入 IPC；@desk/ui 不发请求
+  });
+
   return (
-    <ThemeProvider>
-      <Card variant="glass">Content</Card>
-      <Toaster />
-    </ThemeProvider>
+    <>
+      <DataTable columns={columns} query={query} />
+      <Form schema={schema} onSubmit={save}>
+        <FormInput name="name" label="名称" />
+      </Form>
+    </>
   );
 }
 ```
+
+`QueryProvider` 在桌面根挂一次（`apps/desktop/src/app/app.tsx`）。
 
 ## 目录
 
@@ -76,9 +91,12 @@ export function Page() {
 src/
 ├── tokens/          # 设计令牌（CSS 变量 + Motion spring）
 ├── lib/             # cn() 等工具
+├── query/           # QueryProvider（TanStack Query）
 ├── theme/           # ThemeProvider（next-themes）
 ├── motion/          # 可复用动效原语
 └── components/      # shadcn 风格通用组件（variant 驱动）
+    ├── data-table.tsx
+    ├── form.tsx
     └── layout/      # PageContainer / PageScaffold
 ```
 

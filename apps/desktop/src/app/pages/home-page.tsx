@@ -7,7 +7,7 @@
  * @created 2026-07-20
  */
 
-import { useNavigate } from "react-router";
+import { useWorkspaceNav } from "../use-workspace-tabs";
 import { Button, Card, CardContent } from "@desk/ui";
 import { managePath } from "@desk/platform/compile";
 import { homeManageNav } from "@platform-routes";
@@ -21,7 +21,7 @@ import { homeManageNav } from "@platform-routes";
  * @returns 首页节点
  */
 export function HomePage() {
-  const navigate = useNavigate();
+  const { selectTab } = useWorkspaceNav();
 
   return (
     <>
@@ -33,7 +33,7 @@ export function HomePage() {
             <Button
               key={item.key}
               variant="ghost"
-              onClick={() => navigate(managePath(item.key))}
+              onClick={() => selectTab(managePath(item.key))}
               className="group h-auto p-0 text-left"
             >
               <Card variant="glass" className="h-full w-full transition-colors group-hover:border-primary/40">

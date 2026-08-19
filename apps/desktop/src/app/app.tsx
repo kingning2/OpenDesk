@@ -1,5 +1,5 @@
 /**
- * 应用根组件：路由与授权门禁。
+ * 应用根组件：Query 上下文、路由与授权门禁。
  *
  * @author coisini
  * @created 2026-07-20
@@ -7,7 +7,7 @@
 
 import { useCallback } from "react";
 import { RouterProvider } from "react-router";
-import { Button, Toaster } from "@desk/ui";
+import { Button, QueryProvider, Toaster } from "@desk/ui";
 import { appRouter } from "../route";
 import {
   LicenseGateProvider,
@@ -75,5 +75,9 @@ function AppChrome() {
  * @returns 根节点
  */
 export function App() {
-  return <AppChrome />;
+  return (
+    <QueryProvider>
+      <AppChrome />
+    </QueryProvider>
+  );
 }
