@@ -1,11 +1,11 @@
 /**
  * 闲鱼账号管理页（迁移自原前端 `pages/accounts/Accounts.tsx`）。
  *
- * 按原前端核心交互重写：账号列表 + 筛选 + 新建/编辑 + 状态切换 + 扫码登录。
+ * 账号列表 + 筛选 + 扫码登录添加 + 状态切换 + 连接管理。
  * 数据访问走 Tauri IPC（`@desk/platform/ipc/account`），复用 crates/app 账号服务。
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
   ConfirmModal,
@@ -21,15 +21,13 @@ import {
   SelectValue,
   toast,
 } from "@desk/ui";
-import { Plus, QrCode, Trash2 } from "@desk/ui/icons";
+import { QrCode, Trash2 } from "@desk/ui/icons";
 import {
   accountConnect,
   accountConnectionState,
-  accountCreate,
   accountDelete,
   accountDisconnect,
   accountList,
-  accountPasswordLogin,
   accountQrCancel,
   accountQrCheck,
   accountQrStart,
@@ -38,6 +36,7 @@ import {
   type AccountStatus,
   type XianyuAccount,
 } from "@desk/platform/ipc/account";
+import { listenChannelStatus } from "@desk/platform/events";
 
 const OWNER_ID = 1; // 桌面单用户；多用户时由登录态注入
 
@@ -223,12 +222,6 @@ function AccountQrDialog({
             </p>
           ) : null}
 
-          <p className="text-center text-[length:var(--text-xs)] text-muted-foreground">
-            提示：此处的扫码创建的是业务账号（用于自动回复管理）。
-            <br />
-            登录成功后会自动写入账号并尝试建立闲鱼连接。
-          </p>
-
           <div className="flex w-full justify-center gap-2">
             {isTerminal ? (
               <Button onClick={onClose}>关闭</Button>
@@ -242,36 +235,10 @@ function AccountQrDialog({
   );
 }
 
-interface AccountForm {
-  account_id: string;
-  display_name: string;
-  cookie: string;
-  remark: string;
-}
-
-const EMPTY_FORM: AccountForm = { account_id: "", display_name: "", cookie: "", remark: "" };
-
-function toAccount(ownerId: number, form: AccountForm): XianyuAccount {
-  return {
-    id: 0,
-    owner_id: ownerId,
-    account_id: form.account_id.trim(),
-    display_name: form.display_name.trim(),
-    login_id: "",
-    login_password: "",
-    unb: "",
-    cookie: form.cookie,
-    login_method: "qr",
-    status: "active",
-    remark: form.remark.trim(),
-    pause_duration_minutes: 10,
-  };
-}
-
 /**
  * 闲鱼账号管理页。
  *
- * @author agent
+ * @author Xiaoman
  * @created 2026-08-13
  */
 export function XianyuAccountsPage() {
@@ -279,23 +246,13 @@ export function XianyuAccountsPage() {
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState<AccountForm>(EMPTY_FORM);
-  const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<XianyuAccount | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
   const [qrSeq, setQrSeq] = useState(0);
-  const [passwordOpen, setPasswordOpen] = useState(false);
-  const [passwordLoginId, setPasswordLoginId] = useState("");
-  const [passwordValue, setPasswordValue] = useState("");
-  const [passwordDisplayName, setPasswordDisplayName] = useState("");
-  const [passwordSubmitting, setPasswordSubmitting] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<XianyuAccount | null>(null);
   const [editorDisplayName, setEditorDisplayName] = useState("");
   const [editorRemark, setEditorRemark] = useState("");
-  const [editorLoginId, setEditorLoginId] = useState("");
-  const [editorLoginPassword, setEditorLoginPassword] = useState("");
   const [editorSaving, setEditorSaving] = useState(false);
   /** account_id → 渠道连接状态。 */
   const [connectionStates, setConnectionStates] = useState<Record<string, string>>({});
@@ -336,28 +293,78 @@ export function XianyuAccountsPage() {
     };
   }, []);
 
-  // 轮询各账号的渠道连接状态（每 5 秒）。
-  useEffect(() => {
-    let cancelled = false;
-    const timer = window.setInterval(async () => {
-      if (cancelled) return;
-      const states: Record<string, string> = {};
-      for (const account of accounts) {
+  /** 拉取指定账号的渠道连接状态（合并写入，避免轮询失败清空已有状态）。 */
+  const refreshConnectionStates = useCallback(async (accountIds: string[]) => {
+    if (accountIds.length === 0) {
+      return;
+    }
+    const updates: Record<string, string> = {};
+    await Promise.all(
+      accountIds.map(async (accountId) => {
         try {
-          states[account.account_id] = await accountConnectionState(OWNER_ID, account.account_id);
+          updates[accountId] = await accountConnectionState(OWNER_ID, accountId);
         } catch {
           // 单账号状态查询失败不阻断其余。
         }
+      }),
+    );
+    if (Object.keys(updates).length > 0) {
+      setConnectionStates((current) => ({ ...current, ...updates }));
+    }
+  }, []);
+
+  // 订阅 Rust 侧 channel/status 推送（连接成功/断开/异常即时更新 UI）。
+  useEffect(() => {
+    let cancelled = false;
+    let unlisten: (() => void) | undefined;
+
+    void listenChannelStatus((payload) => {
+      if (cancelled || !payload.account_id) {
+        return;
       }
-      if (!cancelled) {
-        setConnectionStates(states);
+      setConnectionStates((current) => ({
+        ...current,
+        [payload.account_id]: payload.state,
+      }));
+      if (payload.state === "connected") {
+        void load();
       }
-    }, 5000);
+    })
+      .then((fn) => {
+        if (cancelled) {
+          fn();
+          return;
+        }
+        unlisten = fn;
+      })
+      .catch(() => {
+        // 事件订阅失败时仍依赖下方 IPC 轮询兜底。
+      });
+
     return () => {
       cancelled = true;
+      unlisten?.();
+    };
+  }, []);
+
+  // 进入页面立即拉取一次，之后每 5 秒轮询兜底。
+  useEffect(() => {
+    if (accounts.length === 0) {
+      return;
+    }
+    const accountIds = accounts.map((account) => account.account_id);
+    const timer = window.setInterval(() => {
+      void refreshConnectionStates(accountIds);
+    }, 5000);
+    // 首次立即触发一次（通过 0ms timeout 避免 effect 内同步 setState）
+    const immediate = window.setTimeout(() => {
+      void refreshConnectionStates(accountIds);
+    }, 0);
+    return () => {
+      window.clearTimeout(immediate);
       window.clearInterval(timer);
     };
-  }, [accounts]);
+  }, [accounts, refreshConnectionStates]);
 
   const filtered = useMemo(() => {
     return accounts.filter((account) => {
@@ -370,25 +377,6 @@ export function XianyuAccountsPage() {
       return matchKeyword && matchStatus;
     });
   }, [accounts, keyword, statusFilter]);
-
-  async function handleCreate() {
-    if (!form.account_id.trim() || !form.cookie.trim()) {
-      toast.error("账号标识与 Cookie 不能为空");
-      return;
-    }
-    setSaving(true);
-    try {
-      await accountCreate(OWNER_ID, toAccount(OWNER_ID, form));
-      toast.success("账号创建成功");
-      setShowForm(false);
-      setForm(EMPTY_FORM);
-      await load();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : String(error));
-    } finally {
-      setSaving(false);
-    }
-  }
 
   async function handleToggleStatus(account: XianyuAccount) {
     const next: AccountStatus = account.status === "active" ? "disabled" : "active";
@@ -405,8 +393,6 @@ export function XianyuAccountsPage() {
     setEditingAccount(account);
     setEditorDisplayName(account.display_name);
     setEditorRemark(account.remark);
-    setEditorLoginId(account.login_id ?? "");
-    setEditorLoginPassword(account.login_password ?? "");
     setEditorOpen(true);
   }
 
@@ -419,8 +405,6 @@ export function XianyuAccountsPage() {
       await accountUpdate(OWNER_ID, editingAccount.account_id, {
         display_name: editorDisplayName.trim(),
         remark: editorRemark.trim(),
-        login_id: editorLoginId.trim(),
-        login_password: editorLoginPassword,
       });
       toast.success("账号配置已更新");
       setEditorOpen(false);
@@ -438,7 +422,10 @@ export function XianyuAccountsPage() {
     try {
       const state = await accountConnect(OWNER_ID, account.account_id);
       setConnectionStates((current) => ({ ...current, [account.account_id]: state }));
-      toast.success(state === "connected" ? "连接成功，开始监听闲鱼消息" : `连接状态：${state}`);
+      await load();
+      toast.success(
+        state === "connected" ? "连接成功，已同步用户资料并开始监听消息" : `连接状态：${state}`,
+      );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : String(error));
     } finally {
@@ -468,41 +455,13 @@ export function XianyuAccountsPage() {
     }
   }
 
-  async function handlePasswordLogin() {
-    if (!passwordLoginId.trim() || !passwordValue.trim()) {
-      toast.error("请输入账号和密码");
-      return;
-    }
-    setPasswordSubmitting(true);
-    try {
-      const result = await accountPasswordLogin(
-        passwordLoginId.trim(),
-        passwordValue,
-        passwordDisplayName.trim() || undefined,
-      );
-      if (result.code !== 200) {
-        toast.error(result.message || "账号密码登录失败");
-        return;
-      }
-      if (!result.data.ok || result.data.status !== "success") {
-        toast.error(result.data.detail || "账号密码登录失败");
-        return;
-      }
-      toast.success("登录成功，账号已写入");
-      setPasswordOpen(false);
-      setPasswordLoginId("");
-      setPasswordValue("");
-      setPasswordDisplayName("");
-      await load();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : String(error));
-    } finally {
-      setPasswordSubmitting(false);
-    }
+  function openQrLogin() {
+    setQrSeq((seq) => seq + 1);
+    setQrOpen(true);
   }
 
   return (
-    <PageScaffold subtitle="闲鱼多账号管理 — 列表 / 筛选 / 状态切换">
+    <PageScaffold subtitle="闲鱼多账号管理 — 扫码登录 / 列表 / 状态切换">
       <div className="space-y-4">
         {/* 工具栏 */}
         <div className="flex items-center justify-between gap-3">
@@ -524,32 +483,23 @@ export function XianyuAccountsPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setQrSeq((seq) => seq + 1);
-                setQrOpen(true);
-              }}
-            >
-              <QrCode className="size-4" aria-hidden />
-              扫码登录
-            </Button>
-            <Button variant="outline" onClick={() => setPasswordOpen(true)}>
-              账号密码登录
-            </Button>
-            <Button onClick={() => setShowForm(true)}>
-              <Plus className="size-4" aria-hidden />
-              新增账号
-            </Button>
-          </div>
+          <Button variant="outline" onClick={openQrLogin}>
+            <QrCode className="size-4" aria-hidden />
+            扫码登录
+          </Button>
         </div>
 
         {/* 列表 */}
         {loading ? (
           <Loading size="lg" text="加载中..." className="py-16" />
         ) : filtered.length === 0 ? (
-          <div className="py-16 text-center text-muted-foreground">暂无账号</div>
+          <div className="flex flex-col items-center gap-4 py-16 text-center">
+            <p className="text-muted-foreground">暂无账号，请先扫码登录添加</p>
+            <Button variant="outline" onClick={openQrLogin}>
+              <QrCode className="size-4" aria-hidden />
+              扫码登录
+            </Button>
+          </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {filtered.map((account) => {
@@ -563,12 +513,28 @@ export function XianyuAccountsPage() {
                   onClick={() => openAccountEditor(account)}
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 space-y-1">
-                      <div className="truncate text-[length:var(--text-base)] font-medium">
-                        {account.display_name || account.account_id}
-                      </div>
-                      <div className="truncate font-mono text-[length:var(--text-xs)] text-muted-foreground">
-                        {account.account_id}
+                    <div className="flex min-w-0 items-start gap-3">
+                      {account.avatar_url ? (
+                        <img
+                          src={account.avatar_url}
+                          alt=""
+                          className="size-10 shrink-0 rounded-full border border-border object-cover"
+                        />
+                      ) : (
+                        <div
+                          className="flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-[length:var(--text-sm)] font-medium text-muted-foreground"
+                          aria-hidden
+                        >
+                          {(account.display_name || account.account_id).slice(0, 1)}
+                        </div>
+                      )}
+                      <div className="min-w-0 space-y-1">
+                        <div className="truncate text-[length:var(--text-base)] font-medium">
+                          {account.display_name || account.account_id}
+                        </div>
+                        <div className="truncate font-mono text-[length:var(--text-xs)] text-muted-foreground">
+                          {account.account_id}
+                        </div>
                       </div>
                     </div>
                     <span
@@ -595,14 +561,6 @@ export function XianyuAccountsPage() {
                       >
                         {conn.label}
                       </span>
-                    </div>
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-muted-foreground">登录方式</span>
-                      <span>{account.login_method || "—"}</span>
-                    </div>
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-muted-foreground">登录账号</span>
-                      <span className="truncate">{account.login_id || "—"}</span>
                     </div>
                     <div className="flex items-start justify-between gap-3">
                       <span className="text-muted-foreground">备注</span>
@@ -650,107 +608,12 @@ export function XianyuAccountsPage() {
         )}
       </div>
 
-      {/* 新建账号弹窗 */}
-      <ConfirmModal
-        isOpen={showForm}
-        title="新增闲鱼账号"
-        message={
-          <div className="space-y-3 text-left">
-            <label className="block space-y-1">
-              <span className="text-[length:var(--text-sm)] text-muted-foreground">账号标识</span>
-              <Input
-                value={form.account_id}
-                onChange={(event) => setForm({ ...form, account_id: event.target.value })}
-                placeholder="如 acc-xianyu-001"
-              />
-            </label>
-            <label className="block space-y-1">
-              <span className="text-[length:var(--text-sm)] text-muted-foreground">显示名称</span>
-              <Input
-                value={form.display_name}
-                onChange={(event) => setForm({ ...form, display_name: event.target.value })}
-                placeholder="我的闲鱼账号"
-              />
-            </label>
-            <label className="block space-y-1">
-              <span className="text-[length:var(--text-sm)] text-muted-foreground">Cookie</span>
-              <Input
-                value={form.cookie}
-                onChange={(event) => setForm({ ...form, cookie: event.target.value })}
-                placeholder="unb=...; _m_h5_tk=..."
-              />
-            </label>
-            <label className="block space-y-1">
-              <span className="text-[length:var(--text-sm)] text-muted-foreground">备注</span>
-              <Input
-                value={form.remark}
-                onChange={(event) => setForm({ ...form, remark: event.target.value })}
-                placeholder="可选"
-              />
-            </label>
-          </div>
-        }
-        confirmText={saving ? "保存中…" : "创建"}
-        loading={saving}
-        onConfirm={() => void handleCreate()}
-        onCancel={() => {
-          setShowForm(false);
-          setForm(EMPTY_FORM);
-        }}
-      />
-
       {/* 扫码登录弹窗 */}
       <AccountQrDialog
         key={qrSeq}
         open={qrOpen}
         onClose={() => setQrOpen(false)}
         onSuccess={() => void load()}
-      />
-
-      <ConfirmModal
-        isOpen={passwordOpen}
-        title="账号密码登录"
-        message={
-          <div className="space-y-3 text-left">
-            <label className="block space-y-1">
-              <span className="text-[length:var(--text-sm)] text-muted-foreground">账号</span>
-              <Input
-                value={passwordLoginId}
-                onChange={(event) => setPasswordLoginId(event.target.value)}
-                placeholder="手机号 / 用户名 / 邮箱"
-              />
-            </label>
-            <label className="block space-y-1">
-              <span className="text-[length:var(--text-sm)] text-muted-foreground">密码</span>
-              <Input
-                type="password"
-                value={passwordValue}
-                onChange={(event) => setPasswordValue(event.target.value)}
-                placeholder="请输入登录密码"
-              />
-            </label>
-            <label className="block space-y-1">
-              <span className="text-[length:var(--text-sm)] text-muted-foreground">显示名称</span>
-              <Input
-                value={passwordDisplayName}
-                onChange={(event) => setPasswordDisplayName(event.target.value)}
-                placeholder="可选；成功后用于账号显示名"
-              />
-            </label>
-            <p className="text-[length:var(--text-xs)] text-muted-foreground">
-              说明：登录成功后会保存导出的登录态，并把账号密码写入当前账号资料，便于后续编辑。
-            </p>
-          </div>
-        }
-        confirmText={passwordSubmitting ? "登录中…" : "登录"}
-        loading={passwordSubmitting}
-        onConfirm={() => void handlePasswordLogin()}
-        onCancel={() => {
-          if (passwordSubmitting) {
-            return;
-          }
-          setPasswordOpen(false);
-        }}
       />
 
       <ConfirmModal
@@ -764,23 +627,6 @@ export function XianyuAccountsPage() {
                 value={editorDisplayName}
                 onChange={(event) => setEditorDisplayName(event.target.value)}
                 placeholder="账号展示名"
-              />
-            </label>
-            <label className="block space-y-1">
-              <span className="text-[length:var(--text-sm)] text-muted-foreground">登录账号</span>
-              <Input
-                value={editorLoginId}
-                onChange={(event) => setEditorLoginId(event.target.value)}
-                placeholder="手机号 / 用户名 / 邮箱"
-              />
-            </label>
-            <label className="block space-y-1">
-              <span className="text-[length:var(--text-sm)] text-muted-foreground">登录密码</span>
-              <Input
-                type="password"
-                value={editorLoginPassword}
-                onChange={(event) => setEditorLoginPassword(event.target.value)}
-                placeholder="请输入登录密码"
               />
             </label>
             <label className="block space-y-1">

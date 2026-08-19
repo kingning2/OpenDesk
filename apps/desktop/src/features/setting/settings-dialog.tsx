@@ -1,11 +1,13 @@
 /**
- * 设置弹窗 — AI 账号配置（单栏）。
+ * 设置弹窗 — 应用级配置（AI 账号 / 插件）。
+ *
+ * 闲鱼个人设置、授权、主题不进入此弹窗。
  *
  * @author coisini
  * @created 2026-07-21
  */
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   Button,
   Dialog,
@@ -13,9 +15,15 @@ import {
   DialogDescription,
   DialogTitle,
   IconButton,
+  cn,
 } from "@desk/ui";
-import { X } from "@desk/ui/icons";
+import { Bot, Package, X } from "@desk/ui/icons";
 import { AiSettingsPanel } from "@feature/ai";
+import { PluginsPanel } from "@feature/plugin";
+import { isSettingsDirty, resetSettingsDirty } from "./settings-session-store";
+
+/** 设置侧栏分区。 */
+type SettingsSection = "ai" | "plugins";
 
 /**
  * `SettingsDialog` 属性。
@@ -33,7 +41,7 @@ export interface SettingsDialogProps {
 /**
  * 应用设置弹窗。
  *
- * AI 设置即时写入本机；关闭前弹出确认作为临别提示。
+ * 设置即时写入本机；仅 AI 账号有修改时关闭前弹出确认。
  *
  * @author coisini
  * @created 2026-07-21
@@ -43,6 +51,7 @@ export interface SettingsDialogProps {
  */
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [confirmExit, setConfirmExit] = useState(false);
+  const [section, setSection] = useState<SettingsSection>("ai");
 
   /**
    * 真正关闭弹窗，并清理确认态。
@@ -56,13 +65,17 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   }
 
   /**
-   * 请求关闭；总是先弹确认提示。
+   * 请求关闭；AI 账号有修改时才弹确认。
    *
    * @author coisini
    * @created 2026-07-21
    */
   function requestExit() {
-    setConfirmExit(true);
+    if (isSettingsDirty()) {
+      setConfirmExit(true);
+      return;
+    }
+    finishExit();
   }
 
   /**
@@ -75,11 +88,15 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
    */
   function handleOpenChange(next: boolean) {
     if (next) {
+      setConfirmExit(false);
+      resetSettingsDirty();
       onOpenChange(true);
       return;
     }
     requestExit();
   }
+
+  const title = section === "ai" ? "AI 账号" : "插件";
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -105,15 +122,36 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         </IconButton>
 
         <div className="relative flex h-full min-h-0">
+          <nav
+            className="flex w-48 shrink-0 flex-col gap-1 border-r border-border/70 px-3 py-5"
+            aria-label="设置分类"
+          >
+            <p className="mb-2 px-2 text-[length:var(--text-xs)] font-medium uppercase tracking-wide text-muted-foreground">
+              设置
+            </p>
+            <SettingsNavButton
+              active={section === "ai"}
+              icon={<Bot className="size-4" aria-hidden />}
+              label="AI 账号"
+              onClick={() => setSection("ai")}
+            />
+            <SettingsNavButton
+              active={section === "plugins"}
+              icon={<Package className="size-4" aria-hidden />}
+              label="插件"
+              onClick={() => setSection("plugins")}
+            />
+          </nav>
+
           <div className="flex min-w-0 flex-1 flex-col">
             <header className="flex shrink-0 items-center border-b border-border/70 px-8 py-5 pr-14">
               <h2 className="font-display text-[length:var(--text-xl)] font-semibold tracking-tight text-foreground">
-                AI 账号
+                {title}
               </h2>
             </header>
 
             <div className="min-h-0 flex-1 overflow-y-auto px-8 py-7">
-              <AiSettingsPanel />
+              {section === "ai" ? <AiSettingsPanel /> : <PluginsPanel />}
             </div>
           </div>
 
@@ -166,5 +204,40 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * 设置侧栏导航按钮。
+ *
+ * @author Xiaoman
+ * @created 2026-08-19
+ */
+function SettingsNavButton({
+  active,
+  icon,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  icon: ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "flex h-9 items-center gap-2 rounded-[var(--radius-md)] px-2 text-left text-[length:var(--text-sm)] transition-[color,background-color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97]",
+        active
+          ? "bg-muted font-medium text-foreground"
+          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+      )}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }

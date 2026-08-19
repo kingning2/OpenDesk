@@ -5,10 +5,10 @@
 import type { ChannelEventMessage, ChannelEventStatus } from "@desk/contracts";
 import { listenEvent } from "./index";
 
-/** 渠道消息事件主题（与 Rust `channel.message` 对齐）。 */
-export const CHANNEL_MESSAGE_EVENT = "channel.message";
+/** 渠道消息事件主题（与 Rust `channel/message` 对齐；Tauri 禁止 `.`）。 */
+export const CHANNEL_MESSAGE_EVENT = "channel/message";
 /** 渠道连接状态事件主题。 */
-export const CHANNEL_STATUS_EVENT = "channel.status";
+export const CHANNEL_STATUS_EVENT = "channel/status";
 
 /** 订阅渠道消息事件；返回取消订阅函数。 */
 export function listenChannelMessage(

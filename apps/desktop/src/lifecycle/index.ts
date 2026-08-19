@@ -7,4 +7,5 @@
 
 export { useRouteChange } from "./useRouteChange";
 export { useStartApp } from "./useStartApp";
+export { usePluginLifecycle } from "./usePluginLifecycle";
 export { useErrorLifecycle } from "./useErrorLifecycle";

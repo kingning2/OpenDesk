@@ -3,7 +3,7 @@
  *
  * 负责：
  * - 统一 React → Rust `invoke` 入口
- * - 记录 command / durationMs / 成败（经 console-bridge 进入日志面板）
+ * - 记录调用中文名 / durationMs / 成败（经 console-bridge 进入日志面板）
  * - 对高频命令降噪
  *
  * @author Xiaoman
@@ -19,6 +19,8 @@ import {
   stringifyError,
   type ErrorKind,
 } from "../error";
+
+import { ipcCommandLabel } from "./ipc-command-labels";
 
 /**
  * IPC 统一响应体（仿 HTTP 风格）。
@@ -181,9 +183,10 @@ function logIpcCompleted(
   ok: boolean,
   error?: unknown,
 ): void {
+  const label = ipcCommandLabel(command);
   const message = ok
-    ? `IPC 调用完成 command=${command} durationMs=${durationMs}`
-    : `IPC 调用失败 command=${command} durationMs=${durationMs} error=${stringifyError(error)}`;
+    ? `IPC 调用完成 command=${label} durationMs=${durationMs}`
+    : `IPC 调用失败 command=${label} durationMs=${durationMs} error=${stringifyError(error)}`;
 
   if (!ok) {
     console.warn(message);

@@ -19,6 +19,8 @@ export interface XianyuAccount {
   /** 账号标识（全局唯一）。 */
   account_id: string;
   display_name: string;
+  /** 头像 URL（连接后从闲鱼同步）。 */
+  avatar_url: string;
   login_id: string;
   login_password: string;
   unb: string;
@@ -33,6 +35,7 @@ export interface XianyuAccount {
 /** 账号更新补丁（缺省字段不更新）。 */
 export interface AccountUpdate {
   display_name?: string;
+  avatar_url?: string;
   remark?: string;
   status?: AccountStatus;
   login_id?: string;

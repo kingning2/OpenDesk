@@ -53,6 +53,8 @@ export {
 } from "./select";
 export { ScrollArea, ScrollBar } from "./scroll-area";
 export type { ScrollAreaProps } from "./scroll-area";
+export { Progress } from "./progress";
+export type { ProgressProps } from "./progress";
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, cardVariants } from "./card";
 export type { CardProps } from "./card";
 export { Toaster, toast } from "./sonner";

@@ -12,6 +12,7 @@ import { ChevronDown, ChevronRight, Pencil, Plus, Trash2 } from "@desk/ui/icons"
 import { Button, Card, Dialog, DialogContent, Input } from "@desk/ui";
 import type { AiAccount } from "@desk/contracts";
 import { aiTestApiKey } from "@desk/platform/ipc/ai";
+import { markSettingsDirty } from "@feature/setting/settings-session-store";
 import deepseekLogo from "../../assets/deepseek.svg";
 import ollamaLogo from "../../assets/ollama.svg";
 import type { BuiltInProvider } from "./builtin-providers";
@@ -105,6 +106,7 @@ function AccountDialog({
       } else {
         await addAccount(input);
       }
+      markSettingsDirty();
       onClose();
     } catch (caught) {
       setError(toError(caught));
@@ -342,6 +344,7 @@ function ProviderCard({
     setModelError(null);
     try {
       await setProviderDefaultModel(provider.id, trimmed);
+      markSettingsDirty();
     } catch (caught) {
       setModelError(toError(caught));
     }
@@ -499,7 +502,10 @@ export function AiSettingsPanel() {
       title: "删除账号",
       description: "确定删除该账号吗?",
       confirmLabel: "删除",
-      onConfirm: () => removeAccount(account.id),
+      onConfirm: async () => {
+        await removeAccount(account.id);
+        markSettingsDirty();
+      },
     });
   }
 

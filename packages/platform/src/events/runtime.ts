@@ -9,11 +9,11 @@ import type { RuntimeEventError, RuntimeEventSidecarRestarted } from "@desk/cont
 
 import { listenEvent } from "./index";
 
-/** 后端运行时错误事件主题（与 Rust `RUNTIME_ERROR_TOPIC` 对齐）。 */
-export const RUNTIME_ERROR_EVENT = "runtime.error";
+/** 后端运行时错误事件主题（与 Rust `RUNTIME_ERROR_TOPIC` 对齐；Tauri 禁止 `.`）。 */
+export const RUNTIME_ERROR_EVENT = "runtime/error";
 
 /** 后端侧车重启事件主题（与 Rust `SIDECAR_RESTARTED_TOPIC` 对齐）。 */
-export const SIDECAR_RESTARTED_EVENT = "runtime.sidecar.restarted";
+export const SIDECAR_RESTARTED_EVENT = "runtime/sidecar/restarted";
 
 /** 订阅后端运行时错误事件；返回取消订阅函数。 */
 export function listenRuntimeError(

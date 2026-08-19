@@ -24,6 +24,7 @@ export * from "./log";
 export * from "./notification";
 export * from "./order";
 export * from "./platform";
+export * from "./plugin";
 export * from "./publish";
 export * from "./publish-batch";
 export * from "./publish-log";

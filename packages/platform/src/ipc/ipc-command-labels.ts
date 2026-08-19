@@ -1,0 +1,130 @@
+/**
+ * Tauri IPC command → 日志用中文名称。
+ *
+ * 日志面板展示 `command=插件列表`（中文名），不暴露 snake_case 原名。
+ *
+ * @author Xiaoman
+ * @created 2026-08-19
+ */
+
+/** IPC command 中文名（与 Rust `generate_handler!` 对齐）。 */
+export const IPC_COMMAND_LABELS: Readonly<Record<string, string>> = {
+  agent_ping: "Agent 探活",
+  ai_config_get: "读取 AI 配置",
+  ai_config_set: "保存 AI 配置",
+  ["ai_test_api_key"]: "测试 API 密钥",
+  plugin_list: "插件列表",
+  plugin_install: "插件安装",
+  plugin_uninstall: "插件卸载",
+  address_list: "地址列表",
+  address_create: "新建地址",
+  address_update: "更新地址",
+  address_delete: "删除地址",
+  address_batch_delete: "批量删除地址",
+  auto_reply_log_list: "自动回复日志",
+  account_list: "账号列表",
+  account_create: "新建账号",
+  account_update: "更新账号",
+  account_set_status: "设置账号状态",
+  account_delete: "删除账号",
+  account_password_login: "账号密码登录",
+  account_qr_start: "发起扫码登录",
+  account_qr_check: "检查扫码状态",
+  account_qr_cancel: "取消扫码登录",
+  account_connect: "连接账号",
+  account_disconnect: "断开账号",
+  account_connection_state: "账号连接状态",
+  order_list: "订单列表",
+  order_get: "订单详情",
+  order_update_status: "更新订单状态",
+  order_update_delivery: "更新发货信息",
+  order_create: "创建订单",
+  order_delete: "删除订单",
+  keyword_list: "关键词列表",
+  keyword_replace: "替换关键词",
+  keyword_add: "添加关键词",
+  keyword_delete: "删除关键词",
+  item_list: "商品列表",
+  item_get: "商品详情",
+  item_update: "更新商品",
+  card_list: "卡券列表",
+  card_create: "新建卡券",
+  card_update: "更新卡券",
+  card_set_enabled: "设置卡券启用",
+  card_delete: "删除卡券",
+  blacklist_personal_list: "个人黑名单",
+  blacklist_platform_list: "平台黑名单",
+  blacklist_personal_create: "添加个人黑名单",
+  blacklist_set_enabled: "设置黑名单启用",
+  blacklist_delete: "删除黑名单",
+  filter_list: "消息过滤列表",
+  filter_create: "新建消息过滤",
+  filter_update: "更新消息过滤",
+  filter_set_enabled: "设置消息过滤启用",
+  filter_delete: "删除消息过滤",
+  feedback_list: "反馈列表",
+  feedback_create: "提交反馈",
+  feedback_delete: "删除反馈",
+  notification_channel_list: "通知渠道列表",
+  notification_channel_create: "新建通知渠道",
+  notification_channel_update: "更新通知渠道",
+  notification_channel_set_enabled: "设置通知渠道启用",
+  notification_channel_test: "测试通知渠道",
+  notification_channel_delete: "删除通知渠道",
+  notification_list: "通知规则列表",
+  notification_set: "保存通知规则",
+  notification_delete: "删除通知规则",
+  risk_log_list: "风控日志",
+  risk_log_today_rate: "今日风控比率",
+  risk_log_clear: "清空风控日志",
+  risk_log_clear_processing: "清空处理中风控",
+  risk_config_get: "读取风控配置",
+  risk_config_set: "保存风控配置",
+  user_setting_get: "读取用户设置",
+  user_setting_set: "保存用户设置",
+  user_settings_get_all: "读取全部用户设置",
+  publish_material_list: "发布素材列表",
+  publish_material_create: "新建发布素材",
+  publish_material_update: "更新发布素材",
+  publish_material_delete: "删除发布素材",
+  publish_material_batch_delete: "批量删除发布素材",
+  publish_batch_submit: "提交批量发布",
+  publish_batch_status: "批量发布状态",
+  publish_capability: "发布能力查询",
+  publish_single: "单条发布",
+  publish_log_list: "发布日志",
+  publish_log_clear: "清空发布日志",
+  dashboard_stats: "仪表盘统计",
+  channel_state_get: "读取渠道状态",
+  channel_state_set: "设置渠道状态",
+  channel_connect: "连接渠道",
+  channel_disconnect: "断开渠道",
+  channel_send: "发送渠道消息",
+  channel_open_site: "打开渠道站点",
+  channel_close_site: "关闭渠道站点",
+  channel_qr_start: "发起渠道扫码",
+  channel_qr_check: "检查渠道扫码",
+  channel_qr_cancel: "取消渠道扫码",
+  license_status: "授权状态",
+  license_machine_code: "机器码",
+  license_activate: "激活授权",
+  platform_descriptors: "平台能力描述",
+  rate_buyer: "买家评价",
+  rate_feedback_resolve: "评价反馈处理",
+  log_clear: "清空日志",
+  log_recent: "最近日志",
+  log_write: "写入日志",
+};
+
+/**
+ * 解析 IPC command 的中文日志名。
+ *
+ * @author Xiaoman
+ * @created 2026-08-19
+ *
+ * @param command - Tauri command 名
+ * @returns 中文名；未登记时返回「未命名调用」
+ */
+export function ipcCommandLabel(command: string): string {
+  return IPC_COMMAND_LABELS[command] ?? "未命名调用";
+}

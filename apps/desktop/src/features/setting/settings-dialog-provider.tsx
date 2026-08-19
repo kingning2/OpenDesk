@@ -12,6 +12,7 @@ import {
   SettingsDialogContext,
   type SettingsDialogContextValue,
 } from "./settings-dialog-store";
+import { resetSettingsDirty } from "./settings-session-store";
 
 /**
  * 设置弹窗 Provider。
@@ -25,7 +26,10 @@ import {
 export function SettingsDialogProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
 
-  const openSettings = useCallback(() => setOpen(true), []);
+  const openSettings = useCallback(() => {
+    resetSettingsDirty();
+    setOpen(true);
+  }, []);
   const closeSettings = useCallback(() => setOpen(false), []);
 
   const value = useMemo<SettingsDialogContextValue>(

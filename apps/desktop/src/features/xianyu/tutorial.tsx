@@ -46,11 +46,9 @@ const tutorialData: TutorialSection[] = [
     id: "accounts",
     icon: Users,
     title: "账号管理",
-    description: "管理闲鱼账号，支持扫码登录、密码登录、手动输入Cookie等多种方式添加账号。",
+    description: "管理闲鱼账号，通过扫码登录添加账号并维护连接状态。",
     children: [
-      { id: "accounts-qrcode", title: "扫码登录", description: "使用闲鱼APP扫描二维码登录，触发人脸验证后无法处理，不推荐使用。" },
-      { id: "accounts-password", title: "账号密码", description: "使用闲鱼账号和密码登录，可能需要进行人脸验证。" },
-      { id: "accounts-manual", title: "手动输入", description: "手动输入Cookie信息添加账号，适合高级用户。" },
+      { id: "accounts-qrcode", title: "扫码登录", description: "点击「扫码登录」，使用闲鱼 App 扫描二维码完成登录；成功后自动创建账号并建立连接。" },
       { id: "accounts-enable", title: "启用/禁用", description: "切换账号的启用状态，禁用后不再自动回复。" },
       { id: "accounts-ai", title: "AI回复", description: "开启/关闭该账号的AI智能回复功能。" },
       { id: "accounts-redelivery", title: "定时补发货", description: "开启后系统会定时检查未发货订单并自动发货。" },

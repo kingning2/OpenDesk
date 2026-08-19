@@ -4,7 +4,7 @@
  * 职责：
  * - 安装全局错误 reporter（invoke.ts 的 IPC 错误经此上报）
  * - 监听 window error / unhandledrejection → 代码错误（仅日志）
- * - 订阅后端 runtime.error / sidecar.restarted 事件 → 网络错误标记
+ * - 订阅后端 runtime/error / sidecar.restarted 事件 → 网络错误标记
  * - 网络 / IPC 错误：toast + 日志；网络错误额外标记后端不可用；代码错误：仅日志
  *
  * 模块级 `installed` 守卫保证 StrictMode 下只安装一次，且不随组件卸载拆除

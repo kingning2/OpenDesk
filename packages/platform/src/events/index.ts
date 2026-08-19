@@ -14,7 +14,7 @@ import { listen, type UnlistenFn } from "@tauri-apps/api/event";
  * @created 2026-07-21
  *
  * @typeParam T - Payload type (usually a contracts event DTO)
- * @param topic - Event topic，例如 `channel.message` / `runtime.sidecar.restarted`
+ * @param topic - Event topic，例如 `channel/message` / `runtime/sidecar/restarted`
  * @param handler - Callback invoked for each event payload
  * @returns Promise resolving to an unlisten function
  */
@@ -28,4 +28,6 @@ export async function listenEvent<T>(
 }
 
 export * from "./runtime";
+export * from "./plugin";
+export * from "./channel";
 
