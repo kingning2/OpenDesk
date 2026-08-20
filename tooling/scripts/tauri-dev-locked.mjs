@@ -1,3 +1,9 @@
+/**
+ * 有锁本地开发：先同步 license-verifier，再 `tauri dev --features license-lock`。
+ *
+ * @author coisini
+ * @created 2026-07-16
+ */
 import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -60,7 +66,12 @@ if (platform() === "win32") {
   env.CARGO_BUILD_TARGET = buildTarget;
 }
 
-run("node", ["tooling/scripts/build-license-verifier.mjs"], { env });
+console.log("[tauri:dev:locked] syncing license-verifier…");
+const verifierArgs = ["tooling/scripts/build-license-verifier.mjs", "--force"];
+if (buildTarget) {
+  verifierArgs.push("--target", buildTarget);
+}
+run("node", verifierArgs, { env });
 syncContracts({ cwd: root, env });
 syncPythonWorkspace({ cwd: root, env });
 
@@ -74,6 +85,7 @@ env.LICENSE_VERIFIER_EXE = join(
   "apps/desktop/src-tauri/binaries",
   `license-verifier-${triple}${ext}`,
 );
+console.log(`[tauri:dev:locked] license-verifier -> ${env.LICENSE_VERIFIER_EXE}`);
 
 const tauriArgs = ["tauri", "dev", "--features", "license-lock"];
 if (buildTarget) {

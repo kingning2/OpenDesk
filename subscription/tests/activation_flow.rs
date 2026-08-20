@@ -186,7 +186,8 @@ fn activation_flow_works_end_to_end() {
     );
     assert_ne!(code7, 0, "expected parse-license failure for invalid token");
     assert!(
-        stderr7.contains("token base64url decode failed")
+        stderr7.contains("token decode failed")
+            || stderr7.contains("token base64 decode failed")
             || stderr7.contains("token json decode failed"),
         "unexpected parse error: {stderr7}"
     );

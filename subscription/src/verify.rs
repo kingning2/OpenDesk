@@ -10,6 +10,7 @@ use serde::Serialize;
 use crate::activation_state::ActivationStateStore;
 use crate::attestation::AttestationService;
 use crate::claims::{now_ts, parse_activation_code, signing_message};
+use crate::compact_code::{self, is_compact_claims};
 use crate::crypto::OpenSslRsaPss;
 use crate::embedded::EmbeddedMaterials;
 use crate::key_file::resolve_token_input;
@@ -107,12 +108,26 @@ pub fn verify_local(
     state_dir: Option<String>,
 ) -> Result<(VerifyOutput, i32), String> {
     let token = resolve_token_input(token, key_file)?;
-    let claims = parse_activation_code(&token)?;
     let local_machine_code = compute_machine_code()?;
     let now = now.unwrap_or_else(now_ts);
 
+    let claims = if compact_code::looks_like_compact(&token) {
+        let key = EmbeddedMaterials::new().activation_code_key();
+        compact_code::verify_compact(&token, &local_machine_code, &key)?
+    } else {
+        let claims = parse_activation_code(&token)?;
+        if is_compact_claims(&claims) {
+            return Err("compact activation code missing machine binding".into());
+        }
+        claims
+    };
+
     let machine_match = claims.machine_code == local_machine_code;
-    let signature_result = verify_signature(&claims);
+    let signature_result = if is_compact_claims(&claims) {
+        Ok(())
+    } else {
+        verify_signature(&claims)
+    };
     let signature_verified = signature_result.is_ok();
 
     // 仅在签名与机器码通过后再落盘首次激活时间，避免无效 token 占坑。

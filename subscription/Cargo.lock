@@ -4523,6 +4523,7 @@ dependencies = [
  "chrono",
  "clap",
  "hmac",
+ "miniz_oxide",
  "openssl",
  "serde",
  "serde_json",

@@ -5,6 +5,7 @@ import {
   cpSync,
   existsSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   statSync,
   unlinkSync,
@@ -25,9 +26,13 @@ const adapterGeneratedDir = join(root, "crates/adapter/generated");
 const WINDOWS_DEFAULT_MSVC_TRIPLE = "x86_64-pc-windows-msvc";
 
 function parseArgs(argv) {
-  const options = { target: null };
+  const options = { target: null, force: false };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
+    if (arg === "--force") {
+      options.force = true;
+      continue;
+    }
     if (arg === "--target") {
       options.target = argv[index + 1] ?? null;
       index += 1;
@@ -129,32 +134,101 @@ function sha256File(filePath) {
   return hash.digest("hex");
 }
 
-/** subscription 源码是否比产物更新（用于跳过无改动的 release 编 verifier）。 */
-function subscriptionSourcesChanged(sinceMs) {
-  const watchPaths = [
-    join(subscriptionDir, "Cargo.toml"),
-    join(subscriptionDir, "Cargo.lock"),
-    join(subscriptionDir, "build.rs"),
-    join(subscriptionDir, "src"),
-    join(subscriptionDir, "keys"),
-  ];
-  let latest = sinceMs;
-  for (const watchPath of watchPaths) {
-    if (!existsSync(watchPath)) {
-      continue;
-    }
-    const stat = statSync(watchPath);
-    if (stat.isDirectory()) {
-      // 目录 mtime 足够；精细 walk 不必，Cargo 自己会增量。
-      latest = Math.max(latest, stat.mtimeMs);
-      continue;
-    }
-    latest = Math.max(latest, stat.mtimeMs);
+const SUBSCRIPTION_WATCH_PATHS = [
+  "Cargo.toml",
+  "Cargo.lock",
+  "build.rs",
+  "src",
+  "keys",
+];
+
+/** 递归取路径（文件或目录树）最新 mtime；跳过 target。 */
+function latestMtimeMs(path) {
+  if (!existsSync(path)) {
+    return 0;
   }
-  return latest > sinceMs;
+  const stat = statSync(path);
+  if (!stat.isDirectory()) {
+    return stat.mtimeMs;
+  }
+
+  let latest = stat.mtimeMs;
+  const stack = [path];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    let entries;
+    try {
+      entries = readdirSync(current, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      if (entry.name === "target") {
+        continue;
+      }
+      const fullPath = join(current, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(fullPath);
+        continue;
+      }
+      try {
+        latest = Math.max(latest, statSync(fullPath).mtimeMs);
+      } catch {
+        // 并发删除时忽略
+      }
+    }
+  }
+  return latest;
 }
 
-const { target: targetArg } = parseArgs(process.argv.slice(2));
+/** subscription 源码树最新修改时间。 */
+function subscriptionLatestMtimeMs() {
+  let latest = 0;
+  for (const segment of SUBSCRIPTION_WATCH_PATHS) {
+    latest = Math.max(latest, latestMtimeMs(join(subscriptionDir, segment)));
+  }
+  return latest;
+}
+
+/**
+ * 判断是否需要重新 cargo build / 复制到 Tauri binaries。
+ *
+ * @returns {{ needsBuild: boolean, needsCopy: boolean, latestSubscription: number }}
+ */
+function resolveVerifierSyncState(destPath, sourcePath, force) {
+  const latestSubscription = subscriptionLatestMtimeMs();
+
+  if (force) {
+    return { needsBuild: true, needsCopy: true, latestSubscription };
+  }
+
+  const destExists = existsSync(destPath);
+  const sourceExists = existsSync(sourcePath);
+  const destMtime = destExists ? statSync(destPath).mtimeMs : 0;
+  const sourceMtime = sourceExists ? statSync(sourcePath).mtimeMs : 0;
+
+  const needsBuild = !sourceExists || latestSubscription > sourceMtime;
+  const needsCopy =
+    !destExists || !sourceExists || sourceMtime > destMtime || needsBuild;
+
+  return { needsBuild, needsCopy, latestSubscription };
+}
+
+function syncSha256Sidecars(destPath) {
+  const digest = sha256File(destPath);
+  const shaPath = join(adapterGeneratedDir, "license_verifier.sha256");
+  mkdirSync(adapterGeneratedDir, { recursive: true });
+  const previous = existsSync(shaPath)
+    ? readFileSync(shaPath, "utf8").trim()
+    : "";
+  writeFileSync(shaPath, `${digest}\n`, "utf8");
+  if (previous !== digest) {
+    console.log(`sha256 -> ${shaPath} (${digest})`);
+  }
+  return digest;
+}
+
+const { target: targetArg, force: forceBuild } = parseArgs(process.argv.slice(2));
 
 const env = ensureSccache({ ...process.env });
 if (platform() === "win32") {
@@ -174,35 +248,35 @@ if (!existsSync(subscriptionDir)) {
   process.exit(1);
 }
 
-if (
-  process.env.FORCE_LICENSE_VERIFIER_BUILD !== "1" &&
-  existsSync(destPath) &&
-  existsSync(sourcePath) &&
-  statSync(sourcePath).mtimeMs >= statSync(destPath).mtimeMs &&
-  !subscriptionSourcesChanged(statSync(destPath).mtimeMs)
-) {
-  console.log(`Using existing license-verifier: ${destPath}`);
-  const digest = sha256File(destPath);
-  const shaPath = join(adapterGeneratedDir, "license_verifier.sha256");
-  mkdirSync(adapterGeneratedDir, { recursive: true });
-  if (!existsSync(shaPath) || readFileSync(shaPath, "utf8").trim() !== digest) {
-    writeFileSync(shaPath, `${digest}\n`, "utf8");
-    console.log(`sha256 -> ${shaPath} (${digest})`);
-  }
+const { needsBuild, needsCopy, latestSubscription } = resolveVerifierSyncState(
+  destPath,
+  sourcePath,
+  forceBuild,
+);
+
+if (!needsBuild && !needsCopy) {
+  console.log(`license-verifier up to date: ${destPath}`);
+  syncSha256Sidecars(destPath);
   process.exit(0);
 }
 
-const cargoArgs = [
-  "build",
-  "--release",
-  "--bin",
-  "license-verifier",
-  "--target",
-  buildTriple,
-];
-
-console.log(`building license-verifier for ${buildTriple}`);
-run("cargo", cargoArgs, { cwd: subscriptionDir, env });
+if (needsBuild) {
+  const cargoArgs = [
+    "build",
+    "--release",
+    "--bin",
+    "license-verifier",
+    "--target",
+    buildTriple,
+  ];
+  const reason = forceBuild
+    ? "forced rebuild"
+    : `subscription touched ${new Date(latestSubscription).toISOString()}`;
+  console.log(`building license-verifier for ${buildTriple} (${reason})`);
+  run("cargo", cargoArgs, { cwd: subscriptionDir, env });
+} else {
+  console.log(`license-verifier release binary fresh; syncing copy only`);
+}
 
 if (!existsSync(sourcePath)) {
   console.error(`license-verifier binary not found at ${sourcePath}`);
@@ -229,9 +303,7 @@ if (platform() === "win32") {
   }
 }
 
-const digest = sha256File(destPath);
-const shaPath = join(adapterGeneratedDir, "license_verifier.sha256");
-writeFileSync(shaPath, `${digest}\n`, "utf8");
+const digest = syncSha256Sidecars(destPath);
 
 const attestPath = join(adapterGeneratedDir, "license_attest_key.hex");
 if (!existsSync(attestPath)) {
@@ -241,5 +313,5 @@ if (!existsSync(attestPath)) {
   process.exit(1);
 }
 
-console.log(`sha256 -> ${shaPath} (${digest})`);
+console.log(`sha256 verified (${digest})`);
 console.log(`attest key -> ${attestPath}`);

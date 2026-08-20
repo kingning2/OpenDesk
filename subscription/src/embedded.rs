@@ -5,6 +5,7 @@
 
 include!(concat!(env!("OUT_DIR"), "/embedded_public_key.rs"));
 include!(concat!(env!("OUT_DIR"), "/attestation_key.rs"));
+include!(concat!(env!("OUT_DIR"), "/activation_code_key.rs"));
 include!(concat!(env!("OUT_DIR"), "/key_file_salt.rs"));
 
 /// 嵌入材料访问器。
@@ -67,6 +68,13 @@ impl EmbeddedMaterials {
     /// 32 字节密钥切片。
     pub fn attestation_key(&self) -> &'static [u8] {
         ATTESTATION_KEY
+    }
+
+    /// 返回紧凑激活码 HMAC 密钥（32 字节）。
+    pub fn activation_code_key(&self) -> [u8; 32] {
+        let mut out = [0u8; 32];
+        out.copy_from_slice(ACTIVATION_CODE_KEY);
+        out
     }
 
     /// 返回 `.key` 文件 XOR 盐。

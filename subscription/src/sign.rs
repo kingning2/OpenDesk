@@ -1,16 +1,12 @@
-//! 激活 token 签发（OpenSSL RSA-PSS）。
+//! 激活 token 签发（紧凑 API Key 格式）。
 //!
 //! 作者：coisini
 //! 创建时间：2026-07-16
 
-use std::path::Path;
-
-use base64::engine::general_purpose::URL_SAFE_NO_PAD;
-use base64::Engine;
 use chrono::{DateTime, NaiveDate};
 
-use crate::claims::{activation_code_from_claims, now_ts, signing_message, LicenseClaims};
-use crate::crypto::OpenSslRsaPss;
+use crate::claims::now_ts;
+use crate::compact_code::{activation_code_key_from_public_pem, encode_compact};
 
 /// 过期策略：绝对时间或首次激活起算的时长。
 ///
@@ -120,49 +116,34 @@ pub fn resolve_private_key_path(private_key: Option<String>) -> Result<String, S
     Ok(default_path.to_string_lossy().to_string())
 }
 
-fn sign_rsa_pss_sha256(message: &str, private_key_path: &str) -> Result<Vec<u8>, String> {
-    if !Path::new(private_key_path).is_file() {
-        return Err(format!("private key file not found: {private_key_path}"));
+fn resolve_public_key_pem() -> Result<String, String> {
+    let default_path = std::env::current_dir()
+        .map_err(|e| format!("failed to get current dir: {e}"))?
+        .join("keys")
+        .join("public_key.pem");
+
+    if !default_path.is_file() {
+        return Err(format!(
+            "public key file not found: {}",
+            default_path.display()
+        ));
     }
-    let pem =
-        std::fs::read_to_string(private_key_path).map_err(|e| format!("read key failed: {e}"))?;
-    OpenSslRsaPss::new().sign(message.as_bytes(), &pem)
+
+    std::fs::read_to_string(&default_path).map_err(|e| format!("read public key failed: {e}"))
 }
 
-/// 按策略生成激活 token。
-///
-/// 作者：coisini
-/// 创建时间：2026-07-16
+/// 按策略生成 32 位紧凑激活码（`da-` + 32 位 base32）。
 pub fn generate_activation_token_with_policy(
     machine_code: String,
     policy: ExpiryPolicy,
     product: String,
     version: String,
-    private_key_path: String,
+    _private_key_path: String,
 ) -> Result<String, String> {
-    let iat = now_ts();
-    let (exp, duration_secs) = match policy {
-        ExpiryPolicy::Absolute { exp } => (exp, None),
-        ExpiryPolicy::DurationFromActivation { duration_secs } => {
-            // exp 仅作「若立即激活」的参考展示；真正计时在首次激活。
-            (iat + duration_secs, Some(duration_secs))
-        }
-    };
-
-    let message = signing_message(&product, &version, &machine_code, exp, duration_secs);
-    let sig = sign_rsa_pss_sha256(&message, &private_key_path)?;
-    let sig_b64 = URL_SAFE_NO_PAD.encode(sig);
-
-    let claims = LicenseClaims {
-        product,
-        v: version,
-        machine_code,
-        exp,
-        iat,
-        duration_secs,
-        sig: sig_b64,
-    };
-    activation_code_from_claims(&claims)
+    let _ = _private_key_path;
+    let public_pem = resolve_public_key_pem()?;
+    let hmac_key = activation_code_key_from_public_pem(&public_pem);
+    encode_compact(&machine_code, &product, &version, &policy, &hmac_key)
 }
 
 /// 生成绝对过期 token（兼容旧签名）。
@@ -188,9 +169,8 @@ pub fn generate_activation_token(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::claims::parse_activation_code;
-    use crate::crypto::OpenSslRsaPss;
-    use crate::embedded::EmbeddedMaterials;
+    use crate::claims::{parse_activation_code, ACTIVATION_CODE_PREFIX};
+    use crate::compact_code::{looks_like_compact, COMPACT_BODY_LEN};
     use std::path::PathBuf;
 
     fn keys_dir() -> PathBuf {
@@ -198,31 +178,14 @@ mod tests {
     }
 
     #[test]
-    fn openssl_sign_verify_roundtrip() {
-        let private_path = keys_dir().join("private_key.pem");
-        if !private_path.is_file() {
-            eprintln!("skip: private_key.pem missing");
-            return;
-        }
-        let pem = std::fs::read_to_string(&private_path).expect("read private");
-        let public_pem = EmbeddedMaterials::new()
-            .public_key_pem()
-            .expect("public pem");
-        let message = b"dingda|1|machine|123";
-        let crypto = OpenSslRsaPss::new();
-        let sig = crypto.sign(message, &pem).expect("sign");
-        crypto.verify(message, &sig, &public_pem).expect("verify");
-    }
-
-    #[test]
-    fn days_token_uses_duration_secs_in_signature() {
+    fn compact_token_has_fixed_api_key_length() {
         let private_path = keys_dir().join("private_key.pem");
         if !private_path.is_file() {
             eprintln!("skip: private_key.pem missing");
             return;
         }
         let token = generate_activation_token_with_policy(
-            "abc".into(),
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef".into(),
             ExpiryPolicy::DurationFromActivation {
                 duration_secs: 3 * 86400,
             },
@@ -231,19 +194,9 @@ mod tests {
             private_path.to_string_lossy().into(),
         )
         .expect("token");
+        assert!(looks_like_compact(&token));
+        assert_eq!(token.len(), ACTIVATION_CODE_PREFIX.len() + COMPACT_BODY_LEN);
         let claims = parse_activation_code(&token).expect("parse");
         assert_eq!(claims.duration_secs, Some(3 * 86400));
-        let message = signing_message(
-            &claims.product,
-            &claims.v,
-            &claims.machine_code,
-            claims.exp,
-            claims.duration_secs,
-        );
-        let sig = URL_SAFE_NO_PAD.decode(claims.sig.trim()).expect("sig b64");
-        let public_pem = EmbeddedMaterials::new().public_key_pem().expect("public");
-        OpenSslRsaPss::new()
-            .verify(message.as_bytes(), &sig, &public_pem)
-            .expect("verify token");
     }
 }

@@ -1,6 +1,8 @@
 use clap::{Parser, Subcommand};
 use subscription_activation::{
     claims::{now_ts, parse_activation_code},
+    compact_code,
+    embedded::EmbeddedMaterials,
     issue::{ActivationIssuer, IssueRequest},
     key_file::resolve_token_input,
     machine_code::compute_machine_code,
@@ -81,6 +83,7 @@ async fn cmd_generate_activation_code(
         .await
         .map_err(|e| format!("activation task failed: {e}"))??;
     println!("{}", result.output_path);
+    eprintln!("{}", result.token);
     Ok(())
 }
 
@@ -95,8 +98,13 @@ fn cmd_parse_license(token: Option<String>, key_file: Option<String>) -> Result<
 
 fn cmd_check_local(token: Option<String>, key_file: Option<String>) -> Result<i32, String> {
     let token = resolve_token_input(token, key_file)?;
-    let claims = parse_activation_code(&token)?;
     let local_machine_code = compute_machine_code()?;
+    let claims = if compact_code::looks_like_compact(&token) {
+        let key = EmbeddedMaterials::new().activation_code_key();
+        compact_code::verify_compact(&token, &local_machine_code, &key)?
+    } else {
+        parse_activation_code(&token)?
+    };
     let now = now_ts();
     let machine_match = claims.machine_code == local_machine_code;
 

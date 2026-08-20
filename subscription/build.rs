@@ -90,6 +90,7 @@ fn write_attestation_key(out_dir: &PathBuf, manifest_dir: &PathBuf, pem_bytes: &
     }
     rust.push_str("];\n");
     fs::write(out_dir.join("attestation_key.rs"), rust).expect("write attestation_key.rs");
+    write_activation_code_key(out_dir, pem_bytes);
 
     let adapter_generated = manifest_dir
         .join("..")
@@ -105,6 +106,20 @@ fn write_attestation_key(out_dir: &PathBuf, manifest_dir: &PathBuf, pem_bytes: &
             attest_path.display()
         );
     }
+}
+
+/// 派生紧凑激活码 HMAC 密钥（verifier 与 activation-gen 共用）。
+fn write_activation_code_key(out_dir: &PathBuf, pem_bytes: &[u8]) {
+    let digest = sha256_bytes(b"dingda.license.compact.v1", pem_bytes);
+    let mut rust = String::from("pub static ACTIVATION_CODE_KEY: &[u8] = &[");
+    for (i, byte) in digest.iter().enumerate() {
+        if i > 0 {
+            rust.push_str(", ");
+        }
+        rust.push_str(&format!("0x{byte:02X}"));
+    }
+    rust.push_str("];\n");
+    fs::write(out_dir.join("activation_code_key.rs"), rust).expect("write activation_code_key.rs");
 }
 
 /// 简化 SHA-256（避免 build.rs 拉依赖）：纯 Rust 最小实现不够，改用标准库不可用。

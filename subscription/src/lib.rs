@@ -6,6 +6,7 @@
 pub mod activation_state;
 pub mod attestation;
 pub mod claims;
+pub mod compact_code;
 pub mod crypto;
 pub mod embedded;
 pub mod issue;
