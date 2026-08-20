@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { platform } from "node:os";
 import { ensureNasm } from "./ensure-nasm.mjs";
+import { ensureCmake } from "./ensure-cmake.mjs";
 import { ensureSccache } from "./ensure-sccache.mjs";
 import { spawnPnpm } from "./spawn-pnpm.mjs";
 import { syncContracts } from "./sync-contracts.mjs";
@@ -77,6 +78,7 @@ if (tauriArgs[0] === "dev") {
 // Windows：宿主编译器固定 MSVC；交叉目标以 --target / 已有 CARGO_BUILD_TARGET 为准。
 if (platform() === "win32") {
   ensureNasm(env);
+  ensureCmake(env);
   env.RUSTUP_TOOLCHAIN =
     env.RUSTUP_TOOLCHAIN || "stable-x86_64-pc-windows-msvc";
   if (cliTarget) {

@@ -9,6 +9,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { platform } from "node:os";
 import { ensureNasm } from "./ensure-nasm.mjs";
+import { ensureCmake } from "./ensure-cmake.mjs";
 import { ensureSccache } from "./ensure-sccache.mjs";
 import { spawnPnpm } from "./spawn-pnpm.mjs";
 import { syncContracts } from "./sync-contracts.mjs";
@@ -60,6 +61,7 @@ const env = ensureSccache({ ...process.env });
 let buildTarget = null;
 if (platform() === "win32") {
   ensureNasm(env);
+  ensureCmake(env);
   env.RUSTUP_TOOLCHAIN =
     env.RUSTUP_TOOLCHAIN ?? "stable-x86_64-pc-windows-msvc";
   buildTarget = env.CARGO_BUILD_TARGET || WINDOWS_MSVC_TRIPLE;

@@ -1,10 +1,11 @@
 /**
- * Windows：确保 NASM 可用于 boring-sys2（wreq / BoringSSL）编译。
+ * Windows：确保 CMake 可用于 boring-sys2（wreq / BoringSSL）编译。
  *
- * 优先使用系统 PATH 中的 nasm；否则使用/下载仓库内 `.tools/nasm` 便携版。
+ * 优先使用系统 PATH 中的 cmake 或 CMAKE 环境变量；否则使用/下载仓库内 `.tools/cmake` 便携版。
+ * Cargo 只能拉 Rust crate，装不了系统工具，本脚本就是「构建时自动下载缺失工具」的那一步。
  *
  * @author Xiaoman
- * @created 2026-08-19
+ * @created 2026-08-20
  */
 import { existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -13,9 +14,9 @@ import { spawnSync } from "node:child_process";
 import { platform } from "node:os";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
-const NASM_VERSION = "2.16.03";
-const NASM_ZIP_URL = `https://www.nasm.us/pub/nasm/releasebuilds/${NASM_VERSION}/win64/nasm-${NASM_VERSION}-win64.zip`;
-const PORTABLE_ROOT = join(root, ".tools/nasm");
+const CMAKE_VERSION = "4.4.2";
+const CMAKE_ZIP_URL = `https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-windows-x86_64.zip`;
+const PORTABLE_ROOT = join(root, ".tools/cmake");
 
 /**
  * @param {string} command
@@ -75,18 +76,18 @@ function findFile(dir, fileName) {
 }
 
 /**
- * 下载并解压便携 NASM 到 `.tools/nasm`。
+ * 下载并解压便携 CMake 到 `.tools/cmake`。
  */
-function downloadPortableNasm() {
+function downloadPortableCmake() {
   mkdirSync(PORTABLE_ROOT, { recursive: true });
-  const zipPath = join(PORTABLE_ROOT, "nasm-win64.zip");
-  console.log("[dingda] downloading portable NASM for BoringSSL (wreq)...");
+  const zipPath = join(PORTABLE_ROOT, `cmake-${CMAKE_VERSION}-windows-x86_64.zip`);
+  console.log(`[dingda] downloading portable CMake ${CMAKE_VERSION} for BoringSSL (wreq)...`);
 
   const ps = [
     "$ProgressPreference = 'SilentlyContinue'",
     `$zip = '${zipPath.replace(/'/g, "''")}'`,
     `$dest = '${PORTABLE_ROOT.replace(/'/g, "''")}'`,
-    `$uri = '${NASM_ZIP_URL}'`,
+    `$uri = '${CMAKE_ZIP_URL}'`,
     "Invoke-WebRequest -Uri $uri -OutFile $zip",
     "Expand-Archive -Path $zip -DestinationPath $dest -Force",
   ].join("; ");
@@ -97,7 +98,7 @@ function downloadPortableNasm() {
   });
   if (result.status !== 0) {
     console.error(
-      "[dingda] failed to download NASM. Install manually from https://www.nasm.us/ and ensure nasm.exe is on PATH.",
+      "[dingda] failed to download CMake. Install manually from https://cmake.org/download/ and ensure cmake.exe is on PATH.",
     );
     process.exit(result.status ?? 1);
   }
@@ -106,8 +107,8 @@ function downloadPortableNasm() {
 /**
  * @returns {string | null}
  */
-function resolvePortableNasm() {
-  return findFile(PORTABLE_ROOT, "nasm.exe");
+function resolvePortableCmake() {
+  return findFile(PORTABLE_ROOT, "cmake.exe");
 }
 
 /**
@@ -133,18 +134,18 @@ function writePathEnv(env, value) {
 
 /**
  * @param {NodeJS.ProcessEnv} env
- * @param {string} nasmDir
+ * @param {string} cmakeDir
  */
-function prependPathEnv(env, nasmDir) {
+function prependPathEnv(env, cmakeDir) {
   const current = readPathEnv(env);
-  if (current.toLowerCase().includes(nasmDir.toLowerCase())) {
+  if (current.toLowerCase().includes(cmakeDir.toLowerCase())) {
     return;
   }
-  writePathEnv(env, `${nasmDir};${current}`);
+  writePathEnv(env, `${cmakeDir};${current}`);
 }
 
 /**
- * 清除因缺少 NASM 而失败的 boring-sys2 CMake 缓存。
+ * 清除因缺少 CMake 而失败的 boring-sys2 CMake 缓存。
  */
 function clearStaleBoringSysCache() {
   const targetDir = join(root, "target");
@@ -172,57 +173,53 @@ function clearStaleBoringSysCache() {
         continue;
       }
       rmSync(join(buildRoot, entry.name), { recursive: true, force: true });
-      console.log(`[dingda] cleared stale ${entry.name} (retry BoringSSL with NASM)`);
+      console.log(`[dingda] cleared stale ${entry.name} (retry BoringSSL with CMake)`);
     }
   }
 }
 
 /**
- * 为 boring-sys2 配置 NASM 环境变量。
+ * 为 boring-sys2 配置 CMake 环境变量。
  *
  * @param {NodeJS.ProcessEnv} env
  * @returns {NodeJS.ProcessEnv}
  */
-export function ensureNasm(env = { ...process.env }) {
+export function ensureCmake(env = { ...process.env }) {
   if (platform() !== "win32") {
     return env;
   }
 
-  const configured = env.CMAKE_ASM_NASM_COMPILER?.trim();
-  const hadConfiguredNasm = Boolean(configured && existsSync(configured));
-  if (hadConfiguredNasm) {
+  const configured = env.CMAKE?.trim();
+  const hadConfiguredCmake = Boolean(configured && existsSync(configured));
+  if (hadConfiguredCmake) {
     return env;
   }
 
-  let nasmExe = commandExists("nasm") ? resolveFromPath("nasm") : resolvePortableNasm();
-  const downloaded = !nasmExe;
-  if (!nasmExe) {
-    downloadPortableNasm();
-    nasmExe = resolvePortableNasm();
+  let cmakeExe = commandExists("cmake") ? resolveFromPath("cmake") : resolvePortableCmake();
+  const downloaded = !cmakeExe;
+  if (!cmakeExe) {
+    downloadPortableCmake();
+    cmakeExe = resolvePortableCmake();
   }
 
-  if (!nasmExe || !existsSync(nasmExe)) {
+  if (!cmakeExe || !existsSync(cmakeExe)) {
     console.error(
-      "[dingda] NASM is required to build wreq (BoringSSL) on Windows.",
+      "[dingda] CMake is required to build wreq (BoringSSL) on Windows.",
     );
     console.error(
-      "[dingda] Install from https://www.nasm.us/ or rerun `pnpm tauri dev` to auto-download into .tools/nasm",
+      "[dingda] Install from https://cmake.org/download/ or rerun `pnpm tauri dev` to auto-download into .tools/cmake",
     );
     process.exit(1);
   }
 
-  // CMake 4.x 探测 ASM_NASM 方言编译器时读的是 `ASM_NASM` 环境变量
-  // （CMakeDetermineASMCompiler: ENV{ASM<DIALECT>}），而非 CMAKE_ASM_NASM_COMPILER。
-  // 两个都设，兼容新旧 CMake。
-  env.ASM_NASM = nasmExe;
-  env.CMAKE_ASM_NASM_COMPILER = nasmExe;
-  prependPathEnv(env, dirname(nasmExe));
-  console.log(`[dingda] using NASM at ${nasmExe}`);
+  env.CMAKE = cmakeExe;
+  prependPathEnv(env, dirname(cmakeExe));
+  console.log(`[dingda] using CMake at ${cmakeExe}`);
 
-  // 仅在首次下载 NASM 时清 CMake 缓存；日常 dev/build 必须保留增量编译缓存。
+  // 仅在首次下载 CMake 时清 CMake 缓存；日常 dev/build 必须保留增量编译缓存。
   if (downloaded) {
     clearStaleBoringSysCache();
-    console.log("[dingda] portable NASM installed under .tools/nasm (gitignored)");
+    console.log("[dingda] portable CMake installed under .tools/cmake (gitignored)");
   }
 
   return env;
@@ -233,5 +230,5 @@ const isDirectRun =
   import.meta.url === pathToFileURL(process.argv[1]).href;
 
 if (isDirectRun) {
-  ensureNasm({ ...process.env });
+  ensureCmake({ ...process.env });
 }
