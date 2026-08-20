@@ -1,5 +1,6 @@
 {
   "$schema": "./channel-platforms.schema.json",
+  "appName": "叮答",
   "default": "xianyu",
   "platforms": [
     {

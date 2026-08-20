@@ -72,6 +72,35 @@ export function resolveChannelPlatform(env = process.env) {
 }
 
 /**
+ * 解析标题栏展示用的应用中文名称。
+ *
+ * 渠道单平台构建：`{appName}（{平台名}）`（如「叮答（闲鱼）」）。
+ * 聚合构建（`DINGDA_APP_VARIANT=aggregate`）：仅 `{appName}`。
+ *
+ * @author Xiaoman
+ * @created 2026-08-20
+ *
+ * @param {NodeJS.ProcessEnv} [env] 环境变量对象，默认 `process.env`
+ * @returns {string} 编译期固定的品牌标题
+ */
+export function resolveAppBrandTitle(env = process.env) {
+  const config = readChannelPlatformsConfig();
+  const baseName = config.appName ?? "叮答";
+
+  if (env.DINGDA_APP_VARIANT === "aggregate") {
+    return baseName;
+  }
+
+  const platform = resolveChannelPlatform(env);
+  const entry = config.platforms.find((item) => item.id === platform);
+  if (!entry) {
+    return baseName;
+  }
+
+  return `${baseName}（${entry.name}）`;
+}
+
+/**
  * 生成 Vite `define` 用的编译期常量对象。
  *
  * @author Xiaoman
@@ -84,5 +113,6 @@ export function channelPlatformDefine(env = process.env) {
   const platform = resolveChannelPlatform(env);
   return {
     __DINGDA_CHANNEL_PLATFORM__: JSON.stringify(platform),
+    __DINGDA_APP_BRAND_TITLE__: JSON.stringify(resolveAppBrandTitle(env)),
   };
 }
