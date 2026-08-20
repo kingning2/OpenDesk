@@ -189,14 +189,22 @@ mod tests {
 
     #[test]
     fn clear_older_than_keeps_recent() {
+        // 用相对日期避免固定时间戳随当前日期推进而过期（8/10 距今 >7 天时用例会挂）。
+        let now = chrono::Utc::now().date_naive();
+        let old = (now - chrono::Duration::days(10))
+            .format("%Y-%m-%d 10:00:00")
+            .to_string();
+        let recent = (now - chrono::Duration::days(1))
+            .format("%Y-%m-%d 10:00:00")
+            .to_string();
         let store = MockStore {
             logs: Mutex::new(vec![
-                log(1, "acc-1", PublishLogStatus::Success, "2026-08-01 10:00:00"),
-                log(2, "acc-1", PublishLogStatus::Success, "2026-08-10 10:00:00"),
+                log(1, "acc-1", PublishLogStatus::Success, &old),
+                log(2, "acc-1", PublishLogStatus::Success, &recent),
             ]),
         };
         let service = PublishLogService::new(&store);
-        // days=7：仅清掉 8/01 之前的（8/01 距今 > 7 天会删，8/10 保留）。
+        // days=7：仅清掉 7 天前的（old 距今 10 天会删，recent 距今 1 天保留）。
         service.clear_older_than(1, 7).expect("clear");
         let (list, total) = service.list(1, &PublishLogQuery::default()).expect("list");
         assert_eq!(total, 1);
