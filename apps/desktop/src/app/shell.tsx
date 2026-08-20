@@ -6,8 +6,7 @@
  */
 
 import { useEffect, useState } from "react";
-import { NavLink } from "react-router";
-import { IconButton, ThemeProvider, ThemeToggle } from "@desk/ui";
+import { IconButton, SidebarProvider, ThemeProvider, ThemeToggle } from "@desk/ui";
 import { Settings, Terminal } from "@desk/ui/icons";
 import {
   closeWindow,
@@ -17,19 +16,12 @@ import {
   subscribeWindowMaximized,
   toggleMaximizeWindow,
 } from "@desk/platform";
-import { LicensePlanBadge } from "@feature/license";
 import { LogPanel, useLogStore } from "@feature/log";
 import { SettingsDialogProvider, useSettingsDialog } from "@feature/setting";
-import { usePlatformNav } from "../route/use-platform-nav";
 import { useRouteChange, useStartApp, usePluginLifecycle, useErrorLifecycle } from "../lifecycle";
-import {
-  AppLayout,
-  MainPanel,
-  NavRail,
-  NavRailNav,
-  navRailItemVariants,
-  TabBar,
-} from "./layout";
+import { useXianyuAutoConnect } from "@feature/xianyu/use-auto-connect";
+import { AppLayout, MainPanel } from "./layout";
+import { WorkspaceSidebar } from "./layout/workspace-sidebar";
 import { TitleBar } from "./title-bar";
 import { useWorkspaceTabs, WorkspaceNavProvider } from "./use-workspace-tabs";
 import { WorkspaceOutlet } from "./workspace-outlet";
@@ -44,16 +36,26 @@ import { WorkspaceOutlet } from "./workspace-outlet";
  */
 function AppShellInner() {
   const platform = getPlatform();
-  const { visibleNavItems } = usePlatformNav();
   const [isMaximized, setIsMaximized] = useState(false);
   const { openSettings } = useSettingsDialog();
   const toggleLogPanel = useLogStore((state) => state.toggle);
-  const { tabs, activePath, openPaths, selectTab, closeTab, addTab } = useWorkspaceTabs();
+  const [sidebarExpanded, setSidebarExpanded] = useState(() => {
+    if (typeof window === "undefined") {
+      return true;
+    }
+    return window.localStorage.getItem("desk.sidebar.expanded") !== "false";
+  });
+  const { activePath, selectTab } = useWorkspaceTabs();
+
+  useEffect(() => {
+    window.localStorage.setItem("desk.sidebar.expanded", String(sidebarExpanded));
+  }, [sidebarExpanded]);
 
   useRouteChange();
   useStartApp();
   usePluginLifecycle();
   useErrorLifecycle();
+  useXianyuAutoConnect();
 
   useEffect(() => {
     let cancelled = false;
@@ -95,22 +97,12 @@ function AppShellInner() {
               <IconButton
                 label="设置"
                 title="设置"
-                onClick={openSettings}
+                onClick={() => openSettings()}
               >
                 <Settings className="size-3.5" />
               </IconButton>
               <ThemeToggle size="compact" />
             </>
-          }
-          tabs={
-            <TabBar
-              embedded
-              items={tabs}
-              activePath={activePath}
-              onSelect={selectTab}
-              onClose={closeTab}
-              onAdd={addTab}
-            />
           }
           onStartDrag={() => void startWindowDrag()}
           onMinimize={() => void minimizeWindow()}
@@ -119,35 +111,13 @@ function AppShellInner() {
         />
         <AppLayout
           sidebar={
-            <NavRail className="h-full min-h-0">
-              <NavRailNav>
-                {visibleNavItems.map((item) => {
-                  const Icon = item.icon;
-                  const label = item.label;
-                  return (
-                    <NavLink
-                      key={item.id}
-                      to={item.path}
-                      end={item.end}
-                      title={label}
-                      onClick={(event) => {
-                        event.preventDefault();
-                        selectTab(item.path);
-                      }}
-                      className={({ isActive }) => navRailItemVariants({ active: isActive })}
-                    >
-                      {Icon ? <Icon className="size-[1.125rem] shrink-0" aria-hidden /> : null}
-                      <span className="max-w-full truncate">{label}</span>
-                    </NavLink>
-                  );
-                })}
-              </NavRailNav>
-              <LicensePlanBadge />
-            </NavRail>
+            <SidebarProvider open={sidebarExpanded} setOpen={setSidebarExpanded} defaultOpen>
+              <WorkspaceSidebar activePath={activePath} onNavigate={selectTab} />
+            </SidebarProvider>
           }
         >
           <MainPanel>
-            <WorkspaceOutlet openPaths={openPaths} activePath={activePath} />
+            <WorkspaceOutlet activePath={activePath} />
           </MainPanel>
         </AppLayout>
         <LogPanel />
@@ -159,7 +129,7 @@ function AppShellInner() {
 /**
  * 桌面应用主壳。
  *
- * 负责：窗口 TitleBar、侧栏导航、工作区标签与内容出口、设置弹窗。
+ * 负责：窗口 TitleBar、侧栏导航、工作区内容出口、设置弹窗。
  *
  * @author coisini
  * @created 2026-07-20

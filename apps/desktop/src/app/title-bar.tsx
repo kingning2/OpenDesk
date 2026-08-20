@@ -7,12 +7,47 @@
  * @created 2026-07-20
  */
 
+import { APP_BRAND_TITLE } from "@desk/platform/compile";
 import { cn } from "@desk/ui";
 import { Minus, Square, X, SquaresUnite } from "@desk/ui/icons";
 import type { HTMLAttributes, ReactNode, MouseEvent } from "react";
 
 /** 标题栏适配的桌面平台。 */
 export type TitleBarPlatform = "macos" | "windows" | "linux";
+
+/**
+ * 标题栏品牌字标 — 主名用艺术字，平台后缀用常规字。
+ *
+ * @author Xiaoman
+ * @created 2026-08-20
+ *
+ * @param props.title - 编译期品牌标题，如「叮答（闲鱼）」
+ * @returns 品牌字标节点
+ */
+function TitleBarBrand({ title }: { title: string }) {
+  const match = title.match(/^(.+?)（(.+)）$/);
+
+  if (!match) {
+    return (
+      <span className="truncate font-brand text-[15px] leading-none tracking-[0.04em] text-foreground">
+        {title}
+      </span>
+    );
+  }
+
+  const [, baseName, platformName] = match;
+
+  return (
+    <span className="flex min-w-0 items-baseline gap-0.5 leading-none">
+      <span className="shrink-0 font-brand text-[15px] tracking-[0.04em] text-foreground">
+        {baseName}
+      </span>
+      <span className="truncate font-sans text-[11px] font-medium text-muted-foreground">
+        （{platformName}）
+      </span>
+    </span>
+  );
+}
 
 /**
  * 窗口标题栏属性。
@@ -189,11 +224,14 @@ export function TitleBar({
   const isMac = platform === "macos";
 
   const brand = (
-    <img
-      src="/logo.png"
-      alt="DingDa"
-      className="size-5 shrink-0 rounded-[var(--radius-sm)] object-cover"
-    />
+    <div className="flex min-w-0 items-center gap-2.5">
+      <img
+        src="/logo.webp"
+        alt={APP_BRAND_TITLE}
+        className="size-5 shrink-0 rounded-[var(--radius-sm)] object-cover"
+      />
+      <TitleBarBrand title={APP_BRAND_TITLE} />
+    </div>
   );
 
   return (

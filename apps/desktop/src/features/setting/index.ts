@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 设置 Feature 导出。
  *
  * @author coisini
@@ -14,3 +14,4 @@ export type { SettingsDialogProps } from "./settings-dialog";
 export { SettingsDialogProvider } from "./settings-dialog-provider";
 export { useSettingsDialog } from "./settings-dialog-store";
 export type { SettingsDialogContextValue } from "./settings-dialog-store";
+export type { SettingsSectionId } from "./settings-sections";

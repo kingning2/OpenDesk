@@ -68,3 +68,47 @@ export function itemUpdate(
     request: { owner_id: ownerId, item_id: itemId, ai_prompt: aiPrompt },
   });
 }
+
+/** 商品同步结果（与 Rust `ItemSyncResult` 对齐）。 */
+export interface ItemSyncResult {
+  synced: number;
+  created: number;
+  updated: number;
+}
+
+/** 从闲鱼平台同步在售商品并入库。 */
+export function itemSync(
+  ownerId: number,
+  accountId?: string,
+): Promise<ItemSyncResult> {
+  return call<ItemSyncResult>("item_sync", {
+    request: {
+      owner_id: ownerId,
+      account_id: accountId ?? "",
+    },
+  });
+}
+
+/** 闲鱼平台商品详情（与 Rust `PlatformItemDetail` 对齐）。 */
+export interface ItemDetail {
+  item_id: string;
+  title: string;
+  desc: string;
+  price: number;
+  original_price?: number | null;
+  images: string[];
+  want_count?: number | null;
+  browse_count?: number | null;
+  item_url: string;
+}
+
+/** 从闲鱼平台拉取商品详情。 */
+export function itemDetailFetch(ownerId: number, itemId: string, accountId?: string): Promise<ItemDetail> {
+  return call<ItemDetail>("item_detail_fetch", {
+    request: {
+      owner_id: ownerId,
+      item_id: itemId,
+      account_id: accountId ?? "",
+    },
+  });
+}

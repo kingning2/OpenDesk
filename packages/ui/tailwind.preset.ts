@@ -40,6 +40,7 @@ const preset = {
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
         display: ["var(--font-display)", "system-ui", "sans-serif"],
+        brand: ["var(--font-brand)", "system-ui", "sans-serif"],
       },
     },
   },

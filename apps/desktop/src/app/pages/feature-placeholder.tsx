@@ -5,7 +5,7 @@
  * @created 2026-07-20
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@desk/ui";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, PageScaffold } from "@desk/ui";
 
 /**
  * 占位页属性。
@@ -31,7 +31,8 @@ export interface FeaturePlaceholderPageProps {
  */
 export function FeaturePlaceholderPage({ title, description }: FeaturePlaceholderPageProps) {
   return (
-    <Card variant="glass" className="w-full">
+    <PageScaffold subtitle={description ?? `${title} — 开发中`}>
+      <Card variant="glass" className="w-full">
         <CardHeader>
           <CardTitle>{title}</CardTitle>
           {description ? <CardDescription>{description}</CardDescription> : null}
@@ -42,5 +43,6 @@ export function FeaturePlaceholderPage({ title, description }: FeaturePlaceholde
           </p>
         </CardContent>
       </Card>
+    </PageScaffold>
   );
 }

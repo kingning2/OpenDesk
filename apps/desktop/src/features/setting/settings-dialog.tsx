@@ -1,15 +1,12 @@
 /**
- * 设置弹窗 — 应用级配置（AI 账号 / 插件）。
- *
- * 闲鱼个人设置、授权、主题不进入此弹窗。
+ * 设置弹窗 — map 驱动分区渲染。
  *
  * @author coisini
  * @created 2026-07-21
  */
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
-  Button,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -17,13 +14,12 @@ import {
   IconButton,
   cn,
 } from "@desk/ui";
-import { Bot, Package, X } from "@desk/ui/icons";
-import { AiSettingsPanel } from "@feature/ai";
-import { PluginsPanel } from "@feature/plugin";
-import { isSettingsDirty, resetSettingsDirty } from "./settings-session-store";
-
-/** 设置侧栏分区。 */
-type SettingsSection = "ai" | "plugins";
+import { X } from "@desk/ui/icons";
+import {
+  resolveSettingsSection,
+  SETTINGS_SECTIONS,
+  type SettingsSectionId,
+} from "./settings-sections";
 
 /**
  * `SettingsDialog` 属性。
@@ -36,12 +32,12 @@ export interface SettingsDialogProps {
   open: boolean;
   /** 打开状态变更。 */
   onOpenChange: (open: boolean) => void;
+  /** 打开时默认聚焦的分区。 */
+  initialSection?: SettingsSectionId;
 }
 
 /**
  * 应用设置弹窗。
- *
- * 设置即时写入本机；仅 AI 账号有修改时关闭前弹出确认。
  *
  * @author coisini
  * @created 2026-07-21
@@ -49,66 +45,28 @@ export interface SettingsDialogProps {
  * @param props - 见 {@link SettingsDialogProps}
  * @returns 设置 Dialog 节点
  */
-export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
-  const [confirmExit, setConfirmExit] = useState(false);
-  const [section, setSection] = useState<SettingsSection>("ai");
+export function SettingsDialog({ open, onOpenChange, initialSection }: SettingsDialogProps) {
+  const [section, setSection] = useState<SettingsSectionId>(
+    initialSection ?? SETTINGS_SECTIONS[0].id,
+  );
 
-  /**
-   * 真正关闭弹窗，并清理确认态。
-   *
-   * @author coisini
-   * @created 2026-07-21
-   */
-  function finishExit() {
-    setConfirmExit(false);
-    onOpenChange(false);
-  }
-
-  /**
-   * 请求关闭；AI 账号有修改时才弹确认。
-   *
-   * @author coisini
-   * @created 2026-07-21
-   */
-  function requestExit() {
-    if (isSettingsDirty()) {
-      setConfirmExit(true);
-      return;
+  useEffect(() => {
+    if (open && initialSection) {
+      setSection(initialSection);
     }
-    finishExit();
-  }
+  }, [open, initialSection]);
 
-  /**
-   * Radix open 变更：拦截关闭以做确认。
-   *
-   * @author coisini
-   * @created 2026-07-21
-   *
-   * @param next - 下一 open 状态
-   */
-  function handleOpenChange(next: boolean) {
-    if (next) {
-      setConfirmExit(false);
-      resetSettingsDirty();
-      onOpenChange(true);
-      return;
-    }
-    requestExit();
-  }
-
-  const title = section === "ai" ? "AI 账号" : "插件";
+  const activeSection = resolveSettingsSection(section);
+  const ActivePanel = activeSection.Panel;
+  const SectionIcon = activeSection.icon;
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="h-[min(780px,92vh)] w-[min(1100px,96vw)] max-w-none gap-0 p-0"
         closeLabel="关闭"
         dismissOnOutsidePress={false}
         showClose={false}
-        onEscapeKeyDown={(event) => {
-          event.preventDefault();
-          requestExit();
-        }}
       >
         <DialogTitle className="sr-only">设置</DialogTitle>
         <DialogDescription className="sr-only">应用设置</DialogDescription>
@@ -116,7 +74,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         <IconButton
           label="关闭"
           className="absolute right-3 top-3 z-20"
-          onClick={() => requestExit()}
+          onClick={() => onOpenChange(false)}
         >
           <X className="size-3.5" aria-hidden />
         </IconButton>
@@ -129,78 +87,32 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             <p className="mb-2 px-2 text-[length:var(--text-xs)] font-medium uppercase tracking-wide text-muted-foreground">
               设置
             </p>
-            <SettingsNavButton
-              active={section === "ai"}
-              icon={<Bot className="size-4" aria-hidden />}
-              label="AI 账号"
-              onClick={() => setSection("ai")}
-            />
-            <SettingsNavButton
-              active={section === "plugins"}
-              icon={<Package className="size-4" aria-hidden />}
-              label="插件"
-              onClick={() => setSection("plugins")}
-            />
+            {SETTINGS_SECTIONS.map((item) => {
+              const Icon = item.icon;
+              return (
+                <SettingsNavButton
+                  key={item.id}
+                  active={section === item.id}
+                  icon={<Icon className="size-4" aria-hidden />}
+                  label={item.label}
+                  onClick={() => setSection(item.id)}
+                />
+              );
+            })}
           </nav>
 
           <div className="flex min-w-0 flex-1 flex-col">
-            <header className="flex shrink-0 items-center border-b border-border/70 px-8 py-5 pr-14">
+            <header className="flex shrink-0 items-center gap-2 border-b border-border/70 px-8 py-5 pr-14">
+              <SectionIcon className="size-5 text-muted-foreground" aria-hidden />
               <h2 className="font-display text-[length:var(--text-xl)] font-semibold tracking-tight text-foreground">
-                {title}
+                {activeSection.label}
               </h2>
             </header>
 
             <div className="min-h-0 flex-1 overflow-y-auto px-8 py-7">
-              {section === "ai" ? <AiSettingsPanel /> : <PluginsPanel />}
+              <ActivePanel />
             </div>
           </div>
-
-          {confirmExit ? (
-            <div
-              className="absolute inset-0 z-30 flex items-center justify-center bg-black/50 p-6"
-              role="presentation"
-            >
-              <div
-                role="alertdialog"
-                aria-modal="true"
-                aria-labelledby="settings-confirm-title"
-                aria-describedby="settings-confirm-desc"
-                className="w-full max-w-sm rounded-[var(--radius-xl)] border border-border bg-card p-6 shadow-[var(--glass-shadow)]"
-              >
-                <h3
-                  id="settings-confirm-title"
-                  className="font-display text-[length:var(--text-lg)] font-semibold tracking-tight"
-                >
-                  设置已即时保存
-                </h3>
-                <p
-                  id="settings-confirm-desc"
-                  className="mt-2 text-[length:var(--text-sm)] leading-relaxed text-muted-foreground"
-                >
-                  设置会立即写入本机，确定关闭吗?
-                </p>
-                <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => {
-                      setConfirmExit(false);
-                    }}
-                  >
-                    留在设置
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      finishExit();
-                    }}
-                  >
-                    确认关闭
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ) : null}
         </div>
       </DialogContent>
     </Dialog>

@@ -6,7 +6,8 @@
  */
 
 export { LicenseGateProvider, useLicenseGateContext } from "./license-gate-context";
-export type { LicenseGateProviderProps } from "./license-gate-context";
+export { LicenseActivationPanel } from "./license-activation-panel";
+export { isLicensed } from "./is-licensed";
 export { LicensePlanBadge } from "./license-plan-badge";
 export { LicensePlanDialog } from "./license-plan-dialog";
 export type { LicensePlanDialogProps } from "./license-plan-dialog";

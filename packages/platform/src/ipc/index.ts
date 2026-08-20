@@ -10,6 +10,7 @@ export * from "./account";
 export * from "./address";
 export * from "./agent";
 export * from "./ai";
+export * from "./app";
 export * from "./auto-reply-log";
 export * from "./blacklist";
 export * from "./card";

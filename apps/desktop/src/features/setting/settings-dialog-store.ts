@@ -1,11 +1,12 @@
 /**
- * 设置弹窗 Context 定义与 hook（与 Provider 分文件，避免 fast-refresh 警告）。
+ * 设置弹窗 Context 定义与 hook。
  *
  * @author coisini
  * @created 2026-07-21
  */
 
 import { createContext, useContext } from "react";
+import type { SettingsSectionId } from "./settings-sections";
 
 /**
  * 设置弹窗上下文值。
@@ -16,8 +17,8 @@ import { createContext, useContext } from "react";
 export interface SettingsDialogContextValue {
   /** 是否打开。 */
   open: boolean;
-  /** 打开设置弹窗。 */
-  openSettings: () => void;
+  /** 打开设置弹窗，可选定位到指定分区。 */
+  openSettings: (section?: SettingsSectionId) => void;
   /** 关闭设置弹窗。 */
   closeSettings: () => void;
   /** 设置打开状态。 */

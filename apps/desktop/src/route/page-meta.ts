@@ -32,9 +32,13 @@ const pageMetaByPath: Record<string, PageMeta> = {
     title: "Agent",
     description: "Sidecar 连通性垂直切片",
   },
+  "/features/ai": {
+    title: "AI 配置",
+    description: "管理 AI 账号与本地模型",
+  },
   "/features/chat": {
-    title: "Chat",
-    description: "客户会话工作区",
+    title: "客户会话",
+    description: "查看买家消息并人工回复",
   },
   [CHANNEL_MANAGE_ROOT]: {
     title: "管理后台",

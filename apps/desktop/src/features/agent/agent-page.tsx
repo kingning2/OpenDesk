@@ -5,7 +5,7 @@
  * @created 2026-07-20
  */
 
-import { Button, Card, CardContent, CardHeader, CardTitle } from "@desk/ui";
+import { Button, Card, CardContent, CardHeader, CardTitle, PageScaffold } from "@desk/ui";
 
 import { useAgentPing } from "./use-agent-ping";
 
@@ -21,8 +21,7 @@ export function AgentPage() {
   const { status, loading, ping } = useAgentPing();
 
   return (
-    <>
-      <p className="text-(length:--text-sm) text-muted-foreground">Sidecar 连通性垂直切片</p>
+    <PageScaffold subtitle="Sidecar 连通性垂直切片">
       <Card variant="glass" className="w-full">
         <CardHeader>
           <CardTitle>Agent</CardTitle>
@@ -34,6 +33,6 @@ export function AgentPage() {
           </Button>
         </CardContent>
       </Card>
-    </>
+    </PageScaffold>
   );
 }

@@ -10,7 +10,7 @@
 
 import { type ComponentType } from "react";
 import { useLocation } from "react-router";
-import { CHANNEL_MANAGE_ROOT } from "@desk/platform/compile";
+import { CHANNEL_MANAGE_ROOT, managePath } from "@desk/platform/compile";
 import { XianyuAccountsPage } from "./accounts";
 import { XianyuAboutPage } from "./about";
 import { XianyuBatchPublishPage } from "./batch-publish";
@@ -20,6 +20,7 @@ import { XianyuDashboardPage } from "./dashboard";
 import { XianyuDisclaimerPage } from "./disclaimer";
 import { XianyuFeedbackPage } from "./feedback";
 import { XianyuItemsPage } from "./items";
+import { XianyuItemDetailPage } from "./item-detail";
 import { XianyuKeywordsPage } from "./keywords";
 import { XianyuMessageFiltersPage } from "./message-filters";
 import { XianyuMessageLogsPage } from "./message-logs";
@@ -83,6 +84,21 @@ function viewFromPathname(pathname: string): ManageView {
 }
 
 /**
+ * 从路径解析商品详情 ID（`/manage/items/:itemId`）。
+ *
+ * @author Xiaoman
+ * @created 2026-08-20
+ */
+function itemIdFromPathname(pathname: string): string | null {
+  const prefix = `${managePath("items")}/`;
+  if (!pathname.startsWith(prefix)) {
+    return null;
+  }
+  const segment = pathname.slice(prefix.length).split("/")[0] ?? "";
+  return segment ? decodeURIComponent(segment) : null;
+}
+
+/**
  * 闲鱼管理子页出口（静态 URL → 业务页）。
  *
  * @author agent
@@ -92,12 +108,12 @@ function viewFromPathname(pathname: string): ManageView {
  */
 export function XianyuManageConsole() {
   const { pathname } = useLocation();
+  const itemId = itemIdFromPathname(pathname);
+  if (itemId) {
+    return <XianyuItemDetailPage itemId={itemId} />;
+  }
   const view = viewFromPathname(pathname);
   const Page = VIEW_PAGES[view];
 
-  return (
-    <div className="min-h-0 flex-1 overflow-auto">
-      <Page />
-    </div>
-  );
+  return <Page />;
 }

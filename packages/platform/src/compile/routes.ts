@@ -35,6 +35,19 @@ export function managePath(view: string): string {
 }
 
 /**
+ * 商品详情页路径。
+ *
+ * @author Xiaoman
+ * @created 2026-08-20
+ *
+ * @param itemId - 闲鱼商品 ID
+ * @returns 详情页完整路径
+ */
+export function itemDetailPath(itemId: string): string {
+  return `${managePath("items")}/${encodeURIComponent(itemId)}`;
+}
+
+/**
  * 构造当前平台的渠道工作区路径。
  *
  * @author Xiaoman

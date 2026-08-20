@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@fontsource/zcool-kuaile/400.css";
 @import "@desk/ui/tokens";
 
 @source "../../../../packages/ui/src/**/*.{ts,tsx}";

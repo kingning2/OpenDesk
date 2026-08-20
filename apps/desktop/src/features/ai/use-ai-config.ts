@@ -1,7 +1,7 @@
 /**
  * AI 配置 store — 持有内置平台与账号,每次变更整体持久化到 Rust 端。
  *
- * 平台为内置(DeepSeek / Ollama),固定不可增删;仅默认模型与账号可配置。
+ * 平台为内置(DeepSeek / 豆包 / Ollama),固定不可增删;仅默认模型与账号可配置。
  * `authless` 等前端展示标记不落入持久化,回读时合并回内置平台。
  *
  * 以 `use` 前缀命名,使 React Compiler 将其识别为 hook,

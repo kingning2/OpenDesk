@@ -7,7 +7,7 @@
 
 import { useEffect, useState } from "react";
 import { Activity, MessageSquare, Package, ShoppingCart, Ticket, Users } from "@desk/ui/icons";
-import { Loading } from "@desk/ui";
+import { Loading, PageScaffold } from "@desk/ui";
 import { dashboardStats, type DashboardStats } from "@desk/platform/ipc/dashboard";
 
 const OWNER_ID = 1; // 桌面单用户；多用户时由登录态注入
@@ -58,20 +58,17 @@ export function XianyuDashboardPage() {
   }, []);
 
   return (
-    <div className="space-y-6 p-6">
+    <PageScaffold subtitle="闲鱼账号自动化运营概览">
       <header>
         <h1 className="text-[length:var(--text-xl)] font-semibold tracking-tight text-foreground">
           仪表盘
         </h1>
-        <p className="mt-1 text-[length:var(--text-sm)] text-muted-foreground">
-          闲鱼账号自动化运营概览
-        </p>
       </header>
 
       {loading ? (
         <Loading size="lg" text="加载中..." className="py-20" />
       ) : stats ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {STAT_CARDS.map((card) => {
             const Icon = card.icon;
             return (
@@ -97,6 +94,6 @@ export function XianyuDashboardPage() {
           })}
         </div>
       ) : null}
-    </div>
+    </PageScaffold>
   );
 }

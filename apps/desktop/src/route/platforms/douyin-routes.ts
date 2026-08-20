@@ -21,6 +21,24 @@ export const platformCapabilities: readonly string[] = [
   "account",
 ] as const;
 
+import type { LucideIcon } from "@desk/ui/icons";
+
+/** 平台管理导航项（各 channel 构建可扩展）。 */
+export interface ManageNavItem {
+  key: string;
+  label: string;
+  icon: LucideIcon;
+  description: string;
+}
+
+export const manageNav: readonly ManageNavItem[] = [];
+
+export const manageNavGroups: {
+  label: string;
+  icon?: LucideIcon;
+  items: readonly ManageNavItem[];
+}[] = [];
+
 export const sidebarNavItems: NavItem[] = [];
 
 export const pageLoaders: Record<string, PageLoader> = {};

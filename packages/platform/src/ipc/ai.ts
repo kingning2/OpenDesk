@@ -48,6 +48,40 @@ export interface AiApiKeyTestResult {
 }
 
 /**
+ * 单币种余额条目（与 Rust `AiBalanceInfoDto` 对齐）。
+ *
+ * @author Xiaoman
+ * @created 2026-08-20
+ */
+export interface AiBalanceInfoDto {
+  /** 币种（CNY / USD）。 */
+  currency: string;
+  /** 总可用余额。 */
+  total_balance: string;
+  /** 赠金余额。 */
+  granted_balance: string;
+  /** 充值余额。 */
+  topped_up_balance: string;
+}
+
+/**
+ * 账号余额查询结果。
+ *
+ * @author Xiaoman
+ * @created 2026-08-20
+ */
+export interface AiAccountBalanceResult {
+  /** 是否查询成功。 */
+  ok: boolean;
+  /** 余额是否足够调用 API。 */
+  is_available: boolean;
+  /** 各币种余额。 */
+  balances: AiBalanceInfoDto[];
+  /** 失败时的可读说明。 */
+  message: string;
+}
+
+/**
  * 探测 OpenAI 兼容 API Key。
  *
  * @author Xiaoman
@@ -55,11 +89,30 @@ export interface AiApiKeyTestResult {
  *
  * @param baseUrl - provider base URL
  * @param apiKey - API Key
+ * @param kind - 平台类型；deepseek 走余额接口，豆包等走 `/models`
  * @returns 探测结果
  */
 export function aiTestApiKey(
   baseUrl: string,
   apiKey: string,
+  kind?: string,
 ): Promise<AiApiKeyTestResult> {
-  return call<AiApiKeyTestResult>("ai_test_api_key", { baseUrl, apiKey });
+  return call<AiApiKeyTestResult>("ai_test_api_key", { baseUrl, apiKey, kind });
+}
+
+/**
+ * 查询账号余额。
+ *
+ * @author Xiaoman
+ * @created 2026-08-20
+ *
+ * @param baseUrl - provider base URL
+ * @param apiKey - API Key
+ * @returns 余额结果
+ */
+export function aiAccountBalance(
+  baseUrl: string,
+  apiKey: string,
+): Promise<AiAccountBalanceResult> {
+  return call<AiAccountBalanceResult>("ai_account_balance", { baseUrl, apiKey });
 }

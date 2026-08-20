@@ -144,19 +144,23 @@ export function LicenseLockGlyph({ anim, className }: LicenseLockGlyphProps) {
           />
         </motion.g>
 
-        {/* 锁芯：成功时上移脱落，失败时放大加粗 */}
-        <motion.circle
-          cx="20"
-          cy="25"
-          r={isFailure ? 2.4 : 1.8}
-          fill="currentColor"
+        {/* 锁芯：成功时上移脱落，失败时放大加粗（用 g 位移，避免 motion 动画 cy 出现 undefined） */}
+        <motion.g
           animate={
             isSuccess
-              ? { cy: 12, opacity: 0, scale: 0.4 }
-              : { cy: 25, opacity: 1, scale: 1 }
+              ? { y: -13, opacity: 0, scale: 0.4 }
+              : { y: 0, opacity: 1, scale: 1 }
           }
           transition={{ duration: 0.55, ease: "easeOut" }}
-        />
+          style={{ transformOrigin: "20px 25px" }}
+        >
+          <circle
+            cx="20"
+            cy="25"
+            r={isFailure ? 2.4 : 1.8}
+            fill="currentColor"
+          />
+        </motion.g>
 
         {/* 成功裂痕闪光 */}
         <motion.line

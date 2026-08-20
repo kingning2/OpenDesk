@@ -18,7 +18,6 @@ import {
   Image,
   Info,
   Layers,
-  LayoutDashboard,
   MapPin,
   MessageCircle,
   MessageSquare,
@@ -68,7 +67,6 @@ export interface ManageNavItem {
 
 /** 全部管理子页面（22 项，对齐原前端 Sidebar）。 */
 export const MANAGE_NAV: ManageNavItem[] = [
-  { key: "dashboard", label: "仪表盘", icon: LayoutDashboard, description: "业务数据总览与统计卡片" },
   { key: "accounts", label: "账号管理", icon: Users, description: "扫码登录、连接控制与多账号状态" },
   { key: "keywords", label: "自动回复", icon: MessageSquare, description: "关键词规则与自动回复配置" },
   { key: "items", label: "商品管理", icon: Package, description: "商品列表、筛选与 AI 提示词" },
@@ -92,15 +90,40 @@ export const MANAGE_NAV: ManageNavItem[] = [
   { key: "feedback", label: "意见反馈", icon: MessageSquarePlus, description: "提交需求 / BUG / 建议" },
 ];
 
-/** 侧栏直达的管理子页面（用户选定：仪表盘 / 账号 / 商品 / 订单）。 */
+/** 侧栏分组（Grouped Sidebar 模式）。 */
+export interface ManageNavGroup {
+  label: string;
+  icon: LucideIcon;
+  keys: ManageView[];
+}
+
+/** 侧栏分组导航 — 全部管理子页按业务域归类。 */
+export const MANAGE_NAV_GROUPS: ManageNavGroup[] = [
+  { label: "交易", icon: ShoppingCart, keys: ["accounts", "items", "orders", "cards", "blacklist"] },
+  { label: "消息", icon: MessageSquare, keys: ["keywords", "filters", "channels", "notifications", "logs", "risk"] },
+  { label: "发布", icon: Send, keys: ["materials", "publish", "batch-publish", "addresses", "publish-logs"] },
+  { label: "系统", icon: UserCog, keys: ["settings", "tutorial", "about", "disclaimer", "feedback"] },
+];
+
+/**
+ * 解析分组内的导航项（保持 MANAGE_NAV 中的顺序）。
+ *
+ * @author Xiaoman
+ * @created 2026-08-20
+ */
+export function manageNavItemsForGroup(group: ManageNavGroup): ManageNavItem[] {
+  const byKey = new Map(MANAGE_NAV.map((item) => [item.key, item]));
+  return group.keys.map((key) => byKey.get(key)).filter((item): item is ManageNavItem => item != null);
+}
+
+/** @deprecated 侧栏已展示全部子页，首页不再使用 */
 export const SIDEBAR_MANAGE_VIEWS: ManageView[] = [
-  "dashboard",
   "accounts",
   "items",
   "orders",
 ];
 
-/** 首页入口（其余子页面）：全部减去侧栏直达项。 */
+/** @deprecated 侧栏已展示全部子页，首页不再使用 */
 export const HOME_MANAGE_NAV: ManageNavItem[] = MANAGE_NAV.filter(
   (item) => !SIDEBAR_MANAGE_VIEWS.includes(item.key),
 );

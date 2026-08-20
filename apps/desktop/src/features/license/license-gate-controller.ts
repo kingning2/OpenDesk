@@ -3,7 +3,7 @@
  *
  * 负责：
  * - 拉取授权状态
- * - 判断是否应遮罩主界面
+ * - 判断是否未激活（供侧栏入口等使用，不再全屏拦截）
  * - 将未知错误规范为可读消息
  *
  * @author coisini
@@ -26,7 +26,7 @@ export interface LicenseGateSnapshot {
   status: LicenseStatus | null;
   /** 错误消息；成功时为 `null`。 */
   error: string | null;
-  /** 有锁且未激活时为 `true`。 */
+  /** 有锁且未激活时为 `true`（不再阻断整 app，仅用于 UI 提示）。 */
   gateBlocks: boolean;
 }
 

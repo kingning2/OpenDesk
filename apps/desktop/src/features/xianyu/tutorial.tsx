@@ -8,7 +8,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Bell,
-  BookOpen,
   ChevronDown,
   ChevronRight,
   Circle,
@@ -23,7 +22,7 @@ import {
   ShoppingCart,
   Users,
 } from "@desk/ui/icons";
-import { cn } from "@desk/ui";
+import { cn, PageScaffold } from "@desk/ui";
 
 /** 教程章节（与原前端结构一致）。 */
 interface TutorialSection {
@@ -357,20 +356,12 @@ export function XianyuTutorialPage() {
   }, []);
 
   return (
-    <div className="flex h-full flex-col">
-      {/* 页头 */}
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h1 className="flex items-center gap-2 font-semibold">
-            <BookOpen className="size-5" aria-hidden />
-            使用教程
-          </h1>
-          <p className="text-[length:var(--text-sm)] text-muted-foreground">
-            详细了解系统各项功能的使用方法
-          </p>
-        </div>
-      </div>
-
+    <PageScaffold
+      scroll={false}
+      title="使用教程"
+      subtitle="详细了解系统各项功能的使用方法"
+    >
+      <div className="flex min-h-0 flex-1 flex-col">
       {/* 内容区：左目录 + 右内容 */}
       <div className="flex min-h-0 flex-1 gap-4">
         {/* 左侧目录 */}
@@ -409,6 +400,7 @@ export function XianyuTutorialPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </PageScaffold>
   );
 }

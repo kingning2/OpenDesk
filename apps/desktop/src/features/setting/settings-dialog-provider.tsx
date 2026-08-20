@@ -12,7 +12,7 @@ import {
   SettingsDialogContext,
   type SettingsDialogContextValue,
 } from "./settings-dialog-store";
-import { resetSettingsDirty } from "./settings-session-store";
+import type { SettingsSectionId } from "./settings-sections";
 
 /**
  * 设置弹窗 Provider。
@@ -25,9 +25,10 @@ import { resetSettingsDirty } from "./settings-session-store";
  */
 export function SettingsDialogProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [initialSection, setInitialSection] = useState<SettingsSectionId | undefined>();
 
-  const openSettings = useCallback(() => {
-    resetSettingsDirty();
+  const openSettings = useCallback((section?: SettingsSectionId) => {
+    setInitialSection(section);
     setOpen(true);
   }, []);
   const closeSettings = useCallback(() => setOpen(false), []);
@@ -40,7 +41,11 @@ export function SettingsDialogProvider({ children }: { children: ReactNode }) {
   return (
     <SettingsDialogContext.Provider value={value}>
       {children}
-      <SettingsDialog open={open} onOpenChange={setOpen} />
+      <SettingsDialog
+        open={open}
+        initialSection={initialSection}
+        onOpenChange={setOpen}
+      />
     </SettingsDialogContext.Provider>
   );
 }

@@ -12,6 +12,20 @@
 export type ChannelPlatformId = "xianyu" | "xiaohongshu" | "douyin";
 
 declare const __DINGDA_CHANNEL_PLATFORM__: ChannelPlatformId;
+declare const __DINGDA_APP_BRAND_TITLE__: string;
+
+/**
+ * 标题栏品牌中文名称（编译期常量）。
+ *
+ * 渠道构建如「叮答（闲鱼）」；聚合构建为「叮答」。
+ *
+ * @author Xiaoman
+ * @created 2026-08-20
+ */
+export const APP_BRAND_TITLE: string =
+  typeof __DINGDA_APP_BRAND_TITLE__ !== "undefined"
+    ? __DINGDA_APP_BRAND_TITLE__
+    : "叮答";
 
 /**
  * 当前构建选定的渠道平台 id（编译期常量）。

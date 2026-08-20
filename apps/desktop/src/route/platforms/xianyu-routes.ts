@@ -8,17 +8,16 @@
  */
 
 import type { ComponentType } from "react";
-import {
-  CHANNEL_MANAGE_ROOT,
-  managePath,
-} from "@desk/platform/compile";
-import { LayoutDashboard, Package, ShoppingCart, Users } from "@desk/ui/icons";
+import { CHANNEL_MANAGE_ROOT, managePath } from "@desk/platform/compile";
 
 import {
   MANAGE_NAV,
+  MANAGE_NAV_GROUPS,
+  manageNavItemsForGroup,
   MANAGE_VIEW_TITLES,
-  HOME_MANAGE_NAV,
   isManageView,
+  type ManageNavItem,
+  type ManageNavGroup,
   type ManageView,
 } from "@feature/xianyu/manage-nav";
 
@@ -44,6 +43,7 @@ function toRouteSegment(fullPath: string): string {
 export const routeSegments = [
   { path: toRouteSegment(CHANNEL_MANAGE_ROOT) },
   ...MANAGE_NAV.map((item) => ({ path: toRouteSegment(managePath(item.key)) })),
+  { path: `${toRouteSegment(managePath("items"))}/:itemId` },
 ];
 
 /** 当前平台能力（编译期固定，替代运行时 IPC 过滤）。 */
@@ -61,37 +61,18 @@ export const platformCapabilities: readonly string[] = [
   "manage",
 ] as const;
 
-/** 侧栏平台相关导航项。 */
-export const sidebarNavItems: NavItem[] = [
-  {
-    id: "platform-dashboard",
-    path: managePath("dashboard"),
-    label: "仪表盘",
-    icon: LayoutDashboard,
-    requiredCapabilities: ["manage"],
-  },
-  {
-    id: "platform-accounts",
-    path: managePath("accounts"),
-    label: "账号管理",
-    icon: Users,
-    requiredCapabilities: ["manage"],
-  },
-  {
-    id: "platform-items",
-    path: managePath("items"),
-    label: "商品管理",
-    icon: Package,
-    requiredCapabilities: ["manage"],
-  },
-  {
-    id: "platform-orders",
-    path: managePath("orders"),
-    label: "订单管理",
-    icon: ShoppingCart,
-    requiredCapabilities: ["manage"],
-  },
-];
+/** 编译期平台管理导航（侧栏数据源）。 */
+export const manageNav = MANAGE_NAV;
+
+/** 侧栏分组（含解析后的 items 与分组图标）。 */
+export const manageNavGroups = MANAGE_NAV_GROUPS.map((group) => ({
+  label: group.label,
+  icon: group.icon,
+  items: manageNavItemsForGroup(group),
+}));
+
+/** @deprecated 使用 manageNavGroups；保留空数组兼容 nav-registry */
+export const sidebarNavItems: NavItem[] = [];
 
 const loadManageConsole: PageLoader = async () => {
   const { XianyuManageConsole } = await import("@feature/xianyu/manage-console");
@@ -106,7 +87,7 @@ export const pageLoaders: Record<string, PageLoader> = {
   ),
 };
 
-export { MANAGE_VIEW_TITLES, isManageView, HOME_MANAGE_NAV as homeManageNav, type ManageView };
+export { MANAGE_VIEW_TITLES, isManageView, type ManageNavItem, type ManageNavGroup, type ManageView };
 
 /**
  * 按静态路径解析管理子页标题。
@@ -119,13 +100,17 @@ export { MANAGE_VIEW_TITLES, isManageView, HOME_MANAGE_NAV as homeManageNav, typ
  */
 export function manageTitleFromPath(pathname: string): string | null {
   if (pathname === CHANNEL_MANAGE_ROOT) {
-    return "管理后台";
+    return "首页";
   }
   const prefix = `${CHANNEL_MANAGE_ROOT}/`;
   if (!pathname.startsWith(prefix)) {
     return null;
   }
-  const view = pathname.slice(prefix.length).split("/")[0] ?? "";
+  const rest = pathname.slice(prefix.length);
+  if (rest.startsWith("items/") && rest.split("/").length >= 2) {
+    return "商品详情";
+  }
+  const view = rest.split("/")[0] ?? "";
   if (isManageView(view)) {
     return MANAGE_VIEW_TITLES[view];
   }

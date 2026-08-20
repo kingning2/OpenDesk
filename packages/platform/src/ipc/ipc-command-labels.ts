@@ -10,8 +10,10 @@
 /** IPC command 中文名（与 Rust `generate_handler!` 对齐）。 */
 export const IPC_COMMAND_LABELS: Readonly<Record<string, string>> = {
   agent_ping: "Agent 探活",
+  app_version: "应用版本",
   ai_config_get: "读取 AI 配置",
   ai_config_set: "保存 AI 配置",
+  ai_account_balance: "查询 AI 余额",
   ["ai_test_api_key"]: "测试 API 密钥",
   plugin_list: "插件列表",
   plugin_install: "插件安装",

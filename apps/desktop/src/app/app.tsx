@@ -1,24 +1,18 @@
 /**
- * 应用根组件：Query 上下文、路由与授权门禁。
+ * 应用根组件：Query 上下文、路由与授权状态。
  *
  * @author coisini
  * @created 2026-07-20
  */
 
-import { useCallback } from "react";
 import { RouterProvider } from "react-router";
-import { Button, QueryProvider, Toaster } from "@desk/ui";
+import { QueryProvider, Toaster } from "@desk/ui";
 import { appRouter } from "../route";
-import {
-  LicenseGateProvider,
-  LicenseLockHero,
-  LicenseLockOverlay,
-  useLicenseGate,
-} from "@feature/license";
+import { LicenseGateProvider, useLicenseGate } from "@feature/license";
 import "./globals.css";
 
 /**
- * 授权门禁与路由壳。
+ * 授权状态 Provider 与路由壳（无全屏激活遮罩）。
  *
  * @author coisini
  * @created 2026-07-20
@@ -28,39 +22,11 @@ import "./globals.css";
 function AppChrome() {
   const gate = useLicenseGate();
 
-  const onActivated = useCallback(() => {
-    void gate.refresh();
-  }, [gate]);
-
   return (
     <LicenseGateProvider value={gate}>
       <div className="relative h-screen w-full overflow-hidden">
         <RouterProvider router={appRouter} />
         <Toaster position="top-center" richColors closeButton />
-
-        {gate.loading ? (
-          <div
-            className="fixed inset-x-0 bottom-0 top-11 z-40 flex items-center justify-center bg-background/40 p-6 backdrop-blur-md"
-            role="status"
-            aria-live="polite"
-          >
-            <LicenseLockHero anim="busy" caption="正在校验授权状态…" />
-          </div>
-        ) : null}
-
-        {gate.error ? (
-          <div className="fixed inset-x-0 bottom-0 top-11 z-50 flex items-center justify-center bg-background/40 p-6 backdrop-blur-md">
-            <div className="max-w-md space-y-3 rounded-[var(--radius-lg)] border border-border bg-card p-6 text-center shadow-lg">
-              <p className="text-destructive">授权状态读取失败</p>
-              <p className="text-[length:var(--text-sm)] text-muted-foreground">{gate.error}</p>
-              <Button onClick={() => void gate.refresh()}>重试</Button>
-            </div>
-          </div>
-        ) : null}
-
-        {!gate.loading && !gate.error && gate.gateBlocks ? (
-          <LicenseLockOverlay onActivated={onActivated} />
-        ) : null}
       </div>
     </LicenseGateProvider>
   );

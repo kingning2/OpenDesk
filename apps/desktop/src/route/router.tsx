@@ -14,20 +14,39 @@ import { routeSegments } from "@platform-routes";
 
 import { AppShell } from "../app/shell";
 
+/**
+ * 占位路由节点：实际页面由 {@link AppShell} 内 WorkspaceOutlet 按 pathname 懒加载。
+ *
+ * @author Xiaoman
+ * @created 2026-08-20
+ */
+function WorkspacePathMarker() {
+  return null;
+}
+
+/** 为仅匹配 URL 的工作区路径补上 element，消除 React Router leaf 警告。 */
+function workspaceRoute(path: string) {
+  return { path, element: <WorkspacePathMarker /> };
+}
+
 export const appRouter = createBrowserRouter([
   {
     path: "/",
     element: <AppShell />,
     children: [
-      { index: true },
-      { path: "features/agent" },
-      { path: "features/chat" },
+      { index: true, element: <Navigate to={CHANNEL_MANAGE_ROOT} replace /> },
+      workspaceRoute("features/agent"),
+      workspaceRoute("features/ai"),
+      workspaceRoute("features/chat"),
       {
         path: "features/channel",
         element: <Navigate to={CHANNEL_MANAGE_ROOT} replace />,
       },
-      ...routeSegments,
-      { path: "features/knowledge" },
+      ...routeSegments.map((segment) => ({
+        ...segment,
+        element: <WorkspacePathMarker />,
+      })),
+      workspaceRoute("features/knowledge"),
     ],
   },
 ]);

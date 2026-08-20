@@ -1,5 +1,5 @@
 /**
- * 带无障碍标签的图标按钮。
+ * 带无障碍标签的图标按钮（基于 {@link Button}）。
  *
  * @author coisini
  * @created 2026-07-20
@@ -8,6 +8,7 @@
 import * as React from "react";
 
 import { cn } from "../lib/cn";
+import { Button } from "./button";
 
 /**
  * `IconButton` 属性。
@@ -31,17 +32,15 @@ export interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEl
  */
 export function IconButton({ label, className, children, ...props }: IconButtonProps) {
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
+      size="icon"
       aria-label={label}
-      className={cn(
-        "inline-flex size-8 cursor-pointer items-center justify-center rounded-[var(--radius-sm)] text-muted-foreground transition-[color,background-color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97]",
-        "[@media(hover:hover)_and_(pointer:fine)]:hover:bg-muted/60 [@media(hover:hover)_and_(pointer:fine)]:hover:text-foreground",
-        className,
-      )}
+      className={cn("size-8 text-muted-foreground", className)}
       {...props}
     >
       {children}
-    </button>
+    </Button>
   );
 }

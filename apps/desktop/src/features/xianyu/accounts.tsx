@@ -8,11 +8,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
+  Checkbox,
   ConfirmModal,
   Dialog,
   DialogContent,
   Input,
   Loading,
+  PageCardGrid,
+  PageGlowCard,
   PageScaffold,
   Select,
   SelectContent,
@@ -37,6 +40,12 @@ import {
   type XianyuAccount,
 } from "@desk/platform/ipc/account";
 import { listenChannelStatus } from "@desk/platform/events";
+import {
+  loadAutoConnectConfig,
+  runAutoConnectNow,
+  setAccountAutoConnect,
+  setAutoConnectOnStartEnabled,
+} from "./use-auto-connect";
 
 const OWNER_ID = 1; // 桌面单用户；多用户时由登录态注入
 
@@ -257,6 +266,9 @@ export function XianyuAccountsPage() {
   /** account_id → 渠道连接状态。 */
   const [connectionStates, setConnectionStates] = useState<Record<string, string>>({});
   const [connectingId, setConnectingId] = useState<string | null>(null);
+  const [autoConnectOnStart, setAutoConnectOnStart] = useState(false);
+  const [autoConnectIds, setAutoConnectIds] = useState<string[]>([]);
+  const [autoConnecting, setAutoConnecting] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -287,6 +299,23 @@ export function XianyuAccountsPage() {
         if (!cancelled) {
           setLoading(false);
         }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadAutoConnectConfig()
+      .then((config) => {
+        if (!cancelled) {
+          setAutoConnectOnStart(config.enabled);
+          setAutoConnectIds(config.accountIds);
+        }
+      })
+      .catch(() => {
+        // 读取失败时保持默认关闭，不阻断账号列表。
       });
     return () => {
       cancelled = true;
@@ -447,9 +476,51 @@ export function XianyuAccountsPage() {
     if (!deleteTarget) return;
     try {
       await accountDelete(OWNER_ID, deleteTarget.account_id);
+      setAutoConnectIds(await setAccountAutoConnect(deleteTarget.account_id, false));
       toast.success("账号已删除");
       setDeleteTarget(null);
       await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  async function handleToggleAutoConnect() {
+    const next = !autoConnectOnStart;
+    try {
+      await setAutoConnectOnStartEnabled(next);
+      setAutoConnectOnStart(next);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
+      return;
+    }
+    if (!next) {
+      toast.success("已关闭启动自动连接");
+      return;
+    }
+    if (autoConnectIds.length === 0) {
+      toast.success("已开启启动自动连接：请在账号卡片上勾选要自动连接的账号");
+      return;
+    }
+    toast.success("已开启：启动时只连接勾选账号；风控未过滑块将 10 分钟后重试");
+    setAutoConnecting(true);
+    try {
+      const count = await runAutoConnectNow();
+      toast.success(
+        count > 0 ? `已开始连接 ${count} 个勾选账号` : "勾选账号中暂无可连接项（需启用且有 Cookie）",
+      );
+      await refreshConnectionStates(accounts.map((account) => account.account_id));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setAutoConnecting(false);
+    }
+  }
+
+  async function handleToggleAccountAutoConnect(accountId: string, selected: boolean) {
+    try {
+      const next = await setAccountAutoConnect(accountId, selected);
+      setAutoConnectIds(next);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : String(error));
     }
@@ -461,57 +532,80 @@ export function XianyuAccountsPage() {
   }
 
   return (
-    <PageScaffold subtitle="闲鱼多账号管理 — 扫码登录 / 列表 / 状态切换">
-      <div className="space-y-4">
-        {/* 工具栏 */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Input
-              placeholder="搜索账号 ID / 名称"
-              value={keyword}
-              onChange={(event) => setKeyword(event.target.value)}
-              className="w-56"
-            />
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="全部状态" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全部状态</SelectItem>
-                <SelectItem value="active">已启用</SelectItem>
-                <SelectItem value="disabled">已停用</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+    <PageScaffold
+      title="账号管理"
+      subtitle="勾选账号后开启启动自动连接；未勾选的不会自动连"
+      extra={
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant={autoConnectOnStart ? "default" : "outline"}
+            disabled={autoConnecting}
+            onClick={() => void handleToggleAutoConnect()}
+            title="开启后启动应用只连接卡片上勾选的账号；触发风控且滑块未过时，约 10 分钟后自动再连"
+          >
+            {autoConnecting
+              ? "连接中…"
+              : autoConnectOnStart
+                ? `启动自动连接：开（${autoConnectIds.length}）`
+                : "启动自动连接：关"}
+          </Button>
           <Button variant="outline" onClick={openQrLogin}>
             <QrCode className="size-4" aria-hidden />
             扫码登录
           </Button>
         </div>
-
-        {/* 列表 */}
-        {loading ? (
-          <Loading size="lg" text="加载中..." className="py-16" />
-        ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center gap-4 py-16 text-center">
-            <p className="text-muted-foreground">暂无账号，请先扫码登录添加</p>
-            <Button variant="outline" onClick={openQrLogin}>
-              <QrCode className="size-4" aria-hidden />
-              扫码登录
-            </Button>
-          </div>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      }
+      toolbar={
+        <div className="flex flex-wrap items-center gap-3">
+          <Input
+            placeholder="搜索账号 ID / 名称"
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+            className="w-56"
+          />
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="全部状态" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">全部状态</SelectItem>
+              <SelectItem value="active">已启用</SelectItem>
+              <SelectItem value="disabled">已停用</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      }
+    >
+      {loading ? (
+        <Loading size="lg" text="加载中..." className="py-16" />
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center gap-4 py-16 text-center">
+          <p className="text-muted-foreground">暂无账号，请先扫码登录添加</p>
+          <Button variant="outline" onClick={openQrLogin}>
+            <QrCode className="size-4" aria-hidden />
+            扫码登录
+          </Button>
+        </div>
+      ) : (
+        <PageCardGrid>
             {filtered.map((account) => {
               const conn = CONNECTION_LABELS[connectionStates[account.account_id] ?? "disconnected"];
               const isConnecting = connectingId === account.account_id;
               return (
-                <button
+                <PageGlowCard
                   key={account.account_id}
-                  type="button"
-                  className="rounded-2xl border border-border bg-card p-4 text-left transition hover:border-primary/40 hover:bg-muted/20"
+                  role="button"
+                  tabIndex={0}
+                  className="text-left transition hover:bg-muted/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   onClick={() => openAccountEditor(account)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      openAccountEditor(account);
+                    }
+                  }}
                 >
+                  <div className="relative rounded-[inherit] border border-border bg-card p-4 transition hover:border-primary/40">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-start gap-3">
                       {account.avatar_url ? (
@@ -569,9 +663,19 @@ export function XianyuAccountsPage() {
                   </div>
 
                   <div
-                    className="mt-4 flex flex-wrap gap-2"
+                    className="mt-4 flex flex-wrap items-center gap-2"
                     onClick={(event) => event.stopPropagation()}
                   >
+                    <label className="mr-auto flex items-center gap-2 text-[length:var(--text-sm)] text-muted-foreground">
+                      <Checkbox
+                        checked={autoConnectIds.includes(account.account_id)}
+                        onCheckedChange={(checked) =>
+                          void handleToggleAccountAutoConnect(account.account_id, checked === true)
+                        }
+                        aria-label={`自动连接 ${account.display_name || account.account_id}`}
+                      />
+                      自动连接
+                    </label>
                     {connectionStates[account.account_id] === "connected" ? (
                       <Button size="sm" variant="outline" onClick={() => void handleDisconnect(account)}>
                         断开
@@ -601,12 +705,12 @@ export function XianyuAccountsPage() {
                       <Trash2 className="size-3.5" aria-hidden />
                     </Button>
                   </div>
-                </button>
+                  </div>
+                </PageGlowCard>
               );
             })}
-          </div>
-        )}
-      </div>
+          </PageCardGrid>
+      )}
 
       {/* 扫码登录弹窗 */}
       <AccountQrDialog

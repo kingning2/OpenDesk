@@ -7,10 +7,13 @@
 
 import { useEffect, useState } from "react";
 import {
+  AsyncButton,
   Button,
   ConfirmModal,
   Input,
   Loading,
+  PageCardGrid,
+  PageGlowCard,
   PageScaffold,
   Select,
   SelectContent,
@@ -20,9 +23,11 @@ import {
   Textarea,
   toast,
 } from "@desk/ui";
-import { Pencil, Search } from "@desk/ui/icons";
-import { itemList, itemUpdate, type Item } from "@desk/platform/ipc/item";
+import { Pencil, RefreshCw, Search } from "@desk/ui/icons";
+import { itemDetailPath } from "@desk/platform/compile";
+import { itemList, itemSync, itemUpdate, type Item } from "@desk/platform/ipc/item";
 import { accountList, type XianyuAccount } from "@desk/platform/ipc/account";
+import { useWorkspaceNav } from "../../app/use-workspace-tabs";
 import { formatAmount } from "@desk/utils";
 
 const OWNER_ID = 1; // 桌面单用户；多用户时由登录态注入
@@ -35,6 +40,7 @@ const PAGE_SIZE = 20;
  * @created 2026-08-13
  */
 export function XianyuItemsPage() {
+  const { selectTab } = useWorkspaceNav();
   const [items, setItems] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -45,6 +51,7 @@ export function XianyuItemsPage() {
   const [editTarget, setEditTarget] = useState<Item | null>(null);
   const [aiPrompt, setAiPrompt] = useState("");
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   // 加载账号列表。
   useEffect(() => {
@@ -118,6 +125,24 @@ export function XianyuItemsPage() {
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
+  async function handleSync() {
+    setSyncing(true);
+    try {
+      const result = await itemSync(
+        OWNER_ID,
+        accountId === "all" ? undefined : accountId,
+      );
+      toast.success(
+        `同步完成：${result.synced} 件（新增 ${result.created}，更新 ${result.updated}）`,
+      );
+      await load(1);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   async function handleSaveAiPrompt() {
     if (!editTarget) return;
     setSaving(true);
@@ -134,11 +159,12 @@ export function XianyuItemsPage() {
   }
 
   return (
-    <PageScaffold subtitle="闲鱼商品管理 — 列表 / 筛选 / AI 提示词">
-      <div className="space-y-4">
-        {/* 工具栏 */}
+    <PageScaffold
+      title="商品管理"
+      subtitle="卡片 / 筛选 / 同步 / AI 提示词"
+      toolbar={
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <Input
               placeholder="搜索商品 ID / 标题"
               value={keyword}
@@ -165,87 +191,24 @@ export function XianyuItemsPage() {
                 ))}
               </SelectContent>
             </Select>
+            <AsyncButton
+              variant="outline"
+              size="sm"
+              loading={syncing}
+              disabled={loading}
+              onClick={() => handleSync()}
+            >
+              <RefreshCw className="size-3.5" aria-hidden />
+              同步商品
+            </AsyncButton>
           </div>
           <span className="text-[length:var(--text-sm)] text-muted-foreground">
             共 {total} 件商品
           </span>
         </div>
-
-        {/* 列表 */}
-        {loading ? (
-          <Loading size="lg" text="加载中..." className="py-16" />
-        ) : items.length === 0 ? (
-          <div className="py-16 text-center text-muted-foreground">暂无商品</div>
-        ) : (
-          <div className="overflow-hidden rounded-xl border border-border">
-            <table className="w-full text-[length:var(--text-sm)]">
-              <thead className="bg-muted/50 text-muted-foreground">
-                <tr>
-                  <th className="px-4 py-2.5 text-left font-medium">商品 ID</th>
-                  <th className="px-4 py-2.5 text-left font-medium">标题</th>
-                  <th className="px-4 py-2.5 text-left font-medium">价格</th>
-                  <th className="px-4 py-2.5 text-left font-medium">标记</th>
-                  <th className="px-4 py-2.5 text-left font-medium">AI 提示词</th>
-                  <th className="px-4 py-2.5 text-right font-medium">操作</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {items.map((item) => (
-                  <tr key={item.item_id} className="hover:bg-muted/30">
-                    <td className="px-4 py-2.5 font-mono">{item.item_id}</td>
-                    <td className="px-4 py-2.5">
-                      <p className="max-w-64 truncate">{item.title || "—"}</p>
-                      <p className="font-mono text-[length:var(--text-xs)] text-muted-foreground">
-                        {item.account_id}
-                      </p>
-                    </td>
-                    <td className="px-4 py-2.5">{formatAmount(item.price)} 元</td>
-                    <td className="px-4 py-2.5">
-                      <div className="flex flex-wrap gap-1">
-                        {item.is_polished ? (
-                          <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[length:var(--text-xs)] text-blue-500">
-                            已擦亮
-                          </span>
-                        ) : null}
-                        {item.is_multi_spec ? (
-                          <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[length:var(--text-xs)] text-amber-500">
-                            多规格
-                          </span>
-                        ) : null}
-                        {item.has_card ? (
-                          <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[length:var(--text-xs)] text-emerald-500">
-                            有卡券
-                          </span>
-                        ) : null}
-                      </div>
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <p className="max-w-48 truncate text-muted-foreground">
-                        {item.ai_prompt || "—"}
-                      </p>
-                    </td>
-                    <td className="px-4 py-2.5 text-right">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setEditTarget(item);
-                          setAiPrompt(item.ai_prompt);
-                        }}
-                      >
-                        <Pencil className="size-3.5" aria-hidden />
-                        AI 提示词
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* 分页 */}
-        {totalPages > 1 ? (
+      }
+      footer={
+        totalPages > 1 ? (
           <div className="flex items-center justify-end gap-2">
             <Button
               size="sm"
@@ -267,8 +230,121 @@ export function XianyuItemsPage() {
               下一页
             </Button>
           </div>
-        ) : null}
-      </div>
+        ) : undefined
+      }
+    >
+      {loading ? (
+        <Loading size="lg" text="加载中..." className="py-16" />
+      ) : items.length === 0 ? (
+        <div className="flex flex-col items-center gap-4 py-16 text-center">
+          <p className="text-muted-foreground">暂无商品，请先同步闲鱼在售商品</p>
+          <AsyncButton variant="outline" loading={syncing} onClick={() => handleSync()}>
+            <RefreshCw className="size-4" aria-hidden />
+            同步商品
+          </AsyncButton>
+        </div>
+      ) : (
+        <PageCardGrid>
+            {items.map((item) => {
+              const accountLabel =
+                accounts.find((account) => account.account_id === item.account_id)?.display_name ||
+                item.account_id;
+              return (
+                <PageGlowCard
+                  key={item.item_id}
+                  role="button"
+                  tabIndex={0}
+                  className="text-left transition hover:bg-muted/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  onClick={() => selectTab(itemDetailPath(item.item_id))}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      selectTab(itemDetailPath(item.item_id));
+                    }
+                  }}
+                >
+                  <div className="relative rounded-[inherit] border border-border bg-card p-4 transition hover:border-primary/40">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <div
+                        className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-border bg-muted text-[length:var(--text-sm)] font-medium text-muted-foreground"
+                        aria-hidden
+                      >
+                        {(item.title || item.item_id).slice(0, 1)}
+                      </div>
+                      <div className="min-w-0 space-y-1">
+                        <div className="line-clamp-2 text-[length:var(--text-base)] font-medium leading-snug">
+                          {item.title || "—"}
+                        </div>
+                        <div className="truncate font-mono text-[length:var(--text-xs)] text-muted-foreground">
+                          {item.item_id}
+                        </div>
+                      </div>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[length:var(--text-xs)] font-medium text-primary">
+                      {formatAmount(item.price)} 元
+                    </span>
+                  </div>
+
+                  <div className="mt-4 space-y-2 text-[length:var(--text-sm)]">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-muted-foreground">所属账号</span>
+                      <span className="truncate max-w-[65%] text-right">{accountLabel}</span>
+                    </div>
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="shrink-0 text-muted-foreground">AI 提示词</span>
+                      <span className="line-clamp-2 max-w-[65%] text-right text-muted-foreground">
+                        {item.ai_prompt || "—"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {(item.is_polished || item.is_multi_spec || item.has_card) && (
+                    <div className="mt-3 flex flex-wrap gap-1">
+                      {item.is_polished ? (
+                        <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-[length:var(--text-xs)] text-blue-500">
+                          已擦亮
+                        </span>
+                      ) : null}
+                      {item.is_multi_spec ? (
+                        <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[length:var(--text-xs)] text-amber-500">
+                          多规格
+                        </span>
+                      ) : null}
+                      {item.has_card ? (
+                        <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[length:var(--text-xs)] text-emerald-500">
+                          有卡券
+                        </span>
+                      ) : null}
+                    </div>
+                  )}
+
+                  <div className="mt-4 flex flex-wrap gap-2" onClick={(event) => event.stopPropagation()}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => selectTab(itemDetailPath(item.item_id))}
+                    >
+                      查看详情
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setEditTarget(item);
+                        setAiPrompt(item.ai_prompt);
+                      }}
+                    >
+                      <Pencil className="size-3.5" aria-hidden />
+                      AI 提示词
+                    </Button>
+                  </div>
+                  </div>
+                </PageGlowCard>
+              );
+            })}
+          </PageCardGrid>
+      )}
 
       {/* AI 提示词编辑弹窗 */}
       <ConfirmModal

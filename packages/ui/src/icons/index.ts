@@ -71,5 +71,6 @@ export {
   Users,
   X,
   XCircle,
+  ArrowLeft
 } from "lucide-react";
 export type { LucideIcon } from "lucide-react";

@@ -25,7 +25,7 @@ export interface UseLicenseGateResult {
   loading: boolean;
   /** 拉取失败时的错误消息。 */
   error: string | null;
-  /** 是否应展示激活遮罩。 */
+  /** 是否未激活（有锁且未激活）。 */
   gateBlocks: boolean;
   /** 重新拉取状态。 */
   refresh: () => void;

@@ -16,3 +16,6 @@ export type { NavRailItemProps } from "./nav-rail";
 
 export { TabBar, tabItemVariants } from "./tab-bar";
 export type { TabBarItem, TabBarProps } from "./tab-bar";
+
+export { WorkspaceSidebar } from "./workspace-sidebar";
+export type { WorkspaceSidebarProps } from "./workspace-sidebar";
