@@ -1,7 +1,6 @@
 """Auto-generated from contracts/schema."""
 
 from typing import TypedDict
-
 from .llm_message import LlmMessage
 from .llm_provider import LlmProvider
 

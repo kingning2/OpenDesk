@@ -1,7 +1,6 @@
 """Auto-generated from contracts/schema."""
 
 from typing import TypedDict
-
 from .channel_account import ChannelAccount
 from .channel_settings import ChannelSettings
 
