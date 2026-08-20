@@ -33,7 +33,106 @@ LAUNCH_ARGS = [
     "--disable-dev-shm-usage",
     "--no-sandbox",
     "--disable-setuid-sandbox",
+    "--no-first-run",
+    "--no-default-browser-check",
+    "--disable-popup-blocking",
 ]
+
+# 闲鱼 / 阿里 Baxia 风控在刷新重试前必须清除的 risk cookies。
+# 若不清理会形成"刷新 → 带 risk cookies → 再次 punish → 刷新"死循环。
+RISK_COOKIE_NAMES = (
+    "x5secdata",
+    "x5sec",
+    "x5sectag",
+    "x5pref",
+    "bx-cookie-test",
+    "tfstk",
+    "cbc",
+    "sca",
+    "isg",
+)
+
+# 注入到每个页面的反检测脚本：覆盖 FireyeJS / Baxia 常用自动化指纹检测点。
+# playwright-stealth 已覆盖 webdriver/plugins/chrome/languages 等，这里补齐
+# stealth 未处理的：platform/vendor 与 UA 一致性、userAgentData、WebGL 渲染器、
+# Canvas 指纹微扰动、CDP 注入痕迹清理。参考 XianYuPilo sliderSolver.ts。
+ANTI_DETECT_SCRIPT = r"""
+(() => {
+  try {
+    const NAV = navigator;
+    const DEF = (target, name, value) => {
+      try {
+        Object.defineProperty(target, name, { get: () => value, configurable: true });
+      } catch (e) {}
+    };
+    // platform/vendor 与 UA 保持一致，避免 FireyeJS 判定为虚拟机/服务器
+    DEF(Navigator.prototype, 'platform', 'Win32');
+    DEF(NAV, 'platform', 'Win32');
+    DEF(NAV, 'vendor', 'Google Inc.');
+    const ua = NAV.userAgent || '';
+    if (ua) DEF(NAV, 'appVersion', ua.replace(/^Mozilla\//, ''));
+    DEF(NAV, 'hardwareConcurrency', 8);
+    DEF(NAV, 'deviceMemory', 8);
+    // userAgentData（Client Hints）：覆盖真实 OS 指纹，FireyeJS 依赖它
+    const ver = (ua.match(/Chrome\/([\d]+)/) || [, '146'])[1];
+    const brands = [
+      { brand: 'Google Chrome', version: ver },
+      { brand: 'Chromium', version: ver },
+      { brand: 'Not.A/Brand', version: '8' },
+    ];
+    DEF(NAV, 'userAgentData', {
+      brands,
+      mobile: false,
+      platform: 'Windows',
+      getHighEntropyValues: (hints) => Promise.resolve({
+        architecture: 'x86', bitness: '64', brands,
+        fullVersionList: brands, mobile: false, model: '',
+        platform: 'Windows', platformVersion: '15.0.0',
+        uaFullVersion: ver, wow64: false,
+      }),
+      toJSON: () => ({ brands, mobile: false, platform: 'Windows' }),
+    });
+    // WebGL 渲染器：headless/虚拟机返回 SwiftShader 是强机器人信号
+    const wrapWebGL = (Ctx) => {
+      if (!Ctx) return;
+      const orig = Ctx.prototype.getParameter;
+      Ctx.prototype.getParameter = function (param) {
+        if (param === 0x9245) return 'Google Inc. (NVIDIA)';
+        if (param === 0x9246) {
+          return 'ANGLE (NVIDIA, NVIDIA GeForce GTX 1060 Direct3D11 vs_5_0 ps_5_0)';
+        }
+        return orig.call(this, param);
+      };
+    };
+    wrapWebGL(WebGLRenderingContext);
+    if (typeof WebGL2RenderingContext !== 'undefined') wrapWebGL(WebGL2RenderingContext);
+    // Canvas 指纹微扰动：在 toDataURL 结果中注入 ±1 噪声，改变指纹哈希
+    const origData = HTMLCanvasElement.prototype.toDataURL;
+    HTMLCanvasElement.prototype.toDataURL = function (...args) {
+      const ctx = this.getContext('2d');
+      if (ctx) {
+        try {
+          const w = this.width, h = this.height;
+          if (w > 0 && h > 0) {
+            const img = ctx.getImageData(0, 0, w, h);
+            for (let i = 0; i < img.data.length; i += 4) {
+              if (Math.random() < 0.03) {
+                img.data[i] = (img.data[i] + (Math.random() < 0.5 ? -1 : 1)) & 0xff;
+              }
+            }
+            ctx.putImageData(img, 0, 0);
+          }
+        } catch (e) {}
+      }
+      return origData.apply(this, args);
+    };
+    // 清理 CDP 注入痕迹
+    for (const key of Object.keys(window)) {
+      if (key.startsWith('cdc_')) { try { delete window[key]; } catch (e) {} }
+    }
+  } catch (e) {}
+})();
+"""
 
 
 def to_serializable_cookies(cookies: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -89,6 +188,14 @@ async def apply_stealth(context: BrowserContext, logger: Any) -> None:
         logger.warning("playwright-stealth 未安装，沿用基础反检测参数")
         return
     await Stealth(init_scripts_only=True).apply_stealth_async(context)
+
+
+async def apply_anti_detect(context: BrowserContext, logger: Any) -> None:
+    """注入补充反检测脚本，覆盖 stealth 未处理的指纹检测点。"""
+    try:
+        await context.add_init_script(ANTI_DETECT_SCRIPT)
+    except Exception:  # noqa: BLE001
+        logger.warning("注入反检测脚本失败（不影响主流程）")
 
 
 async def try_click_first(page: Page, selectors: list[str]) -> bool:
