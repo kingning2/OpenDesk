@@ -12,15 +12,17 @@ import contextlib
 import logging
 import time
 import uuid
+from pathlib import Path
 from typing import Any
 
 from gateway.login.platform_config import get_platform_config, normalize_platform
 from gateway.login.playwright_common import (
     LAUNCH_ARGS,
+    apply_anti_detect,
     apply_stealth,
     async_playwright,
+    launch_persistent_chromium,
     resolve_proxy,
-    resolve_user_agent,
     to_serializable_cookies,
 )
 
@@ -101,35 +103,35 @@ async def start_qr_login_by_platform(platform: str = "xianyu") -> tuple[bool, st
     session = QrSession(session_id, platform_name)
 
     try:
-        user_agent = resolve_user_agent(platform_name)
         proxy = resolve_proxy(platform_name)
         logger.info("启动 Playwright 引擎…")
         playwright = await async_playwright().start()
         logger.info(
-            "正在打开 Chromium 浏览器… platform=%s proxy_enabled=%s",
+            "正在打开浏览器（系统 Edge/Chrome，有头）… platform=%s proxy_enabled=%s",
             platform_name,
             bool(proxy),
         )
         launch_kwargs: dict[str, Any] = {
-            "headless": True,
-            "args": LAUNCH_ARGS,
+            "headless": False,
+            "args": list(LAUNCH_ARGS),
+            # 去掉 Playwright 默认 --enable-automation，降低"自动化窗口"被标记概率
+            "ignore_default_args": ["--enable-automation"],
+            "viewport": {"width": 1280, "height": 800},
+            "locale": "zh-CN",
+            "timezone_id": "Asia/Shanghai",
         }
         if proxy:
             launch_kwargs["proxy"] = proxy
-        browser = await playwright.chromium.launch(**launch_kwargs)
-        # 真实 Chrome 桌面 UA + 桌面视口，否则 goofish 反爬直接拦截（非法访问）。
-        # 在现有参数基础上补充 playwright-stealth，让常见自动化指纹在页面脚本执行前被覆盖。
-        context = await browser.new_context(
-            user_agent=user_agent,
-            viewport={"width": 1280, "height": 800},
-            is_mobile=False,
-            locale="zh-CN",
-            timezone_id="Asia/Shanghai",
-        )
+        user_data_dir = Path.cwd() / "browser_data" / f"qr_{platform_name}"
+        context = await launch_persistent_chromium(playwright, user_data_dir, **launch_kwargs)
         await apply_stealth(context, logger)
-        page = await context.new_page()
+        await apply_anti_detect(context, logger)
+        # 清掉持久化 profile 里可能残留的登录 cookie，确保每次展示登录二维码
+        with contextlib.suppress(Exception):
+            await context.clear_cookies()
+        page = context.pages[0] if context.pages else await context.new_page()
 
-        session.browser = browser
+        session.browser = None  # 持久化上下文自带浏览器，由 context.close() 回收
         session.context = context
         session.page = page
         session.status = STATUS_GENERATING

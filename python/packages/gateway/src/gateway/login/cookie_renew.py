@@ -26,6 +26,8 @@ from gateway.login.playwright_common import (
     apply_anti_detect,
     apply_stealth,
     async_playwright,
+    clear_profile_locks,
+    launch_persistent_chromium,
     resolve_proxy,
     resolve_user_agent,
     to_serializable_cookies,
@@ -76,15 +78,6 @@ def _playwright_cookie(raw: dict[str, Any]) -> dict[str, Any] | None:
     if isinstance(expires, (int, float)) and expires > 0:
         cookie["expires"] = expires
     return cookie
-
-
-def _clear_profile_locks(user_data_dir: Path) -> None:
-    """清理上次未干净退出留下的 Chromium 锁文件。"""
-    for name in ("SingletonLock", "SingletonCookie", "SingletonSocket"):
-        lock = user_data_dir / name
-        with contextlib.suppress(OSError):
-            if lock.exists():
-                lock.unlink()
 
 
 def _looks_logged_in(page_url: str, cookies: list[dict[str, Any]], login_cookie: str) -> bool:
@@ -141,7 +134,7 @@ async def _run_renew_session(
     """
     user_data_dir = Path.cwd() / "browser_data" / f"user_{_safe_account_dir(account_id)}"
     user_data_dir.mkdir(parents=True, exist_ok=True)
-    _clear_profile_locks(user_data_dir)
+    clear_profile_locks(user_data_dir)
 
     playwright = None
     context = None
@@ -161,10 +154,7 @@ async def _run_renew_session(
         }
         if proxy:
             launch_kwargs["proxy"] = proxy
-        context = await playwright.chromium.launch_persistent_context(
-            str(user_data_dir),
-            **launch_kwargs,
-        )
+        context = await launch_persistent_chromium(playwright, user_data_dir, **launch_kwargs)
         await apply_stealth(context, logger)
         await apply_anti_detect(context, logger)
         with contextlib.suppress(Exception):

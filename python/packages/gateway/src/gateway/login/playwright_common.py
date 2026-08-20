@@ -7,7 +7,9 @@
 from __future__ import annotations
 
 import contextlib
+import logging
 import os
+from pathlib import Path
 from typing import Any
 
 try:  # playwright 为可选运行时依赖；缺失或损坏时降级。
@@ -22,6 +24,11 @@ try:  # playwright-stealth 为可选运行时依赖；缺失时沿用基础参�
     from playwright_stealth import Stealth
 except Exception:  # pragma: no cover — ImportError / 包损坏
     Stealth = None  # type: ignore[assignment]
+
+logger = logging.getLogger("dingda.sidecar.playwright")
+
+# 系统浏览器优先（避免下载 Playwright Chromium；真实 Edge/Chrome 指纹更抗风控）。
+SYSTEM_CHANNELS = ("msedge", "chrome")
 
 CHROME_DESKTOP_UA = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -196,6 +203,42 @@ async def apply_anti_detect(context: BrowserContext, logger: Any) -> None:
         await context.add_init_script(ANTI_DETECT_SCRIPT)
     except Exception:  # noqa: BLE001
         logger.warning("注入反检测脚本失败（不影响主流程）")
+
+
+def clear_profile_locks(user_data_dir: Path) -> None:
+    """清理上次未干净退出留下的 Chromium 锁文件。"""
+    for name in ("SingletonLock", "SingletonCookie", "SingletonSocket"):
+        lock = user_data_dir / name
+        with contextlib.suppress(OSError):
+            if lock.exists():
+                lock.unlink()
+
+
+async def launch_persistent_chromium(
+    playwright: Any,
+    user_data_dir: str | Path,
+    **kwargs: Any,
+) -> BrowserContext:
+    """用系统浏览器（Edge/Chrome）启动持久化上下文；都不可用则退回自带 Chromium。
+
+    避免为登录/续期下载 Playwright Chromium；真实 Edge/Chrome 指纹更抗风控。
+    """
+    clear_profile_locks(Path(user_data_dir))
+    last_error: str | None = None
+    for channel in SYSTEM_CHANNELS + (None,):
+        opts = dict(kwargs)
+        if channel:
+            opts["channel"] = channel
+        try:
+            context = await playwright.chromium.launch_persistent_context(
+                str(user_data_dir), **opts
+            )
+            logger.info("浏览器已启动 channel=%s", channel or "bundled")
+            return context
+        except Exception as error:  # noqa: BLE001
+            last_error = str(error)
+            logger.warning("浏览器启动失败 channel=%s: %s", channel, str(error)[:120])
+    raise RuntimeError(f"启动浏览器失败（已尝试 Edge/Chrome/自带）: {last_error}")
 
 
 async def try_click_first(page: Page, selectors: list[str]) -> bool:
