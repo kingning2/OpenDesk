@@ -11,6 +11,9 @@
     "account_id": {
       "type": "string"
     },
+    "cid": {
+      "type": "string"
+    },
     "peer_id": {
       "type": "string"
     },

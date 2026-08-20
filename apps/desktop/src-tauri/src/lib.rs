@@ -31,10 +31,10 @@ use shared::channel::dispatcher::ChannelDispatcher;
 use shared::channel::ChannelRepo;
 use shared::ipc::{
     agent_ping, ai_account_balance, ai_config_get, ai_config_set, ai_test_api_key, app_version,
-    channel_connect, channel_disconnect, channel_qr_cancel, channel_qr_check, channel_qr_start,
-    channel_send, channel_state_get, channel_state_set, license_activate, license_machine_code,
-    license_status, log_clear, log_recent, log_write, platform_descriptors, plugin_install,
-    plugin_list, plugin_uninstall,
+    channel_connect, channel_disconnect, channel_fetch_history, channel_product_headinfo,
+    channel_qr_cancel, channel_qr_check, channel_qr_start, channel_send, channel_state_get,
+    channel_state_set, license_activate, license_machine_code, license_status, log_clear,
+    log_recent, log_write, platform_descriptors, plugin_install, plugin_list, plugin_uninstall,
 };
 use shared::lifecycle::{on_exit, on_setup};
 use shared::{build_license_gate, init_tracing, platform_initialization_script, AppState};
@@ -168,6 +168,8 @@ macro_rules! base_invoke_handler {
                 channel_connect,
                 channel_disconnect,
                 channel_send,
+                channel_fetch_history,
+                channel_product_headinfo,
                 channel_open_site,
                 channel_close_site,
                 channel_qr_start,
@@ -201,6 +203,8 @@ macro_rules! base_invoke_handler {
                 channel_connect,
                 channel_disconnect,
                 channel_send,
+                channel_fetch_history,
+                channel_product_headinfo,
                 channel_qr_start,
                 channel_qr_check,
                 channel_qr_cancel,

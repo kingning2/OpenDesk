@@ -39,6 +39,8 @@ export {
   Moon,
   Lock,
   Package,
+  PanelRightClose,
+  PanelRightOpen,
   Pencil,
   Play,
   Plus,

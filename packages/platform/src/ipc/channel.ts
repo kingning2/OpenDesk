@@ -92,6 +92,33 @@ export function channelSend(
 }
 
 /**
+ * 拉取会话完整消息历史（写入本地并推送；返回新插入条数）。
+ *
+ * @author Xiaoman
+ * @created 2026-08-20
+ *
+ * @param conversationId - 会话 id
+ */
+export function channelFetchHistory(conversationId: string): Promise<number> {
+  return call<number>("channel_fetch_history", { conversationId });
+}
+
+/** 会话关联商品卡信息（`message.headinfo` 返回的 data 节点）。 */
+export type ProductHeadInfo = Record<string, unknown>;
+
+/**
+ * 拉取会话关联商品卡信息。
+ *
+ * @author Xiaoman
+ * @created 2026-08-20
+ *
+ * @param conversationId - 会话 id
+ */
+export function channelProductHeadinfo(conversationId: string): Promise<ProductHeadInfo> {
+  return call<ProductHeadInfo>("channel_product_headinfo", { conversationId });
+}
+
+/**
  * 打开渠道站点（主窗口内嵌子 WebView）。
  *
  * @author Xiaoman

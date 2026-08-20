@@ -9,7 +9,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use super::protocol::{ChannelAccount, ChannelKind, ChannelProtocol, ConnectionState};
+use super::protocol::{
+    ChannelAccount, ChannelKind, ChannelProtocol, ConnectionState, HistoryMessage,
+};
 use common::DingDaResult;
 
 /// 协议实例工厂 — 每次连接创建独立 [`ChannelProtocol`]（支持多账号并行）。
@@ -111,11 +113,17 @@ impl ChannelDispatcher {
         Ok(())
     }
 
-    /// 发送消息；`peer_id` 为平台侧会话/对方 id。
+    /// 发送消息；`cid` 为平台侧会话 id，`peer_id` 为会话对端 id。
     ///
     /// 作者：Xiaoman
     /// 创建时间：2026-08-18
-    pub async fn send(&self, account_id: &str, peer_id: &str, text: &str) -> DingDaResult<String> {
+    pub async fn send(
+        &self,
+        account_id: &str,
+        cid: &str,
+        peer_id: &str,
+        text: &str,
+    ) -> DingDaResult<String> {
         let protocol = self
             .active
             .read()
@@ -125,7 +133,7 @@ impl ChannelDispatcher {
             .ok_or_else(|| {
                 common::DingDaError::not_found("active channel", account_id.to_string())
             })?;
-        protocol.send(peer_id, text).await
+        protocol.send(cid, peer_id, text).await
     }
 
     /// 查询指定账号的连接状态。
@@ -139,5 +147,26 @@ impl ChannelDispatcher {
             .get(account_id)
             .map(|protocol| protocol.connection_state())
             .unwrap_or(ConnectionState::Disconnected)
+    }
+
+    /// 拉取某会话的完整消息历史（透传平台实现）。
+    ///
+    /// 作者：Xiaoman
+    /// 创建时间：2026-08-20
+    pub async fn fetch_history(
+        &self,
+        account_id: &str,
+        cid: &str,
+    ) -> DingDaResult<Vec<HistoryMessage>> {
+        let protocol = self
+            .active
+            .read()
+            .await
+            .get(account_id)
+            .cloned()
+            .ok_or_else(|| {
+                common::DingDaError::not_found("active channel", account_id.to_string())
+            })?;
+        protocol.fetch_history(cid).await
     }
 }

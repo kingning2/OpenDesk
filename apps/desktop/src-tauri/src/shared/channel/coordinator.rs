@@ -16,15 +16,16 @@ use app::risk::RiskService;
 use app::xianyu::InMemoryRiskStore;
 use common::contracts::{ChannelConversation, ChannelMessage, ChannelSettings};
 use common::events::{emit, AppEvent, ChannelMessageEvent, ChannelStatusEvent, EventSink};
-use common::DingDaResult;
-use platform::xianyu::is_risk_control_text;
+use common::{DingDaError, DingDaResult};
+use platform::xianyu::{cookies, is_risk_control_text};
+use serde_json::Value;
 
 use crate::shared::auto_reply::AutoReplyHandle;
 
 #[cfg(platform_xianyu)]
 use super::cookie_renew::RiskCookieRenewer;
 use super::dispatcher::ChannelDispatcher;
-use super::protocol::{ChannelInboundMessage, ConnectionState, InboundListener};
+use super::protocol::{ChannelInboundMessage, ConnectionState, ConversationSync, InboundListener};
 use super::{conversation_id_for, filter_reply, inbound_to_message, ChannelRepo};
 
 /// 协调器 — 持有 store / dispatcher / 自动回复管线 / 事件总线。
@@ -131,9 +132,18 @@ impl ChannelCoordinator {
         conversation: &ChannelConversation,
         content: &str,
     ) -> DingDaResult<String> {
+        let cid = conversation
+            .cid
+            .clone()
+            .unwrap_or_else(|| conversation.peer_id.clone());
         let message_id = self
             .dispatcher
-            .send(&conversation.account_id, &conversation.peer_id, content)
+            .send(
+                &conversation.account_id,
+                &cid,
+                &conversation.peer_id,
+                content,
+            )
             .await
             .map_err(|error| error.to_string())?;
 
@@ -151,6 +161,112 @@ impl ChannelCoordinator {
 
         self.emit_channel_message(&conversation.account_id, outbound, None);
         Ok(message_id)
+    }
+
+    /// 拉取会话完整消息历史并落库、推送；返回新插入条数。
+    ///
+    /// 作者：Xiaoman
+    /// 创建时间：2026-08-20
+    pub async fn fetch_history(&self, conversation_id: &str) -> DingDaResult<usize> {
+        let conversation = self
+            .store
+            .find_conversation_by_id(conversation_id)
+            .map_err(|error| DingDaError::store(error.to_string()))?
+            .ok_or_else(|| DingDaError::not_found("conversation", conversation_id))?;
+
+        // 账号自身 goofish id（unb），用于判断消息方向（我发的 → out）。
+        let my_unb = self
+            .store
+            .list_accounts()
+            .map_err(|error| DingDaError::store(error.to_string()))?
+            .into_iter()
+            .find(|account| account.id == conversation.account_id)
+            .and_then(|account| {
+                let cookie_list = cookies::parse_credential(&account.credential);
+                cookies::my_id(&cookie_list)
+            });
+
+        let cid = conversation
+            .cid
+            .clone()
+            .unwrap_or_else(|| conversation.peer_id.clone());
+        let history = self
+            .dispatcher
+            .fetch_history(&conversation.account_id, &cid)
+            .await?;
+
+        let existing = self
+            .store
+            .list_messages(&conversation.id)
+            .map_err(|error| DingDaError::store(error.to_string()))?;
+
+        let mut inserted = 0usize;
+        for (index, item) in history.into_iter().enumerate() {
+            let outbound = my_unb
+                .as_ref()
+                .is_some_and(|unb| item.sender_user_id == *unb);
+            let message = ChannelMessage {
+                id: format!("h-{}-{}-{}", conversation.id, item.created_at_ms, index),
+                conversation_id: conversation.id.clone(),
+                direction: if outbound {
+                    "out".to_string()
+                } else {
+                    "in".to_string()
+                },
+                sender: if outbound {
+                    "human".to_string()
+                } else {
+                    "customer".to_string()
+                },
+                content: item.content,
+                created_at: item.created_at_ms.to_string(),
+            };
+            // 去重：同会话同时间同内容的已存在则跳过（WS 推送与历史可能重复）。
+            if existing
+                .iter()
+                .any(|m| m.created_at == message.created_at && m.content == message.content)
+            {
+                continue;
+            }
+            self.store
+                .insert_message(&message)
+                .map_err(|error| DingDaError::store(error.to_string()))?;
+            self.emit_channel_message(&conversation.account_id, message, None);
+            inserted += 1;
+        }
+        info!(
+            conversation_id = %conversation_id,
+            inserted,
+            "会话消息历史已同步"
+        );
+        Ok(inserted)
+    }
+
+    /// 拉取会话关联商品卡信息（`message.headinfo`，GET）。
+    ///
+    /// 作者：Xiaoman
+    /// 创建时间：2026-08-20
+    pub async fn fetch_conversation_headinfo(&self, conversation_id: &str) -> DingDaResult<Value> {
+        let conversation = self
+            .store
+            .find_conversation_by_id(conversation_id)
+            .map_err(|error| DingDaError::store(error.to_string()))?
+            .ok_or_else(|| DingDaError::not_found("conversation", conversation_id))?;
+        let account = self
+            .store
+            .list_accounts()
+            .map_err(|error| DingDaError::store(error.to_string()))?
+            .into_iter()
+            .find(|account| account.id == conversation.account_id)
+            .ok_or_else(|| DingDaError::not_found("account", conversation.account_id))?;
+        let cookie_str =
+            cookies::cookies_to_string(&cookies::parse_credential(&account.credential));
+        let item_id = conversation.item_id.unwrap_or_default();
+        let session_id = conversation
+            .cid
+            .clone()
+            .unwrap_or_else(|| conversation.peer_id.clone());
+        platform::xianyu::fetch_message_headinfo(&cookie_str, &session_id, &item_id).await
     }
 
     fn emit_channel_status(
@@ -218,6 +334,11 @@ impl InboundListener for ChannelCoordinator {
         let conversation = ChannelConversation {
             id: conversation_id.clone(),
             account_id: inbound.account_id.clone(),
+            cid: if inbound.cid.is_empty() {
+                None
+            } else {
+                Some(inbound.cid.clone())
+            },
             peer_id: inbound.peer_id.clone(),
             peer_name: Some(inbound.peer_name.clone()),
             item_id: Some(inbound.item_id.clone()),
@@ -290,7 +411,12 @@ impl InboundListener for ChannelCoordinator {
 
         match self
             .dispatcher
-            .send(&inbound.account_id, &inbound.peer_id, &safe_reply)
+            .send(
+                &inbound.account_id,
+                &inbound.cid,
+                &inbound.peer_id,
+                &safe_reply,
+            )
             .await
         {
             Ok(message_id) => {
@@ -342,5 +468,34 @@ impl InboundListener for ChannelCoordinator {
             ConnectionState::Connecting => {}
         }
         self.emit_channel_status(account_id, state, detail);
+    }
+
+    async fn on_conversation(&self, sync: ConversationSync) {
+        let conversation = ChannelConversation {
+            id: conversation_id_for(&sync.peer_id, &sync.item_id),
+            account_id: sync.account_id.clone(),
+            cid: if sync.cid.is_empty() {
+                None
+            } else {
+                Some(sync.cid.clone())
+            },
+            peer_id: sync.peer_id,
+            peer_name: None,
+            item_id: if sync.item_id.is_empty() {
+                None
+            } else {
+                Some(sync.item_id)
+            },
+            item_title: if sync.item_title.is_empty() {
+                None
+            } else {
+                Some(sync.item_title)
+            },
+            item_price: None,
+            updated_at: sync.updated_at,
+        };
+        if let Err(error) = self.store.upsert_conversation(&conversation) {
+            warn!(%error, "同步会话失败");
+        }
     }
 }

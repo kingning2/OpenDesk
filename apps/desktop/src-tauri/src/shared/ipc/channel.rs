@@ -7,6 +7,7 @@ use common::contracts::{
     ChannelIpcSendRequest, ChannelIpcSendResponse, ChannelIpcStateRequest, ChannelIpcStateResponse,
     ChannelSidecarQrCancelRequest, ChannelSidecarQrCheckRequest, ChannelSidecarQrStartRequest,
 };
+use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
 use tauri::State;
@@ -162,6 +163,48 @@ pub async fn channel_send(
         message_id,
         detail: None,
     }))
+}
+
+/// 拉取会话完整消息历史（写入本地并推送；返回新插入条数）。
+
+#[tauri::command]
+pub async fn channel_fetch_history(
+    state: tauri::State<'_, crate::shared::state::AppState>,
+    coordinator: State<'_, Arc<ChannelCoordinator>>,
+    conversation_id: String,
+) -> DingDaResult<IpcResponse<u32>> {
+    state
+        .license
+        .ensure_licensed()
+        .await
+        .map_err(|error| error.to_string())?;
+
+    let inserted = coordinator
+        .fetch_history(&conversation_id)
+        .await
+        .map_err(|error| error.to_string())?;
+    Ok(IpcResponse::ok(inserted as u32))
+}
+
+/// 拉取会话关联商品卡信息（`message.headinfo`）。
+
+#[tauri::command]
+pub async fn channel_product_headinfo(
+    state: tauri::State<'_, crate::shared::state::AppState>,
+    coordinator: State<'_, Arc<ChannelCoordinator>>,
+    conversation_id: String,
+) -> DingDaResult<IpcResponse<Value>> {
+    state
+        .license
+        .ensure_licensed()
+        .await
+        .map_err(|error| error.to_string())?;
+
+    let data = coordinator
+        .fetch_conversation_headinfo(&conversation_id)
+        .await
+        .map_err(|error| error.to_string())?;
+    Ok(IpcResponse::ok(data))
 }
 
 /// 启动扫码登录：调 Python Playwright 打开登录页，截图二维码。

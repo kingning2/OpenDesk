@@ -11,8 +11,15 @@ import type {
   ChannelEventMessage,
   ChannelMessage,
 } from "@desk/contracts";
-import { listenChannelMessage } from "@desk/platform/events";
-import { channelSend, channelStateGet } from "@desk/platform/ipc/channel";
+import {
+  listenChannelMessage,
+  listenChannelStatus,
+} from "@desk/platform/events";
+import {
+  channelFetchHistory,
+  channelSend,
+  channelStateGet,
+} from "@desk/platform/ipc/channel";
 
 /** 收件箱聚合状态。 */
 export interface ChannelInboxState {
@@ -75,6 +82,28 @@ export function useChannelInbox(): ChannelInboxState {
 
   useEffect(() => {
     void refresh();
+  }, [refresh]);
+
+  // WS 连接成功（userConvs 全量会话已同步）后刷新，让会话及时出现。
+  useEffect(() => {
+    let cancelled = false;
+    let unlisten: (() => void) | undefined;
+    void listenChannelStatus((payload) => {
+      if (cancelled || payload.state !== "connected") {
+        return;
+      }
+      void refresh();
+    }).then((dispose) => {
+      if (cancelled) {
+        dispose();
+        return;
+      }
+      unlisten = dispose;
+    });
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
   }, [refresh]);
 
   useEffect(() => {
@@ -161,6 +190,19 @@ export function useChannelInbox(): ChannelInboxState {
     [refresh, selectedId],
   );
 
+  // 选中会话时按需拉取完整消息历史，随后刷新线程。
+  const selectConversation = useCallback(
+    (conversationId: string) => {
+      setSelectedId(conversationId);
+      void channelFetchHistory(conversationId)
+        .catch((cause) => {
+          console.warn("拉取会话历史失败:", cause);
+        })
+        .then(() => refresh());
+    },
+    [refresh],
+  );
+
   return {
     loading,
     error,
@@ -170,7 +212,7 @@ export function useChannelInbox(): ChannelInboxState {
     selectedConversation,
     threadMessages,
     refresh,
-    selectConversation: setSelectedId,
+    selectConversation,
     sendMessage,
     accountFilter,
     setAccountFilter,

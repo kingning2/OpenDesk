@@ -6,6 +6,7 @@ from typing import TypedDict
 class ChannelConversation(TypedDict, total=False):
     id: str
     account_id: str
+    cid: str
     peer_id: str
     peer_name: str
     item_id: str

@@ -119,14 +119,15 @@ impl ChannelRepo {
     ) -> Result<(), ChannelStoreError> {
         diesel::sql_query(
             "INSERT INTO channel_conversations \
-               (id, account_id, peer_id, peer_name, item_id, item_title, item_price, updated_at) \
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?) \
+               (id, account_id, cid, peer_id, peer_name, item_id, item_title, item_price, updated_at) \
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) \
              ON CONFLICT(id) DO UPDATE SET \
-               peer_name=excluded.peer_name, item_id=excluded.item_id, \
+               cid=excluded.cid, peer_name=excluded.peer_name, item_id=excluded.item_id, \
                item_title=excluded.item_title, item_price=excluded.item_price, updated_at=excluded.updated_at",
         )
         .bind::<Text, _>(&conversation.id)
         .bind::<Text, _>(&conversation.account_id)
+        .bind::<diesel::sql_types::Nullable<Text>, _>(conversation.cid.as_deref())
         .bind::<Text, _>(&conversation.peer_id)
         .bind::<diesel::sql_types::Nullable<Text>, _>(conversation.peer_name.as_deref())
         .bind::<diesel::sql_types::Nullable<Text>, _>(conversation.item_id.as_deref())
@@ -143,7 +144,7 @@ impl ChannelRepo {
     /// 列出所有会话（按 updated_at 倒序）。
     pub fn list_conversations(&self) -> Result<Vec<ChannelConversation>, ChannelStoreError> {
         let rows = diesel::sql_query(
-            "SELECT id, account_id, peer_id, peer_name, item_id, item_title, item_price, updated_at \
+            "SELECT id, account_id, cid, peer_id, peer_name, item_id, item_title, item_price, updated_at \
              FROM channel_conversations ORDER BY updated_at DESC",
         )
         .load::<ConversationRow>(&mut *self.conn()?)
@@ -154,6 +155,24 @@ impl ChannelRepo {
         Ok(rows)
     }
 
+    /// 按会话 id 查会话。
+    pub fn find_conversation_by_id(
+        &self,
+        id: &str,
+    ) -> Result<Option<ChannelConversation>, ChannelStoreError> {
+        let rows = diesel::sql_query(
+            "SELECT id, account_id, cid, peer_id, peer_name, item_id, item_title, item_price, updated_at \
+             FROM channel_conversations WHERE id = ?",
+        )
+        .bind::<Text, _>(id)
+        .load::<ConversationRow>(&mut *self.conn()?)
+        .map_err(|error| ChannelStoreError::Db(error.to_string()))?
+        .into_iter()
+        .map(Into::into)
+        .collect::<Vec<_>>();
+        Ok(rows.into_iter().next())
+    }
+
     /// 按 peer_id + item_id 查会话。
     #[allow(dead_code)]
     pub fn find_conversation_by_peer(
@@ -162,7 +181,7 @@ impl ChannelRepo {
         item_id: &str,
     ) -> Result<Option<ChannelConversation>, ChannelStoreError> {
         let rows = diesel::sql_query(
-            "SELECT id, account_id, peer_id, peer_name, item_id, item_title, item_price, updated_at \
+            "SELECT id, account_id, cid, peer_id, peer_name, item_id, item_title, item_price, updated_at \
              FROM channel_conversations WHERE peer_id = ? AND item_id = ?",
         )
         .bind::<Text, _>(peer_id)
@@ -289,6 +308,8 @@ struct ConversationRow {
     id: String,
     #[diesel(sql_type = Text)]
     account_id: String,
+    #[diesel(sql_type = diesel::sql_types::Nullable<Text>)]
+    cid: Option<String>,
     #[diesel(sql_type = Text)]
     peer_id: String,
     #[diesel(sql_type = diesel::sql_types::Nullable<Text>)]
@@ -308,6 +329,7 @@ impl From<ConversationRow> for ChannelConversation {
         Self {
             id: row.id,
             account_id: row.account_id,
+            cid: row.cid,
             peer_id: row.peer_id,
             peer_name: row.peer_name,
             item_id: row.item_id,

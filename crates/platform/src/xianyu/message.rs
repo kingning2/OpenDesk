@@ -68,6 +68,9 @@ pub fn register_frame(device_id: &str, token: &str) -> Value {
 }
 
 /// 同步 ack 帧（注册后确认 diff）。
+///
+/// `pts=0`（对齐 goofish-cli）：请求从开头全量同步，服务器才会把历史会话/消息推上来；
+/// 用当前时间戳则只同步连接后的新消息，历史会话全部缺失。
 pub fn sync_ack_frame() -> Value {
     json!({
         "lwp": "/r/SyncStatus/ackDiff",
@@ -78,7 +81,7 @@ pub fn sync_ack_frame() -> Value {
             "channel": "sync",
             "topic": "sync",
             "highPts": 0,
-            "pts": now_ms() * 1000,
+            "pts": 0,
             "seq": 0,
             "timestamp": now_ms()
         }]
@@ -153,6 +156,19 @@ pub fn normalize_peer(id: &str, domain: &str) -> String {
     }
 }
 
+/// 拉取会话消息历史帧（`/r/MessageManager/listUserMessages`，WebSocket LWP）。
+///
+/// 帧格式参考 goofish-cli `core/ws.py` `list_user_messages`：
+/// body 数组 `[cid@goofish, 向后翻页?, nextCursor, limit, false]`；
+/// 首次 `cursor` 传超大值，翻页时用响应里的 `nextCursor` 替换。
+pub fn list_user_messages_frame(cid: &str, cursor: i64, limit: u32) -> Value {
+    json!({
+        "lwp": "/r/MessageManager/listUserMessages",
+        "headers": { "mid": generate_mid() },
+        "body": [ normalize_peer(cid, "goofish"), false, cursor, limit, false ]
+    })
+}
+
 /// 从入站 `reminderUrl` 提取 `itemId=xxx`。
 pub fn extract_item_id(url: &str) -> Option<String> {
     let after = url.split("itemId=").nth(1)?;
@@ -213,6 +229,18 @@ mod tests {
             Some("12345".to_string())
         );
         assert_eq!(extract_item_id("https://x/?noitem=1"), None);
+    }
+
+    #[test]
+    fn list_user_messages_frame_structure() {
+        let frame = list_user_messages_frame("cid1", 9007199254740991, 20);
+        assert_eq!(frame["lwp"], "/r/MessageManager/listUserMessages");
+        assert_eq!(frame["body"][0], "cid1@goofish");
+        assert_eq!(frame["body"][2], 9007199254740991_i64);
+        assert_eq!(frame["body"][3], 20);
+        assert!(frame["headers"]["mid"]
+            .as_str()
+            .is_some_and(|m| !m.is_empty()));
     }
 
     #[test]

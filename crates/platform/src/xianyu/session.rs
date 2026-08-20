@@ -94,9 +94,11 @@ pub async fn fetch_unread_sessions(
 fn parse_session_item(item: &Value) -> Option<SessionSummary> {
     let session = item.get("session")?;
     let user_info = session.get("userInfo").unwrap_or(&Value::Null);
-    let summary = item
-        .pointer("/message/summary")
-        .or_else(|| item.get("message"))
+    let message = item.get("message").unwrap_or(&Value::Null);
+    // summary 在部分响应里是嵌套对象（含 unread/summary/ts），部分平台直接平铺在 message。
+    let summary = message
+        .get("summary")
+        .filter(|value| value.is_object())
         .unwrap_or(&Value::Null);
 
     let session_id = json_str(session.get("sessionId"))?;
@@ -109,11 +111,23 @@ fn parse_session_item(item: &Value) -> Option<SessionSummary> {
         .or_else(|| json_str(user_info.get("nick")))
         .unwrap_or_default();
 
-    let unread = summary.get("unread").and_then(json_u32).unwrap_or(0);
+    // 未读数：message.summary.unread → message.unread → session.unread。
+    let unread = [summary, message, session]
+        .iter()
+        .find_map(|node| node.get("unread").and_then(json_u32))
+        .unwrap_or(0);
+    // 最后一条消息：message.summary.summary/content → message.content/summary/text。
     let last_msg = json_str(summary.get("summary"))
         .or_else(|| json_str(summary.get("content")))
+        .or_else(|| json_str(message.get("content")))
+        .or_else(|| json_str(message.get("summary")))
+        .or_else(|| json_str(message.get("text")))
         .unwrap_or_default();
-    let ts_ms = summary.get("ts").and_then(json_i64).unwrap_or(0);
+    // 时间戳：message.summary.ts → message.ts → session.ts。
+    let ts_ms = [summary, message, session]
+        .iter()
+        .find_map(|node| node.get("ts").and_then(json_i64))
+        .unwrap_or(0);
     let session_type = session.get("sessionType").and_then(json_i64).unwrap_or(0);
 
     let item_id = json_str(session.get("itemId"))

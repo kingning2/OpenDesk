@@ -104,22 +104,60 @@ pub enum ChannelError {
     Transport(String),
 }
 
+/// 会话同步原语（`userConvs` 批量下发），应用层据此 upsert 会话。
+#[derive(Debug, Clone)]
+pub struct ConversationSync {
+    pub account_id: String,
+    /// goofish 会话 id（裸数字）。
+    pub cid: String,
+    /// 会话对端用户 id（买家 userId）。
+    pub peer_id: String,
+    pub item_id: String,
+    pub item_title: String,
+    /// 毫秒时间戳。
+    pub updated_at: String,
+}
+
 /// 入站消息监听器 — 由应用层（coordinator）实现，协议层回调。
 #[async_trait]
 pub trait InboundListener: Send + Sync {
     async fn on_message(&self, message: ChannelInboundMessage);
     async fn on_state(&self, account_id: &str, state: ConnectionState, detail: Option<String>);
+
+    /// 会话列表同步（`userConvs` 等批量下发）——仅更新会话，不插消息。
+    async fn on_conversation(&self, _sync: ConversationSync) {}
 }
 
 /// 协议层归一化后的入站消息（应用层继续加工为 `common::contracts::ChannelMessage`）。
 #[derive(Debug, Clone)]
 pub struct ChannelInboundMessage {
     pub account_id: String,
+    /// 会话对端用户 id（买家 userId）。
     pub peer_id: String,
+    /// 会话对端昵称。
     pub peer_name: String,
+    /// 关联商品 id。
     pub item_id: String,
+    /// goofish 会话 id（cid，`xxx@goofish` 的裸数字），消息历史/发送使用。
+    pub cid: String,
     pub content: String,
     #[allow(dead_code)]
+    pub created_at_ms: i64,
+}
+
+/// 单条历史消息（`MessageManager/listUserMessages` 返回，跨平台 DTO）。
+///
+/// 帧格式参考 goofish-cli `core/ws.py`：`um.message.extension.senderUserId`、
+/// `reminderTitle`（发送者昵称）、内容 `content.custom.data`（base64 JSON 解码）。
+#[derive(Debug, Clone)]
+pub struct HistoryMessage {
+    /// 发送者 userId。
+    pub sender_user_id: String,
+    /// 发送者昵称。
+    pub sender_user_name: String,
+    /// 正文（已解码）。
+    pub content: String,
+    /// 毫秒时间戳。
     pub created_at_ms: i64,
 }
 
@@ -139,14 +177,19 @@ pub trait ChannelProtocol: Send + Sync {
     /// 断开连接。
     async fn disconnect(&self) -> DingDaResult<()>;
 
-    /// 向 `peer_id` 发送文本，返回平台侧消息 id。
-    async fn send(&self, peer_id: &str, text: &str) -> DingDaResult<String>;
+    /// 向 `cid`（会话）内的 `peer_id` 发送文本，返回平台侧消息 id。
+    async fn send(&self, cid: &str, peer_id: &str, text: &str) -> DingDaResult<String>;
 
     fn connection_state(&self) -> ConnectionState;
 
     /// 当前正在使用该协议实例的账号 id；单连接协议需实现。
     fn active_account_id(&self) -> Option<String> {
         None
+    }
+
+    /// 拉取某会话的完整消息历史（未实现时返回空列表）。
+    async fn fetch_history(&self, _cid: &str) -> DingDaResult<Vec<HistoryMessage>> {
+        Ok(Vec::new())
     }
 
     fn set_inbound_listener(&self, listener: Arc<dyn InboundListener>);

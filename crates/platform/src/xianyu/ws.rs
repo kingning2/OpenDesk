@@ -13,6 +13,7 @@ use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
 use tokio::sync::mpsc;
 use tokio_tungstenite::connect_async;
+use tokio_tungstenite::tungstenite::http::Request;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::MaybeTlsStream;
 use tokio_tungstenite::WebSocketStream;
@@ -22,15 +23,25 @@ use super::codec;
 use super::message;
 use crate::protocol::{
     ChannelAccount, ChannelError, ChannelInboundMessage, ChannelProtocol, ConnectionState,
-    InboundListener,
+    ConversationSync, HistoryMessage, InboundListener,
 };
 
+use base64::Engine;
 use common::constants::xianyu;
-use common::DingDaResult;
+use common::{DingDaError, DingDaResult};
+use serde_json::Value;
+use std::collections::HashMap;
 
 const WS_URL: &str = xianyu::WS_URL;
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(15);
 const TOKEN_REFRESH_INTERVAL: Duration = Duration::from_secs(3600);
+
+/// 消息历史拉取参数（参考 goofish-cli `core/ws.py` `list_user_messages`）。
+const HISTORY_PAGE_LIMIT: u32 = 50;
+const HISTORY_MAX_PAGES: u32 = 3;
+const HISTORY_RESPONSE_TIMEOUT: Duration = Duration::from_secs(10);
+/// `listUserMessages` 首次翻页游标（服务端约定的大数）。
+const HISTORY_FIRST_CURSOR: i64 = 9_007_199_254_740_991;
 
 /// 连接流类型（保留供未来扩展类型标注）。
 #[allow(dead_code)]
@@ -73,6 +84,12 @@ struct Inner {
     state: RwLock<ConnectionState>,
     listener: RwLock<Option<Arc<dyn InboundListener>>>,
     writer: tokio::sync::Mutex<Option<mpsc::Sender<String>>>,
+    /// 请求-响应关联：mid → 响应 body 通道（`fetch_user_messages` 用）。
+    pending: std::sync::Mutex<HashMap<String, mpsc::UnboundedSender<Value>>>,
+    /// 等待 `/s/vulcan` 后才发出的请求帧文本。
+    queued: std::sync::Mutex<Vec<String>>,
+    /// 是否已收到 `/s/vulcan`（连接就绪，可直发请求）。
+    vulcan_ready: std::sync::Mutex<bool>,
 }
 
 impl Inner {
@@ -120,6 +137,30 @@ impl Inner {
             });
         }
     }
+
+    /// 上抛会话列表同步（`userConvs`），应用层仅更新会话。
+    fn notify_conversation(&self, sync: ConversationSync) {
+        let listener = self
+            .listener
+            .read()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone();
+        if let Some(listener) = listener {
+            tokio::spawn(async move {
+                listener.on_conversation(sync).await;
+            });
+        }
+    }
+
+    /// 经出站通道向 WS 发送文本帧（若已连接）。
+    async fn send_text(&self, frame: String) -> Result<(), String> {
+        let writer = self.writer.lock().await;
+        let Some(sender) = writer.as_ref() else {
+            return Err("WS 未连接".to_string());
+        };
+        info!(frame = %frame, "WS 发送文本帧");
+        sender.send(frame).await.map_err(|error| error.to_string())
+    }
 }
 
 /// 闲鱼渠道协议实现。
@@ -144,6 +185,9 @@ impl XianyuChannel {
                 state: RwLock::new(ConnectionState::Disconnected),
                 listener: RwLock::new(None),
                 writer: tokio::sync::Mutex::new(None),
+                pending: std::sync::Mutex::new(HashMap::new()),
+                queued: std::sync::Mutex::new(Vec::new()),
+                vulcan_ready: std::sync::Mutex::new(false),
             }),
             stop_flag: Arc::new(AtomicBool::new(false)),
             task: Arc::new(tokio::sync::Mutex::new(None)),
@@ -179,7 +223,20 @@ impl XianyuChannel {
             .map_err(|error| ChannelError::Protocol(error.to_string()))?;
         info!(account = %account.id, "mtop token 获取成功，正在建立 WebSocket");
 
-        let (mut sink, mut stream) = connect_async(WS_URL)
+        // 握手必须带账号 Cookie + Origin，否则服务器不认证该连接、不推任何数据
+        // （vulcan / userConvs / 同步），只对显式请求回 400。参考 goofish-cli _handshake_headers。
+        let request = Request::builder()
+            .uri(WS_URL)
+            .header("Cookie", cookie_str.clone())
+            .header("Origin", xianyu::WEB_ORIGIN)
+            .header(
+                "User-Agent",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 \
+                 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+            )
+            .body(())
+            .map_err(|error| ChannelError::Protocol(error.to_string()))?;
+        let (mut sink, mut stream) = connect_async(request)
             .await
             .map_err(|error| ChannelError::Transport(format!("ws 连接失败: {error}")))?
             .0
@@ -187,19 +244,21 @@ impl XianyuChannel {
 
         self.inner
             .set_state(ConnectionState::Connected, Some("连接成功".into()));
-        info!(account = %account.id, "WebSocket 已连接，正在注册设备监听");
+        info!(account = %account.id, url = WS_URL, "WebSocket 连接已建立");
 
         let reg = message::register_frame(&device_id, &token);
+        info!(account = %account.id, frame = %reg.to_string(), "WS 发送注册帧");
         sink.send(Message::Text(reg.to_string()))
             .await
             .map_err(|error| ChannelError::Transport(error.to_string()))?;
         let ack = message::sync_ack_frame();
+        info!(account = %account.id, frame = %ack.to_string(), "WS 发送 ackDiff 帧");
         sink.send(Message::Text(ack.to_string()))
             .await
             .map_err(|error| ChannelError::Transport(error.to_string()))?;
         info!(account = %account.id, "设备注册帧与同步确认已发送，开始监听消息");
 
-        self.sync_unread_sessions(&cookie_str, &account.id).await;
+        self.sync_sessions(&cookie_str, &account.id).await;
 
         let mut last_heartbeat = Instant::now();
         let last_token_refresh = Instant::now();
@@ -209,10 +268,10 @@ impl XianyuChannel {
                 _ = tokio::time::sleep(Duration::from_millis(500)) => {
                     if last_heartbeat.elapsed() >= HEARTBEAT_INTERVAL {
                         let frame = message::heartbeat_frame();
+                        info!(account = %account.id, frame = %frame.to_string(), "WS 发送心跳帧");
                         if sink.send(Message::Text(frame.to_string())).await.is_err() {
                             return Ok(());
                         }
-                        debug!(account = %account.id, "已发送心跳帧");
                         last_heartbeat = Instant::now();
                     }
                     if last_token_refresh.elapsed() >= TOKEN_REFRESH_INTERVAL {
@@ -221,6 +280,7 @@ impl XianyuChannel {
                     }
                 }
                 Some(frame) = outbound.recv() => {
+                    info!(account = %account.id, frame = %frame, "WS 发送文本帧");
                     if sink.send(Message::Text(frame)).await.is_err() {
                         return Ok(());
                     }
@@ -228,9 +288,11 @@ impl XianyuChannel {
                 incoming = stream.next() => {
                     match incoming {
                         Some(Ok(Message::Text(text))) => {
+                            info!(account = %account.id, frame = %text, "WS 收到文本帧");
                             self.handle_text_frame(&text).await;
                         }
                         Some(Ok(Message::Binary(bin))) => {
+                            info!(account = %account.id, len = bin.len(), "WS 收到二进制帧");
                             self.handle_binary_frame(&bin).await;
                         }
                         Some(Ok(_)) => {}
@@ -246,8 +308,177 @@ impl XianyuChannel {
         Ok(())
     }
 
-    async fn handle_text_frame(&self, _text: &str) {
-        // 心跳响应 / 通用控制帧为 JSON，业务消息走二进制 MessagePack。
+    async fn handle_text_frame(&self, text: &str) {
+        let Ok(msg) = serde_json::from_str::<Value>(text) else {
+            return;
+        };
+        let lwp = msg.get("lwp").and_then(Value::as_str).unwrap_or("");
+        // 连接就绪推送：此刻起可直发 LWP 请求。
+        if lwp == "/s/vulcan" {
+            debug!("收到 /s/vulcan，flush 排队请求帧");
+            self.flush_queued().await;
+            return;
+        }
+        // 全量会话列表（userConvs）：解析并入库，侧栏据此展示全部会话。
+        if let Some(convs) = msg.pointer("/body/userConvs").and_then(Value::as_array) {
+            let account_id = self
+                .inner
+                .account
+                .read()
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .as_ref()
+                .map(|account| account.id.clone())
+                .unwrap_or_default();
+            let synced = self.sync_user_convs(convs, &account_id).await;
+            info!(account = %account_id, synced, "已从 userConvs 同步会话");
+            return;
+        }
+        // 全量同步推包（会话/消息）：目前仅打点确认是否到达，解析待接入。
+        if msg.pointer("/body/syncPushPackage").is_some() {
+            let items = msg
+                .pointer("/body/syncPushPackage/data")
+                .and_then(Value::as_array)
+                .map(|items| items.len())
+                .unwrap_or(0);
+            warn!(items, "收到 syncPushPackage（全量同步推包），暂未解析");
+            return;
+        }
+        // 请求-响应关联：命中 mid 则把 body 交给等待方。
+        let mid = msg
+            .pointer("/headers/mid")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_string();
+        if mid.is_empty() {
+            return;
+        }
+        let responder = {
+            let mut pending = self
+                .inner
+                .pending
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            pending.remove(&mid)
+        };
+        if let Some(responder) = responder {
+            let body = msg.get("body").cloned().unwrap_or(Value::Null);
+            let _ = responder.send(body);
+        } else {
+            let pending = self
+                .inner
+                .pending
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .len();
+            if pending > 0 {
+                warn!(lwp = %lwp, mid = %mid, pending, "收到文本帧但无匹配 mid");
+            }
+        }
+    }
+
+    /// 标记连接就绪并把排队中的 LWP 请求帧发出。
+    async fn flush_queued(&self) {
+        {
+            let mut ready = self
+                .inner
+                .vulcan_ready
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            *ready = true;
+        }
+        let frames: Vec<String> = {
+            let mut queued = self
+                .inner
+                .queued
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            std::mem::take(&mut *queued)
+        };
+        for frame in frames {
+            if let Err(error) = self.inner.send_text(frame).await {
+                warn!(%error, "发送排队请求帧失败");
+            }
+        }
+    }
+
+    /// 拉取会话完整消息历史（`MessageManager/listUserMessages`，参考 goofish-cli）。
+    pub async fn fetch_user_messages(
+        &self,
+        cid: &str,
+        limit: u32,
+    ) -> DingDaResult<Vec<HistoryMessage>> {
+        let mut all = Vec::new();
+        let mut cursor = HISTORY_FIRST_CURSOR;
+        for _ in 0..HISTORY_MAX_PAGES {
+            let frame = message::list_user_messages_frame(cid, cursor, limit);
+            let mid = frame
+                .pointer("/headers/mid")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_string();
+            let (tx, mut rx) = mpsc::unbounded_channel::<Value>();
+            {
+                let mut pending = self
+                    .inner
+                    .pending
+                    .lock()
+                    .unwrap_or_else(|poisoned| poisoned.into_inner());
+                pending.insert(mid.clone(), tx);
+            }
+            // 队列化请求帧；服务器就绪（/s/vulcan）后再发送，否则等 vulcan 触发 flush。
+            info!(cid = %cid, mid = %mid, "消息历史请求入队，等待 vulcan 就绪");
+            {
+                let mut queued = self
+                    .inner
+                    .queued
+                    .lock()
+                    .unwrap_or_else(|poisoned| poisoned.into_inner());
+                queued.push(frame.to_string());
+            }
+            let ready = *self
+                .inner
+                .vulcan_ready
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            if ready {
+                self.flush_queued().await;
+            }
+
+            let body = match tokio::time::timeout(HISTORY_RESPONSE_TIMEOUT, rx.recv()).await {
+                Ok(Some(body)) => body,
+                Ok(None) => return Err(DingDaError::channel("消息历史响应通道已关闭")),
+                Err(_) => return Err(DingDaError::channel("拉取消息历史超时")),
+            };
+
+            if let Some(code) = body.get("code").and_then(Value::as_i64) {
+                if code != 200 {
+                    return Err(DingDaError::channel(format!(
+                        "listUserMessages 返回 code={code}"
+                    )));
+                }
+            }
+
+            let models = body
+                .get("userMessageModels")
+                .and_then(Value::as_array)
+                .cloned()
+                .unwrap_or_default();
+            for model in models {
+                if let Some(history) = parse_history_message(&model) {
+                    all.push(history);
+                }
+            }
+
+            let has_more = body.get("hasMore").and_then(Value::as_i64).unwrap_or(0) == 1;
+            if !has_more {
+                break;
+            }
+            match body.get("nextCursor").and_then(Value::as_i64) {
+                Some(next) if next > 0 => cursor = next,
+                _ => break,
+            }
+        }
+        Ok(all)
     }
 
     async fn handle_binary_frame(&self, bin: &[u8]) {
@@ -255,7 +486,9 @@ impl XianyuChannel {
         let Ok(frame) = parsed else {
             return;
         };
+        info!(frame = %super::mtop::truncate_log(&format!("{frame:?}"), 2500), "WS 二进制帧内容");
         if !codec::is_chat_message(&frame) {
+            debug!("收到非聊天二进制帧");
             return;
         }
         let Some(content) = codec::get_string(&frame, codec::MSG_CONTENT) else {
@@ -266,6 +499,10 @@ impl XianyuChannel {
         let created_at_ms = codec::get_i64(&frame, codec::MSG_CREATE_TIME).unwrap_or(0);
         let url = codec::get_string(&frame, codec::MSG_URL).unwrap_or_default();
         let item_id = message::extract_item_id(&url).unwrap_or_default();
+        // cid 为 `["1"]["2"]` 的 `cid@goofish`，取裸数字部分作为会话 id。
+        let cid = codec::get_string(&frame, codec::MSG_TYPE)
+            .map(|raw| message::extract_cid(&raw))
+            .unwrap_or_default();
         let account_id = self
             .inner
             .account
@@ -285,34 +522,34 @@ impl XianyuChannel {
             peer_id,
             peer_name,
             item_id,
+            cid,
             content,
             created_at_ms,
         };
         self.inner.notify_message(inbound);
     }
 
-    /// 连接成功后拉取 mtop 未读会话，补全 WebSocket 推送前的待回复消息。
+    /// 连接成功后拉取 mtop 会话列表，把每条会话的最后一条消息同步进来
+    /// （WebSocket 推送前的待回复消息补全）。
     ///
     /// 作者：Xiaoman
     /// 创建时间：2026-08-20
-    async fn sync_unread_sessions(&self, cookie_str: &str, account_id: &str) {
-        match super::session::fetch_unread_sessions(cookie_str, 50).await {
+    async fn sync_sessions(&self, cookie_str: &str, account_id: &str) {
+        // fetchNum 调大：session.sync 一次最多返回 fetchNum 条，默认 50 会漏掉后面的活跃会话。
+        match super::session::fetch_sessions(cookie_str, 500).await {
             Ok((sessions, _)) => {
                 if sessions.is_empty() {
-                    info!(account = %account_id, "无未读会话");
+                    info!(account = %account_id, "无可同步会话");
                     return;
                 }
                 info!(
                     account = %account_id,
                     count = sessions.len(),
-                    "已拉取未读会话，正在同步"
+                    "已拉取会话列表，正在同步"
                 );
+                let total = sessions.len();
+                let mut synced = 0u32;
                 for session in sessions {
-                    // 优先真人会话；系统/通知类仍保留有正文摘要的条目。
-                    if session.session_type != 1 && session.last_msg.is_empty() {
-                        continue;
-                    }
-
                     let peer_id = if !session.peer_id.is_empty() {
                         session.peer_id
                     } else {
@@ -321,12 +558,9 @@ impl XianyuChannel {
                     if peer_id.is_empty() {
                         continue;
                     }
+                    synced += 1;
 
-                    let content = if session.last_msg.is_empty() {
-                        format!("({} 条未读消息)", session.unread)
-                    } else {
-                        session.last_msg
-                    };
+                    let content = session.last_msg;
 
                     let created_at_ms = if session.ts_ms > 0 {
                         session.ts_ms
@@ -339,21 +573,154 @@ impl XianyuChannel {
                         peer_id,
                         peer_name: session.peer_name,
                         item_id: session.item_id,
+                        cid: message::extract_cid(&session.session_id),
                         content,
                         created_at_ms,
                     };
                     self.inner.notify_message(inbound);
                 }
+                info!(account = %account_id, total, synced, "会话同步完成");
             }
             Err(error) => {
                 let detail = error.to_string();
-                warn!(account = %account_id, %detail, "拉取未读会话失败");
+                warn!(account = %account_id, %detail, "拉取会话列表失败");
                 if super::risk::is_risk_control_text(&detail) {
                     self.inner.set_state(ConnectionState::Error, Some(detail));
                 }
             }
         }
     }
+
+    /// 解析 `body.userConvs`（WS 下发的完整会话列表）并入库。
+    ///
+    /// 字段参考：`singleChatUserConversation.singleChatConversation`（cid/extension）
+    /// + `singleChatUserConversation.modifyTime`（更新时间）。
+    async fn sync_user_convs(&self, convs: &[Value], account_id: &str) -> usize {
+        let mut synced = 0usize;
+        for conv in convs {
+            let visible = conv
+                .pointer("/singleChatUserConversation/visible")
+                .and_then(Value::as_i64)
+                .unwrap_or(0);
+            if visible == 0 {
+                continue;
+            }
+            let Some(sc) = conv.pointer("/singleChatUserConversation/singleChatConversation")
+            else {
+                continue;
+            };
+            let Some(cid_raw) = sc.get("cid").and_then(Value::as_str) else {
+                continue;
+            };
+            let cid = message::extract_cid(cid_raw);
+            if cid.is_empty() {
+                continue;
+            }
+            let extension = sc.get("extension").unwrap_or(&Value::Null);
+            let Some(peer_id) = extension.get("extUserId").and_then(Value::as_str) else {
+                continue;
+            };
+            if peer_id.is_empty() {
+                continue;
+            }
+            let item_id = extension
+                .get("itemId")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_string();
+            let item_title = extension
+                .get("itemTitle")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_string();
+            let updated_at = conv
+                .pointer("/singleChatUserConversation/modifyTime")
+                .and_then(Value::as_i64)
+                .unwrap_or(0)
+                .to_string();
+            let sync = ConversationSync {
+                account_id: account_id.to_string(),
+                cid,
+                peer_id: peer_id.to_string(),
+                item_id,
+                item_title,
+                updated_at,
+            };
+            self.inner.notify_conversation(sync);
+            synced += 1;
+        }
+        synced
+    }
+}
+
+/// 解析 `userMessageModels[]` 单条为历史消息（字段参考 goofish-cli `core/ws.py`）。
+fn parse_history_message(model: &Value) -> Option<HistoryMessage> {
+    let message = model.get("message")?;
+    let extension = message.get("extension").unwrap_or(&Value::Null);
+    let sender_user_id = extension
+        .get("senderUserId")
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .to_string();
+    let sender_user_name = extension
+        .get("reminderTitle")
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .to_string();
+    let data = message
+        .pointer("/content/custom/data")
+        .and_then(Value::as_str)?;
+    let content = decode_history_content(data).unwrap_or_default();
+    let created_at_ms = ["createTime", "ts", "createTimeMs"]
+        .iter()
+        .find_map(|key| message.get(*key).and_then(Value::as_i64))
+        .unwrap_or(0);
+    Some(HistoryMessage {
+        sender_user_id,
+        sender_user_name,
+        content,
+        created_at_ms,
+    })
+}
+
+/// base64 → JSON 解码消息正文（`content.custom.data`）。
+///
+/// 解码后可能是字符串，也可能是 `{"text": {"text": "..."}}` / `{"content": "..."}` 等结构。
+fn decode_history_content(data_base64: &str) -> Option<String> {
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(data_base64)
+        .ok()?;
+    let text = String::from_utf8(bytes).ok()?;
+    let trimmed = text.trim().to_string();
+    let Ok(value) = serde_json::from_str::<Value>(&trimmed) else {
+        return Some(trimmed);
+    };
+    let extract = |node: &Value| -> Option<String> {
+        match node {
+            Value::String(s) => Some(s.clone()),
+            Value::Object(_) => node
+                .get("text")
+                .and_then(|t| match t {
+                    Value::String(s) => Some(s.clone()),
+                    Value::Object(_) => {
+                        t.get("text").and_then(Value::as_str).map(|s| s.to_string())
+                    }
+                    _ => None,
+                })
+                .or_else(|| {
+                    node.get("content")
+                        .and_then(Value::as_str)
+                        .map(|s| s.to_string())
+                })
+                .or_else(|| {
+                    node.get("title")
+                        .and_then(Value::as_str)
+                        .map(|s| s.to_string())
+                }),
+            _ => None,
+        }
+    };
+    extract(&value).or(Some(trimmed))
 }
 
 #[async_trait::async_trait]
@@ -377,6 +744,10 @@ impl ChannelProtocol for XianyuChannel {
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .as_ref()
             .map(|account| account.id.clone())
+    }
+
+    async fn fetch_history(&self, cid: &str) -> DingDaResult<Vec<HistoryMessage>> {
+        self.fetch_user_messages(cid, HISTORY_PAGE_LIMIT).await
     }
 
     fn set_inbound_listener(&self, listener: Arc<dyn InboundListener>) {
@@ -489,7 +860,7 @@ impl ChannelProtocol for XianyuChannel {
         Ok(())
     }
 
-    async fn send(&self, peer_id: &str, text: &str) -> DingDaResult<String> {
+    async fn send(&self, cid: &str, peer_id: &str, text: &str) -> DingDaResult<String> {
         let account = self
             .inner
             .account
@@ -500,8 +871,7 @@ impl ChannelProtocol for XianyuChannel {
         let cookies = super::cookies::parse_credential(&account.credential);
         let my_id = super::cookies::my_id(&cookies)
             .ok_or_else(|| ChannelError::Protocol("cookie 缺少 unb".into()))?;
-        let cid = message::extract_cid(peer_id);
-        let frame = message::send_message_frame(&cid, &cid, &my_id, text);
+        let frame = message::send_message_frame(cid, peer_id, &my_id, text);
 
         let sender = self
             .inner

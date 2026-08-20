@@ -9,6 +9,7 @@ pub mod api;
 pub mod codec;
 pub mod cookie;
 pub mod cookies;
+pub mod headinfo;
 pub mod http;
 pub mod item;
 pub mod message;
@@ -19,6 +20,7 @@ pub mod session;
 pub mod sign;
 pub mod ws;
 
+pub use headinfo::fetch_message_headinfo;
 pub use item::{fetch_item_detail, fetch_seller_items, PlatformItem, PlatformItemDetail};
 pub use mtop::{MtopClient, MtopRequest, MtopResponse};
 pub use profile::{fetch_user_profile, UserProfile};

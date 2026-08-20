@@ -3,6 +3,7 @@
 export interface ChannelConversation {
   id: string;
   account_id: string;
+  cid?: string;
   peer_id: string;
   peer_name?: string;
   item_id?: string;

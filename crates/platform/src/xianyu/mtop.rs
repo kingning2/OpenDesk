@@ -32,6 +32,8 @@ pub struct MtopRequest {
     pub data: Value,
     /// 额外查询参数（如 spm、sessionOption 等）。
     pub extra_params: HashMap<String, String>,
+    /// GET 请求：`data` 放入查询串（默认 POST form）。
+    pub use_get: bool,
 }
 
 impl MtopRequest {
@@ -41,11 +43,18 @@ impl MtopRequest {
             version: version.to_string(),
             data,
             extra_params: HashMap::new(),
+            use_get: false,
         }
     }
 
     pub fn with_param(mut self, key: &str, value: &str) -> Self {
         self.extra_params.insert(key.to_string(), value.to_string());
+        self
+    }
+
+    /// 改为 GET 请求（`data` 以查询参数形式发送）。
+    pub fn with_get(mut self) -> Self {
+        self.use_get = true;
         self
     }
 }
@@ -67,6 +76,16 @@ impl MtopResponse {
     /// 取 `data` 节点。
     pub fn data(&self) -> Option<&Value> {
         self.json.get("data")
+    }
+}
+
+/// 日志输出限长，超长截断并标记（响应体可能很大，避免刷屏）。
+pub(crate) fn truncate_log(text: &str, max: usize) -> String {
+    if text.chars().count() > max {
+        let head: String = text.chars().take(max).collect();
+        format!("{head}…(截断 {} 字符)", text.chars().count() - max)
+    } else {
+        text.to_string()
     }
 }
 
@@ -136,6 +155,15 @@ impl MtopClient {
         let data_val = serde_json::to_string(&request.data)
             .map_err(|error| format!("mtop data 序列化失败: {error}"))?;
         let sign = generate_sign(&token, &timestamp, &data_val);
+        info!(
+            api = %request.api,
+            version = %request.version,
+            t = %timestamp,
+            token = %token,
+            sign = %sign,
+            data = %data_val,
+            "mtop 请求"
+        );
 
         // 公共查询参数。
         let mut params: HashMap<&str, String> = HashMap::new();
@@ -161,14 +189,25 @@ impl MtopClient {
             request.version
         );
 
-        let response = self
-            .http
-            .post(&url)
-            .query(&params)
-            .header("Origin", xianyu::WEB_ORIGIN)
-            .header("Content-Type", "application/x-www-form-urlencoded")
-            .header("Cookie", cookie_str.clone())
-            .form(&[("data", data_val.clone())])
+        let send = if request.use_get {
+            let mut get_params = params;
+            get_params.insert("data", data_val.clone());
+            self.http
+                .get(&url)
+                .query(&get_params)
+                .header("Origin", xianyu::WEB_ORIGIN)
+                .header("Cookie", cookie_str.clone())
+        } else {
+            self.http
+                .post(&url)
+                .query(&params)
+                .header("Origin", xianyu::WEB_ORIGIN)
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .header("Cookie", cookie_str.clone())
+                .form(&[("data", data_val.clone())])
+        };
+
+        let response = send
             .send()
             .await
             .map_err(|error| format!("mtop 请求失败 ({}): {error}", request.api))?;
@@ -191,6 +230,17 @@ impl MtopClient {
             .and_then(Value::as_str)
             .map(|s| s.to_string())
             .unwrap_or_else(|| json.to_string());
+
+        let data_str = json
+            .get("data")
+            .map(|d| d.to_string())
+            .unwrap_or_else(|| json.to_string());
+        info!(
+            api = %request.api,
+            ret = %ret,
+            data = %truncate_log(&data_str, 4000),
+            "mtop 响应"
+        );
 
         Ok(MtopResponse { json, ret })
     }

@@ -17,8 +17,9 @@ pub use agent::agent_ping;
 pub use ai::{ai_account_balance, ai_config_get, ai_config_set, ai_test_api_key};
 pub use app::app_version;
 pub use channel::{
-    channel_connect, channel_disconnect, channel_qr_cancel, channel_qr_check, channel_qr_start,
-    channel_send, channel_state_get, channel_state_set,
+    channel_connect, channel_disconnect, channel_fetch_history, channel_product_headinfo,
+    channel_qr_cancel, channel_qr_check, channel_qr_start, channel_send, channel_state_get,
+    channel_state_set,
 };
 pub use license::{license_activate, license_machine_code, license_status};
 pub use log::{log_clear, log_recent, log_write};

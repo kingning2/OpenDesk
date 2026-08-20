@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct ChannelConversation {
     pub id: String,
     pub account_id: String,
+    pub cid: Option<String>,
     pub peer_id: String,
     pub peer_name: Option<String>,
     pub item_id: Option<String>,
