@@ -178,6 +178,7 @@ pub trait OrderStore: Send + Sync {
         page_size: u32,
         status: Option<OrderStatus>,
         keyword: &str,
+        buyer_id: Option<&str>,
     ) -> DingDaResult<(Vec<Order>, u32)>;
 
     /// 更新订单状态。
@@ -249,9 +250,10 @@ impl<'a> OrderService<'a> {
         page_size: u32,
         status: Option<OrderStatus>,
         keyword: &str,
+        buyer_id: Option<&str>,
     ) -> DingDaResult<(Vec<Order>, u32)> {
         self.store
-            .list_orders(owner_id, page, page_size, status, keyword)
+            .list_orders(owner_id, page, page_size, status, keyword, buyer_id)
     }
 
     /// 更新状态。

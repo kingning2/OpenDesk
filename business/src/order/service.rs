@@ -94,6 +94,7 @@ mod tests {
             _page_size: u32,
             status: Option<OrderStatus>,
             keyword: &str,
+            buyer_id: Option<&str>,
         ) -> DingDaResult<(Vec<Order>, u32)> {
             let list: Vec<Order> = self
                 .orders
@@ -103,6 +104,7 @@ mod tests {
                 .filter(|o| {
                     o.owner_id == owner_id
                         && status.map(|s| o.status == s).unwrap_or(true)
+                        && buyer_id.is_none_or(|b| o.buyer_id == b)
                         && (keyword.is_empty() || o.order_no.contains(keyword))
                 })
                 .cloned()
@@ -214,10 +216,29 @@ mod tests {
         ]);
         let service = OrderService::new(&store);
         let (list, total) = service
-            .list(1, 1, 20, Some(OrderStatus::Paid), "")
+            .list(1, 1, 20, Some(OrderStatus::Paid), "", None)
             .expect("list");
         assert_eq!(total, 1);
         assert_eq!(list[0].order_no, "o-1");
+    }
+
+    #[test]
+    fn list_filters_by_buyer() {
+        let store = MockStore::new(vec![
+            sample_order("o-1", 1, OrderStatus::Paid),
+            sample_order("o-2", 1, OrderStatus::Shipped),
+        ]);
+        let service = OrderService::new(&store);
+        let (list, total) = service
+            .list(1, 1, 20, None, "", Some("buyer-1"))
+            .expect("list");
+        assert_eq!(total, 2);
+        assert!(list.iter().all(|order| order.buyer_id == "buyer-1"));
+        let (empty, empty_total) = service
+            .list(1, 1, 20, None, "", Some("buyer-2"))
+            .expect("list");
+        assert_eq!(empty_total, 0);
+        assert!(empty.is_empty());
     }
 
     #[test]
@@ -277,6 +298,6 @@ mod tests {
         assert!(service.delete(1, 1).expect("delete"));
         let count = service.batch_delete(1, &[2, 3]).expect("batch");
         assert_eq!(count, 1); // 仅 id=2（owner1）；id=3 属 owner2
-        assert_eq!(service.list(1, 1, 20, None, "").expect("list").1, 0);
+        assert_eq!(service.list(1, 1, 20, None, "", None).expect("list").1, 0);
     }
 }

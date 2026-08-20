@@ -24,6 +24,9 @@ pub struct OrderListRequest {
     pub status: Option<String>,
     #[serde(default)]
     pub keyword: String,
+    /// 按买家 ID 过滤（客户会话客户信息栏使用；空串 = 不过滤）。
+    #[serde(default)]
+    pub buyer_id: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -47,6 +50,11 @@ pub fn order_list(
 ) -> common::DingDaResult<IpcResponse<(Vec<Order>, u32)>> {
     let service = OrderService::new(state.store.as_ref());
     let status = request.status.as_deref().map(OrderStatus::from_str);
+    let buyer_id = if request.buyer_id.is_empty() {
+        None
+    } else {
+        Some(request.buyer_id.as_str())
+    };
     let result = service
         .list(
             request.owner_id,
@@ -54,6 +62,7 @@ pub fn order_list(
             request.page_size,
             status,
             &request.keyword,
+            buyer_id,
         )
         .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(result))

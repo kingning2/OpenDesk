@@ -26,13 +26,19 @@ export interface Order {
   order_no: string;
   status: OrderStatus;
   buyer_id: string;
+  buyer_nick: string;
+  buyer_fish_nick: string;
+  chat_id: string;
   item_id: string;
   item_title: string;
+  spec_name: string;
+  spec_value: string;
   quantity: number;
   amount: number;
   account_id: string;
   is_rated: boolean;
   is_red_flower: boolean;
+  placed_at?: string | null;
 }
 
 /** 订单列表查询入参。 */
@@ -42,6 +48,8 @@ export interface OrderListRequest {
   page_size: number;
   status?: OrderStatus;
   keyword?: string;
+  /** 按买家 ID 过滤（客户会话客户信息栏使用）。 */
+  buyer_id?: string;
 }
 
 /** 查询订单列表（返回 [列表, 总数]）。 */

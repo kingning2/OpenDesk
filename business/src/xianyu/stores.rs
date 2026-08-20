@@ -521,6 +521,7 @@ impl OrderStore for InMemoryOrderStore {
         _page_size: u32,
         status: Option<OrderStatus>,
         keyword: &str,
+        buyer_id: Option<&str>,
     ) -> DingDaResult<(Vec<Order>, u32)> {
         let orders: Vec<Order> = self.db.scan(DOMAIN_ORDER, owner_id)?;
         let mut list: Vec<Order> = orders
@@ -528,6 +529,7 @@ impl OrderStore for InMemoryOrderStore {
             .filter(|order| {
                 order.owner_id == owner_id
                     && status.map(|s| order.status == s).unwrap_or(true)
+                    && buyer_id.is_none_or(|b| order.buyer_id == b)
                     && (keyword.is_empty()
                         || order.order_no.contains(keyword)
                         || order.buyer_nick.contains(keyword)

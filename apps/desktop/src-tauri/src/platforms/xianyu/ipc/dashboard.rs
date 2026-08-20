@@ -75,12 +75,12 @@ impl DashboardHandle {
 
         let (_, total_orders) = self
             .orders
-            .list_orders(owner_id, 1, 1, None, "")
+            .list_orders(owner_id, 1, 1, None, "", None)
             .unwrap_or((Vec::new(), 0));
 
         let (_, pending_ship_orders) = self
             .orders
-            .list_orders(owner_id, 1, u32::MAX, Some(OrderStatus::Paid), "")
+            .list_orders(owner_id, 1, u32::MAX, Some(OrderStatus::Paid), "", None)
             .unwrap_or((Vec::new(), 0));
 
         DashboardStats {
