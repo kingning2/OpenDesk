@@ -38,6 +38,10 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      // react-hooks v7 新增的 React Compiler 规则偏激进，与现有派生 state / effect
+      // 数据拉取写法冲突；降为 warn 保持可见但不阻断 lint。
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/purity": "warn",
       "react-refresh/only-export-components": [
         "warn",
         { allowConstantExport: true },

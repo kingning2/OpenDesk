@@ -37,6 +37,10 @@ select = [
 ]
 ignore = []
 
+[tool.ruff.lint.per-file-ignores]
+# 自动生成的契约文件：导入排序由 codegen 输出决定，格式化会随重新生成被覆盖。
+"python/packages/contracts/src/contracts/generated/*.py" = ["I001"]
+
 [tool.ruff.lint.isort]
 known-first-party = [
   "contracts",
