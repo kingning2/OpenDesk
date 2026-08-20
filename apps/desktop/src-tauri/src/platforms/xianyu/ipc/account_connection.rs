@@ -196,3 +196,28 @@ pub async fn account_connection_state(
             .to_string(),
     ))
 }
+
+/// 手动触发浏览器滑块续期（打开 Playwright 窗口完成验证）。
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-08-20
+#[tauri::command]
+pub async fn account_cookie_renew(
+    state: State<'_, AppState>,
+    renewer: State<'_, Arc<crate::shared::channel::cookie_renew::RiskCookieRenewer>>,
+    request: AccountConnectRequest,
+) -> common::DingDaResult<IpcResponse<String>> {
+    state
+        .license
+        .ensure_licensed()
+        .await
+        .map_err(common::DingDaError::wrap)?;
+
+    info!(account = %request.account_id, "手动触发闲鱼滑块续期");
+    renewer
+        .renew_once(&request.account_id, "")
+        .await
+        .map_err(common::DingDaError::wrap)?;
+
+    Ok(IpcResponse::ok("续期成功".to_string()))
+}

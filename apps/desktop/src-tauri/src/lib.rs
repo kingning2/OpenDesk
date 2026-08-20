@@ -21,6 +21,7 @@ mod platforms;
 pub use shared::{agent, config, logging, state, timing};
 
 use adapter::agent_sidecar::RuntimeAgentSidecar;
+use app::account::AccountStore;
 use kernel::event::{EventBus, InMemoryEventBus};
 use runtime::sidecar::lifecycle::{
     SidecarConfig, SidecarLifecycle, RUNTIME_ERROR_TOPIC, SIDECAR_RESTARTED_TOPIC,
@@ -29,10 +30,11 @@ use shared::channel::coordinator::ChannelCoordinator;
 use shared::channel::dispatcher::ChannelDispatcher;
 use shared::channel::ChannelRepo;
 use shared::ipc::{
-    agent_ping, ai_config_get, ai_config_set, ai_test_api_key, channel_connect, channel_disconnect,
-    channel_qr_cancel, channel_qr_check, channel_qr_start, channel_send, channel_state_get,
-    channel_state_set, license_activate, license_machine_code, license_status, log_clear,
-    log_recent, log_write, platform_descriptors, plugin_install, plugin_list, plugin_uninstall,
+    agent_ping, ai_account_balance, ai_config_get, ai_config_set, ai_test_api_key, app_version,
+    channel_connect, channel_disconnect, channel_qr_cancel, channel_qr_check, channel_qr_start,
+    channel_send, channel_state_get, channel_state_set, license_activate, license_machine_code,
+    license_status, log_clear, log_recent, log_write, platform_descriptors, plugin_install,
+    plugin_list, plugin_uninstall,
 };
 use shared::lifecycle::{on_exit, on_setup};
 use shared::{build_license_gate, init_tracing, platform_initialization_script, AppState};
@@ -44,20 +46,21 @@ use tauri::Manager;
 use platforms::xianyu::bootstrap::register_active_platform;
 #[cfg(platform_xianyu)]
 use platforms::xianyu::ipc::{
-    account_connect, account_connection_state, account_create, account_delete, account_disconnect,
-    account_list, account_password_login, account_qr_cancel, account_qr_check, account_qr_start,
-    account_set_status, account_update, address_batch_delete, address_create, address_delete,
-    address_list, address_update, auto_reply_log_list, blacklist_delete, blacklist_personal_create,
-    blacklist_personal_list, blacklist_platform_list, blacklist_set_enabled, card_create,
-    card_delete, card_list, card_set_enabled, card_update, channel_close_site, channel_open_site,
-    dashboard_stats, feedback_create, feedback_delete, feedback_list, filter_create, filter_delete,
-    filter_list, filter_set_enabled, filter_update, item_get, item_list, item_update, keyword_add,
-    keyword_delete, keyword_list, keyword_replace, notification_channel_create,
-    notification_channel_delete, notification_channel_list, notification_channel_set_enabled,
-    notification_channel_test, notification_channel_update, notification_delete, notification_list,
-    notification_set, order_create, order_delete, order_get, order_list, order_update_delivery,
-    order_update_status, publish_batch_status, publish_batch_submit, publish_capability,
-    publish_log_clear, publish_log_list, publish_material_batch_delete, publish_material_create,
+    account_connect, account_connection_state, account_cookie_renew, account_create,
+    account_delete, account_disconnect, account_list, account_password_login, account_qr_cancel,
+    account_qr_check, account_qr_start, account_set_status, account_update, address_batch_delete,
+    address_create, address_delete, address_list, address_update, auto_reply_log_list,
+    blacklist_delete, blacklist_personal_create, blacklist_personal_list, blacklist_platform_list,
+    blacklist_set_enabled, card_create, card_delete, card_list, card_set_enabled, card_update,
+    channel_close_site, channel_open_site, dashboard_stats, feedback_create, feedback_delete,
+    feedback_list, filter_create, filter_delete, filter_list, filter_set_enabled, filter_update,
+    item_detail_fetch, item_get, item_list, item_sync, item_update, keyword_add, keyword_delete,
+    keyword_list, keyword_replace, notification_channel_create, notification_channel_delete,
+    notification_channel_list, notification_channel_set_enabled, notification_channel_test,
+    notification_channel_update, notification_delete, notification_list, notification_set,
+    order_create, order_delete, order_get, order_list, order_update_delivery, order_update_status,
+    publish_batch_status, publish_batch_submit, publish_capability, publish_log_clear,
+    publish_log_list, publish_material_batch_delete, publish_material_create,
     publish_material_delete, publish_material_list, publish_material_update, publish_single,
     rate_buyer, rate_feedback_resolve, risk_config_get, risk_config_set, risk_log_clear,
     risk_log_clear_processing, risk_log_list, risk_log_today_rate, user_setting_get,
@@ -74,6 +77,7 @@ macro_rules! base_invoke_handler {
                 ai_config_get,
                 ai_config_set,
                 ai_test_api_key,
+                ai_account_balance,
                 plugin_list,
                 plugin_install,
                 plugin_uninstall,
@@ -93,6 +97,7 @@ macro_rules! base_invoke_handler {
                 account_qr_check,
                 account_qr_cancel,
                 account_connect,
+                account_cookie_renew,
                 account_disconnect,
                 account_connection_state,
                 order_list,
@@ -108,6 +113,8 @@ macro_rules! base_invoke_handler {
                 item_list,
                 item_get,
                 item_update,
+                item_sync,
+                item_detail_fetch,
                 card_list,
                 card_create,
                 card_update,
@@ -174,7 +181,8 @@ macro_rules! base_invoke_handler {
                 rate_feedback_resolve,
                 log_clear,
                 log_recent,
-                log_write
+                log_write,
+                app_version
             ]
         }
         #[cfg(not(platform_xianyu))]
@@ -184,6 +192,7 @@ macro_rules! base_invoke_handler {
                 ai_config_get,
                 ai_config_set,
                 ai_test_api_key,
+                ai_account_balance,
                 plugin_list,
                 plugin_install,
                 plugin_uninstall,
@@ -201,7 +210,8 @@ macro_rules! base_invoke_handler {
                 platform_descriptors,
                 log_clear,
                 log_recent,
-                log_write
+                log_write,
+                app_version
             ]
         }
     }};
@@ -302,11 +312,40 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
                     }
                 }
             }
+            #[cfg(platform_xianyu)]
+            let risk_store = app
+                .try_state::<platforms::xianyu::ipc::risk::RiskHandle>()
+                .map(|handle| handle.store.clone());
+            #[cfg(not(platform_xianyu))]
+            let risk_store: Option<Arc<app::xianyu::InMemoryRiskStore>> = None;
+
+            #[cfg(platform_xianyu)]
+            let cookie_renewer = app
+                .try_state::<platforms::xianyu::ipc::account::AccountHandle>()
+                .map(|handle| {
+                    let store: Arc<dyn AccountStore> = handle.store.clone();
+                    Arc::new(shared::channel::cookie_renew::RiskCookieRenewer::new(
+                        app.state::<AppState>().lifecycle.clone(),
+                        store,
+                        dispatcher.clone(),
+                        risk_store.clone(),
+                        1,
+                    ))
+                });
+
+            #[cfg(platform_xianyu)]
+            if let Some(renewer) = cookie_renewer.clone() {
+                app.manage(renewer);
+            }
+
             let coordinator = Arc::new(ChannelCoordinator::new(
                 repo,
                 dispatcher.clone(),
                 auto_reply,
                 event_sink,
+                risk_store,
+                #[cfg(platform_xianyu)]
+                cookie_renewer,
             ));
             app.manage(coordinator.clone());
 

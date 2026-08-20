@@ -148,6 +148,9 @@ pub trait RiskStore: Send + Sync {
 
     /// 保存配置。
     fn save_config(&self, owner_id: i64, config: &RiskConfig) -> DingDaResult<()>;
+
+    /// 追加风控日志（`id == 0` 时存储层自动分配）。
+    fn append_log(&self, log: RiskLogItem) -> DingDaResult<RiskLogItem>;
 }
 
 /// 风控服务。
@@ -270,6 +273,49 @@ impl<'a> RiskService<'a> {
         }
         self.store.save_config(owner_id, config)
     }
+
+    /// 记录闲鱼 IM / mtop 风控拦截事件。
+    ///
+    /// 作者：Xiaoman
+    /// 创建时间：2026-08-20
+    pub fn record_im_risk(
+        &self,
+        owner_id: i64,
+        account_id: &str,
+        source: &str,
+        detail: &str,
+    ) -> DingDaResult<RiskLogItem> {
+        let now = chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+        let risk_type = if detail.contains("captcha") || detail.contains("punish") {
+            "slider".to_string()
+        } else {
+            "rgv587".to_string()
+        };
+        let error_message = truncate_detail(detail, 500);
+        let log = RiskLogItem {
+            id: 0,
+            owner_id,
+            account_id: account_id.to_string(),
+            risk_type,
+            message: format!("{source}：触发闲鱼风控"),
+            processing_result: String::new(),
+            processing_status: "processing".to_string(),
+            captcha_engine: Some("playwright".to_string()),
+            call_type: Some("local".to_string()),
+            call_user: None,
+            error_message: Some(error_message),
+            created_at: Some(now),
+            updated_at: None,
+        };
+        self.store.append_log(log)
+    }
+}
+
+fn truncate_detail(detail: &str, max_chars: usize) -> String {
+    if detail.chars().count() <= max_chars {
+        return detail.to_string();
+    }
+    format!("{}…", detail.chars().take(max_chars).collect::<String>())
 }
 
 fn pct(success: u32, total: u32) -> u32 {
@@ -336,6 +382,21 @@ mod tests {
             let _ = owner_id;
             *self.config.lock().expect("lock") = config.clone();
             Ok(())
+        }
+        fn append_log(&self, mut log: RiskLogItem) -> DingDaResult<RiskLogItem> {
+            if log.id == 0 {
+                log.id = self
+                    .logs
+                    .lock()
+                    .expect("lock")
+                    .iter()
+                    .map(|item| item.id)
+                    .max()
+                    .unwrap_or(0)
+                    + 1;
+            }
+            self.logs.lock().expect("lock").push(log.clone());
+            Ok(log)
         }
     }
 
@@ -426,5 +487,21 @@ mod tests {
         assert!(service.save_config(1, &config).is_err());
         config.remote_url = "https://your-host/slider".to_string();
         assert!(service.save_config(1, &config).is_ok());
+    }
+
+    #[test]
+    fn record_im_risk_truncates_utf8_without_panic() {
+        let mock = store();
+        let service = RiskService::new(&mock);
+        let detail = format!(
+            "token 接口未成功: {{\"ret\":[\"FAIL_SYS_USER_VALIDATE\",\"RGV587_ERROR::SM::{}\"]]}}",
+            "哎".repeat(520)
+        );
+        let log = service
+            .record_im_risk(1, "acc-1", "闲鱼 IM", &detail)
+            .expect("record");
+        let message = log.error_message.expect("message");
+        assert!(message.chars().count() <= 501);
+        assert!(message.ends_with('…'));
     }
 }

@@ -41,10 +41,24 @@ pub fn is_risk_control_text(text: &str) -> bool {
 /// # 返回值
 /// 含 `punish` 或 `captcha` 的 `https://` URL；没有则 `None`。
 pub fn extract_punish_url(text: &str) -> Option<String> {
+    if let Some(json_start) = text.find('{') {
+        if let Ok(value) = serde_json::from_str::<serde_json::Value>(&text[json_start..]) {
+            if let Some(url) = value
+                .pointer("/data/url")
+                .and_then(serde_json::Value::as_str)
+            {
+                let url = url.replace("\\/", "/");
+                if url.contains("punish") || url.contains("captcha") {
+                    return Some(url);
+                }
+            }
+        }
+    }
+
     let start = text.find("https://")?;
     let rest = &text[start..];
     let end = rest
-        .find(|ch: char| ch == '"' || ch == ' ' || ch == '\\' || ch == '}' || ch == '\'')
+        .find(|ch: char| ['"', ' ', '}', '\''].contains(&ch))
         .unwrap_or(rest.len());
     let url = rest[..end].replace("\\/", "/");
     if url.contains("punish") || url.contains("captcha") {
@@ -67,11 +81,11 @@ mod tests {
     }
 
     #[test]
-    fn extract_punish_url_from_token_error() {
-        let text = r#"token 接口未成功: {"data":{"url":"https://h5api.m.goofish.com:443//h5/mtop.taobao.idlemessage.pc.login.token/1.0/_____tmd_____/punish?x5secdata=abc&action=captcha"},"ret":["FAIL_SYS_USER_VALIDATE"]}"#;
+    fn extract_punish_url_from_real_rgv587_payload() {
+        let text = r#"channel error: internal: token 接口未成功: {"data":{"url":"https://h5api.m.goofish.com:443//h5/mtop.taobao.idlemessage.pc.login.token/1.0/_____tmd_____/punish?x5secdata=abc&x5step=2&action=captcha&pureCaptcha="},"ret":["FAIL_SYS_USER_VALIDATE","RGV587_ERROR::SM::哎哟喂,被挤爆啦,请稍后重试"]}"#;
         let url = extract_punish_url(text).expect("url");
         assert!(url.contains("punish"));
-        assert!(url.starts_with("https://"));
+        assert!(url.contains("action=captcha"));
         assert!(!url.contains('"'));
     }
 }

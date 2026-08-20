@@ -30,7 +30,9 @@ pub mod site;
 pub use account::{
     account_create, account_delete, account_list, account_set_status, account_update,
 };
-pub use account_connection::{account_connect, account_connection_state, account_disconnect};
+pub use account_connection::{
+    account_connect, account_connection_state, account_cookie_renew, account_disconnect,
+};
 pub use account_password::account_password_login;
 pub use account_qr::{account_qr_cancel, account_qr_check, account_qr_start};
 pub use address::{
@@ -45,7 +47,7 @@ pub use card::{card_create, card_delete, card_list, card_set_enabled, card_updat
 pub use dashboard::dashboard_stats;
 pub use feedback::{feedback_create, feedback_delete, feedback_list};
 pub use filter::{filter_create, filter_delete, filter_list, filter_set_enabled, filter_update};
-pub use item::{item_get, item_list, item_update};
+pub use item::{item_detail_fetch, item_get, item_list, item_sync, item_update};
 pub use keyword::{keyword_add, keyword_delete, keyword_list, keyword_replace};
 pub use notification::{
     notification_channel_create, notification_channel_delete, notification_channel_list,

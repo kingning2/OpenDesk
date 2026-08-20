@@ -359,6 +359,26 @@ impl ItemStore for InMemoryItemStore {
             .db
             .put(DOMAIN_ITEM, &item.item_id, item.owner_id, item)?)
     }
+
+    fn upsert_item(&self, item: &Item) -> DingDaResult<()> {
+        if let Some(mut existing) = self.get_item(item.owner_id, &item.item_id)? {
+            existing.title = item.title.clone();
+            existing.price = item.price;
+            existing.desc = item.desc.clone();
+            existing.account_id = item.account_id.clone();
+            Ok(self
+                .db
+                .put(DOMAIN_ITEM, &existing.item_id, existing.owner_id, &existing)?)
+        } else {
+            let mut item = item.clone();
+            if item.id == 0 {
+                item.id = self.db.next_id(DOMAIN_ITEM, item.owner_id)?;
+            }
+            Ok(self
+                .db
+                .put(DOMAIN_ITEM, &item.item_id, item.owner_id, &item)?)
+        }
+    }
 }
 
 // ─── 卡券 ──────────────────────────────────────────────────────────────────────
@@ -1093,6 +1113,15 @@ impl RiskStore for InMemoryRiskStore {
         Ok(self
             .db
             .put(DOMAIN_RISK_CONFIG, RISK_CONFIG_KEY, owner_id, config)?)
+    }
+
+    fn append_log(&self, mut log: RiskLogItem) -> DingDaResult<RiskLogItem> {
+        if log.id == 0 {
+            log.id = self.db.next_id(DOMAIN_RISK, log.owner_id)?;
+        }
+        self.db
+            .put(DOMAIN_RISK, &log.id.to_string(), log.owner_id, &log)?;
+        Ok(log)
     }
 }
 

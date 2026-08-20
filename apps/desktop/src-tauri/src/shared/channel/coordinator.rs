@@ -6,17 +6,23 @@
 //! 作者：Xiaoman
 //! 创建时间：2026-08-18
 
-use std::sync::Arc;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use agent::llm::ChatMessage;
 use app::auto_reply::{AutoReplyDecision, ChatInput};
+use app::risk::RiskService;
+use app::xianyu::InMemoryRiskStore;
 use common::contracts::{ChannelConversation, ChannelMessage, ChannelSettings};
 use common::events::{emit, AppEvent, ChannelMessageEvent, ChannelStatusEvent, EventSink};
 use common::DingDaResult;
+use platform::xianyu::is_risk_control_text;
 
 use crate::shared::auto_reply::AutoReplyHandle;
 
+#[cfg(platform_xianyu)]
+use super::cookie_renew::RiskCookieRenewer;
 use super::dispatcher::ChannelDispatcher;
 use super::protocol::{ChannelInboundMessage, ConnectionState, InboundListener};
 use super::{conversation_id_for, filter_reply, inbound_to_message, ChannelRepo};
@@ -27,6 +33,13 @@ pub struct ChannelCoordinator {
     dispatcher: Arc<ChannelDispatcher>,
     auto_reply: AutoReplyHandle,
     sink: Arc<dyn EventSink>,
+    risk_store: Option<Arc<InMemoryRiskStore>>,
+    owner_id: i64,
+    /// 风控日志去重：account_id → (detail 摘要, 毫秒时间戳)。
+    risk_dedup: Mutex<HashMap<String, (String, u128)>>,
+    /// 滑块验证浏览器续期（闲鱼启用时注入）。
+    #[cfg(platform_xianyu)]
+    cookie_renewer: Option<Arc<RiskCookieRenewer>>,
 }
 
 impl ChannelCoordinator {
@@ -40,17 +53,67 @@ impl ChannelCoordinator {
     /// - `dispatcher` — 协议发送器
     /// - `auto_reply` — 自动回复管线
     /// - `sink` — 事件下发（`TauriEventSink` 或测试替身）
+    /// - `risk_store` — 风控日志存储（闲鱼启用时注入）
+    /// - `cookie_renewer` — 滑块浏览器续期（闲鱼启用时注入）
     pub fn new(
         store: Arc<ChannelRepo>,
         dispatcher: Arc<ChannelDispatcher>,
         auto_reply: AutoReplyHandle,
         sink: Arc<dyn EventSink>,
+        risk_store: Option<Arc<InMemoryRiskStore>>,
+        #[cfg(platform_xianyu)] cookie_renewer: Option<Arc<RiskCookieRenewer>>,
     ) -> Self {
         Self {
             store,
             dispatcher,
             auto_reply,
             sink,
+            risk_store,
+            owner_id: 1,
+            risk_dedup: Mutex::new(HashMap::new()),
+            #[cfg(platform_xianyu)]
+            cookie_renewer,
+        }
+    }
+
+    fn maybe_record_risk(&self, account_id: &str, detail: &str) {
+        let Some(risk_store) = &self.risk_store else {
+            return;
+        };
+        if !is_risk_control_text(detail) {
+            return;
+        }
+
+        let signature = detail.chars().take(200).collect::<String>();
+        let now_ms = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|duration| duration.as_millis())
+            .unwrap_or(0);
+        {
+            let mut dedup = self
+                .risk_dedup
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            if let Some((last_sig, last_ms)) = dedup.get(account_id) {
+                if last_sig == &signature && now_ms.saturating_sub(*last_ms) < 120_000 {
+                    return;
+                }
+            }
+            dedup.insert(account_id.to_string(), (signature, now_ms));
+        }
+
+        let service = RiskService::new(risk_store.as_ref());
+        match service.record_im_risk(self.owner_id, account_id, "闲鱼 IM", detail) {
+            Ok(log) => {
+                info!(
+                    account = %account_id,
+                    log_id = log.id,
+                    "已写入风控日志"
+                );
+            }
+            Err(error) => {
+                warn!(account = %account_id, %error, "写入风控日志失败");
+            }
         }
     }
 
@@ -147,6 +210,11 @@ impl InboundListener for ChannelCoordinator {
 
         let conversation_id = conversation_id_for(&inbound.peer_id, &inbound.item_id);
         let now = self.now_iso();
+        let message_created_at = if inbound.created_at_ms > 0 {
+            inbound.created_at_ms.to_string()
+        } else {
+            now.clone()
+        };
         let conversation = ChannelConversation {
             id: conversation_id.clone(),
             account_id: inbound.account_id.clone(),
@@ -155,13 +223,20 @@ impl InboundListener for ChannelCoordinator {
             item_id: Some(inbound.item_id.clone()),
             item_title: None,
             item_price: None,
-            updated_at: now.clone(),
+            updated_at: message_created_at.clone(),
         };
         if let Err(error) = self.store.upsert_conversation(&conversation) {
             warn!(%error, "更新会话失败");
         }
 
-        let message = inbound_to_message(&inbound, &conversation_id, &now);
+        let message = inbound_to_message(&inbound, &conversation_id, &message_created_at);
+        let existing = self
+            .store
+            .list_messages(&conversation_id)
+            .unwrap_or_default();
+        if existing.iter().any(|item| item.id == message.id) {
+            return;
+        }
         if let Err(error) = self.store.insert_message(&message) {
             warn!(%error, "写入入站消息失败");
         }
@@ -249,6 +324,20 @@ impl InboundListener for ChannelCoordinator {
             }
             ConnectionState::Error => {
                 warn!(account = %account_id, detail = ?detail, "闲鱼连接异常");
+                if let Some(detail) = detail.as_deref() {
+                    if is_risk_control_text(detail) {
+                        #[cfg(platform_xianyu)]
+                        if let Some(renewer) = &self.cookie_renewer {
+                            warn!(account = %account_id, "检测到风控，调度浏览器自动过滑块");
+                            renewer
+                                .clone()
+                                .spawn_renew(account_id.to_string(), detail.to_string());
+                        } else {
+                            warn!(account = %account_id, "滑块续期器未注入，无法自动过滑块");
+                        }
+                    }
+                    self.maybe_record_risk(account_id, detail);
+                }
             }
             ConnectionState::Connecting => {}
         }

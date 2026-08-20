@@ -4,6 +4,8 @@
 //! 签名（md5 token&t&appKey&data）→ POST form → set-cookie 写回 → ret 校验 → TOKEN_EXPIRED 重试。
 //! 业务层（评价/订单/发货/关单等）只声明 [`MtopRequest`]，客户端统一处理协议细节。
 //!
+//! 新接口发现与登记表：[`skills/dingda/guides/xianyu-mtop-discovery.md`](../../../../skills/dingda/guides/xianyu-mtop-discovery.md)
+//!
 //! 作者：Xiaoman
 //! 创建时间：2026-08-19
 

@@ -59,6 +59,9 @@ pub trait ItemStore: Send + Sync {
 
     /// 更新商品（AI 提示词等）。
     fn update_item(&self, item: &Item) -> DingDaResult<()>;
+
+    /// 新建或更新商品（平台同步入库；保留已有本地配置字段）。
+    fn upsert_item(&self, item: &Item) -> DingDaResult<()>;
 }
 
 /// 商品服务。
@@ -93,6 +96,11 @@ impl<'a> ItemService<'a> {
         };
         apply(&mut item);
         self.store.update_item(&item)
+    }
+
+    /// 新建或更新商品（平台同步）。
+    pub fn upsert(&self, item: &Item) -> DingDaResult<()> {
+        self.store.upsert_item(item)
     }
 }
 
@@ -154,6 +162,25 @@ mod tests {
             if let Some(existing) = list.iter_mut().find(|i| i.id == item.id) {
                 *existing = item.clone();
             }
+            Ok(())
+        }
+        fn upsert_item(&self, item: &Item) -> DingDaResult<()> {
+            let mut list = self.items.lock().expect("lock");
+            if let Some(existing) = list
+                .iter_mut()
+                .find(|i| i.owner_id == item.owner_id && i.item_id == item.item_id)
+            {
+                existing.title = item.title.clone();
+                existing.price = item.price;
+                existing.desc = item.desc.clone();
+                existing.account_id = item.account_id.clone();
+                return Ok(());
+            }
+            let mut item = item.clone();
+            if item.id == 0 {
+                item.id = (list.len() + 1) as i64;
+            }
+            list.push(item);
             Ok(())
         }
     }

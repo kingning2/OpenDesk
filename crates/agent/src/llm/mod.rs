@@ -122,7 +122,9 @@ pub fn normalize_provider_type(provider_type: &str, base_url: &str, model: &str)
         | "openai兼容"
         | "dashscope_compatible"
         | "qwen"
-        | "dashscope" => "openai_compatible",
+        | "dashscope"
+        | "deepseek"
+        | "doubao" => "openai_compatible",
         "anthropic" | "claude" => "anthropic",
         "gemini" | "google_gemini" => "gemini",
         "dashscope_app" | "dashscope应用" => "dashscope_app",
@@ -170,7 +172,14 @@ mod tests {
             normalize_provider_type("openai", "", ""),
             "openai_compatible"
         );
-        assert_eq!(normalize_provider_type("qwen", "", ""), "openai_compatible");
+        assert_eq!(
+            normalize_provider_type("doubao", "", ""),
+            "openai_compatible"
+        );
+        assert_eq!(
+            normalize_provider_type("deepseek", "", ""),
+            "openai_compatible"
+        );
         assert_eq!(normalize_provider_type("claude", "", ""), "anthropic");
         assert_eq!(
             normalize_provider_type("", "https://generativelanguage.googleapis.com", ""),

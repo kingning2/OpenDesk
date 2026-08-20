@@ -144,6 +144,11 @@ pub trait ChannelProtocol: Send + Sync {
 
     fn connection_state(&self) -> ConnectionState;
 
+    /// 当前正在使用该协议实例的账号 id；单连接协议需实现。
+    fn active_account_id(&self) -> Option<String> {
+        None
+    }
+
     fn set_inbound_listener(&self, listener: Arc<dyn InboundListener>);
 }
 

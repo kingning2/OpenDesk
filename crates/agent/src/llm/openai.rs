@@ -26,8 +26,8 @@ fn normalize_base_url(base_url: &str) -> String {
     if base.ends_with("/chat/completions") || base.contains("/chat/completions") {
         return base.to_string();
     }
-    // 已含 /v1 或 /v1/ 则直接拼路径。
-    if base.ends_with("/v1") {
+    // 已含 /v1、/v2、/v3 则直接拼路径。
+    if base.ends_with("/v1") || base.ends_with("/v2") || base.ends_with("/v3") {
         return format!("{base}{DEFAULT_CHAT_PATH}");
     }
     format!("{base}/v1{DEFAULT_CHAT_PATH}")
@@ -145,8 +145,8 @@ mod tests {
             "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
         );
         assert_eq!(
-            normalize_base_url("http://localhost:11434/v1"),
-            "http://localhost:11434/v1/chat/completions"
+            normalize_base_url("https://ark.cn-beijing.volces.com/api/v3"),
+            "https://ark.cn-beijing.volces.com/api/v3/chat/completions"
         );
         assert_eq!(
             normalize_base_url(""),

@@ -13,4 +13,6 @@ pub use platform::protocol;
 // 从 dingda-business re-export，保持 coordinator 路径不变
 pub use app::channel::{conversation_id_for, filter_reply, inbound_to_message, ChannelRepo};
 
+#[cfg(platform_xianyu)]
+pub mod cookie_renew;
 pub mod coordinator;

@@ -10,14 +10,18 @@ pub mod codec;
 pub mod cookie;
 pub mod cookies;
 pub mod http;
+pub mod item;
 pub mod message;
 pub mod mtop;
 pub mod profile;
 pub mod risk;
+pub mod session;
 pub mod sign;
 pub mod ws;
 
+pub use item::{fetch_item_detail, fetch_seller_items, PlatformItem, PlatformItemDetail};
 pub use mtop::{MtopClient, MtopRequest, MtopResponse};
 pub use profile::{fetch_user_profile, UserProfile};
 pub use risk::{extract_punish_url, is_risk_control_text};
+pub use session::{fetch_sessions, fetch_unread_sessions, SessionSummary};
 pub use ws::XianyuChannel;

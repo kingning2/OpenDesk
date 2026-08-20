@@ -199,6 +199,8 @@ impl XianyuChannel {
             .map_err(|error| ChannelError::Transport(error.to_string()))?;
         info!(account = %account.id, "设备注册帧与同步确认已发送，开始监听消息");
 
+        self.sync_unread_sessions(&cookie_str, &account.id).await;
+
         let mut last_heartbeat = Instant::now();
         let last_token_refresh = Instant::now();
 
@@ -288,6 +290,70 @@ impl XianyuChannel {
         };
         self.inner.notify_message(inbound);
     }
+
+    /// 连接成功后拉取 mtop 未读会话，补全 WebSocket 推送前的待回复消息。
+    ///
+    /// 作者：Xiaoman
+    /// 创建时间：2026-08-20
+    async fn sync_unread_sessions(&self, cookie_str: &str, account_id: &str) {
+        match super::session::fetch_unread_sessions(cookie_str, 50).await {
+            Ok((sessions, _)) => {
+                if sessions.is_empty() {
+                    info!(account = %account_id, "无未读会话");
+                    return;
+                }
+                info!(
+                    account = %account_id,
+                    count = sessions.len(),
+                    "已拉取未读会话，正在同步"
+                );
+                for session in sessions {
+                    // 优先真人会话；系统/通知类仍保留有正文摘要的条目。
+                    if session.session_type != 1 && session.last_msg.is_empty() {
+                        continue;
+                    }
+
+                    let peer_id = if !session.peer_id.is_empty() {
+                        session.peer_id
+                    } else {
+                        message::extract_cid(&session.session_id)
+                    };
+                    if peer_id.is_empty() {
+                        continue;
+                    }
+
+                    let content = if session.last_msg.is_empty() {
+                        format!("({} 条未读消息)", session.unread)
+                    } else {
+                        session.last_msg
+                    };
+
+                    let created_at_ms = if session.ts_ms > 0 {
+                        session.ts_ms
+                    } else {
+                        message::now_ms()
+                    };
+
+                    let inbound = ChannelInboundMessage {
+                        account_id: account_id.to_string(),
+                        peer_id,
+                        peer_name: session.peer_name,
+                        item_id: session.item_id,
+                        content,
+                        created_at_ms,
+                    };
+                    self.inner.notify_message(inbound);
+                }
+            }
+            Err(error) => {
+                let detail = error.to_string();
+                warn!(account = %account_id, %detail, "拉取未读会话失败");
+                if super::risk::is_risk_control_text(&detail) {
+                    self.inner.set_state(ConnectionState::Error, Some(detail));
+                }
+            }
+        }
+    }
 }
 
 #[async_trait::async_trait]
@@ -304,6 +370,15 @@ impl ChannelProtocol for XianyuChannel {
             .unwrap_or_else(|poisoned| *poisoned.into_inner())
     }
 
+    fn active_account_id(&self) -> Option<String> {
+        self.inner
+            .account
+            .read()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .as_ref()
+            .map(|account| account.id.clone())
+    }
+
     fn set_inbound_listener(&self, listener: Arc<dyn InboundListener>) {
         *self
             .inner
@@ -313,9 +388,20 @@ impl ChannelProtocol for XianyuChannel {
     }
 
     async fn connect(&self, account: &ChannelAccount) -> DingDaResult<()> {
-        if self.inner.read_state() == ConnectionState::Connected {
+        let current_account = self
+            .inner
+            .account
+            .read()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone();
+        let same_account = current_account
+            .as_ref()
+            .is_some_and(|current| current.id == account.id);
+
+        if self.inner.read_state() == ConnectionState::Connected && same_account {
             return Ok(());
         }
+
         *self
             .inner
             .account

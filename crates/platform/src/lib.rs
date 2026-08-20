@@ -28,7 +28,7 @@ pub mod xianyu;
 pub use capabilities::{PlatformCapabilities, PlatformCapability, PlatformDescriptor};
 pub use common::DingDaResult;
 pub use compile::{active_kind, is_active, is_active_id, ACTIVE_PLATFORM};
-pub use dispatcher::{ChannelDispatcher, DispatcherError};
+pub use dispatcher::{ChannelDispatcher, ChannelProtocolFactory, DispatcherError};
 pub use protocol::{
     ChannelError, ChannelInboundMessage, ChannelKind, ChannelProtocol, ConnectionState,
     InboundListener,

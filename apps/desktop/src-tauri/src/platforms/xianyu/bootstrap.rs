@@ -14,7 +14,7 @@ use app::xianyu::{
 };
 use common::DingDaResult;
 use platform::dispatcher::ChannelDispatcher;
-use platform::protocol::ChannelProtocol;
+use platform::protocol::{ChannelKind, ChannelProtocol};
 use platform::xianyu::XianyuChannel;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -139,7 +139,13 @@ pub fn register_active_platform(
     dispatcher: &Arc<ChannelDispatcher>,
     coordinator: &Arc<ChannelCoordinator>,
 ) {
-    let xianyu = Arc::new(XianyuChannel::new());
-    xianyu.set_inbound_listener(coordinator.clone());
-    dispatcher.register(xianyu);
+    let listener = coordinator.clone();
+    dispatcher.register_factory(
+        ChannelKind::Xianyu,
+        Arc::new(move || {
+            let channel = Arc::new(XianyuChannel::new());
+            channel.set_inbound_listener(listener.clone());
+            channel
+        }),
+    );
 }
