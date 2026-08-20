@@ -133,7 +133,7 @@ const jsonLd = {
       "@id": `${SITE}/#organization`,
       name: "叮答",
       url: `${SITE}/`,
-      logo: { "@type": "ImageObject", url: `${SITE}/assets/logo.svg` },
+      logo: { "@type": "ImageObject", url: `${SITE}/assets/logo.webp` },
       sameAs: ["https://github.com/kingning2/dingda"],
     },
     {
@@ -203,8 +203,8 @@ const Home: NextPage = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#F5EDE0" />
         <link rel="canonical" href={`${SITE}/`} />
-        <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="assets/logo.svg" />
+        <link rel="icon" href="assets/favicon.webp" type="image/webp" />
+        <link rel="apple-touch-icon" href="assets/logo.webp" />
         <link rel="alternate" type="text/markdown" href="llms.txt" title="叮答 (LLM-readable)" />
 
         <meta property="og:type" content="website" />
@@ -239,7 +239,7 @@ const Home: NextPage = () => {
         <div className="shell header-inner">
           <a className="brand" href="#top" aria-label="叮答 首页">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="assets/logo.svg" alt="" width={30} height={30} />
+            <img src="assets/logo.webp" alt="" width={30} height={30} className="rounded-sm object-cover" />
             <span className="brand-word">叮答</span>
           </a>
           <nav className="header-nav" aria-label="主导航">
@@ -337,7 +337,7 @@ const Home: NextPage = () => {
           <div className="footer-grid">
             <div className="footer-brand">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="assets/logo.svg" alt="" width={34} height={34} />
+              <img src="assets/logo.webp" alt="" width={34} height={34} className="rounded-sm object-cover" />
               <div>
                 <p className="footer-name">叮答 DingDa</p>
                 <p className="footer-tagline">本地优先的 AI 智能客服平台。数据归你，AI 为辅。</p>
