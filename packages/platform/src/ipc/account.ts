@@ -40,6 +40,8 @@ export interface AccountUpdate {
   status?: AccountStatus;
   login_id?: string;
   login_password?: string;
+  /** 更新 Cookie（扫码重登 / 风控后在真实浏览器获取的新 Cookie）。 */
+  cookie?: string;
 }
 
 /** 查询账号列表。 */

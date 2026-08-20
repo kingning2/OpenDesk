@@ -22,6 +22,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Textarea,
   toast,
 } from "@desk/ui";
 import { QrCode, Trash2 } from "@desk/ui/icons";
@@ -262,6 +263,7 @@ export function XianyuAccountsPage() {
   const [editingAccount, setEditingAccount] = useState<XianyuAccount | null>(null);
   const [editorDisplayName, setEditorDisplayName] = useState("");
   const [editorRemark, setEditorRemark] = useState("");
+  const [editorCookie, setEditorCookie] = useState("");
   const [editorSaving, setEditorSaving] = useState(false);
   /** account_id → 渠道连接状态。 */
   const [connectionStates, setConnectionStates] = useState<Record<string, string>>({});
@@ -422,6 +424,7 @@ export function XianyuAccountsPage() {
     setEditingAccount(account);
     setEditorDisplayName(account.display_name);
     setEditorRemark(account.remark);
+    setEditorCookie(account.cookie ?? "");
     setEditorOpen(true);
   }
 
@@ -431,11 +434,13 @@ export function XianyuAccountsPage() {
     }
     try {
       setEditorSaving(true);
+      const cookieChanged = editorCookie.trim() !== (editingAccount.cookie ?? "");
       await accountUpdate(OWNER_ID, editingAccount.account_id, {
         display_name: editorDisplayName.trim(),
         remark: editorRemark.trim(),
+        cookie: editorCookie.trim() || undefined,
       });
-      toast.success("账号配置已更新");
+      toast.success(cookieChanged ? "Cookie 已更新，请先断开再连接以生效" : "账号配置已更新");
       setEditorOpen(false);
       setEditingAccount(null);
       await load();
@@ -741,9 +746,24 @@ export function XianyuAccountsPage() {
                 placeholder="可选备注"
               />
             </label>
+            <label className="block space-y-1">
+              <span className="text-[length:var(--text-sm)] text-muted-foreground">
+                Cookie（风控/登录后更新）
+              </span>
+              <Textarea
+                value={editorCookie}
+                onChange={(event) => setEditorCookie(event.target.value)}
+                placeholder="在真实浏览器登录闲鱼并过滑块后，复制 Cookie 粘贴这里"
+                rows={5}
+                className="font-mono text-xs"
+              />
+              <span className="block text-[length:var(--text-xs)] text-muted-foreground/80">
+                在浏览器控制台输入 document.cookie 复制，或 F12 → Application → Cookies。留空则不修改 Cookie。
+              </span>
+            </label>
           </div>
         }
-        confirmText={editorSaving ? "保存中…" : "保存资料"}
+        confirmText={editorSaving ? "保存中…" : "保存"}
         loading={editorSaving}
         onConfirm={() => void handleSaveAccountProfile()}
         onCancel={() => {
