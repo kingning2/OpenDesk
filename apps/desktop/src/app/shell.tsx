@@ -7,7 +7,7 @@
 
 import { useEffect, useState } from "react";
 import { IconButton, SidebarProvider, ThemeProvider, ThemeToggle } from "@desk/ui";
-import { Settings, Terminal } from "@desk/ui/icons";
+import { Settings } from "@desk/ui/icons";
 import {
   closeWindow,
   getPlatform,
@@ -16,10 +16,9 @@ import {
   subscribeWindowMaximized,
   toggleMaximizeWindow,
 } from "@desk/platform";
-import { LogPanel, useLogStore } from "@feature/log";
 import { SettingsDialogProvider, useSettingsDialog } from "@feature/setting";
+import { PlatformShellLifecycles } from "virtual:dingda/platform-shell-lifecycles";
 import { useRouteChange, useStartApp, usePluginLifecycle, useErrorLifecycle } from "../lifecycle";
-import { useXianyuAutoConnect } from "@feature/xianyu/use-auto-connect";
 import { AppLayout, MainPanel } from "./layout";
 import { WorkspaceSidebar } from "./layout/workspace-sidebar";
 import { TitleBar } from "./title-bar";
@@ -38,7 +37,6 @@ function AppShellInner() {
   const platform = getPlatform();
   const [isMaximized, setIsMaximized] = useState(false);
   const { openSettings } = useSettingsDialog();
-  const toggleLogPanel = useLogStore((state) => state.toggle);
   const [sidebarExpanded, setSidebarExpanded] = useState(() => {
     if (typeof window === "undefined") {
       return true;
@@ -55,7 +53,6 @@ function AppShellInner() {
   useStartApp();
   usePluginLifecycle();
   useErrorLifecycle();
-  useXianyuAutoConnect();
 
   useEffect(() => {
     let cancelled = false;
@@ -81,19 +78,13 @@ function AppShellInner() {
 
   return (
     <WorkspaceNavProvider selectTab={selectTab}>
+      <PlatformShellLifecycles />
       <div className="flex h-screen w-full flex-col overflow-hidden bg-shell">
         <TitleBar
           platform={platform}
           isMaximized={isMaximized}
           actions={
             <>
-              <IconButton
-                label="运行日志"
-                title="运行日志"
-                onClick={toggleLogPanel}
-              >
-                <Terminal className="size-3.5" />
-              </IconButton>
               <IconButton
                 label="设置"
                 title="设置"
@@ -120,7 +111,6 @@ function AppShellInner() {
             <WorkspaceOutlet activePath={activePath} />
           </MainPanel>
         </AppLayout>
-        <LogPanel />
       </div>
     </WorkspaceNavProvider>
   );

@@ -12,6 +12,9 @@ import { callRequest } from "./invoke";
 /** 账号状态（与 Rust `AccountStatus` 对齐）。 */
 export type AccountStatus = "active" | "disabled";
 
+/** 账号所属平台。 */
+export type AccountPlatform = "xianyu" | "ali1688";
+
 /** 账号（与 Rust `app::account::XianyuAccount` 对齐的核心字段）。 */
 export interface XianyuAccount {
   id: number;
@@ -24,10 +27,31 @@ export interface XianyuAccount {
   login_id: string;
   login_password: string;
   unb: string;
+  /** 本站业务 Cookie（闲鱼账号为 goofish；1688 账号为 1688 袋）。 */
   cookie: string;
+  /**
+   * 1688 Cookie（兼容旧双站字段；分站登录后可为空）。
+   *
+   * @author Xiaoman
+   * @created 2026-08-22
+   */
+  cookie_1688?: string;
+  /**
+   * 平台：`xianyu` / `ali1688`。
+   *
+   * @author Xiaoman
+   * @created 2026-08-22
+   */
+  platform?: AccountPlatform | string;
   /** qr / password。 */
   login_method: string;
   status: AccountStatus;
+  /**
+   * 备注 — 如「闲鱼已登录」「1688已登录」。
+   *
+   * @author Xiaoman
+   * @created 2026-08-22
+   */
   remark: string;
   pause_duration_minutes: number;
 }
@@ -42,6 +66,13 @@ export interface AccountUpdate {
   login_password?: string;
   /** 更新 Cookie（扫码重登 / 风控后在真实浏览器获取的新 Cookie）。 */
   cookie?: string;
+  /**
+   * 更新 1688 Cookie。
+   *
+   * @author Xiaoman
+   * @created 2026-08-22
+   */
+  cookie_1688?: string;
 }
 
 /** 查询账号列表。 */
@@ -109,24 +140,54 @@ export interface AccountQrCheckResult {
   qr_base64: string | null;
 }
 
-/** 启动业务账号扫码登录。 */
-export function accountQrStart(name?: string): Promise<AccountQrStartResult> {
+/** 启动业务账号扫码登录。
+ *
+ * @author Xiaoman
+ * @created 2026-08-22
+ *
+ * @param name - 可选展示名
+ * @param platform - `xianyu` / `ali1688`
+ */
+export function accountQrStart(
+  name?: string,
+  platform: AccountPlatform = "xianyu",
+): Promise<AccountQrStartResult> {
   return callRequest<AccountQrStartResult>("account_qr_start", {
-    request: { name: name ?? null },
+    request: { name: name ?? null, platform },
   }).then((response) => response.data);
 }
 
-/** 轮询扫码状态（成功后账号已自动创建/更新）。 */
-export function accountQrCheck(sessionId: string): Promise<AccountQrCheckResult> {
+/** 轮询扫码状态（成功后账号已自动创建/更新）。
+ *
+ * @author Xiaoman
+ * @created 2026-08-22
+ *
+ * @param sessionId - 扫码会话 ID
+ * @param platform - 须与 start 一致
+ */
+export function accountQrCheck(
+  sessionId: string,
+  platform: AccountPlatform = "xianyu",
+): Promise<AccountQrCheckResult> {
   return callRequest<AccountQrCheckResult>("account_qr_check", {
-    request: { session_id: sessionId },
+    request: { session_id: sessionId, platform },
   }).then((response) => response.data);
 }
 
-/** 取消业务账号扫码登录。 */
-export function accountQrCancel(sessionId: string): Promise<void> {
+/** 取消业务账号扫码登录。
+ *
+ * @author Xiaoman
+ * @created 2026-08-22
+ *
+ * @param sessionId - 扫码会话 ID
+ * @param platform - 须与 start 一致
+ */
+export function accountQrCancel(
+  sessionId: string,
+  platform: AccountPlatform = "xianyu",
+): Promise<void> {
   return callRequest<void>("account_qr_cancel", {
-    request: { session_id: sessionId },
+    request: { session_id: sessionId, platform },
   }).then(() => undefined);
 }
 

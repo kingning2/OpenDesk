@@ -1,7 +1,7 @@
 /**
  * License 激活面板 React Hook（薄适配层）。
  *
- * 将 [`LicenseActivationService`] 接到表单状态，并用 toast + 锁动画反馈每次操作。
+ * 将 [`LicenseActivationService`] 接到表单状态，并用 toast 反馈每次操作。
  *
  * @author coisini
  * @created 2026-07-16
@@ -10,12 +10,9 @@
 import { useEffect, useState } from "react";
 import { toast } from "@desk/ui";
 import { LicenseActivationService } from "./license-activation-service";
-import type { LicenseLockAnim } from "./license-lock-glyph";
 
-/** 成功裂开动画时长（毫秒），结束后再卸载闸门。 */
-const SUCCESS_ANIM_MS = 900;
-/** 失败加固动画时长（毫秒），结束后回到 idle。 */
-const FAILURE_ANIM_MS = 700;
+/** 成功后再刷新闸门的短暂延迟（毫秒）。 */
+const SUCCESS_DELAY_MS = 900;
 
 /**
  * Hook 返回值：激活表单状态与操作。
@@ -32,16 +29,12 @@ export interface UseLicenseActivateResult {
   setToken: (value: string) => void;
   /** 是否正在激活。 */
   busy: boolean;
-  /** 锁图标动画相位。 */
-  lockAnim: LicenseLockAnim;
   /** 提示/错误消息。 */
   message: string | null;
   /** 复制设备码。 */
   copyMachineCode: () => Promise<void>;
   /** 用 token 激活。 */
   activateWithToken: () => Promise<void>;
-  /** 用 key 文件激活。 */
-  activateWithKeyFile: (file: File) => Promise<void>;
 }
 
 /**
@@ -50,10 +43,10 @@ export interface UseLicenseActivateResult {
  * @author coisini
  * @created 2026-07-16
  *
- * @param ms - 正常动画等待时长
+ * @param ms - 正常等待时长
  * @returns 无
  */
-function waitForAnim(ms: number): Promise<void> {
+function waitForDelay(ms: number): Promise<void> {
   const reduced =
     typeof window !== "undefined" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -78,7 +71,6 @@ export function useLicenseActivate(
   const [machineCode, setMachineCode] = useState("");
   const [token, setToken] = useState("");
   const [busy, setBusy] = useState(false);
-  const [lockAnim, setLockAnim] = useState<LicenseLockAnim>("idle");
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -114,7 +106,6 @@ export function useLicenseActivate(
   ) {
     const pending = "正在校验激活码…";
     setBusy(true);
-    setLockAnim("busy");
     setMessage(pending);
     const toastId = toast.loading(pending);
     const result = await run();
@@ -122,25 +113,17 @@ export function useLicenseActivate(
     setBusy(false);
 
     if (result.ok) {
-      setLockAnim("success");
       toast.success(result.message, { id: toastId });
-      await waitForAnim(SUCCESS_ANIM_MS);
+      await waitForDelay(SUCCESS_DELAY_MS);
       onActivated();
       return;
     }
 
-    setLockAnim("failure");
     toast.error(result.message, { id: toastId });
-    await waitForAnim(FAILURE_ANIM_MS);
-    setLockAnim("idle");
   }
 
   async function activateWithToken() {
     await runActivate(() => service.activateWithToken(token));
-  }
-
-  async function activateWithKeyFile(file: File) {
-    await runActivate(() => service.activateWithKeyFile(file));
   }
 
   return {
@@ -148,10 +131,8 @@ export function useLicenseActivate(
     token,
     setToken,
     busy,
-    lockAnim,
     message,
     copyMachineCode,
     activateWithToken,
-    activateWithKeyFile,
   };
 }

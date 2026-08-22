@@ -73,6 +73,7 @@ export {
   Users,
   X,
   XCircle,
-  ArrowLeft
+  ArrowLeft,
+  Building2
 } from "lucide-react";
 export type { LucideIcon } from "lucide-react";

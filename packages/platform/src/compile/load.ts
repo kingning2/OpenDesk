@@ -38,6 +38,10 @@ export async function loadActivePlatformModule<T>(
       const load = loaders.xianyu;
       return load ? load() : null;
     }
+    case "ali1688": {
+      const load = loaders.ali1688;
+      return load ? load() : null;
+    }
     case "xiaohongshu": {
       const load = loaders.xiaohongshu;
       return load ? load() : null;

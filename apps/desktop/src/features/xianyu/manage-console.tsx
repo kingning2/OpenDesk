@@ -1,7 +1,8 @@
 /**
  * 闲鱼管理子页出口 — 按静态 URL 渲染对应业务页。
  *
- * 导航入口由应用主侧栏（仪表盘 / 账号 / 商品 / 订单）与首页卡片提供，
+ * 导航入口由应用主侧栏（首页 / 账号 / 商品 / 订单）提供；
+ * 风控日志与免责声明在应用设置弹窗中。
  * 本组件不再重复内置二级侧栏。
  *
  * @author Xiaoman
@@ -12,54 +13,33 @@ import { type ComponentType } from "react";
 import { useLocation } from "react-router";
 import { CHANNEL_MANAGE_ROOT, managePath } from "@desk/platform/compile";
 import { XianyuAccountsPage } from "./accounts";
-import { XianyuAboutPage } from "./about";
-import { XianyuBatchPublishPage } from "./batch-publish";
-import { XianyuBlacklistPage } from "./blacklist";
-import { XianyuCardsPage } from "./cards";
 import { XianyuDashboardPage } from "./dashboard";
-import { XianyuDisclaimerPage } from "./disclaimer";
-import { XianyuFeedbackPage } from "./feedback";
 import { XianyuItemsPage } from "./items";
 import { XianyuItemDetailPage } from "./item-detail";
-import { XianyuKeywordsPage } from "./keywords";
-import { XianyuMessageFiltersPage } from "./message-filters";
-import { XianyuMessageLogsPage } from "./message-logs";
-import { XianyuMessageNotificationsPage } from "./message-notifications";
-import { XianyuNotificationChannelsPage } from "./notification-channels";
 import { XianyuOrdersPage } from "./orders";
-import { XianyuPersonalSettingsPage } from "./personal-settings";
-import { XianyuProductMaterialsPage } from "./product-materials";
-import { XianyuProductPublishPage } from "./product-publish";
-import { XianyuPublishAddressesPage } from "./publish-addresses";
-import { XianyuPublishLogsPage } from "./publish-logs";
-import { XianyuRiskLogsPage } from "./risk-logs";
-import { XianyuTutorialPage } from "./tutorial";
 import { isManageView, type ManageView } from "./manage-nav";
 
-/** view → 页面组件映射。 */
-const VIEW_PAGES: Record<ManageView, ComponentType> = {
+/**
+ * 兼容旧路由 `/manage/accounts-1688`：打开账号管理并定位 1688 Tab。
+ * 双站构建时共享 Hub 同时含闲鱼 / 1688 Tab。
+ *
+ * @author Xiaoman
+ * @created 2026-08-22
+ */
+function Accounts1688View() {
+  return <XianyuAccountsPage initialTab="ali1688" />;
+}
+
+/**
+ * view → 页面组件映射。
+ * 1688 子页仅双站构建时注册（编译期裁剪，单站构建无该路由）。
+ */
+const VIEW_PAGES: Partial<Record<ManageView, ComponentType>> = {
   dashboard: XianyuDashboardPage,
   accounts: XianyuAccountsPage,
-  keywords: XianyuKeywordsPage,
+  ...(__DINGDA_HAS_ALI1688__ ? { "accounts-1688": Accounts1688View } : {}),
   items: XianyuItemsPage,
   orders: XianyuOrdersPage,
-  cards: XianyuCardsPage,
-  blacklist: XianyuBlacklistPage,
-  filters: XianyuMessageFiltersPage,
-  channels: XianyuNotificationChannelsPage,
-  notifications: XianyuMessageNotificationsPage,
-  logs: XianyuMessageLogsPage,
-  risk: XianyuRiskLogsPage,
-  materials: XianyuProductMaterialsPage,
-  publish: XianyuProductPublishPage,
-  "batch-publish": XianyuBatchPublishPage,
-  addresses: XianyuPublishAddressesPage,
-  "publish-logs": XianyuPublishLogsPage,
-  settings: XianyuPersonalSettingsPage,
-  tutorial: XianyuTutorialPage,
-  about: XianyuAboutPage,
-  disclaimer: XianyuDisclaimerPage,
-  feedback: XianyuFeedbackPage,
 };
 
 /**
@@ -113,7 +93,7 @@ export function XianyuManageConsole() {
     return <XianyuItemDetailPage itemId={itemId} />;
   }
   const view = viewFromPathname(pathname);
-  const Page = VIEW_PAGES[view];
+  const Page = VIEW_PAGES[view] ?? XianyuDashboardPage;
 
   return <Page />;
 }

@@ -9,15 +9,18 @@
  */
 
 /** 渠道平台 id（与契约 / Rust `ChannelKind` 对齐）。 */
-export type ChannelPlatformId = "xianyu" | "xiaohongshu" | "douyin";
+export type ChannelPlatformId = "xianyu" | "ali1688" | "xiaohongshu" | "douyin";
 
 declare const __DINGDA_CHANNEL_PLATFORM__: ChannelPlatformId;
+declare const __DINGDA_CHANNEL_PLATFORMS__: readonly ChannelPlatformId[];
+declare const __DINGDA_HAS_XIANYU__: boolean;
+declare const __DINGDA_HAS_ALI1688__: boolean;
 declare const __DINGDA_APP_BRAND_TITLE__: string;
 
 /**
  * 标题栏品牌中文名称（编译期常量）。
  *
- * 渠道构建如「叮答（闲鱼）」；聚合构建为「叮答」。
+ * 渠道构建如「叮答（闲鱼）」；聚合 / 多平台构建为「叮答」。
  *
  * @author Xiaoman
  * @created 2026-08-20
@@ -28,21 +31,53 @@ export const APP_BRAND_TITLE: string =
     : "叮答";
 
 /**
- * 当前构建选定的渠道平台 id（编译期常量）。
+ * 当前构建选定的主渠道平台 id（编译期常量）。
  *
- * 由 Vite `define` 注入；未注入时回退 `xianyu`（仅 dev 预览容错）。
+ * 主平台：优先闲鱼；否则取首个启用平台。由 Vite `define` 注入；未注入时回退 `xianyu`（仅 dev 预览容错）。
  */
 export const ACTIVE_CHANNEL_PLATFORM: ChannelPlatformId =
   typeof __DINGDA_CHANNEL_PLATFORM__ !== "undefined"
     ? __DINGDA_CHANNEL_PLATFORM__
     : "xianyu";
 
+/**
+ * 当前构建启用的全部渠道平台 id（编译期常量数组）。
+ *
+ * 由 Vite `define` 注入；未注入时回退 `["xianyu"]`（仅 dev 预览容错）。
+ */
+export const ENABLED_CHANNEL_PLATFORMS: readonly ChannelPlatformId[] =
+  typeof __DINGDA_CHANNEL_PLATFORMS__ !== "undefined"
+    ? __DINGDA_CHANNEL_PLATFORMS__
+    : (["xianyu"] as const);
+
+/** 闲鱼是否编入本次构建。 */
+export const HAS_XIANYU: boolean =
+  typeof __DINGDA_HAS_XIANYU__ !== "undefined" ? __DINGDA_HAS_XIANYU__ : true;
+
+/** 1688 是否编入本次构建。 */
+export const HAS_ALI1688: boolean =
+  typeof __DINGDA_HAS_ALI1688__ !== "undefined" ? __DINGDA_HAS_ALI1688__ : false;
+
 /** 全部已知平台 id。 */
 export const CHANNEL_PLATFORM_IDS: readonly ChannelPlatformId[] = [
   "xianyu",
+  "ali1688",
   "xiaohongshu",
   "douyin",
 ] as const;
+
+/**
+ * 判断给定 id 是否编入本次构建。
+ *
+ * @author Xiaoman
+ * @created 2026-08-22
+ *
+ * @param platformId - 待判断平台 id
+ * @returns 已启用为 `true`
+ */
+export function hasChannelPlatform(platformId: ChannelPlatformId): boolean {
+  return ENABLED_CHANNEL_PLATFORMS.includes(platformId);
+}
 
 /**
  * 读取当前构建选定的渠道平台 id。

@@ -120,15 +120,6 @@ function enqueueWrite<T>(task: () => Promise<T>): Promise<T> {
 }
 
 /**
- * 内存中的自动连接配置（需先 {@link loadAutoConnectConfig}）。
- *
- * @returns 缓存快照
- */
-export function getCachedAutoConnectConfig(): AutoConnectConfig {
-  return { enabled: cached.enabled, accountIds: [...cached.accountIds] };
-}
-
-/**
  * 写入总开关到业务库。
  *
  * @param enabled - 是否开启

@@ -8,7 +8,7 @@
  * - 网络 / IPC 错误：toast + 日志；网络错误额外标记后端不可用；代码错误：仅日志
  *
  * 模块级 `installed` 守卫保证 StrictMode 下只安装一次，且不随组件卸载拆除
- * （全局单例，语义同 `installConsoleBridge`）。
+ * （全局单例）。
  *
  * @author Xiaoman
  * @created 2026-08-18

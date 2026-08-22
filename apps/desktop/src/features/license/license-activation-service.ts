@@ -3,8 +3,7 @@
  *
  * 负责：
  * - 加载并复制设备码
- * - Token / `.key` 激活
- * - 文件字节转 Base64
+ * - Token 激活
  *
  * @author coisini
  * @created 2026-07-16
@@ -112,39 +111,6 @@ export class LicenseActivationService {
     return this.runActivation(() =>
       licenseActivate({ token: token.trim() }),
     );
-  }
-
-  /**
-   * 使用 `.key` 文件激活。
-   *
-   * @author coisini
-   * @created 2026-07-16
-   *
-   * @param file - 用户选择的 key 文件
-   * @returns 激活结果
-   */
-  public async activateWithKeyFile(file: File): Promise<LicenseActivationResult> {
-    const keyBytesBase64 = await this.encodeFileToBase64(file);
-    return this.runActivation(() => licenseActivate({ keyBytesBase64 }));
-  }
-
-  /**
-   * 将文件内容编码为标准 Base64。
-   *
-   * @author coisini
-   * @created 2026-07-16
-   *
-   * @param file - 输入文件
-   * @returns Base64 字符串
-   */
-  public async encodeFileToBase64(file: File): Promise<string> {
-    const buffer = await file.arrayBuffer();
-    const bytes = new Uint8Array(buffer);
-    let binary = "";
-    for (const byte of bytes) {
-      binary += String.fromCharCode(byte);
-    }
-    return btoa(binary);
   }
 
   /**

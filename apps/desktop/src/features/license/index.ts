@@ -7,7 +7,6 @@
 
 export { LicenseGateProvider, useLicenseGateContext } from "./license-gate-context";
 export { LicenseActivationPanel } from "./license-activation-panel";
-export { isLicensed } from "./is-licensed";
 export { LicensePlanBadge } from "./license-plan-badge";
 export { LicensePlanDialog } from "./license-plan-dialog";
 export type { LicensePlanDialogProps } from "./license-plan-dialog";
@@ -18,12 +17,6 @@ export {
   formatLicenseExpiresAt,
 } from "./format-license-remaining";
 export type { LicenseRemainingLabel } from "./format-license-remaining";
-export { LicenseLockOverlay } from "./license-lock-overlay";
-export type { LicenseLockOverlayProps } from "./license-lock-overlay";
-export { LicenseLockHero } from "./license-lock-hero";
-export type { LicenseLockHeroProps } from "./license-lock-hero";
-export { LicenseLockGlyph } from "./license-lock-glyph";
-export type { LicenseLockAnim, LicenseLockGlyphProps } from "./license-lock-glyph";
 export { useLicenseGate } from "./use-license-gate";
 export type { UseLicenseGateResult } from "./use-license-gate";
 export { useLicenseActivate } from "./use-license-activate";

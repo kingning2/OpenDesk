@@ -13,9 +13,7 @@ import { call } from "./invoke";
 export interface DashboardStats {
   total_accounts: number;
   active_accounts: number;
-  total_keywords: number;
   total_items: number;
-  total_cards: number;
   total_orders: number;
   pending_ship_orders: number;
 }

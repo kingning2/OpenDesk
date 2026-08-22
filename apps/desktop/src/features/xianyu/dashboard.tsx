@@ -1,12 +1,12 @@
 /**
  * 闲鱼仪表盘页（迁移自原前端 `pages/dashboard/Dashboard.tsx`）。
  *
- * 按原前端核心交互重写：统计卡片区（账号/关键词/商品/卡券/订单/待发货）。
+ * 按原前端核心交互重写：统计卡片区（账号/商品/订单/待发货）。
  * 数据访问走 Tauri IPC（`@desk/platform/ipc/dashboard`），复用壳层聚合统计。
  */
 
 import { useEffect, useState } from "react";
-import { Activity, MessageSquare, Package, ShoppingCart, Ticket, Users } from "@desk/ui/icons";
+import { Activity, Package, ShoppingCart, Users } from "@desk/ui/icons";
 import { Loading, PageScaffold } from "@desk/ui";
 import { dashboardStats, type DashboardStats } from "@desk/platform/ipc/dashboard";
 
@@ -22,9 +22,7 @@ interface StatCardDef {
 const STAT_CARDS: StatCardDef[] = [
   { key: "total_accounts", icon: Users, label: "总账号数", color: "text-blue-500" },
   { key: "active_accounts", icon: Activity, label: "启用账号", color: "text-amber-500" },
-  { key: "total_keywords", icon: MessageSquare, label: "关键词数", color: "text-emerald-500" },
   { key: "total_items", icon: Package, label: "商品数", color: "text-violet-500" },
-  { key: "total_cards", icon: Ticket, label: "卡券数", color: "text-cyan-500" },
   { key: "total_orders", icon: ShoppingCart, label: "总订单", color: "text-blue-500" },
   { key: "pending_ship_orders", icon: ShoppingCart, label: "待发货", color: "text-amber-500" },
 ];
