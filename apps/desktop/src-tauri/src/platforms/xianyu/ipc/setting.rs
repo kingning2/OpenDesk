@@ -2,8 +2,8 @@
 
 use crate::platforms::xianyu::persist::InMemoryUserSettingStore;
 use crate::shared::ipc::IpcResponse;
-use business::setting::UserSettingService;
 use common;
+use platform::domain::setting::UserSettingService;
 use serde::Deserialize;
 use std::sync::Arc;
 use tauri::State;

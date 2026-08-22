@@ -1,15 +1,15 @@
 //! 闲鱼监控任务执行引擎。
 
-use business::monitor::{
-    MonitorResult, MonitorRun, MonitorRunStore, MonitorService, MonitorTask, MonitorTaskStore,
-};
 use chrono::Utc;
 use common::events::{
     emit, AppEvent, MonitorMatchEvent, MonitorProgressEvent, MonitorProgressStage,
     MonitorProgressSummary,
 };
 use common::DingDaResult;
-use platform::xianyu::{
+use platform::domain::monitor::{
+    MonitorResult, MonitorRun, MonitorRunStore, MonitorService, MonitorTask, MonitorTaskStore,
+};
+use platform::shared::{
     InMemoryAccountStore, InMemoryMonitorResultStore, InMemoryMonitorRunStore,
     InMemoryMonitorTaskStore,
 };

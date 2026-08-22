@@ -11,7 +11,7 @@ use std::process::Command;
 use std::sync::{Arc, OnceLock};
 use std::time::Duration;
 
-use platform::dispatcher::ChannelDispatcher;
+use platform::protocol::dispatcher::ChannelDispatcher;
 use platform::protocol::ChannelAccount;
 use platform::xianyu::dev_tunnel::{
     read_msg, write_msg, TunnelMsg, TunnelSession, DEV_TUNNEL_ADDR,

@@ -1,11 +1,11 @@
 //! 闲鱼 Sidecar 搜索封装 — 监控与手动搜索共用。
 
-use business::account::AccountService;
 use common::contracts::ChannelSidecarSearchRequest;
 use common::DingDaResult;
-use platform::ali1688::resolve_account_platform;
-use platform::xianyu::cookies::parse_credential;
-use platform::xianyu::stores::InMemoryAccountStore;
+use platform::domain::account::AccountService;
+use platform::shared::cookies::parse_credential;
+use platform::shared::resolve_account_platform;
+use platform::shared::stores::InMemoryAccountStore;
 use serde_json::Value;
 
 use crate::shared::state::AppState;

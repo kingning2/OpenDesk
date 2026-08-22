@@ -10,7 +10,7 @@
 use crate::platforms::core::account::AccountHandle;
 use crate::platforms::core::account_qr::AccountQrHandle;
 use common::DingDaResult;
-use platform::xianyu::{InMemoryAccountStore, SqliteBusinessDb};
+use platform::shared::{InMemoryAccountStore, SqliteBusinessDb};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
 use tauri::Manager;

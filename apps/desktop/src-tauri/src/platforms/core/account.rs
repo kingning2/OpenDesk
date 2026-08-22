@@ -1,17 +1,17 @@
 //! 账号管理 Tauri commands — 多账号 CRUD + 状态切换。
 //!
-//! 壳层组合：`InMemoryAccountStore` → `business::account::AccountService`（校验 + 编排）。
+//! 壳层组合：`InMemoryAccountStore` → `platform::domain::account::AccountService`（校验 + 编排）。
 
 use crate::shared::ipc::IpcResponse;
 use crate::shared::state::AppState;
-use business::account::{
-    AccountService, AccountStatus, AccountStore, AccountUpdate, XianyuAccount,
-};
 use common;
 use common::contracts::ChannelSidecarLoginProbeRequest;
-use platform::ali1688::resolve_account_platform;
-use platform::xianyu::cookies::parse_credential;
-use platform::xianyu::stores::InMemoryAccountStore;
+use platform::domain::account::{
+    AccountService, AccountStatus, AccountStore, AccountUpdate, XianyuAccount,
+};
+use platform::shared::cookies::parse_credential;
+use platform::shared::resolve_account_platform;
+use platform::shared::stores::InMemoryAccountStore;
 use serde::Deserialize;
 use std::sync::Arc;
 use tauri::State;
@@ -163,8 +163,7 @@ pub async fn account_probe_login(
                 trace_id: Some(format!("ali1688-login-probe-{}", request.account_id)),
             };
             let sidecar = app_state.lifecycle.client();
-            match runtime::sidecar::routes::channel_login_probe::call(sidecar, sidecar_request)
-                .await
+            match infra::sidecar::routes::channel_login_probe::call(sidecar, sidecar_request).await
             {
                 Ok(response) => {
                     tracing::info!(

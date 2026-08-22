@@ -4,10 +4,10 @@
 //! 创建时间：2026-08-22
 
 use crate::shared::ipc::IpcResponse;
-use business::account::AccountService;
 use common::contracts::ChannelSidecarSearchRequest;
-use platform::ali1688::resolve_account_platform;
-use platform::xianyu::cookies::parse_credential;
+use platform::domain::account::AccountService;
+use platform::shared::cookies::parse_credential;
+use platform::shared::resolve_account_platform;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tauri::State;

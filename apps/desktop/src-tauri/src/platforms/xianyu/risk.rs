@@ -10,9 +10,9 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use business::risk::RiskService;
 use common::events::{emit, AppEvent, ChannelStatusEvent, EventSink};
-use platform::xianyu::stores::InMemoryRiskStore;
+use platform::domain::risk::RiskService;
+use platform::shared::stores::InMemoryRiskStore;
 
 use crate::shared::channel::risk_handler::RiskHandler;
 

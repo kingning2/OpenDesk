@@ -7,8 +7,8 @@
 //! 作者：Xiaoman
 //! 创建时间：2026-08-18
 
-pub use platform::dispatcher;
 pub use platform::protocol;
+pub use platform::protocol::dispatcher;
 
 // 从 business re-export，保持 coordinator 路径不变
 pub use business::channel::{conversation_id_for, inbound_to_message, ChannelRepo};

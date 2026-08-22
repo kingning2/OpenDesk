@@ -3,14 +3,14 @@
 //! 作者：coisini
 //! 创建时间：2026-07-16
 
-use adapter::agent_sidecar::RuntimeAgentSidecar;
+use infra::agent_sidecar::RuntimeAgentSidecar;
+use infra::event::InMemoryEventBus;
 #[cfg(not(feature = "license-lock"))]
-use adapter::license::UnlockedLicenseGate;
+use infra::license::UnlockedLicenseGate;
 #[cfg(feature = "license-lock")]
-use adapter::license::{FailClosedLicenseGate, VerifierProcessLicense};
-use kernel::event::InMemoryEventBus;
+use infra::license::{FailClosedLicenseGate, VerifierProcessLicense};
+use infra::sidecar::lifecycle::SidecarLifecycle;
 use ports::license::LicenseGate;
-use runtime::sidecar::lifecycle::SidecarLifecycle;
 use std::sync::Arc;
 
 /// 桌面应用共享状态。

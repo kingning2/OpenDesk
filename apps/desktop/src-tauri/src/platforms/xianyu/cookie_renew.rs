@@ -10,14 +10,14 @@ use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use business::account::{AccountService, AccountStore, AccountUpdate};
-use business::risk::RiskService;
 use common::contracts::ChannelSidecarCookieRenewRequest;
 use common::events::{emit, AppEvent, ChannelStatusEvent, EventSink};
-use platform::xianyu::cookies::parse_credential;
+use infra::sidecar::lifecycle::SidecarLifecycle;
+use platform::domain::account::{AccountService, AccountStore, AccountUpdate};
+use platform::domain::risk::RiskService;
+use platform::shared::cookies::parse_credential;
+use platform::shared::stores::InMemoryRiskStore;
 use platform::xianyu::extract_punish_url;
-use platform::xianyu::stores::InMemoryRiskStore;
-use runtime::sidecar::lifecycle::SidecarLifecycle;
 
 use crate::platforms::xianyu::ipc::account_connection::to_channel_account;
 use crate::shared::channel::dispatcher::ChannelDispatcher;
@@ -359,7 +359,7 @@ impl RiskCookieRenewer {
             trace_id: Some(format!("renew-{account_id}")),
         };
         let response =
-            runtime::sidecar::routes::channel_cookie_renew::call(self.sidecar.client(), request)
+            infra::sidecar::routes::channel_cookie_renew::call(self.sidecar.client(), request)
                 .await
                 .map_err(|error| error.to_string())?;
 

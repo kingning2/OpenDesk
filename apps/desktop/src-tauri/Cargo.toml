@@ -27,7 +27,7 @@ serde_json = { workspace = true }
 tauri-build = { workspace = true }
 
 [dependencies]
-adapter = { path = "../../../crates/adapter" }
+infra = { path = "../../../crates/infra" }
 business = { path = "../../../business" }
 agent = { path = "../../../crates/agent" }
 async-trait = { workspace = true }
@@ -36,7 +36,6 @@ base64 = "0.22"
 chrono = { workspace = true }
 diesel = { workspace = true }
 futures-util = { workspace = true }
-kernel = { path = "../../../crates/kernel" }
 md-5 = { workspace = true }
 macros = { path = "../../../crates/macros" }
 platform = { path = "../../../crates/platform", default-features = false }
@@ -44,10 +43,8 @@ ports = { path = "../../../crates/ports" }
 rand = { workspace = true }
 reqwest = { workspace = true }
 rmpv = { workspace = true }
-runtime = { path = "../../../crates/runtime" }
 serde = { workspace = true }
 serde_json = { workspace = true }
-storage = { path = "../../../crates/storage" }
 tauri = { workspace = true }
 tauri-plugin-opener = { workspace = true }
 thiserror = { workspace = true }

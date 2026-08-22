@@ -1,6 +1,6 @@
 //! 闲鱼监控 AI — 关键词生成与商品决策（Rust LLM + 余额不足自动切换）。
 
-use agent::llm::{
+use agent::{
     normalize_provider_type, provider_from_settings, ChatMessage, ChatRequest, ProviderSettings,
 };
 use common::contracts::{AiAccount, AiIpcConfigResponse, AiProvider};

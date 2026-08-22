@@ -8,8 +8,8 @@ use crate::platforms::xianyu::persist::InMemoryAccountStore;
 use crate::shared::channel::dispatcher::ChannelDispatcher;
 use crate::shared::ipc::IpcResponse;
 use crate::shared::state::AppState;
-use business::account::{AccountService, AccountStore, AccountUpdate};
 use common::contracts::ChannelAccount;
+use platform::domain::account::{AccountService, AccountStore, AccountUpdate};
 use platform::xianyu::fetch_user_profile;
 use serde::Deserialize;
 use std::sync::Arc;
@@ -25,7 +25,7 @@ pub struct AccountConnectRequest {
 /// 由业务账号构造渠道账号（credential = cookie 字符串）。
 pub fn to_channel_account(
     _owner_id: i64,
-    account: &business::account::XianyuAccount,
+    account: &platform::domain::account::XianyuAccount,
 ) -> ChannelAccount {
     ChannelAccount {
         id: account.account_id.clone(),

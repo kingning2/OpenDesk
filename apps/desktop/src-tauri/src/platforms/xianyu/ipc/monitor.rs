@@ -1,9 +1,11 @@
 //! 闲鱼监控 IPC — 任务 CRUD、手动运行、AI 生成关键词、结果列表。
 
-use business::monitor::{MonitorResult, MonitorRun, MonitorService, MonitorStats, MonitorTask};
 use chrono::Utc;
 use common::DingDaResult;
-use platform::xianyu::{
+use platform::domain::monitor::{
+    MonitorResult, MonitorRun, MonitorService, MonitorStats, MonitorTask,
+};
+use platform::shared::{
     InMemoryMonitorResultStore, InMemoryMonitorRunStore, InMemoryMonitorTaskStore,
 };
 use serde::{Deserialize, Serialize};

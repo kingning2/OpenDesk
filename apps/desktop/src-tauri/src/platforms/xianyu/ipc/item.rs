@@ -6,9 +6,9 @@
 use crate::platforms::core::account::AccountHandle;
 use crate::platforms::xianyu::persist::InMemoryItemStore;
 use crate::shared::ipc::IpcResponse;
-use business::account::{AccountService, AccountStore, AccountUpdate, XianyuAccount};
-use business::item::{Item, ItemQuery, ItemService};
 use common;
+use platform::domain::account::{AccountService, AccountStore, AccountUpdate, XianyuAccount};
+use platform::domain::item::{Item, ItemQuery, ItemService};
 use platform::xianyu::{fetch_item_detail, fetch_seller_items, PlatformItemDetail};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -169,13 +169,13 @@ pub async fn item_sync(
     let mut updated = 0u32;
 
     for account in targets {
-        let cookie_header = platform::xianyu::cookies::credential_to_cookie_header(&account.cookie);
+        let cookie_header = platform::shared::cookies::credential_to_cookie_header(&account.cookie);
         let user_id = {
             let from_account = account.extract_unb();
             if !from_account.is_empty() {
                 from_account
             } else {
-                platform::xianyu::cookies::my_id(&platform::xianyu::cookies::parse_credential(
+                platform::shared::cookies::my_id(&platform::shared::cookies::parse_credential(
                     &cookie_header,
                 ))
                 .unwrap_or_default()
@@ -307,7 +307,7 @@ pub async fn item_detail_fetch(
     }
 
     let (detail, updated_cookie) = fetch_item_detail(
-        &platform::xianyu::cookies::credential_to_cookie_header(&account.cookie),
+        &platform::shared::cookies::credential_to_cookie_header(&account.cookie),
         &request.item_id,
     )
     .await

@@ -1,4 +1,4 @@
-//! 应用级生命周期（与 `runtime::sidecar::lifecycle` 无关）。
+//! 应用级生命周期（与 `infra::sidecar::lifecycle` 无关）。
 //!
 //! 打开本目录即可对照前端 `apps/desktop/src/lifecycle/`（仅生命周期钩子）：
 //!

@@ -15,8 +15,8 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use futures_util::{SinkExt, StreamExt};
+use platform::shared::cookies::{self, cookies_to_string, parse_credential};
 use platform::xianyu::api::XianyuApi;
-use platform::xianyu::cookies::{self, cookies_to_string, parse_credential};
 use platform::xianyu::dev_tunnel::{
     read_msg, write_msg, TunnelMsg, TunnelSession, DEV_TUNNEL_ADDR,
 };

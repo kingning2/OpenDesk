@@ -1,7 +1,7 @@
 //! ???? Tauri commands ? ??????????????????
 
 use common::DingDaResult;
-use platform::registry::PlatformRegistry;
+use platform::protocol::registry::PlatformRegistry;
 use serde::Serialize;
 
 use crate::shared::ipc::IpcResponse;

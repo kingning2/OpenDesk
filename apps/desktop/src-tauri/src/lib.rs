@@ -21,9 +21,9 @@ mod shared;
 // `#[timed]` 展开为 `crate::timing`；命令层历史路径 `crate::agent` / `crate::state` 等亦走此 re-export。
 pub use shared::{config, logging, state, timing};
 
-use adapter::agent_sidecar::RuntimeAgentSidecar;
-use kernel::event::{EventBus, InMemoryEventBus};
-use runtime::sidecar::lifecycle::{
+use infra::agent_sidecar::RuntimeAgentSidecar;
+use infra::event::{EventBus, InMemoryEventBus};
+use infra::sidecar::lifecycle::{
     SidecarConfig, SidecarLifecycle, RUNTIME_ERROR_TOPIC, SIDECAR_RESTARTED_TOPIC,
 };
 use shared::channel::coordinator::ChannelCoordinator;

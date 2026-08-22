@@ -3,7 +3,7 @@
 //! 实现 [`InboundListener`]，在协议层与业务层之间编排：
 //! 入站消息 → 去重/持久化 → 事件推送。
 //!
-//! 平台无关：不引用 `platform::xianyu`；风控交给 [`super::risk_handler::RiskHandler`]。
+//! 平台无关：不引用 `platform_xianyu`；风控交给 [`super::risk_handler::RiskHandler`]。
 //!
 //! 作者：Xiaoman
 //! 创建时间：2026-08-18

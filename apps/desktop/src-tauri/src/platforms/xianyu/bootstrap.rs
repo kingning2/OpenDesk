@@ -15,16 +15,17 @@ use crate::platforms::core::account_qr::{AccountQrHandle, PostQrLoginHook};
 use crate::platforms::xianyu::ipc;
 use crate::shared::channel::coordinator::ChannelCoordinator;
 use crate::shared::channel::risk_handler::RiskHandler;
-use business::account::AccountStore;
 use common::events::EventSink;
 use common::DingDaResult;
-use platform::dispatcher::ChannelDispatcher;
+use platform::domain::account::AccountStore;
+use platform::protocol::dispatcher::ChannelDispatcher;
 use platform::protocol::{ChannelKind, ChannelProtocol};
-use platform::xianyu::{
+use platform::shared::{
     InMemoryAccountStore, InMemoryItemStore, InMemoryMonitorResultStore, InMemoryMonitorRunStore,
     InMemoryMonitorTaskStore, InMemoryOrderStore, InMemoryRiskStore, InMemoryUserSettingStore,
-    SqliteBusinessDb, XianyuChannel,
+    SqliteBusinessDb,
 };
+use platform::xianyu::XianyuChannel;
 use std::sync::Arc;
 use tauri::Manager;
 

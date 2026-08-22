@@ -1,7 +1,7 @@
 //! 闲鱼专属渠道 IPC — 消息历史 / 商品卡 / 渠道扫码登录。
 //!
 //! 通用渠道命令（状态 / 连接 / 发送）留在 `shared::ipc::channel`；
-//! 本模块收纳依赖 `platform::xianyu` 的闲鱼专属命令：
+//! 本模块收纳依赖 `platform_xianyu` 的闲鱼专属命令：
 //! 历史拉取（`cookies::my_id` 判断方向）、商品卡 `headinfo`、渠道扫码（硬编码 `xianyu`）。
 //!
 //! 作者：Xiaoman
@@ -67,8 +67,8 @@ pub async fn channel_fetch_history(
         .into_iter()
         .find(|account| account.id == conversation.account_id)
         .and_then(|account| {
-            let cookie_list = platform::xianyu::cookies::parse_credential(&account.credential);
-            platform::xianyu::cookies::my_id(&cookie_list)
+            let cookie_list = platform::shared::cookies::parse_credential(&account.credential);
+            platform::shared::cookies::my_id(&cookie_list)
         });
 
     let cid = conversation
@@ -150,8 +150,8 @@ pub async fn channel_product_headinfo(
         .into_iter()
         .find(|account| account.id == conversation.account_id)
         .ok_or_else(|| DingDaError::not_found("account", &conversation.account_id))?;
-    let cookie_str = platform::xianyu::cookies::cookies_to_string(
-        &platform::xianyu::cookies::parse_credential(&account.credential),
+    let cookie_str = platform::shared::cookies::cookies_to_string(
+        &platform::shared::cookies::parse_credential(&account.credential),
     );
     let item_id = conversation.item_id.unwrap_or_default();
     let session_id = conversation
@@ -197,7 +197,7 @@ pub async fn channel_qr_start(
         platform: Some("xianyu".to_string()),
     };
     let sidecar = state.lifecycle.client();
-    let response = runtime::sidecar::routes::channel_qr_start::call(sidecar, sidecar_request)
+    let response = infra::sidecar::routes::channel_qr_start::call(sidecar, sidecar_request)
         .await
         .map_err(|error| error.to_string())?;
 
@@ -251,7 +251,7 @@ pub async fn channel_qr_check(
         platform: Some("xianyu".to_string()),
     };
     let sidecar = state.lifecycle.client();
-    let response = runtime::sidecar::routes::channel_qr_check::call(sidecar, sidecar_request)
+    let response = infra::sidecar::routes::channel_qr_check::call(sidecar, sidecar_request)
         .await
         .map_err(|error| error.to_string())?;
 
@@ -321,7 +321,7 @@ pub async fn channel_qr_cancel(
         platform: Some("xianyu".to_string()),
     };
     let sidecar = state.lifecycle.client();
-    let response = runtime::sidecar::routes::channel_qr_cancel::call(sidecar, sidecar_request)
+    let response = infra::sidecar::routes::channel_qr_cancel::call(sidecar, sidecar_request)
         .await
         .map_err(|error| error.to_string())?;
 

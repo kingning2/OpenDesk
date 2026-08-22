@@ -10,14 +10,16 @@
 use crate::shared::channel::dispatcher::ChannelDispatcher;
 use crate::shared::ipc::IpcResponse;
 use crate::shared::state::AppState;
-use business::account::{AccountService, AccountStore, AccountUpdate, LoginMethod, XianyuAccount};
 use common::contracts::{
     ChannelIpcQrCancelResponse, ChannelIpcQrCheckResponse, ChannelIpcQrStartResponse,
     ChannelSidecarQrCancelRequest, ChannelSidecarQrCheckRequest, ChannelSidecarQrStartRequest,
 };
-use platform::core::account::normalize_account_platform;
-use platform::core::account_qr::account_from_cookies;
-use platform::xianyu::stores::InMemoryAccountStore;
+use platform::domain::account::{
+    AccountService, AccountStore, AccountUpdate, LoginMethod, XianyuAccount,
+};
+use platform::shared::account::normalize_account_platform;
+use platform::shared::account_qr::account_from_cookies;
+use platform::shared::stores::InMemoryAccountStore;
 use serde::Deserialize;
 use std::future::Future;
 use std::pin::Pin;
@@ -108,7 +110,7 @@ pub async fn account_qr_start(
         platform: Some(platform.to_string()),
     };
     let sidecar = state.lifecycle.client();
-    let response = runtime::sidecar::routes::channel_qr_start::call(sidecar, sidecar_request)
+    let response = infra::sidecar::routes::channel_qr_start::call(sidecar, sidecar_request)
         .await
         .map_err(common::DingDaError::wrap)?;
 
@@ -145,7 +147,7 @@ pub async fn account_qr_check(
         platform: Some(platform.to_string()),
     };
     let sidecar = state.lifecycle.client();
-    let response = runtime::sidecar::routes::channel_qr_check::call(sidecar, sidecar_request)
+    let response = infra::sidecar::routes::channel_qr_check::call(sidecar, sidecar_request)
         .await
         .map_err(common::DingDaError::wrap)?;
 
@@ -233,7 +235,7 @@ pub async fn account_qr_cancel(
         platform: Some(platform.to_string()),
     };
     let sidecar = state.lifecycle.client();
-    let response = runtime::sidecar::routes::channel_qr_cancel::call(sidecar, sidecar_request)
+    let response = infra::sidecar::routes::channel_qr_cancel::call(sidecar, sidecar_request)
         .await
         .map_err(common::DingDaError::wrap)?;
 
