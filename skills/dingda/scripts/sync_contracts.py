@@ -13,7 +13,7 @@ from pathlib import Path
 from _common import CONTRACTS, ROOT, delete_if_exists, setup_logging, write_text_if_changed
 
 TS_OUT = ROOT / "packages" / "contracts" / "src" / "generated"
-PY_OUT = ROOT / "python" / "packages" / "contracts" / "src" / "contracts" / "generated"
+PY_OUT = ROOT / "python" / "contracts" / "generated"
 RS_OUT = ROOT / "crates" / "common" / "src" / "contracts"
 
 TYPE_MAP_TS = {

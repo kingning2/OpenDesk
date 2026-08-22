@@ -18,15 +18,15 @@ Python 是 **例外 Sidecar**，不是 AI Runtime、不是业务核心。
 ## 目录结构
 
 ```
-python/
-├── sidecar/           # 进程入口（Rust 托管生命周期）
-└── packages/
-    ├── contracts/     # codegen 类型
-    ├── gateway/       # 请求路由（现有 ping 骨架）
-    └── shared/        # 共享工具
+python/                 # 单一项目（无 uv workspace 多包）
+├── pyproject.toml      # dingda-sidecar
+├── sidecar/            # 进程入口（Rust 托管生命周期）
+├── gateway/            # 浏览器例外（续期 / 扫码 / 滑块）
+├── shared/             # 共享工具
+└── contracts/          # codegen 类型
 ```
 
-新增 `python/packages/<name>` 前必须有 Change Record 说明为何 Rust 不够。不要为 LLM / RAG / Agent 预建空包。
+根 `pyproject.toml` 通过 path 依赖安装本项目。新增模块前必须有 Change Record 说明为何 Rust 不够。不要为 LLM / RAG / Agent 预建空包。
 
 ## Sidecar 管理面
 

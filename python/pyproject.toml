@@ -1,0 +1,26 @@
+[project]
+name = "dingda-sidecar"
+version = "0.1.0"
+description = "DingDa Python sidecar（浏览器例外能力）"
+requires-python = ">=3.13"
+dependencies = [
+  "playwright>=1.40",
+  "playwright-stealth>=2.0.3",
+  "camoufox>=0.4.11",
+]
+
+[dependency-groups]
+dev = [
+  "pyinstaller>=6.13",
+]
+
+[project.scripts]
+dingda-sidecar = "sidecar.main:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["gateway*", "shared*", "contracts*", "sidecar*"]

@@ -6,8 +6,10 @@
 - 用 CDP 真实鼠标事件（带 deltaX/deltaY）拖动，修复 movementX=0 机器人特征；
 - 以 x5sec Cookie 或弹窗消失判定成功，失败时清 risk cookies 重试。
 
-参考 XianYuPilo sliderSolver.ts：三种轨迹方案按 attempt % 3 轮换，对抗
-Baxia FireyeJS 的 ML 轨迹检测；默认轨迹为最小急动度剖面（Hogan 1984）。
+参考 XianYuPilo sliderSolver.ts：三种轨迹方案按尝试轮换，对抗
+Baxia FireyeJS 的 ML 轨迹检测；默认优先最小急动度剖面（Hogan 1984）。
+Camoufox 路径关闭包内 humanize，由本模块控制拖动节奏，避免逐步 mouse.move
+被拉到秒级。
 
 作者：Xiaoman
 创建时间：2026-08-20
@@ -69,6 +71,15 @@ RISK_COOKIE_NAMES = (
 )
 
 STRATEGY_NAMES = {0: "最小急动度物理拖动", 1: "容器内拖动", 2: "超出容器拖动"}
+
+
+def _strategy_for_attempt(attempt: int) -> int:
+    """按尝试序号选择轨迹：优先物理拖动（Camoufox 上已验证更快更稳）。
+
+    @param attempt 1-based 尝试次数
+    @returns 0=物理 / 1=容器内 / 2=超出容器
+    """
+    return (attempt - 1) % 3
 
 
 def has_x5sec(cookies: list[dict[str, Any]]) -> bool:
@@ -287,13 +298,29 @@ async def _create_drag_mouse(
     page: Any,
     start_x: float,
     start_y: float,
+    *,
+    prefer_page_mouse: bool = False,
 ) -> CdpMouse | PageMouseFallback:
-    """创建拖动鼠标：优先 CDP（带 deltaX/deltaY），失败回退 page.mouse。"""
+    """创建拖动鼠标：Chromium 优先 CDP（带 delta）；Camoufox/Firefox 用 page.mouse。"""
+    if prefer_page_mouse or _is_firefox_page(page):
+        logger.info("滑块使用 page.mouse（Firefox/Camoufox）")
+        return PageMouseFallback(page)
     try:
-        client = await page.context().new_cdp_session(page)
+        client = await page.context.new_cdp_session(page)
         return CdpMouse(client, start_x, start_y)
     except Exception:  # noqa: BLE001
         return PageMouseFallback(page)
+
+
+def _is_firefox_page(page: Any) -> bool:
+    """当前页是否为 Firefox / Camoufox（无 CDP Input 路径）。"""
+    with contextlib.suppress(Exception):
+        browser = page.context.browser
+        if browser is not None and getattr(browser, "browser_type", None) is not None:
+            name = (browser.browser_type.name or "").lower()
+            if name in {"firefox", "camoufox"}:
+                return True
+    return False
 
 
 async def _human_like_drag(
@@ -306,19 +333,14 @@ async def _human_like_drag(
 ) -> None:
     """容器内拟人拖动：不对称三阶段速度 + 中间停顿 + 终点过冲回退。
 
-    每次重试使用不同步数/延迟档位，避免同页连续失败累积惩罚态。
+    总时长压在约 0.8–1.4s（与物理轨迹同量级）。勿对单步使用大 ``steps``：
+    Camoufox humanize / Playwright 插值会把每步拖成秒级。
     """
-    if attempt <= 1:
-        steps, delay_min, delay_max, pauses = 50, 30, 70, 1
-    elif attempt == 2:
-        steps, delay_min, delay_max, pauses = 55, 40, 80, 1
-    elif attempt == 3:
-        steps, delay_min, delay_max, pauses = 45, 25, 60, 0
-    else:
-        steps = 40 + random.randint(0, 19)
-        delay_min = 30 + random.randint(0, 29)
-        delay_max = delay_min + 30 + random.randint(0, 39)
-        pauses = 0
+    del attempt  # 保留签名兼容；时长用随机档而非 attempt 放大
+    total_ms = random.uniform(800, 1400)
+    steps = random.randint(45, 70)
+    avg_delay = total_ms / steps
+    pauses = 1 if random.random() < 0.5 else 0
 
     actual_x = start_x + random.uniform(-4, 4)
     actual_y = start_y + random.uniform(-3, 3)
@@ -337,21 +359,20 @@ async def _human_like_drag(
         arc_offset = arc_dir * arc_amp * math.sin(math.pi * progress)
         current_y = last_y * 0.6 + (actual_y + arc_offset + random.uniform(-3, 3)) * 0.4
         last_y = current_y
-        await mouse.move(target_x, current_y, 3)
-        delay = delay_min + (delay_max - delay_min) * random.random()
-        await page.wait_for_timeout(max(1, int(delay)))
+        await mouse.move(target_x, current_y, 1)
+        await page.wait_for_timeout(max(1, int(avg_delay + random.uniform(-2.5, 2.5))))
         last_x = target_x
         if pauses and progress >= pause_point:
             pauses -= 1
             pause_point = random.uniform(0.3, 0.7)
-            await page.wait_for_timeout(300)
+            await page.wait_for_timeout(int(random.uniform(80, 160)))
 
-    await page.wait_for_timeout(int(random.uniform(30, 100)))
+    await page.wait_for_timeout(int(random.uniform(30, 80)))
     overshoot = random.uniform(5, 13)
-    await mouse.move(actual_x + distance + overshoot, actual_y + random.uniform(-5, 5), 4)
-    await page.wait_for_timeout(int(random.uniform(50, 130)))
-    await mouse.move(actual_x + distance, actual_y + random.uniform(-3, 3), 4)
-    await page.wait_for_timeout(int(random.uniform(50, 120)))
+    await mouse.move(actual_x + distance + overshoot, actual_y + random.uniform(-5, 5), 1)
+    await page.wait_for_timeout(int(random.uniform(40, 90)))
+    await mouse.move(actual_x + distance, actual_y + random.uniform(-3, 3), 1)
+    await page.wait_for_timeout(int(random.uniform(40, 90)))
     await mouse.up(actual_x + distance, last_y)
 
 
@@ -366,18 +387,12 @@ async def _human_like_drag_out(
     """超出容器范围的拟人拖动：Y 大幅偏移（±50-120px）模拟手部自由移动。
 
     与容器内拖动互补：真人拖动时鼠标可随意超出弹窗范围，只要已按下且整体
-    向右移动，Baxia 仍会判定为有效滑动。
+    向右移动，Baxia 仍会判定为有效滑动。总时长约 0.8–1.4s。
     """
-    if attempt == 1:
-        steps, delay_min, delay_max = 35, 25, 55
-    elif attempt == 2:
-        steps, delay_min, delay_max = 40, 30, 70
-    elif attempt == 3:
-        steps, delay_min, delay_max = 30, 20, 50
-    else:
-        steps = 35 + random.randint(0, 14)
-        delay_min = 25 + random.randint(0, 29)
-        delay_max = delay_min + 30 + random.randint(0, 39)
+    del attempt
+    total_ms = random.uniform(800, 1400)
+    steps = random.randint(40, 65)
+    avg_delay = total_ms / steps
 
     out_points: list[tuple[float, float]] = []
     count = random.randint(2, 3)
@@ -401,17 +416,16 @@ async def _human_like_drag_out(
                 y_offset += point_offset * influence
         current_y = start_y + y_offset + random.uniform(-5, 5)
         await mouse.move(target_x, current_y, 1)
-        delay = delay_min + random.random() * (delay_max - delay_min)
-        await page.wait_for_timeout(max(1, int(delay)))
+        await page.wait_for_timeout(max(1, int(avg_delay + random.uniform(-2.5, 2.5))))
         last_x = target_x
 
-    await page.wait_for_timeout(int(random.uniform(30, 100)))
+    await page.wait_for_timeout(int(random.uniform(30, 80)))
     overshoot = random.uniform(5, 15)
-    await mouse.move(start_x + distance + overshoot, start_y + random.uniform(-20, 20), 2)
-    await page.wait_for_timeout(int(random.uniform(50, 130)))
+    await mouse.move(start_x + distance + overshoot, start_y + random.uniform(-20, 20), 1)
+    await page.wait_for_timeout(int(random.uniform(40, 90)))
     end_y = start_y + random.uniform(-15, 15)
-    await mouse.move(start_x + distance, end_y, 2)
-    await page.wait_for_timeout(int(random.uniform(50, 120)))
+    await mouse.move(start_x + distance, end_y, 1)
+    await page.wait_for_timeout(int(random.uniform(40, 90)))
     await mouse.up(start_x + distance, end_y)
 
 
@@ -494,6 +508,8 @@ async def _simulate_slide(
     scope: Any,
     distance: float,
     attempt: int,
+    *,
+    prefer_page_mouse: bool = False,
 ) -> bool:
     """接近滑块 → 按下 → 按策略拖动 → 释放。
 
@@ -502,6 +518,7 @@ async def _simulate_slide(
     @param scope 滑块所在 frame / page
     @param distance 可滑动距离
     @param attempt 尝试序号（决定轨迹策略）
+    @param prefer_page_mouse Camoufox 等强制走 page.mouse
     @returns 是否完成拖动动作
     """
     box = await button.bounding_box()
@@ -530,7 +547,7 @@ async def _simulate_slide(
     # 移到按钮后的"思考"停顿
     await page.wait_for_timeout(int(random.uniform(100, 250)))
 
-    mouse = await _create_drag_mouse(page, start_x, start_y)
+    mouse = await _create_drag_mouse(page, start_x, start_y, prefer_page_mouse=prefer_page_mouse)
     await mouse.down(start_x, start_y)
     await page.wait_for_timeout(int(random.uniform(80, 180)))
     # 按下后微小漂移（真人按下到开始拖动之间鼠标常有 1-2px 漂移）
@@ -541,13 +558,13 @@ async def _simulate_slide(
     )
     await page.wait_for_timeout(int(random.uniform(30, 80)))
 
-    strategy = attempt % 3
-    if strategy == 1:
-        await _human_like_drag(page, mouse, start_x, start_y, distance, attempt)
-    elif strategy == 2:
-        await _human_like_drag_out(page, mouse, start_x, start_y, distance, attempt)
-    else:
+    strategy = _strategy_for_attempt(attempt)
+    if strategy == 0:
         await _human_physics_drag(page, mouse, start_x, start_y, distance, attempt)
+    elif strategy == 1:
+        await _human_like_drag(page, mouse, start_x, start_y, distance, attempt)
+    else:
+        await _human_like_drag_out(page, mouse, start_x, start_y, distance, attempt)
     return True
 
 
@@ -604,16 +621,33 @@ async def _wait_for_result(page: Any, scope: Any, context: Any) -> bool:
     """拖动后轮询验证结果：成功即返回，明确失败立即返回。
 
     Baxia 验证可能需要 3-9s，且会先出现转圈加载，不能只看 1 次快照。
+    优先等 ``x5sec``；仅容器消失时再多等片刻，避免导航到淘宝时过早判定成功。
     """
     deadline = time.monotonic() + 9.0
+    container_gone_at: float | None = None
     while time.monotonic() < deadline:
         cookies = await context.cookies()
-        if await _verification_ok(page, scope, cookies):
+        if has_x5sec(cookies):
             return True
         if await _has_fail_marker(scope):
             return False
-        await page.wait_for_timeout(500)
-    return False
+        # 容器消失可能只是跳转中，再等最多 2s 看 x5sec
+        try:
+            container = await scope.query_selector(".nc-container")
+            gone = container is None or not await container.is_visible()
+        except Exception as error:  # noqa: BLE001
+            message = str(error).lower()
+            gone = "detached" in message or "disconnected" in message
+        if gone:
+            if container_gone_at is None:
+                container_gone_at = time.monotonic()
+            elif time.monotonic() - container_gone_at >= 2.0 and await _verification_ok(
+                page, scope, cookies
+            ):
+                return True
+        await page.wait_for_timeout(400)
+    cookies = await context.cookies()
+    return await _verification_ok(page, scope, cookies)
 
 
 async def _click_retry(scope: Any) -> None:
@@ -639,6 +673,7 @@ async def try_solve_slider(
     context: Any,
     *,
     max_retries: int = 3,
+    prefer_page_mouse: bool = False,
 ) -> tuple[bool, str]:
     """在已打开的验证页上自动拖滑块。
 
@@ -648,6 +683,7 @@ async def try_solve_slider(
     @param page Playwright Page
     @param context BrowserContext（用于读 Cookie）
     @param max_retries 最大尝试次数
+    @param prefer_page_mouse Camoufox 路径强制 page.mouse（避免 CDP）
     @returns (成功, 说明)
     """
     await page.wait_for_timeout(800)
@@ -680,9 +716,16 @@ async def try_solve_slider(
         logger.info(
             "滑动距离=%.1fpx 轨迹=%s",
             distance,
-            STRATEGY_NAMES[attempt % 3],
+            STRATEGY_NAMES[_strategy_for_attempt(attempt)],
         )
-        if not await _simulate_slide(page, button, scope, distance, attempt):
+        if not await _simulate_slide(
+            page,
+            button,
+            scope,
+            distance,
+            attempt,
+            prefer_page_mouse=prefer_page_mouse,
+        ):
             logger.warning("拖动模拟失败")
             continue
 

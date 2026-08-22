@@ -56,7 +56,7 @@ contracts/
 |------|------|
 | TypeScript | `packages/contracts/src/` |
 | Rust | `crates/common/src/contracts/`（规划） |
-| Python | `python/packages/contracts/src/contracts/` |
+| Python | `python/contracts/` |
 
 ## PR 要求
 

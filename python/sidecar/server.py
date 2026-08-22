@@ -11,9 +11,8 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, ClassVar
 
-from gateway.handlers import (
+from gateway import (
     handle_cookie_renew,
-    handle_password_login,
     handle_qr_cancel,
     handle_qr_check,
     handle_qr_start,
@@ -23,7 +22,6 @@ from sidecar.routes import ROUTES
 logger = logging.getLogger("dingda.sidecar")
 
 HANDLERS = {
-    "handle_password_login": handle_password_login,
     "handle_cookie_renew": handle_cookie_renew,
     "handle_qr_start": handle_qr_start,
     "handle_qr_check": handle_qr_check,

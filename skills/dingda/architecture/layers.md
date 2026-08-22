@@ -25,10 +25,10 @@
 ┌────────────────────────────▼─────────────────────────────┐
 │ Layer 3: Python Sidecar（例外，不是 AI Runtime）           │
 │                                                          │
-│  python/sidecar/            进程入口 · 管理面 API          │
-│  python/packages/gateway/   请求路由（现有 ping / 缺口能力）│
-│  python/packages/contracts/ 契约实现                      │
-│  python/packages/shared/    共享工具                      │
+│  python/                    单一项目（无 uv workspace）    │
+│    sidecar/                 进程入口 · 管理面 API          │
+│    gateway/                 浏览器例外（续期 / 扫码等）      │
+│    shared/ · contracts/     共享工具 · codegen 类型        │
 └──────────────────────────────────────────────────────────┘
 ```
 

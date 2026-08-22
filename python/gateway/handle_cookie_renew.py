@@ -12,7 +12,7 @@ import logging
 import time
 from typing import Any
 
-from gateway.login.cookie_renew import renew_cookies
+from gateway.cookie_renew import renew_cookies
 from shared.logging import bind_log_context
 
 logger = logging.getLogger("dingda.sidecar.cookie-renew")

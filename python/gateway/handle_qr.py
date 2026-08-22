@@ -10,7 +10,7 @@ import logging
 import time
 from typing import Any
 
-from gateway.login.qr_session import (
+from gateway.qr import (
     cancel_qr_login_by_platform,
     check_qr_login_by_platform,
     start_qr_login_by_platform,

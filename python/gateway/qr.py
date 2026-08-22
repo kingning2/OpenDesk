@@ -10,13 +10,14 @@ import asyncio
 import base64
 import contextlib
 import logging
+import os
 import time
 import uuid
 from pathlib import Path
 from typing import Any
 
-from gateway.login.platform_config import get_platform_config, normalize_platform
-from gateway.login.playwright_common import (
+from gateway.platform_config import get_platform_config, normalize_platform
+from gateway.playwright_common import (
     LAUNCH_ARGS,
     apply_anti_detect,
     apply_stealth,
@@ -90,6 +91,12 @@ async def start_qr_login() -> tuple[bool, str, dict[str, Any]]:
     return await start_qr_login_by_platform(platform="xianyu")
 
 
+def _qr_headless() -> bool:
+    """扫码是否无头。默认无头；设 DINGDA_QR_HEADLESS=0 可弹出浏览器调试。"""
+    value = os.getenv("DINGDA_QR_HEADLESS", "1").strip().lower()
+    return value not in {"0", "false", "no", "off"}
+
+
 async def start_qr_login_by_platform(platform: str = "xianyu") -> tuple[bool, str, dict[str, Any]]:
     """按平台启动扫码登录。"""
     if async_playwright is None:
@@ -104,15 +111,17 @@ async def start_qr_login_by_platform(platform: str = "xianyu") -> tuple[bool, st
 
     try:
         proxy = resolve_proxy(platform_name)
+        headless = _qr_headless()
         logger.info("启动 Playwright 引擎…")
         playwright = await async_playwright().start()
         logger.info(
-            "正在打开浏览器（系统 Edge/Chrome，有头）… platform=%s proxy_enabled=%s",
+            "正在打开浏览器（系统 Edge/Chrome，%s）… platform=%s proxy_enabled=%s",
+            "无头" if headless else "有头",
             platform_name,
             bool(proxy),
         )
         launch_kwargs: dict[str, Any] = {
-            "headless": False,
+            "headless": headless,
             "args": list(LAUNCH_ARGS),
             # 去掉 Playwright 默认 --enable-automation，降低"自动化窗口"被标记概率
             "ignore_default_args": ["--enable-automation"],
