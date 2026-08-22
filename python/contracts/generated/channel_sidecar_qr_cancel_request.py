@@ -6,3 +6,4 @@ from typing import TypedDict
 class ChannelSidecarQrCancelRequest(TypedDict, total=False):
     session_id: str
     trace_id: str
+    platform: str

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.19
+
+- `channel/sidecar/qr_start|qr_check|qr_cancel` 请求新增可选 `platform`（`xianyu` / `ali1688`），支持分站扫码
+
 ## 0.1.18
 
 - 新增 `channel/sidecar/cookie_renew`：风控（验证码 / RGV587）时由 Playwright 临时续期 Cookie

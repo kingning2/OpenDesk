@@ -6,4 +6,5 @@ use serde::{Deserialize, Serialize};
 pub struct ChannelSidecarQrStartRequest {
     pub account_id: String,
     pub trace_id: Option<String>,
+    pub platform: Option<String>,
 }

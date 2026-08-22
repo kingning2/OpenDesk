@@ -10,6 +10,10 @@
     },
     "trace_id": {
       "type": "string"
+    },
+    "platform": {
+      "type": "string",
+      "description": "登录平台：xianyu | ali1688；缺省 xianyu"
     }
   },
   "additionalProperties": false

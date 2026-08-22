@@ -6,4 +6,5 @@ use serde::{Deserialize, Serialize};
 pub struct ChannelSidecarQrCancelRequest {
     pub session_id: String,
     pub trace_id: Option<String>,
+    pub platform: Option<String>,
 }
