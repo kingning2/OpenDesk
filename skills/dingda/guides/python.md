@@ -20,9 +20,13 @@ Python 是 **例外 Sidecar**，不是 AI Runtime、不是业务核心。
 ```
 python/                 # 单一项目（无 uv workspace 多包）
 ├── pyproject.toml      # dingda-sidecar
-├── sidecar/            # 进程入口（Rust 托管生命周期）
-├── gateway/            # 浏览器例外（续期 / 扫码 / 滑块）
-├── shared/             # 共享工具
+├── sidecar/            # 进程入口 + HTTP handlers
+├── channels/
+│   ├── channel.py
+│   ├── channel_factory.py    # create_channel
+│   ├── core/
+│   ├── xianyu/xianyu_channel.py
+│   └── ali1688/ali1688_channel.py
 └── contracts/          # codegen 类型
 ```
 

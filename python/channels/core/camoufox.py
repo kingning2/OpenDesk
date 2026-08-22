@@ -14,14 +14,12 @@ import os
 from pathlib import Path
 from typing import Any
 
-from gateway.playwright_common import (
+from channels.channel_factory import create_channel
+from channels.core.playwright_common import (
     LAUNCH_ARGS,
-    apply_anti_detect,
     apply_stealth,
     async_playwright,
     launch_persistent_chromium,
-    resolve_proxy,
-    resolve_user_agent,
 )
 
 logger = logging.getLogger("dingda.sidecar.camoufox")
@@ -157,8 +155,9 @@ async def launch_renew_context(
         msg = "playwright 未安装：请运行 uv add playwright 并执行 playwright install chromium"
         raise RuntimeError(msg)
 
-    user_agent = resolve_user_agent(platform_name)
-    proxy = resolve_proxy(platform_name)
+    browser = create_channel(platform_name).browser()
+    user_agent = browser.resolve_user_agent()
+    proxy = browser.resolve_proxy()
     playwright = await async_playwright().start()
     launch_kwargs: dict[str, Any] = {
         "headless": headless,
@@ -174,7 +173,7 @@ async def launch_renew_context(
     user_data_dir.mkdir(parents=True, exist_ok=True)
     context = await launch_persistent_chromium(playwright, user_data_dir, **launch_kwargs)
     await apply_stealth(context, logger)
-    await apply_anti_detect(context, logger)
+    await browser.apply_anti_detect(context, logger)
     logger.info("使用 Chromium 启动续期会话")
     return playwright, None, context, "chromium"
 

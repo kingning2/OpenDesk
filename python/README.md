@@ -1,4 +1,4 @@
-# Python Sidecar（单一项目，无 uv workspace）
+﻿# Python Sidecar（单一项目，无 uv workspace）
 
 DingDa 默认能力在 **Rust**。Python 只在 Rust 生态不够时使用（Playwright / Camoufox），由 Rust 托管生命周期。
 
@@ -10,28 +10,28 @@ React → Tauri IPC → Rust → Python Sidecar
 
 ```
 python/
-├── pyproject.toml       # 唯一 Python 项目（dingda-sidecar）
-├── sidecar/             # HTTP 进程入口
-├── gateway/             # Cookie 续期 / 扫码 / 滑块 / 浏览器
-├── shared/              # 日志等
-├── contracts/           # codegen 类型（可选引用）
-├── browser_data/        # 本地 profile（gitignore）
-└── sidecar.spec         # PyInstaller
+├── pyproject.toml
+├── sidecar/                 # HTTP 进程入口 + handlers
+├── channels/
+│   ├── channel.py            # Channel 抽象基类
+│   ├── channel_factory.py    # create_channel(channel_type)
+│   ├── core/                 # 公用基建
+│   ├── xianyu/xianyu_channel.py
+│   └── ali1688/ali1688_channel.py
+├── contracts/
+└── sidecar.spec
 ```
 
-根仓库通过 path 依赖安装本项目，**不再**使用 `[tool.uv.workspace]` 多包。
+## 依赖关系
+
+```
+sidecar/handlers  →  create_channel(platform)  →  channel.qrcode() / renew_cookies()
+平台子类覆写 hook（如 Ali1688Qrcode._probe_logged_in）处理差异
+```
 
 ## 开发
 
 ```bash
 uv sync
 uv run python -m sidecar.main --port 8787
-```
-
-## 调用链（Cookie 续期）
-
-```
-Rust → POST /v1/channel/cookie_renew
-  → gateway.handle_cookie_renew → gateway.cookie_renew
-  → gateway.camoufox + gateway.slider
 ```

@@ -22,6 +22,10 @@ class PlatformConfig:
     qr_selectors: list[str]
     login_cookie_name: str
     cookie_domain_keyword: str
+    # 备用登录 Cookie（SSO 中间态判定）：1688 扫码后先落淘宝 `unb`，
+    # 补访首页完成 SSO 后才有本站 Cookie。无 SSO 流程的平台留空。
+    sso_cookie_name: str | None = None
+    sso_cookie_domain_keyword: str | None = None
 
 
 PLATFORM_CONFIGS: dict[str, PlatformConfig] = {
@@ -41,11 +45,28 @@ PLATFORM_CONFIGS: dict[str, PlatformConfig] = {
         login_cookie_name="unb",
         cookie_domain_keyword="goofish.com",
     ),
+    # 对照 1688-cli login.ts：signin.htm?tbpm=1
+    "ali1688": PlatformConfig(
+        login_entry_url="https://login.1688.com/member/signin.htm?tbpm=1",
+        home_url="https://myalibaba.1688.com/",
+        qr_selectors=[
+            "canvas",
+            "img.qrcode-img",
+            "div.qrcode-img",
+            "#qrcode-img",
+            "img[src*='qrcode']",
+            ".login-qrcode-img",
+        ],
+        login_cookie_name="unb",
+        cookie_domain_keyword="1688.com",
+        sso_cookie_name="unb",
+        sso_cookie_domain_keyword="taobao.com",
+    ),
 }
 
 
 def normalize_platform(platform: str | None) -> str:
-    """标准化平台标识，默认回退 xianyu。
+    """标准化平台标识，默认回退 xianyu；`1688` 视同 `ali1688`。
 
     作者：Xiaoman
     创建时间：2026-08-21
@@ -56,8 +77,10 @@ def normalize_platform(platform: str | None) -> str:
     返回：
         小写平台标识。
     """
-    value = (platform or "xianyu").strip().lower()
-    return value or "xianyu"
+    value = (platform or "xianyu").strip().lower() or "xianyu"
+    if value == "1688":
+        return "ali1688"
+    return value
 
 
 def get_platform_config(platform: str | None) -> PlatformConfig:

@@ -10,11 +10,11 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-PACKAGE_SRC = Path(__file__).resolve().parents[1] / "src"
-if str(PACKAGE_SRC) not in sys.path:
-    sys.path.insert(0, str(PACKAGE_SRC))
+PYTHON_ROOT = Path(__file__).resolve().parents[1]
+if str(PYTHON_ROOT) not in sys.path:
+    sys.path.insert(0, str(PYTHON_ROOT))
 
-from shared.logging import (  # noqa: E402
+from channels.core.logging import (  # noqa: E402
     JsonLineFormatter,
     bind_log_context,
     configure_logging,

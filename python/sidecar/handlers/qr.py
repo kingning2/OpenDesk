@@ -1,7 +1,6 @@
 """Sidecar handlers: /v1/channel/qr_start / qr_check / qr_cancel (POST) — Python ← Rust only。
 
-闲鱼扫码登录：Playwright 打开登录页显示二维码，前端展示后轮询扫码状态，
-登录成功后导出 cookies 返回 Rust。
+Sidecar 从请求体读取 ``platform``，经 [`create_channel`] 分发到对应渠道扫码实现。
 """
 
 from __future__ import annotations
@@ -10,27 +9,27 @@ import logging
 import time
 from typing import Any
 
-from gateway.qr import (
-    cancel_qr_login_by_platform,
-    check_qr_login_by_platform,
-    start_qr_login_by_platform,
-)
-from shared.logging import bind_log_context
+from channels.channel_factory import create_channel
+from channels.core.logging import bind_log_context
 
 logger = logging.getLogger("dingda.sidecar.qr")
+
+
+def _channel_from_payload(payload: dict[str, Any] | None):
+    platform = str((payload or {}).get("platform") or "xianyu").strip().lower() or "xianyu"
+    return create_channel(platform), platform
 
 
 async def handle_qr_start(payload: dict[str, Any] | None, *, trace_id: str) -> dict[str, Any]:
     """Contract: contracts/schema/v1/channel/sidecar/qr_start.*.schema.json"""
     with bind_log_context(trace_id=trace_id, feature="channel"):
-        platform = str((payload or {}).get("platform") or "xianyu").strip().lower() or "xianyu"
+        channel, platform = _channel_from_payload(payload)
         started = time.perf_counter()
-        ok, detail, data = await start_qr_login_by_platform(platform)
+        ok, detail, data = await channel.qrcode().start()
         duration_ms = max(0, int((time.perf_counter() - started) * 1000))
         qr = data.get("qr_base64")
         status = data.get("status", "error")
         if not qr:
-            # 启动失败：start_qr_login 内部已打关键步骤日志，这里补一条失败结果。
             logger.warning(
                 "获取二维码失败：%s duration_ms=%s",
                 detail,
@@ -68,7 +67,7 @@ async def handle_qr_start(payload: dict[str, Any] | None, *, trace_id: str) -> d
 async def handle_qr_check(payload: dict[str, Any] | None, *, trace_id: str) -> dict[str, Any]:
     """Contract: contracts/schema/v1/channel/sidecar/qr_check.*.schema.json"""
     with bind_log_context(trace_id=trace_id, feature="channel"):
-        platform = str((payload or {}).get("platform") or "xianyu").strip().lower() or "xianyu"
+        channel, platform = _channel_from_payload(payload)
         session_id = (payload or {}).get("session_id") or ""
         if not session_id:
             return {
@@ -80,10 +79,9 @@ async def handle_qr_check(payload: dict[str, Any] | None, *, trace_id: str) -> d
                 "trace_id": trace_id,
             }
         started = time.perf_counter()
-        ok, detail, data = await check_qr_login_by_platform(session_id, platform=platform)
+        ok, detail, data = await channel.qrcode().check(session_id)
         duration_ms = max(0, int((time.perf_counter() - started) * 1000))
         status = data.get("status")
-        # 等待扫码是常态，不逐次打扰；只在状态变化（扫码/确认/成功/刷新/过期/失败）时打一条。
         if status != "waiting":
             logger.info(
                 "%s duration_ms=%s",
@@ -111,10 +109,10 @@ async def handle_qr_check(payload: dict[str, Any] | None, *, trace_id: str) -> d
 async def handle_qr_cancel(payload: dict[str, Any] | None, *, trace_id: str) -> dict[str, Any]:
     """Contract: contracts/schema/v1/channel/sidecar/qr_cancel.*.schema.json"""
     with bind_log_context(trace_id=trace_id, feature="channel"):
-        platform = str((payload or {}).get("platform") or "xianyu").strip().lower() or "xianyu"
+        channel, platform = _channel_from_payload(payload)
         session_id = (payload or {}).get("session_id") or ""
         started = time.perf_counter()
-        ok, detail, _data = await cancel_qr_login_by_platform(session_id, platform=platform)
+        ok, detail, _data = await channel.qrcode().cancel(session_id)
         duration_ms = max(0, int((time.perf_counter() - started) * 1000))
         logger.info(
             "取消扫码登录 ok=%s duration_ms=%s",

@@ -20,14 +20,14 @@ import time
 from pathlib import Path
 from typing import Any
 
-from gateway.camoufox import close_renew_session, launch_renew_context
-from gateway.platform_config import get_platform_config, normalize_platform
-from gateway.playwright_common import (
+from channels.core.camoufox import close_renew_session, launch_renew_context
+from channels.core.platform_config import get_platform_config, normalize_platform
+from channels.core.playwright_common import (
     async_playwright,
     clear_profile_locks,
     to_serializable_cookies,
 )
-from gateway.slider import clear_risk_cookies, has_x5sec, try_solve_slider
+from channels.xianyu.login.slider import clear_risk_cookies, has_x5sec, try_solve_slider
 
 logger = logging.getLogger("dingda.sidecar.cookie-renew")
 

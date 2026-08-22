@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 
-from sidecar.logging_config import configure_logging
+from channels.core.logging import configure_logging
 from sidecar.server import serve
 
 

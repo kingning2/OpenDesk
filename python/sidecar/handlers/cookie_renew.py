@@ -1,10 +1,4 @@
-"""Sidecar handler: /v1/channel/cookie_renew (POST) — Python ← Rust only。
-
-闲鱼风控后续期：注入现有 Cookie，临时打开 Playwright，导出新 Cookie。
-
-作者：Xiaoman
-创建时间：2026-08-19
-"""
+"""Sidecar handler: /v1/channel/cookie_renew (POST) — 按渠道工厂分发登录续期。"""
 
 from __future__ import annotations
 
@@ -12,8 +6,9 @@ import logging
 import time
 from typing import Any
 
-from gateway.cookie_renew import renew_cookies
-from shared.logging import bind_log_context
+from channels.channel_factory import create_channel
+from channels.core.logging import bind_log_context
+from channels.core.platform_config import normalize_platform
 
 logger = logging.getLogger("dingda.sidecar.cookie-renew")
 
@@ -33,24 +28,28 @@ async def handle_cookie_renew(payload: dict[str, Any] | None, *, trace_id: str) 
                 "trace_id": trace_id,
             }
 
+        platform = normalize_platform(body.get("platform"))
+        channel = create_channel(platform)
         punish_url = str(body.get("punish_url") or "").strip() or None
         started = time.perf_counter()
-        ok, detail, data = await renew_cookies(
+        ok, detail, data = await channel.renew_cookies(
             cookies,
             account_id=account_id,
             punish_url=punish_url,
         )
         duration_ms = max(0, int((time.perf_counter() - started) * 1000))
         logger.info(
-            "Cookie 浏览器续期完成 status=%s duration_ms=%s account=%s",
+            "Cookie 浏览器续期完成 status=%s duration_ms=%s account=%s platform=%s",
             data.get("status", "error"),
             duration_ms,
             account_id,
+            platform,
             extra={
                 "event": "channel.cookie_renew.completed",
                 "status": data.get("status", "error"),
                 "duration_ms": duration_ms,
                 "account_id": account_id,
+                "platform": platform,
             },
         )
         return {
