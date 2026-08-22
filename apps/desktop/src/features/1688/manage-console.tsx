@@ -1,22 +1,40 @@
 /**
- * 1688 管理子页出口 — 仅账号管理一项，直接渲染共享账号面板。
- *
- * 1688 站点无闲鱼业务子页，管理根路径与 `/manage/accounts` 均落到账号管理。
+ * 1688 管理子页出口 — 按静态 URL 渲染对应业务页。
  *
  * @author Xiaoman
  * @created 2026-08-22
  */
 
+import { type ComponentType } from "react";
+import { useLocation } from "react-router";
+import { CHANNEL_MANAGE_ROOT } from "@desk/platform/compile";
 import { Ali1688AccountsPage } from "./accounts";
+import { Ali1688SearchPage } from "./search";
+import { isManageView, type ManageView } from "./manage-nav";
+
+const VIEW_PAGES: Record<ManageView, ComponentType> = {
+  accounts: Ali1688AccountsPage,
+  search: Ali1688SearchPage,
+};
+
+function viewFromPathname(pathname: string): ManageView {
+  if (pathname === CHANNEL_MANAGE_ROOT) {
+    return "search";
+  }
+  const prefix = `${CHANNEL_MANAGE_ROOT}/`;
+  if (!pathname.startsWith(prefix)) {
+    return "search";
+  }
+  const segment = pathname.slice(prefix.length).split("/")[0] ?? "";
+  return isManageView(segment) ? segment : "search";
+}
 
 /**
  * 1688 管理子页出口（静态 URL → 业务页）。
- *
- * @author Xiaoman
- * @created 2026-08-22
- *
- * @returns 当前子页内容（1688 仅账号管理）
  */
 export function Ali1688ManageConsole() {
-  return <Ali1688AccountsPage />;
+  const { pathname } = useLocation();
+  const view = viewFromPathname(pathname);
+  const Page = VIEW_PAGES[view] ?? Ali1688SearchPage;
+  return <Page />;
 }

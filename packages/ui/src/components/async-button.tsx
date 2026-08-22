@@ -37,6 +37,8 @@ export interface AsyncButtonProps
 
 type Phase = "idle" | "loading" | "success";
 
+const phaseContentClass = "inline-flex items-center gap-1";
+
 /**
  * 带 loading / success 反馈的异步按钮。
  *
@@ -87,45 +89,45 @@ export function AsyncButton({
       onClick={(event) => void handleClick(event)}
       {...props}
     >
-      <span className="relative flex items-center justify-center gap-2">
-        <AnimatePresence mode="wait" initial={false}>
-          {busy ? (
-            <motion.span
-              key="loading"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.15 }}
-              className="flex items-center gap-2"
-            >
-              <Loader2 className="size-3.5 animate-spin" aria-hidden />
+      <AnimatePresence mode="wait" initial={false}>
+        {busy ? (
+          <motion.span
+            key="loading"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+          >
+            <span className={phaseContentClass}>
+              <Loader2 className="size-3.5 shrink-0 animate-spin" aria-hidden />
               {children}
-            </motion.span>
-          ) : showSuccess ? (
-            <motion.span
-              key="success"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.15 }}
-              className="flex items-center gap-2"
-            >
-              <Check className="size-3.5" aria-hidden />
+            </span>
+          </motion.span>
+        ) : showSuccess ? (
+          <motion.span
+            key="success"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+          >
+            <span className={phaseContentClass}>
+              <Check className="size-3.5 shrink-0" aria-hidden />
               {children}
-            </motion.span>
-          ) : (
-            <motion.span
-              key="idle"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.12 }}
-            >
-              {children}
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </span>
+            </span>
+          </motion.span>
+        ) : (
+          <motion.span
+            key="idle"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.12 }}
+          >
+            <span className={phaseContentClass}>{children}</span>
+          </motion.span>
+        )}
+      </AnimatePresence>
     </Button>
   );
 }

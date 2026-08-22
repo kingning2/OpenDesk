@@ -14,10 +14,18 @@
  */
 
 import type { LucideIcon } from "@desk/ui/icons";
-import { Building2, Package, ShoppingCart, Users } from "@desk/ui/icons";
+import { Building2, Package, Radar, Search, ShoppingCart, Users } from "@desk/ui/icons";
 
 /** 管理子页面标识（URL 片段，如 `/manage/accounts`）。 */
-export type ManageView = "dashboard" | "accounts" | "accounts-1688" | "items" | "orders";
+export type ManageView =
+  | "dashboard"
+  | "accounts"
+  | "accounts-1688"
+  | "search"
+  | "search-1688"
+  | "monitor"
+  | "items"
+  | "orders";
 
 /** 管理子页面导航项。 */
 export interface ManageNavItem {
@@ -41,6 +49,20 @@ export const MANAGE_NAV: ManageNavItem[] = [
     description: "闲鱼 / 1688 分 Tab 扫码登录与账号状态",
     ready: true,
   },
+  {
+    key: "search",
+    label: "闲鱼商品搜索",
+    icon: Search,
+    description: "指纹浏览器搜索闲鱼二手商品",
+    ready: true,
+  },
+  {
+    key: "monitor",
+    label: "商品监控",
+    icon: Radar,
+    description: "定时多任务监控 + AI 关键词与决策",
+    ready: true,
+  },
   ...(__DINGDA_HAS_ALI1688__
     ? [
         {
@@ -49,6 +71,13 @@ export const MANAGE_NAV: ManageNavItem[] = [
           icon: Building2,
           description: "兼容旧路由，打开账号管理并定位 1688 Tab",
           ready: false,
+        },
+        {
+          key: "search-1688" as const,
+          label: "1688商品搜索",
+          icon: Search,
+          description: "Camoufox 指纹浏览器搜索 1688 批发商品",
+          ready: true,
         },
       ]
     : []),
@@ -77,7 +106,10 @@ export interface ManageNavGroup {
 
 /** 侧栏分组导航 — 保留的管理子页按业务域归类。 */
 export const MANAGE_NAV_GROUPS: ManageNavGroup[] = [
-  { label: "交易", icon: ShoppingCart, keys: ["accounts", "items", "orders"] },
+  { label: "交易", icon: ShoppingCart, keys: ["accounts", "search", "monitor", "items", "orders"] },
+  ...(__DINGDA_HAS_ALI1688__
+    ? [{ label: "1688", icon: Building2, keys: ["search-1688"] as ManageView[] }]
+    : []),
 ];
 
 /**

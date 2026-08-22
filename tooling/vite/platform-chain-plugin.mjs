@@ -196,13 +196,13 @@ function generateManageNavReexport(enabled) {
  * @returns {string}
  */
 function generateShellLifecyclesFixed(enabled) {
-  if (!enabled.includes("xianyu")) {
+  if (!enabled.includes("xianyu") && !enabled.includes("ali1688")) {
     return "export function PlatformShellLifecycles() { return null; }";
   }
   return [
-    'import { useXianyuAutoConnect } from "@feature/xianyu/use-auto-connect";',
+    'import { useAccountAutoConnect } from "@feature/component/accounts/use-auto-connect";',
     "export function PlatformShellLifecycles() {",
-    "  useXianyuAutoConnect();",
+    "  useAccountAutoConnect();",
     "  return null;",
     "}",
   ].join("\n");

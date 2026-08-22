@@ -2,9 +2,8 @@
  * 平台账号列表面板（共享）— 不含任何平台分支，平台差异全部来自注入的 deps。
  *
  * 能力可见性：
- * - `deps.supportsConnection` — 连接状态行 / 连接断开按钮 / 扫码后刷新连接状态
- * - `deps.autoConnect` — 启动自动连接开关与勾选
- * - 无对应能力时相关 UI 自动隐藏、相关 IPC 不再调用
+ * - `deps.supportsConnection` — 是否有真实渠道 WS（闲鱼）；无则连接/断开为前端会话态
+ * - `deps.autoConnect` — 启动自动连接开关与勾选（闲鱼连渠道，1688 勾选保留配置）
  *
  * @author Xiaoman
  * @created 2026-08-13
@@ -31,21 +30,28 @@ import { QrCode, Trash2 } from "@desk/ui/icons";
 import {
   accountDelete,
   accountList,
-  accountSetStatus,
+  accountProbeLogin,
   accountUpdate,
-  type AccountStatus,
   type XianyuAccount,
 } from "@desk/platform/ipc/account";
 import { listenChannelStatus } from "@desk/platform/events";
 import {
+  accountSessionStatusView,
   CHANNEL_CONNECTION_STATUS_MAP,
   connectionStatusHint,
+  loginSessionStatusHint,
   mergeChannelConnectionState,
   normalizeChannelConnectionState,
   type ChannelConnectionState,
 } from "@desk/platform";
 import type { AccountPanelDeps } from "./types";
 import { AccountQrDialog } from "./account-qr-dialog";
+import {
+  loadConnectedAccountIds,
+  probeAccountLoginSessions,
+  probeConnectedAccounts,
+  setAccountConnected,
+} from "./use-connected-accounts";
 
 const OWNER_ID = 1; // 桌面单用户；多用户时由登录态注入
 
@@ -99,6 +105,8 @@ export function resolveAccountPlatform(account: XianyuAccount): "xianyu" | "ali1
  */
 export function AccountsPanel({ deps }: { deps: AccountPanelDeps }) {
   const { platform, platformName, appName, supportsConnection, autoConnect } = deps;
+  /** 无渠道 WS：展示登录态探针，不提供连接/断开。 */
+  const isLoginSession = !supportsConnection;
   const defaultQrHint = `请用 ${appName} App 扫码`;
 
   const [accounts, setAccounts] = useState<XianyuAccount[]>([]);
@@ -114,7 +122,6 @@ export function AccountsPanel({ deps }: { deps: AccountPanelDeps }) {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<XianyuAccount | null>(null);
   const [editorDisplayName, setEditorDisplayName] = useState("");
-  const [editorRemark, setEditorRemark] = useState("");
   const [editorCookie, setEditorCookie] = useState("");
   const [editorSaving, setEditorSaving] = useState(false);
   /** account_id → 渠道连接状态（与 `channel/status.state` / map 对齐）。仅支持连接的平台使用。 */
@@ -128,7 +135,7 @@ export function AccountsPanel({ deps }: { deps: AccountPanelDeps }) {
   const [autoConnectIds, setAutoConnectIds] = useState<string[]>([]);
   const [autoConnecting, setAutoConnecting] = useState(false);
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const list = await accountList(OWNER_ID);
@@ -138,7 +145,7 @@ export function AccountsPanel({ deps }: { deps: AccountPanelDeps }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [platform]);
 
   useEffect(() => {
     let cancelled = false;
@@ -276,7 +283,7 @@ export function AccountsPanel({ deps }: { deps: AccountPanelDeps }) {
       cancelled = true;
       unlisten?.();
     };
-  }, [supportsConnection]);
+  }, [supportsConnection, load]);
 
   // 进页 / 账号列表变化时拉一次快照；运行中只信 channel/status 推送，不再定时轮询。
   useEffect(() => {
@@ -285,6 +292,110 @@ export function AccountsPanel({ deps }: { deps: AccountPanelDeps }) {
     }
     void refreshConnectionStates(accounts.map((account) => account.account_id));
   }, [accounts, supportsConnection, refreshConnectionStates]);
+
+  /** 恢复「已连接」标记并探针校验登录是否过期（闲鱼等已连渠道账号）。 */
+  const refreshConnectedSessionProbe = useCallback(async (list: XianyuAccount[]) => {
+    const connectedIds = await loadConnectedAccountIds();
+    const platformConnected = connectedIds.filter((accountId) =>
+      list.some((account) => account.account_id === accountId),
+    );
+    if (platformConnected.length === 0) {
+      return;
+    }
+
+    setConnectionStates((current) => {
+      const next = { ...current };
+      for (const accountId of platformConnected) {
+        if (next[accountId] !== "auth_expired") {
+          next[accountId] = "connecting";
+        }
+      }
+      return next;
+    });
+
+    const results = await probeConnectedAccounts(list);
+    setConnectionStates((current) => {
+      const next = { ...current };
+      for (const [accountId, ok] of Object.entries(results)) {
+        next[accountId] = ok ? "connected" : "auth_expired";
+      }
+      return next;
+    });
+    const expiredIds = Object.entries(results)
+      .filter(([, ok]) => !ok)
+      .map(([accountId]) => accountId);
+    if (expiredIds.length === 0) {
+      setConnectionDetails((current) => {
+        const next = { ...current };
+        for (const accountId of Object.keys(results)) {
+          delete next[accountId];
+        }
+        return next;
+      });
+      return;
+    }
+
+    setConnectionDetails((current) => {
+      const next = { ...current };
+      for (const accountId of expiredIds) {
+        next[accountId] = "登录态已过期，请重新扫码";
+      }
+      return next;
+    });
+  }, []);
+
+  /** 1688 等：对有 Cookie 的账号批量探针，先展示「检测中」。 */
+  const refreshLoginSessionProbe = useCallback(async (list: XianyuAccount[]) => {
+    const targets = list.filter((account) => Boolean(account.cookie?.trim()));
+    if (targets.length === 0) {
+      return;
+    }
+
+    setConnectionStates((current) => {
+      const next = { ...current };
+      for (const account of targets) {
+        if (next[account.account_id] !== "auth_expired") {
+          next[account.account_id] = "connecting";
+        }
+      }
+      return next;
+    });
+
+    const results = await probeAccountLoginSessions(targets);
+    setConnectionStates((current) => {
+      const next = { ...current };
+      for (const account of targets) {
+        const online = results[account.account_id];
+        if (online === undefined) {
+          continue;
+        }
+        next[account.account_id] = online ? "connected" : "auth_expired";
+      }
+      return next;
+    });
+    setConnectionDetails((current) => {
+      const next = { ...current };
+      for (const account of targets) {
+        if (results[account.account_id] === false) {
+          next[account.account_id] = "登录态已过期，请重新扫码";
+        } else if (results[account.account_id] === true) {
+          delete next[account.account_id];
+        }
+      }
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (accounts.length === 0) {
+      return;
+    }
+    if (isLoginSession) {
+      void refreshLoginSessionProbe(accounts);
+      return;
+    }
+    void refreshConnectedSessionProbe(accounts);
+  }, [accounts, isLoginSession, refreshConnectedSessionProbe, refreshLoginSessionProbe]);
 
   const filtered = useMemo(() => {
     return accounts.filter((account) => {
@@ -298,21 +409,9 @@ export function AccountsPanel({ deps }: { deps: AccountPanelDeps }) {
     });
   }, [accounts, keyword, statusFilter]);
 
-  async function handleToggleStatus(account: XianyuAccount) {
-    const next: AccountStatus = account.status === "active" ? "disabled" : "active";
-    try {
-      await accountSetStatus(OWNER_ID, account.account_id, next);
-      toast.success(`账号已${next === "active" ? "启用" : "停用"}`);
-      await load();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : String(error));
-    }
-  }
-
   function openAccountEditor(account: XianyuAccount) {
     setEditingAccount(account);
     setEditorDisplayName(account.display_name);
-    setEditorRemark(account.remark);
     setEditorCookie(account.cookie ?? "");
     setEditorOpen(true);
   }
@@ -326,7 +425,6 @@ export function AccountsPanel({ deps }: { deps: AccountPanelDeps }) {
       const cookieChanged = editorCookie.trim() !== (editingAccount.cookie ?? "");
       await accountUpdate(OWNER_ID, editingAccount.account_id, {
         display_name: editorDisplayName.trim(),
-        remark: editorRemark.trim(),
         cookie: editorCookie.trim() || undefined,
       });
       toast.success(cookieChanged ? "Cookie 已更新，请先断开再连接以生效" : "账号配置已更新");
@@ -341,10 +439,49 @@ export function AccountsPanel({ deps }: { deps: AccountPanelDeps }) {
   }
 
   async function handleConnect(account: XianyuAccount) {
-    if (!deps.connect) {
+    if (!account.cookie?.trim()) {
+      toast.error("账号缺少 Cookie，请先扫码登录");
       return;
     }
     setConnectingId(account.account_id);
+    setConnectionStates((current) => ({ ...current, [account.account_id]: "connecting" }));
+
+    if (!deps.connect) {
+      try {
+        const online = await accountProbeLogin(OWNER_ID, account.account_id);
+        if (!online) {
+          setConnectionStates((current) => ({
+            ...current,
+            [account.account_id]: "auth_expired",
+          }));
+          setConnectionDetails((current) => ({
+            ...current,
+            [account.account_id]: "登录态已过期，请重新扫码",
+          }));
+          toast.error("登录态已过期，请重新扫码", {
+            action: {
+              label: "重新扫码",
+              onClick: () => openRescanQr(account),
+            },
+          });
+          return;
+        }
+        setConnectionStates((current) => ({
+          ...current,
+          [account.account_id]: "connected",
+        }));
+        setConnectionDetails((current) => {
+          const next = { ...current };
+          delete next[account.account_id];
+          return next;
+        });
+        toast.success("登录态有效");
+      } finally {
+        setConnectingId(null);
+      }
+      return;
+    }
+
     try {
       const state = normalizeChannelConnectionState(
         await deps.connect(OWNER_ID, account.account_id),
@@ -356,6 +493,7 @@ export function AccountsPanel({ deps }: { deps: AccountPanelDeps }) {
         return next;
       });
       await load();
+      await setAccountConnected(account.account_id, true);
       toast.success(
         state === "connected" ? "连接成功，已同步用户资料并开始监听消息" : `连接状态：${CHANNEL_CONNECTION_STATUS_MAP[state].label}`,
       );
@@ -385,16 +523,20 @@ export function AccountsPanel({ deps }: { deps: AccountPanelDeps }) {
   }
 
   async function handleDisconnect(account: XianyuAccount) {
-    if (!deps.disconnect) {
+    if (deps.disconnect) {
+      try {
+        await deps.disconnect(OWNER_ID, account.account_id);
+        await setAccountConnected(account.account_id, false);
+        setConnectionStates((current) => ({ ...current, [account.account_id]: "disconnected" }));
+        toast.success("已断开连接");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : String(error));
+      }
       return;
     }
-    try {
-      await deps.disconnect(OWNER_ID, account.account_id);
-      setConnectionStates((current) => ({ ...current, [account.account_id]: "disconnected" }));
-      toast.success("已断开连接");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : String(error));
-    }
+    await setAccountConnected(account.account_id, false);
+    setConnectionStates((current) => ({ ...current, [account.account_id]: "disconnected" }));
+    toast.success("已断开连接");
   }
 
   async function handleDelete() {
@@ -404,6 +546,7 @@ export function AccountsPanel({ deps }: { deps: AccountPanelDeps }) {
       if (autoConnect) {
         setAutoConnectIds(await autoConnect.setAccount(deleteTarget.account_id, false));
       }
+      await setAccountConnected(deleteTarget.account_id, false);
       toast.success("账号已删除");
       setDeleteTarget(null);
       await load();
@@ -432,12 +575,14 @@ export function AccountsPanel({ deps }: { deps: AccountPanelDeps }) {
       toast.success("已开启启动自动连接：请在账号卡片上勾选要自动连接的账号");
       return;
     }
-    toast.success("已开启：启动时只连接勾选账号；风控未过滑块将 10 分钟后重试");
+    toast.success("已开启：启动时连接勾选的闲鱼账号；1688 勾选仅保留在配置中");
     setAutoConnecting(true);
     try {
       const count = await autoConnect.runNow();
       toast.success(
-        count > 0 ? `已开始连接 ${count} 个勾选账号` : "勾选账号中暂无可连接项（需启用且有 Cookie）",
+        count > 0
+          ? `已开始连接 ${count} 个闲鱼账号`
+          : "勾选账号中暂无可连接的闲鱼账号（1688 账号无需渠道连接）",
       );
       await refreshConnectionStates(accounts.map((account) => account.account_id));
     } catch (error) {
@@ -509,7 +654,7 @@ export function AccountsPanel({ deps }: { deps: AccountPanelDeps }) {
               variant={autoConnectOnStart ? "default" : "outline"}
               disabled={autoConnecting}
               onClick={() => void handleToggleAutoConnect()}
-              title="开启后启动应用只连接卡片上勾选的账号；触发风控且滑块未过时，约 10 分钟后自动再连"
+              title="开启后启动应用只连接勾选的闲鱼账号；1688 账号可勾选但不走渠道连接；风控未过滑块约 10 分钟后重试"
             >
               {autoConnecting
                 ? "连接中…"
@@ -543,16 +688,16 @@ export function AccountsPanel({ deps }: { deps: AccountPanelDeps }) {
               const displayState = normalizeChannelConnectionState(
                 connectionStates[account.account_id],
               );
-              const conn = CHANNEL_CONNECTION_STATUS_MAP[displayState];
-              const hint = connectionStatusHint(
-                displayState,
-                connectionDetails[account.account_id],
-              );
+              const conn = accountSessionStatusView(displayState, supportsConnection);
+              const hint = isLoginSession
+                ? loginSessionStatusHint(displayState, connectionDetails[account.account_id])
+                : connectionStatusHint(displayState, connectionDetails[account.account_id]);
               const authExpired = displayState === "auth_expired";
               const renewing = displayState === "renewing";
               const queued = displayState === "queued";
               const sliderBusy = renewing || queued;
               const isConnecting = connectingId === account.account_id;
+              const hasCookie = Boolean(account.cookie?.trim());
               return (
                 <PageGlowCard
                   key={account.account_id}
@@ -605,40 +750,34 @@ export function AccountsPanel({ deps }: { deps: AccountPanelDeps }) {
                   </div>
 
                   <div className="mt-4 min-h-0 flex-1 space-y-2 text-[length:var(--text-sm)]">
-                    {supportsConnection ? (
-                      <>
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="text-muted-foreground">连接状态</span>
-                          <span
-                            className={`rounded-full px-2 py-0.5 text-[length:var(--text-xs)] ${conn.badgeClass}`}
-                            title={hint ?? undefined}
-                          >
-                            {conn.label}
-                          </span>
-                        </div>
-                        {/* 固定占位，避免有无提示文案时同行高度视觉跳动 */}
-                        <p
-                          className={`min-h-[1.25rem] text-[length:var(--text-xs)] ${
-                            authExpired
-                              ? "text-orange-700"
-                              : renewing
-                                ? "text-sky-700"
-                                : queued
-                                  ? "text-violet-700"
-                                  : displayState === "error"
-                                    ? "text-red-600"
-                                    : "invisible"
-                          }`}
-                          aria-hidden={!hint}
-                        >
-                          {hint ?? "占位"}
-                        </p>
-                      </>
-                    ) : null}
-                    <div className="flex items-start justify-between gap-3">
-                      <span className="text-muted-foreground">备注</span>
-                      <span className="line-clamp-2 max-w-[65%] text-right">{account.remark || "—"}</span>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-muted-foreground">
+                        {isLoginSession ? "登录状态" : "连接状态"}
+                      </span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[length:var(--text-xs)] ${conn.badgeClass}`}
+                        title={hint ?? undefined}
+                      >
+                        {conn.label}
+                      </span>
                     </div>
+                    {/* 固定占位，避免有无提示文案时同行高度视觉跳动 */}
+                    <p
+                      className={`min-h-[1.25rem] text-[length:var(--text-xs)] ${
+                        authExpired
+                          ? "text-orange-700"
+                          : renewing
+                            ? "text-sky-700"
+                            : queued
+                              ? "text-violet-700"
+                              : displayState === "error"
+                                ? "text-red-600"
+                                : "invisible"
+                      }`}
+                      aria-hidden={!hint}
+                    >
+                      {hint ?? "占位"}
+                    </p>
                   </div>
 
                   <div
@@ -657,18 +796,18 @@ export function AccountsPanel({ deps }: { deps: AccountPanelDeps }) {
                         自动连接
                       </label>
                     ) : null}
-                    {!supportsConnection || authExpired ? (
+                    {authExpired || !hasCookie ? (
                       <Button
                         size="sm"
-                        variant={supportsConnection ? undefined : "outline"}
+                        variant={authExpired ? undefined : "outline"}
                         onClick={() => openRescanQr(account)}
                       >
                         <QrCode className="size-3.5" aria-hidden />
                         重新扫码
                       </Button>
                     ) : null}
-                    {supportsConnection ? (
-                      connectionStates[account.account_id] === "connected" ? (
+                    {!isLoginSession ? (
+                      displayState === "connected" ? (
                         <Button size="sm" variant="outline" onClick={() => void handleDisconnect(account)}>
                           断开
                         </Button>
@@ -676,35 +815,32 @@ export function AccountsPanel({ deps }: { deps: AccountPanelDeps }) {
                         <Button
                           size="sm"
                           variant="outline"
-                          disabled={isConnecting || !account.cookie || authExpired || sliderBusy}
+                          disabled={isConnecting || !hasCookie || authExpired || sliderBusy}
                           onClick={() => void handleConnect(account)}
                           title={
-                            authExpired
-                              ? "请先重新扫码刷新登录态"
-                              : renewing
-                                ? "正在过滑块，请稍候"
-                                : queued
-                                  ? "排队等待过滑块，请稍候"
-                                  : undefined
+                            !hasCookie
+                              ? "请先扫码登录"
+                              : authExpired
+                                ? "请先重新扫码刷新登录态"
+                                : renewing
+                                  ? "正在过滑块，请稍候"
+                                  : queued
+                                    ? "排队等待过滑块，请稍候"
+                                    : undefined
                           }
                         >
                           {isConnecting ? "连接中…" : "连接"}
                         </Button>
                       )
                     ) : null}
-                    <Button size="sm" variant="outline" onClick={() => void handleToggleStatus(account)}>
-                      {account.status === "active" ? "停用" : "启用"}
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => openAccountEditor(account)}>
-                      编辑资料
-                    </Button>
                     <Button
                       size="sm"
-                      variant="ghost"
-                      className="text-destructive"
+                      variant="outline"
+                      className="text-destructive hover:text-destructive"
                       onClick={() => setDeleteTarget(account)}
                     >
                       <Trash2 className="size-3.5" aria-hidden />
+                      删除
                     </Button>
                   </div>
                   </div>
@@ -732,6 +868,11 @@ export function AccountsPanel({ deps }: { deps: AccountPanelDeps }) {
                   .filter((account) => resolveAccountPlatform(account) === platform)
                   .map((account) => account.account_id),
               );
+            } else {
+              const list = await accountList(OWNER_ID);
+              await refreshLoginSessionProbe(
+                list.filter((account) => resolveAccountPlatform(account) === platform),
+              );
             }
             toast.success(`${platformName} 扫码成功`);
           })().catch((error) => {
@@ -751,14 +892,6 @@ export function AccountsPanel({ deps }: { deps: AccountPanelDeps }) {
                 value={editorDisplayName}
                 onChange={(event) => setEditorDisplayName(event.target.value)}
                 placeholder="账号展示名"
-              />
-            </label>
-            <label className="block space-y-1">
-              <span className="text-[length:var(--text-sm)] text-muted-foreground">备注</span>
-              <Input
-                value={editorRemark}
-                onChange={(event) => setEditorRemark(event.target.value)}
-                placeholder={`如：${platformName}已登录`}
               />
             </label>
             <label className="block space-y-1">

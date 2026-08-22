@@ -11,7 +11,7 @@
 import type { AccountPlatform } from "@desk/platform/ipc/account";
 
 /**
- * 启动自动连接能力（仅支持渠道连接的平台注入；闲鱼专用）。
+ * 启动自动连接能力（闲鱼 / 1688 共用勾选列表；实际渠道连接仅闲鱼）。
  *
  * @author Xiaoman
  * @created 2026-08-22
@@ -42,7 +42,7 @@ export interface AccountPanelDeps {
   platformName: string;
   /** 扫码 App 名（如「闲鱼」「手机淘宝 / 1688」）。 */
   appName: string;
-  /** 是否有渠道连接（WS）能力；无则隐藏连接状态 / 连接按钮 / 自动连接。 */
+  /** 是否有真实渠道 WS；无则 UI 展示登录态探针，不提供连接/断开。 */
   supportsConnection: boolean;
   /** 建立渠道连接，返回后端连接状态串。 */
   connect?: (ownerId: number, accountId: string) => Promise<string>;

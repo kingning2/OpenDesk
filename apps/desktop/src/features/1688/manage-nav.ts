@@ -9,10 +9,10 @@
  */
 
 import type { LucideIcon } from "@desk/ui/icons";
-import { ShoppingCart, Users } from "@desk/ui/icons";
+import { Search, ShoppingCart, Users } from "@desk/ui/icons";
 
 /** 1688 管理子页面标识（URL 片段，如 `/manage/accounts`）。 */
-export type ManageView = "accounts";
+export type ManageView = "accounts" | "search";
 
 /** 管理子页面导航项。 */
 export interface ManageNavItem {
@@ -32,6 +32,13 @@ export const MANAGE_NAV: ManageNavItem[] = [
     description: "1688 / 手机淘宝 Cookie 扫码登录与账号状态",
     ready: true,
   },
+  {
+    key: "search",
+    label: "商品搜索",
+    icon: Search,
+    description: "Camoufox 指纹浏览器搜索 1688 批发商品",
+    ready: true,
+  },
 ];
 
 /** 侧栏分组（Grouped Sidebar 模式）。 */
@@ -43,7 +50,7 @@ export interface ManageNavGroup {
 
 /** 侧栏分组导航。 */
 export const MANAGE_NAV_GROUPS: ManageNavGroup[] = [
-  { label: "交易", icon: ShoppingCart, keys: ["accounts"] },
+  { label: "交易", icon: ShoppingCart, keys: ["search", "accounts"] },
 ];
 
 /**

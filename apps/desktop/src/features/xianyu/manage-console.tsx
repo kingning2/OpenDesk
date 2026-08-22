@@ -12,6 +12,9 @@
 import { type ComponentType } from "react";
 import { useLocation } from "react-router";
 import { CHANNEL_MANAGE_ROOT, managePath } from "@desk/platform/compile";
+import { Ali1688SearchPage } from "@feature/1688/search";
+import { XianyuMonitorPage } from "./monitor";
+import { XianyuSearchPage } from "./search";
 import { XianyuAccountsPage } from "./accounts";
 import { XianyuDashboardPage } from "./dashboard";
 import { XianyuItemsPage } from "./items";
@@ -37,7 +40,11 @@ function Accounts1688View() {
 const VIEW_PAGES: Partial<Record<ManageView, ComponentType>> = {
   dashboard: XianyuDashboardPage,
   accounts: XianyuAccountsPage,
-  ...(__DINGDA_HAS_ALI1688__ ? { "accounts-1688": Accounts1688View } : {}),
+  search: XianyuSearchPage,
+  monitor: XianyuMonitorPage,
+  ...(__DINGDA_HAS_ALI1688__
+    ? { "accounts-1688": Accounts1688View, "search-1688": Ali1688SearchPage }
+    : {}),
   items: XianyuItemsPage,
   orders: XianyuOrdersPage,
 };

@@ -30,4 +30,5 @@ export async function listenEvent<T>(
 export * from "./runtime";
 export * from "./plugin";
 export * from "./channel";
+export * from "./monitor";
 

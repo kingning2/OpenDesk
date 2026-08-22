@@ -46,13 +46,6 @@ export interface XianyuAccount {
   /** qr / password。 */
   login_method: string;
   status: AccountStatus;
-  /**
-   * 备注 — 如「闲鱼已登录」「1688已登录」。
-   *
-   * @author Xiaoman
-   * @created 2026-08-22
-   */
-  remark: string;
   pause_duration_minutes: number;
 }
 
@@ -60,7 +53,6 @@ export interface XianyuAccount {
 export interface AccountUpdate {
   display_name?: string;
   avatar_url?: string;
-  remark?: string;
   status?: AccountStatus;
   login_id?: string;
   login_password?: string;
@@ -117,6 +109,13 @@ export function accountDelete(ownerId: number, accountId: string): Promise<void>
   return callRequest<void>("account_delete", {
     request: { owner_id: ownerId, account_id: accountId },
   }).then(() => undefined);
+}
+
+/** 探测账号 Cookie 是否仍在线。 */
+export function accountProbeLogin(ownerId: number, accountId: string): Promise<boolean> {
+  return callRequest<boolean>("account_probe_login", {
+    request: { owner_id: ownerId, account_id: accountId },
+  }).then((response) => response.data);
 }
 
 // ========== 业务账号扫码登录（复用 sidecar 扫码能力，成功后自动创建/更新账号） ==========

@@ -119,7 +119,10 @@ export function RiskLogsPanel() {
 
   function accountLabel(accountId: string): string {
     const account = accounts.find((item) => item.account_id === accountId);
-    return account?.remark ? `${accountId} (${account.remark})` : accountId;
+    if (account?.display_name) {
+      return `${account.display_name} (${accountId})`;
+    }
+    return accountId;
   }
 
   async function handleClear() {
@@ -200,8 +203,8 @@ export function RiskLogsPanel() {
                 <SelectItem value="">全部账号</SelectItem>
                 {accounts.map((account) => (
                   <SelectItem key={account.account_id} value={account.account_id}>
-                    {account.remark
-                      ? `${account.account_id} (${account.remark})`
+                    {account.display_name
+                      ? `${account.display_name} (${account.account_id})`
                       : account.account_id}
                   </SelectItem>
                 ))}

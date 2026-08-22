@@ -21,7 +21,7 @@ import {
   runAutoConnectNow,
   setAccountAutoConnect,
   setAutoConnectOnStartEnabled,
-} from "./use-auto-connect";
+} from "@feature/component/accounts/use-auto-connect";
 import { ali1688AccountTab } from "@feature/1688/accounts";
 
 const xianyuDeps: AccountPanelDeps = {

@@ -84,6 +84,60 @@ export const CHANNEL_CONNECTION_STATUS_MAP: Record<
   },
 };
 
+/** 无渠道 WS 时的登录态展示（1688 等：探针检测，非「连接」）。 */
+export const LOGIN_SESSION_STATUS_MAP: Record<
+  ChannelConnectionState,
+  ChannelConnectionStatusView
+> = {
+  disconnected: {
+    label: "未检测",
+    badgeClass: "bg-muted text-muted-foreground",
+    defaultHint: null,
+  },
+  connecting: {
+    label: "检测中",
+    badgeClass: "bg-amber-500/15 text-amber-600",
+    defaultHint: "正在检测登录态…",
+  },
+  connected: {
+    label: "已登录",
+    badgeClass: "bg-emerald-500/15 text-emerald-600",
+    defaultHint: null,
+  },
+  error: {
+    label: "检测失败",
+    badgeClass: "bg-red-500/15 text-red-600",
+    defaultHint: "登录态检测失败，请稍后重试",
+  },
+  auth_expired: {
+    label: "登录过期",
+    badgeClass: "bg-orange-500/15 text-orange-700",
+    defaultHint: "登录态已过期，请重新扫码",
+  },
+  renewing: {
+    label: "过滑块中",
+    badgeClass: "bg-sky-500/15 text-sky-700",
+    defaultHint: "正在过滑块验证，请稍候",
+  },
+  queued: {
+    label: "排队中",
+    badgeClass: "bg-violet-500/15 text-violet-700",
+    defaultHint: "排队等待过滑块，请稍候",
+  },
+};
+
+/**
+ * 按面板模式取状态展示（渠道连接 vs 登录态探针）。
+ */
+export function accountSessionStatusView(
+  state: ChannelConnectionState,
+  supportsConnection: boolean,
+): ChannelConnectionStatusView {
+  return supportsConnection
+    ? CHANNEL_CONNECTION_STATUS_MAP[state]
+    : LOGIN_SESSION_STATUS_MAP[state];
+}
+
 /**
  * 将事件 `state` 规范为已知键；未知值回退 `disconnected`。
  *
@@ -164,5 +218,26 @@ export function connectionStatusHint(
   ) {
     return trimmed;
   }
-  return CHANNEL_CONNECTION_STATUS_MAP[state].defaultHint;
+  const map = accountSessionStatusView(state, true);
+  return map.defaultHint;
+}
+
+/**
+ * 登录态模式下的副文案（1688 等）。
+ */
+export function loginSessionStatusHint(
+  state: ChannelConnectionState,
+  detail?: string | null,
+): string | null {
+  const trimmed = detail?.trim() ?? "";
+  if (
+    trimmed &&
+    !trimmed.startsWith("{") &&
+    !trimmed.includes("FAIL_SYS_") &&
+    !trimmed.includes("_____tmd_____") &&
+    trimmed.length < 120
+  ) {
+    return trimmed;
+  }
+  return LOGIN_SESSION_STATUS_MAP[state].defaultHint;
 }

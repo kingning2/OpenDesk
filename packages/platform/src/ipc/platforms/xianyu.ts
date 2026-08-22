@@ -7,3 +7,5 @@ export * from "../item";
 export * from "../order";
 export * from "../risk";
 export * from "../setting";
+export * from "../xianyu-search";
+export * from "../xianyu-monitor";
