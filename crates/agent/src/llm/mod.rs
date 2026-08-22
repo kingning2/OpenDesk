@@ -3,7 +3,7 @@
 //! 统一 [`LlmProvider`] trait：任何 provider（OpenAI 兼容 / Anthropic / Gemini / DashScope）
 //! 都实现 `complete(&ChatRequest) -> ChatResponse`。
 //!
-//! 第三方库优先：OpenAI 兼容走 `async-openai`；Anthropic / Gemini / DashScope App
+//! 第三方库优先：OpenAI 兼容走 reqwest 直连；Anthropic / Gemini / DashScope App
 //! 用 reqwest 薄封装（各自协议差异大，无统一第三方库）。
 
 pub mod anthropic;

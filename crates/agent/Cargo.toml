@@ -4,7 +4,6 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-async-openai = "0.28"
 async-trait = { workspace = true }
 chrono = { version = "0.4", features = ["serde"] }
 common = { path = "../common" }
