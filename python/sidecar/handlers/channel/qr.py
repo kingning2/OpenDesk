@@ -1,7 +1,4 @@
-"""Sidecar handlers: /v1/channel/qr_start / qr_check / qr_cancel (POST) — Python ← Rust only。
-
-Sidecar 从请求体读取 ``platform``，经 [`create_channel`] 分发到对应渠道扫码实现。
-"""
+"""Sidecar handlers: /v1/channel/qr_* (POST)。"""
 
 from __future__ import annotations
 
@@ -12,7 +9,7 @@ from typing import Any
 from channels.channel_factory import create_channel
 from channels.core.logging import bind_log_context
 
-logger = logging.getLogger("dingda.sidecar.qr")
+logger = logging.getLogger("dingda.sidecar.channel.qr")
 
 
 def _channel_from_payload(payload: dict[str, Any] | None):

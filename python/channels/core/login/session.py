@@ -36,6 +36,9 @@ class QrSession:
         self.started_at = time.monotonic()
         self.last_refresh_at = time.monotonic()
         self.qr_base64: str | None = None
+        self.qr_code_content: str | None = None
+        self.last_emitted_qr_content: str | None = None
+        self.qr_progress: str | None = None
         self.detail = ""
         self.lock = asyncio.Lock()
 

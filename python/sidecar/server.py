@@ -11,8 +11,10 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, ClassVar
 
-from sidecar.handlers.cookie_renew import handle_cookie_renew
-from sidecar.handlers.qr import handle_qr_cancel, handle_qr_check, handle_qr_start
+from sidecar.handlers.channel.cookie_renew import handle_cookie_renew
+from sidecar.handlers.channel.login_probe import handle_login_probe
+from sidecar.handlers.channel.qr import handle_qr_cancel, handle_qr_check, handle_qr_start
+from sidecar.handlers.channel.search import handle_search
 from sidecar.routes import ROUTES
 
 logger = logging.getLogger("dingda.sidecar")
@@ -22,6 +24,8 @@ HANDLERS = {
     "handle_qr_start": handle_qr_start,
     "handle_qr_check": handle_qr_check,
     "handle_qr_cancel": handle_qr_cancel,
+    "handle_search": handle_search,
+    "handle_login_probe": handle_login_probe,
 }
 
 # 高频轮询：正常且够快时只打 DEBUG，避免刷屏。

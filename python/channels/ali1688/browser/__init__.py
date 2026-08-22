@@ -1,4 +1,4 @@
-"""1688 Playwright 配置。"""
+"""1688 Playwright 浏览器配置。"""
 
 from __future__ import annotations
 

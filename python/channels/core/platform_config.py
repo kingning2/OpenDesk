@@ -45,10 +45,10 @@ PLATFORM_CONFIGS: dict[str, PlatformConfig] = {
         login_cookie_name="unb",
         cookie_domain_keyword="goofish.com",
     ),
-    # 对照 1688-cli login.ts：signin.htm?tbpm=1
+    # 1688：直连 signin 页，QR 由 qrcode/generate API 拦截（见 Ali1688Qrcode）
     "ali1688": PlatformConfig(
         login_entry_url="https://login.1688.com/member/signin.htm?tbpm=1",
-        home_url="https://myalibaba.1688.com/",
+        home_url=("https://air.1688.com/app/ctf-page/trade-order-list/buyer-order-list.html"),
         qr_selectors=[
             "canvas",
             "img.qrcode-img",

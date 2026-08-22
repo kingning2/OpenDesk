@@ -1,4 +1,4 @@
-"""闲鱼 Playwright 配置。"""
+"""闲鱼 Playwright 配置与会话辅助。"""
 
 from __future__ import annotations
 
@@ -8,6 +8,12 @@ from typing import Any
 
 from channels.core.browser.base import BrowserPlatform
 from channels.core.playwright_common import CHROME_DESKTOP_UA, inject_init_script
+from channels.xianyu.browser.session import (
+    looks_blocked,
+    prepare_cookies,
+    profile_dir,
+    resolve_headless,
+)
 
 # 闲鱼 / 阿里 Baxia 风控：注入到每个页面的反检测脚本。
 _ANTI_DETECT_SCRIPT = r"""
@@ -110,3 +116,12 @@ class XianyuBrowser(BrowserPlatform):
 
     async def apply_anti_detect(self, context: Any, logger: logging.Logger) -> None:
         await inject_init_script(context, _ANTI_DETECT_SCRIPT, logger)
+
+
+__all__ = [
+    "XianyuBrowser",
+    "looks_blocked",
+    "prepare_cookies",
+    "profile_dir",
+    "resolve_headless",
+]

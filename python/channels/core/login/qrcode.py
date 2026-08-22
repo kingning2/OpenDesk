@@ -106,6 +106,8 @@ class QrcodeLogin:
             session.page = page
             session.status = STATUS_GENERATING
 
+            await self._before_login_goto(page, session)
+
             logger.info("正在加载登录页… platform=%s", self.platform)
             loaded = False
             for attempt in range(3):
@@ -124,19 +126,14 @@ class QrcodeLogin:
             if not loaded:
                 raise RuntimeError(f"{self.platform} 登录页加载失败")
 
-            qr_base64: str | None = None
-            deadline = time.monotonic() + QR_WAIT_TIMEOUT_MS / 1000
-            while time.monotonic() < deadline:
-                qr_base64 = await screenshot_qr(page, config.qr_selectors)
-                loc = await find_qr_locator(page, config.qr_selectors)
-                if loc is not None and qr_base64:
-                    break
-                await page.wait_for_timeout(400)
+            await self._prepare_for_qr(page)
+
+            qr_base64 = await self._capture_qr(page, session)
             if not qr_base64:
                 await page.wait_for_timeout(1500)
-                qr_base64 = await screenshot_qr(page, config.qr_selectors)
+                qr_base64 = await self._capture_qr(page, session)
             if not qr_base64:
-                raise RuntimeError("未检测到二维码元素")
+                raise RuntimeError("未检测到二维码")
 
             session.status = STATUS_READY
             session.detail = "二维码已就绪"
@@ -175,23 +172,37 @@ class QrcodeLogin:
                 if page is None:
                     return True, "等待中", {"status": STATUS_WAITING}
 
-                config = self.config
                 cookies = await self._read_cookies(session)
                 if await self._probe_logged_in(session, page, cookies):
                     return await self._finish_success(session, session_id)
 
-                page_text = await collect_page_text(page)
-                progress = login_progress_from_text(page_text)
+                progress = await self._login_progress(session, page, cookies)
+                if progress is None:
+                    page_text = await collect_page_text(page)
+                    progress = login_progress_from_text(page_text)
                 if progress == "success_text":
                     return await self._finish_success(session, session_id)
                 if progress == "scanned":
                     return True, "已扫码，请在手机确认", {"status": STATUS_SCANNED}
                 if progress == "confirmed":
                     return True, "已扫码，请在手机确认", {"status": STATUS_CONFIRMED}
+                if progress == "expired":
+                    await session.close()
+                    QR_SESSIONS.pop(session_id, None)
+                    return True, "二维码已过期", {"status": STATUS_EXPIRED}
 
-                qr_missing = await find_qr_locator(page, config.qr_selectors) is None
-                due = time.monotonic() - session.last_refresh_at > QR_REFRESH_SECONDS
-                if qr_missing or due:
+                passive = await self._poll_passive_qr_update(session)
+                if passive is not None:
+                    session.qr_base64 = passive
+                    session.last_refresh_at = time.monotonic()
+                    logger.info("二维码已被动刷新 platform=%s", self.platform)
+                    return (
+                        True,
+                        "二维码已刷新",
+                        {"status": STATUS_REFRESHED, "qr_base64": passive},
+                    )
+
+                if await self._needs_qr_refresh(session, page):
                     new_qr = await self._refresh(session)
                     if new_qr is not None:
                         session.qr_base64 = new_qr
@@ -221,6 +232,43 @@ class QrcodeLogin:
             return False, "平台与会话不匹配", {"ok": False}
         await session.close()
         return True, "已取消", {"ok": True}
+
+    async def _before_login_goto(self, page: Any, session: QrSession) -> None:
+        """打开登录页前的准备（如注册网络监听）。"""
+
+    async def _prepare_for_qr(self, page: Any) -> None:
+        """等待二维码出现前的页面准备；子类可覆写。"""
+
+    async def _capture_qr(self, page: Any, session: QrSession) -> str | None:
+        """获取二维码 data URL；默认截 DOM。"""
+        config = self.config
+        deadline = time.monotonic() + QR_WAIT_TIMEOUT_MS / 1000
+        while time.monotonic() < deadline:
+            qr_base64 = await screenshot_qr(page, config.qr_selectors)
+            loc = await find_qr_locator(page, config.qr_selectors)
+            if loc is not None and qr_base64:
+                return qr_base64
+            await page.wait_for_timeout(400)
+        return await screenshot_qr(page, config.qr_selectors)
+
+    async def _poll_passive_qr_update(self, session: QrSession) -> str | None:
+        """监听侧被动收到的新 QR；默认无。"""
+        return None
+
+    async def _login_progress(
+        self,
+        session: QrSession,
+        page: Any,
+        cookies: list[dict[str, Any]],
+    ) -> str | None:
+        """从网络/API 等侧信道读取扫码进度；默认走页面文案。"""
+        return None
+
+    async def _needs_qr_refresh(self, session: QrSession, page: Any) -> bool:
+        config = self.config
+        qr_missing = await find_qr_locator(page, config.qr_selectors) is None
+        due = time.monotonic() - session.last_refresh_at > QR_REFRESH_SECONDS
+        return qr_missing or due
 
     async def _probe_logged_in(
         self,
@@ -261,6 +309,7 @@ class QrcodeLogin:
                     return shot
             await page.goto(config.login_entry_url, wait_until="domcontentloaded", timeout=40000)
             await page.wait_for_timeout(800)
+            await self._prepare_for_qr(page)
             shot = await screenshot_qr(page, config.qr_selectors)
             if shot:
                 return shot
@@ -301,6 +350,20 @@ class QrcodeLogin:
             return
         await self._goto(page, config.home_url, wait_ms=3000)
 
+    def _export_indicates_login(
+        self,
+        cookies: list[dict[str, Any]],
+        *,
+        page_url: str | None,
+    ) -> bool:
+        """导出 jar 是否足以视为已登录；子类可覆写（如 1688 SSO）。"""
+        config = self.config
+        return has_login_cookie(
+            cookies,
+            name=config.login_cookie_name,
+            domain_keyword=config.cookie_domain_keyword,
+        )
+
     async def _finish_success(
         self,
         session: QrSession,
@@ -318,11 +381,8 @@ class QrcodeLogin:
                 raw = await session.context.cookies()
                 exported = to_serializable_cookies(raw)
                 if exported:
-                    has_login = has_login_cookie(
-                        exported,
-                        name=config.login_cookie_name,
-                        domain_keyword=config.cookie_domain_keyword,
-                    )
+                    page_url = str(page.url) if page is not None else None
+                    has_login = self._export_indicates_login(exported, page_url=page_url)
                     logger.info(
                         "导出 cookies platform=%s attempt=%s count=%s domains=%s has_login=%s",
                         self.platform,

@@ -10,7 +10,7 @@ from channels.channel_factory import create_channel
 from channels.core.logging import bind_log_context
 from channels.core.platform_config import normalize_platform
 
-logger = logging.getLogger("dingda.sidecar.cookie-renew")
+logger = logging.getLogger("dingda.sidecar.channel.cookie_renew")
 
 
 async def handle_cookie_renew(payload: dict[str, Any] | None, *, trace_id: str) -> dict[str, Any]:
