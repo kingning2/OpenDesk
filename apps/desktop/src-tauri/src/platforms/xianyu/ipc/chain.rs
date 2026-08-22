@@ -41,6 +41,9 @@ macro_rules! platform_ipc_step_xianyu {
             monitor_task_delete,
             monitor_task_run,
             monitor_result_list,
+            monitor_run_list,
+            monitor_run_get,
+            monitor_stats,
             monitor_generate_keywords,
         )
     };

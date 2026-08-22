@@ -1,22 +1,27 @@
 //! 闲鱼监控 IPC — 任务 CRUD、手动运行、AI 生成关键词、结果列表。
 
-use business::monitor::{MonitorResult, MonitorService, MonitorTask};
+use business::monitor::{MonitorResult, MonitorRun, MonitorService, MonitorStats, MonitorTask};
 use chrono::Utc;
 use common::DingDaResult;
-use platform::xianyu::{InMemoryMonitorResultStore, InMemoryMonitorTaskStore};
+use platform::xianyu::{
+    InMemoryMonitorResultStore, InMemoryMonitorRunStore, InMemoryMonitorTaskStore,
+};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tauri::State;
 use uuid::Uuid;
 
 use crate::config::ConfigStore;
-use crate::platforms::xianyu::monitor::ai::{generate_keywords, AiFailoverContext};
+use crate::platforms::xianyu::monitor::ai::{
+    build_keyword_prompt, generate_keywords, AiFailoverContext,
+};
 use crate::platforms::xianyu::monitor::{MonitorEngine, MonitorRunSummary};
 use crate::shared::ipc::IpcResponse;
 
 pub struct MonitorHandle {
     pub tasks: Arc<InMemoryMonitorTaskStore>,
     pub results: Arc<InMemoryMonitorResultStore>,
+    pub runs: Arc<InMemoryMonitorRunStore>,
     pub engine: Arc<MonitorEngine>,
 }
 
@@ -56,7 +61,7 @@ fn default_max_results() -> u32 {
     20
 }
 fn default_headed() -> bool {
-    true
+    false
 }
 fn default_ai_failover_enabled() -> bool {
     true
@@ -66,6 +71,12 @@ fn default_ai_failover_enabled() -> bool {
 pub struct MonitorTaskIdRequest {
     pub owner_id: i64,
     pub task_id: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct MonitorRunIdRequest {
+    pub owner_id: i64,
+    pub run_id: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -88,7 +99,11 @@ pub struct MonitorGenerateKeywordsResponse {
 }
 
 fn service(handle: &MonitorHandle) -> MonitorService<'_> {
-    MonitorService::new(handle.tasks.as_ref(), handle.results.as_ref())
+    MonitorService::new(
+        handle.tasks.as_ref(),
+        handle.results.as_ref(),
+        handle.runs.as_ref(),
+    )
 }
 
 fn sanitize_ai_account_order(order: &[String], primary: &str) -> Vec<String> {
@@ -196,6 +211,34 @@ pub async fn monitor_result_list(
 }
 
 #[tauri::command]
+pub async fn monitor_run_list(
+    handle: State<'_, MonitorHandle>,
+    request: MonitorTaskIdRequest,
+) -> DingDaResult<IpcResponse<Vec<MonitorRun>>> {
+    Ok(IpcResponse::ok(
+        service(&handle).list_runs(request.owner_id, &request.task_id)?,
+    ))
+}
+
+#[tauri::command]
+pub async fn monitor_run_get(
+    handle: State<'_, MonitorHandle>,
+    request: MonitorRunIdRequest,
+) -> DingDaResult<IpcResponse<Option<MonitorRun>>> {
+    Ok(IpcResponse::ok(
+        service(&handle).get_run(request.owner_id, &request.run_id)?,
+    ))
+}
+
+#[tauri::command]
+pub async fn monitor_stats(
+    handle: State<'_, MonitorHandle>,
+    owner_id: i64,
+) -> DingDaResult<IpcResponse<MonitorStats>> {
+    Ok(IpcResponse::ok(service(&handle).stats(owner_id)?))
+}
+
+#[tauri::command]
 pub async fn monitor_generate_keywords(
     config_store: State<'_, Arc<ConfigStore>>,
     request: MonitorGenerateKeywordsRequest,
@@ -210,15 +253,11 @@ pub async fn monitor_generate_keywords(
         request.ai_failover_enabled,
         sanitize_ai_account_order(&request.ai_account_order, &request.ai_account_id),
     );
-    let keywords = generate_keywords(
-        &config,
-        &mut failover,
-        &request.intent,
-        &request.ai_criteria,
-    )
-    .await
-    .map_err(common::DingDaError::wrap)?;
+    let prompt = build_keyword_prompt(&request.intent, &request.ai_criteria);
+    let generated = generate_keywords(&config, &mut failover, &prompt)
+        .await
+        .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(MonitorGenerateKeywordsResponse {
-        keywords,
+        keywords: generated.keywords,
     }))
 }

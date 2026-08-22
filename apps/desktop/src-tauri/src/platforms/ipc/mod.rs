@@ -29,8 +29,8 @@ macro_rules! invoke_ipc_use_decls {
         #[cfg(platform_xianyu)]
         use $crate::platforms::xianyu::ipc::*;
         use $crate::shared::ipc::{
-            agent_ping, ai_account_balance, ai_config_get, ai_config_set, ai_test_api_key,
-            app_version, channel_connect, channel_disconnect, channel_send, channel_state_get,
+            ai_account_balance, ai_config_get, ai_config_set, ai_test_api_key, app_version,
+            channel_connect, channel_disconnect, channel_send, channel_state_get,
             channel_state_set, license_activate, license_machine_code, license_status, log_clear,
             log_recent, log_write, platform_descriptors, plugin_install, plugin_list,
             plugin_uninstall,
@@ -44,7 +44,6 @@ macro_rules! invoke_ipc_use_decls {
 macro_rules! with_shared_ipc {
     ($callback:ident) => {
         $callback!(
-            agent_ping,
             ai_config_get,
             ai_config_set,
             ai_test_api_key,

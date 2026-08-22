@@ -16,6 +16,18 @@ pub struct MonitorAiDecision {
     pub reason: String,
 }
 
+/// 关键词生成结果（含 AI 原始返回，供转录展示）。
+pub struct KeywordGenResult {
+    pub keywords: Vec<String>,
+    pub raw: String,
+}
+
+/// 单条商品决策结果（含 AI 原始返回，供转录展示）。
+pub struct DecideResult {
+    pub decision: MonitorAiDecision,
+    pub raw: String,
+}
+
 /// 单次任务运行内的 AI 账号切换上下文（成功后 sticky，避免每条商品重试已失败的账号）。
 #[derive(Debug, Clone)]
 pub struct AiFailoverContext {
@@ -177,19 +189,21 @@ fn build_provider_settings(account: &AiAccount, provider: &AiProvider) -> Provid
     }
 }
 
-pub async fn generate_keywords(
-    config: &AiIpcConfigResponse,
-    failover: &mut AiFailoverContext,
-    intent: &str,
-    criteria: &str,
-) -> Result<Vec<String>, String> {
-    let prompt = format!(
+pub fn build_keyword_prompt(intent: &str, criteria: &str) -> String {
+    format!(
         "你是闲鱼二手商品监控助手。根据用户购买意图生成 1~5 个适合在闲鱼搜索的关键词。\n\
          要求：只输出 JSON 数组，如 [\"关键词1\",\"关键词2\"]，不要其它文字。\n\
          用户意图：{intent}\n\
          筛选标准：{criteria}"
-    );
-    let raw = complete_json_with_failover(config, failover, &prompt).await?;
+    )
+}
+
+pub async fn generate_keywords(
+    config: &AiIpcConfigResponse,
+    failover: &mut AiFailoverContext,
+    prompt: &str,
+) -> Result<KeywordGenResult, String> {
+    let raw = complete_json_with_failover(config, failover, prompt).await?;
     let parsed: Vec<String> = serde_json::from_str(&extract_json_array(&raw))
         .map_err(|error| format!("AI 关键词 JSON 解析失败: {error}; raw={raw}"))?;
     let keywords: Vec<String> = parsed
@@ -200,25 +214,28 @@ pub async fn generate_keywords(
     if keywords.is_empty() {
         return Err("AI 未生成有效关键词".to_string());
     }
-    Ok(keywords)
+    Ok(KeywordGenResult { keywords, raw })
+}
+
+pub fn build_decision_prompt(criteria: &str, item_json: &str) -> String {
+    format!(
+        "你是闲鱼捡漏助手。根据筛选标准判断商品是否值得通知用户。\n\
+         只输出 JSON：{{\"recommended\": true/false, \"reason\": \"一句话理由\"}}\n\
+         筛选标准：{criteria}\n\
+         商品信息：{item_json}"
+    )
 }
 
 pub async fn decide_item(
     config: &AiIpcConfigResponse,
     failover: &mut AiFailoverContext,
-    criteria: &str,
-    item_json: &str,
-) -> Result<MonitorAiDecision, String> {
-    let prompt = format!(
-        "你是闲鱼捡漏助手。根据筛选标准判断商品是否值得通知用户。\n\
-         只输出 JSON：{{\"recommended\": true/false, \"reason\": \"一句话理由\"}}\n\
-         筛选标准：{criteria}\n\
-         商品信息：{item_json}"
-    );
-    let raw = complete_json_with_failover(config, failover, &prompt).await?;
+    prompt: &str,
+) -> Result<DecideResult, String> {
+    let raw = complete_json_with_failover(config, failover, prompt).await?;
     let json_text = extract_json_object(&raw);
-    serde_json::from_str(&json_text)
-        .map_err(|error| format!("AI 决策 JSON 解析失败: {error}; raw={raw}"))
+    let decision = serde_json::from_str(&json_text)
+        .map_err(|error| format!("AI 决策 JSON 解析失败: {error}; raw={raw}"))?;
+    Ok(DecideResult { decision, raw })
 }
 
 async fn complete_json_with_failover(

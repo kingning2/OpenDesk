@@ -19,7 +19,7 @@ mod platforms;
 mod shared;
 
 // `#[timed]` 展开为 `crate::timing`；命令层历史路径 `crate::agent` / `crate::state` 等亦走此 re-export。
-pub use shared::{agent, config, logging, state, timing};
+pub use shared::{config, logging, state, timing};
 
 use adapter::agent_sidecar::RuntimeAgentSidecar;
 use kernel::event::{EventBus, InMemoryEventBus};

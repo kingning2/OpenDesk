@@ -21,9 +21,9 @@ use common::DingDaResult;
 use platform::dispatcher::ChannelDispatcher;
 use platform::protocol::{ChannelKind, ChannelProtocol};
 use platform::xianyu::{
-    InMemoryAccountStore, InMemoryItemStore, InMemoryMonitorResultStore, InMemoryMonitorTaskStore,
-    InMemoryOrderStore, InMemoryRiskStore, InMemoryUserSettingStore, SqliteBusinessDb,
-    XianyuChannel,
+    InMemoryAccountStore, InMemoryItemStore, InMemoryMonitorResultStore, InMemoryMonitorRunStore,
+    InMemoryMonitorTaskStore, InMemoryOrderStore, InMemoryRiskStore, InMemoryUserSettingStore,
+    SqliteBusinessDb, XianyuChannel,
 };
 use std::sync::Arc;
 use tauri::Manager;
@@ -67,9 +67,11 @@ pub fn register_business(app: &tauri::AppHandle) -> DingDaResult<()> {
 
     let monitor_tasks = Arc::new(InMemoryMonitorTaskStore::new((**db).clone()));
     let monitor_results = Arc::new(InMemoryMonitorResultStore::new((**db).clone()));
+    let monitor_runs = Arc::new(InMemoryMonitorRunStore::new((**db).clone()));
     let engine = Arc::new(crate::platforms::xianyu::monitor::MonitorEngine {
         tasks: monitor_tasks.clone(),
         results: monitor_results.clone(),
+        runs: monitor_runs.clone(),
         app_state: Arc::new(
             app.state::<crate::shared::state::AppState>()
                 .inner()
@@ -85,6 +87,8 @@ pub fn register_business(app: &tauri::AppHandle) -> DingDaResult<()> {
             .inner()
             .clone(),
     });
+    // 清理上次中断残留的 is_running / running 运行记录，避免「立即运行」被卡死。
+    engine.recover_interrupted_runs(1)?;
     let scheduler = Arc::new(crate::platforms::xianyu::monitor::MonitorScheduler::new(
         engine.clone(),
         1,
@@ -93,6 +97,7 @@ pub fn register_business(app: &tauri::AppHandle) -> DingDaResult<()> {
     app.manage(ipc::monitor::MonitorHandle {
         tasks: monitor_tasks,
         results: monitor_results,
+        runs: monitor_runs,
         engine,
     });
 

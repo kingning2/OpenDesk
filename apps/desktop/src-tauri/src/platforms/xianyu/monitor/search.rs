@@ -10,6 +10,13 @@ use serde_json::Value;
 
 use crate::shared::state::AppState;
 
+/// 单次关键词搜索的结果与状态 — 供监控引擎展示扫描进度、判定会话失效。
+pub struct SearchOutcome {
+    pub offers: Vec<Value>,
+    pub status: String,
+    pub detail: String,
+}
+
 pub async fn search_offers(
     state: &AppState,
     account_store: &InMemoryAccountStore,
@@ -18,7 +25,7 @@ pub async fn search_offers(
     keyword: &str,
     max_results: i64,
     headed: bool,
-) -> DingDaResult<Vec<Value>> {
+) -> DingDaResult<SearchOutcome> {
     let service = AccountService::new(account_store);
     let account = service
         .list(owner_id)
@@ -65,5 +72,26 @@ pub async fn search_offers(
         .and_then(Value::as_array)
         .cloned()
         .unwrap_or_default();
-    Ok(offers)
+    let status = response
+        .get("status")
+        .and_then(Value::as_str)
+        .map(str::to_string)
+        .unwrap_or_else(|| {
+            if offers.is_empty() {
+                "empty"
+            } else {
+                "success"
+            }
+            .to_string()
+        });
+    let detail = response
+        .get("detail")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_string();
+    Ok(SearchOutcome {
+        offers,
+        status,
+        detail,
+    })
 }

@@ -24,7 +24,6 @@ pub mod shell_platform;
 pub mod state;
 
 // 从 dingda-business re-export，保持 IPC 层路径不变
-pub use business::agent;
 pub use business::config;
 pub use business::logging;
 pub use business::timing;
