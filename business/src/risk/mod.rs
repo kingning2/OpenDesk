@@ -151,6 +151,9 @@ pub trait RiskStore: Send + Sync {
 
     /// 追加风控日志（`id == 0` 时存储层自动分配）。
     fn append_log(&self, log: RiskLogItem) -> DingDaResult<RiskLogItem>;
+
+    /// 按 id 更新已有风控日志（用于过滑块结果回写）。
+    fn update_log(&self, log: &RiskLogItem) -> DingDaResult<()>;
 }
 
 /// 风控服务。
@@ -309,6 +312,83 @@ impl<'a> RiskService<'a> {
         };
         self.store.append_log(log)
     }
+
+    /// 记录本机过滑块结果（成功 / 失败）。
+    ///
+    /// 优先把同账号最新一条 `processing` 日志更新为终态；没有则追加新日志。
+    ///
+    /// 作者：Xiaoman
+    /// 创建时间：2026-08-21
+    ///
+    /// # 参数
+    /// - `owner_id` — 归属用户
+    /// - `account_id` — 账号 id
+    /// - `success` — 是否过滑块成功
+    /// - `detail` — 失败时的短错误；成功可传空
+    pub fn record_slider_outcome(
+        &self,
+        owner_id: i64,
+        account_id: &str,
+        success: bool,
+        detail: &str,
+    ) -> DingDaResult<RiskLogItem> {
+        let now = chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+        let status = if success { "success" } else { "failed" };
+        let processing_result = if success {
+            "本机过滑块成功，Cookie 已续期".to_string()
+        } else {
+            format!("本机过滑块失败：{}", truncate_detail(detail, 200))
+        };
+        let message = if success {
+            "本机过滑块成功".to_string()
+        } else {
+            "本机过滑块失败".to_string()
+        };
+
+        let processing = self.store.list_logs(
+            owner_id,
+            &RiskLogQuery {
+                account_id: account_id.to_string(),
+                processing_status: "processing".to_string(),
+                ..Default::default()
+            },
+        )?;
+        if let Some(mut log) = processing.into_iter().max_by_key(|item| item.id) {
+            log.risk_type = "slider".to_string();
+            log.message = message;
+            log.processing_result = processing_result;
+            log.processing_status = status.to_string();
+            log.captcha_engine = Some("playwright".to_string());
+            log.call_type = Some("local".to_string());
+            if !success {
+                log.error_message = Some(truncate_detail(detail, 500));
+            }
+            log.updated_at = Some(now);
+            self.store.update_log(&log)?;
+            return Ok(log);
+        }
+
+        let log = RiskLogItem {
+            id: 0,
+            owner_id,
+            account_id: account_id.to_string(),
+            risk_type: "slider".to_string(),
+            message,
+            processing_result,
+            processing_status: status.to_string(),
+            captcha_engine: Some("playwright".to_string()),
+            call_type: Some("local".to_string()),
+            call_user: None,
+            error_message: if success {
+                None
+            } else {
+                Some(truncate_detail(detail, 500))
+            },
+            created_at: Some(now),
+            updated_at: None,
+        };
+        self.store.append_log(log)
+    }
 }
 
 fn truncate_detail(detail: &str, max_chars: usize) -> String {
@@ -397,6 +477,16 @@ mod tests {
             }
             self.logs.lock().expect("lock").push(log.clone());
             Ok(log)
+        }
+
+        fn update_log(&self, log: &RiskLogItem) -> DingDaResult<()> {
+            let mut logs = self.logs.lock().expect("lock");
+            if let Some(slot) = logs.iter_mut().find(|item| item.id == log.id) {
+                *slot = log.clone();
+                Ok(())
+            } else {
+                Err(format!("风控日志不存在: {}", log.id).into())
+            }
         }
     }
 
@@ -503,5 +593,39 @@ mod tests {
         let message = log.error_message.expect("message");
         assert!(message.chars().count() <= 501);
         assert!(message.ends_with('…'));
+    }
+
+    #[test]
+    fn record_slider_outcome_updates_processing() {
+        let mock = store();
+        let service = RiskService::new(&mock);
+        service
+            .record_im_risk(1, "acc-new", "闲鱼 IM", "punish captcha")
+            .expect("processing");
+        let ok = service
+            .record_slider_outcome(1, "acc-new", true, "")
+            .expect("success");
+        assert_eq!(ok.processing_status, "success");
+        assert!(ok.processing_result.contains("成功"));
+        let processing = service
+            .list(
+                1,
+                &RiskLogQuery {
+                    account_id: "acc-new".to_string(),
+                    processing_status: "processing".to_string(),
+                    ..Default::default()
+                },
+            )
+            .expect("list");
+        assert_eq!(processing.total, 0);
+
+        service
+            .record_im_risk(1, "acc-fail", "闲鱼 IM", "punish captcha")
+            .expect("processing");
+        let failed = service
+            .record_slider_outcome(1, "acc-fail", false, "浏览器续期超时")
+            .expect("failed");
+        assert_eq!(failed.processing_status, "failed");
+        assert!(failed.processing_result.contains("失败"));
     }
 }

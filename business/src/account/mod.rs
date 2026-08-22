@@ -154,19 +154,45 @@ impl XianyuAccount {
         self.status == AccountStatus::Active
     }
 
-    /// 从 Cookie 中提取 UNB（缺失时回退 display_name）。
+    /// 从 Cookie 中提取 UNB（优先账号字段，再解析 Cookie / JSON 凭据）。
+    ///
+    /// 作者：Xiaoman
+    /// 创建时间：2026-08-18
     pub fn extract_unb(&self) -> String {
         if !self.unb.is_empty() {
             return self.unb.clone();
         }
-        // 简单提取：`unb=<value>`。
-        self.cookie
-            .split(';')
-            .find_map(|part| {
-                let part = part.trim();
-                part.strip_prefix("unb=").map(|v| v.trim().to_string())
-            })
-            .unwrap_or_default()
+        // `unb=<value>` 旧字符串。
+        if let Some(value) = self.cookie.split(';').find_map(|part| {
+            let part = part.trim();
+            part.strip_prefix("unb=").map(|v| v.trim().to_string())
+        }) {
+            return value;
+        }
+        // 滑块续期写回的 cookies JSON 数组 / 快照。
+        if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&self.cookie) {
+            let cookies = if let Some(arr) = parsed.as_array() {
+                Some(arr.as_slice())
+            } else {
+                parsed
+                    .get("cookies")
+                    .and_then(serde_json::Value::as_array)
+                    .map(|arr| arr.as_slice())
+            };
+            if let Some(arr) = cookies {
+                for item in arr {
+                    if item.get("name").and_then(serde_json::Value::as_str) == Some("unb") {
+                        if let Some(value) = item.get("value").and_then(serde_json::Value::as_str) {
+                            let value = value.trim();
+                            if !value.is_empty() {
+                                return value.to_string();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        String::new()
     }
 }
 
@@ -245,6 +271,13 @@ mod tests {
     fn unb_prefers_stored_value() {
         let acc = account("unb=U-999", "U-1");
         assert_eq!(acc.extract_unb(), "U-1");
+    }
+
+    #[test]
+    fn unb_extraction_from_json_cookie_array() {
+        let json = r#"[{"name":"unb","value":"2214350705775","domain":".goofish.com","path":"/"}]"#;
+        let acc = account(json, "");
+        assert_eq!(acc.extract_unb(), "2214350705775");
     }
 
     #[test]

@@ -1,10 +1,12 @@
-//! 应用级配置存储 — AI 账号与内置插件（OCR 等）。
+//! 应用级配置存储 — AI 账号与内置插件（OCR、Camoufox 等）。
 //!
 //! 设置弹窗是应用级入口：AI 配置写入 `ai-config.json`；插件文件落在
-//! `{app_local_data}/plugins/{plugin_id}/`（OCR 为 `plugins/ocr/tessdata/`）。
+//! `{app_local_data}/plugins/{plugin_id}/`（OCR 为 `plugins/ocr/tessdata/`，
+//! Camoufox 为 `plugins/camoufox/`）。
 //!
 //! 作者：Xiaoman
 //! 创建时间：2026-08-19
+//! 更新：2026-08-21 — 增加 Camoufox 插件导出。
 
 mod ai;
 mod plugins;
@@ -16,7 +18,10 @@ use common::DingDaResult;
 use std::path::{Path, PathBuf};
 
 pub use ai::AiConfigStore;
-pub use plugins::{plugin_assets, plugin_install_dir, tmp_path, PluginAsset, PLUGIN_ID_OCR};
+pub use plugins::{
+    find_camoufox_executable, plugin_assets, plugin_install_dir, tmp_path, PluginAsset,
+    PLUGIN_ID_CAMOUFOX, PLUGIN_ID_OCR,
+};
 
 /// 应用配置存储（AI JSON + 插件目录）。
 ///
