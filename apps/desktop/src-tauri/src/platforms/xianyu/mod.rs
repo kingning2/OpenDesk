@@ -7,5 +7,6 @@ pub mod bootstrap;
 pub mod cookie_renew;
 pub mod dev_host;
 pub mod ipc;
+pub mod monitor;
 pub mod persist;
 pub mod risk;

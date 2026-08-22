@@ -21,8 +21,9 @@ use common::DingDaResult;
 use platform::dispatcher::ChannelDispatcher;
 use platform::protocol::{ChannelKind, ChannelProtocol};
 use platform::xianyu::{
-    InMemoryAccountStore, InMemoryItemStore, InMemoryOrderStore, InMemoryRiskStore,
-    InMemoryUserSettingStore, SqliteBusinessDb, XianyuChannel,
+    InMemoryAccountStore, InMemoryItemStore, InMemoryMonitorResultStore, InMemoryMonitorTaskStore,
+    InMemoryOrderStore, InMemoryRiskStore, InMemoryUserSettingStore, SqliteBusinessDb,
+    XianyuChannel,
 };
 use std::sync::Arc;
 use tauri::Manager;
@@ -62,6 +63,37 @@ pub fn register_business(app: &tauri::AppHandle) -> DingDaResult<()> {
         accounts,
         items,
         orders,
+    });
+
+    let monitor_tasks = Arc::new(InMemoryMonitorTaskStore::new((**db).clone()));
+    let monitor_results = Arc::new(InMemoryMonitorResultStore::new((**db).clone()));
+    let engine = Arc::new(crate::platforms::xianyu::monitor::MonitorEngine {
+        tasks: monitor_tasks.clone(),
+        results: monitor_results.clone(),
+        app_state: Arc::new(
+            app.state::<crate::shared::state::AppState>()
+                .inner()
+                .clone(),
+        ),
+        account_store: app.state::<AccountHandle>().store.clone(),
+        config_store: app
+            .state::<Arc<crate::config::ConfigStore>>()
+            .inner()
+            .clone(),
+        event_sink: app
+            .state::<Arc<dyn common::events::EventSink>>()
+            .inner()
+            .clone(),
+    });
+    let scheduler = Arc::new(crate::platforms::xianyu::monitor::MonitorScheduler::new(
+        engine.clone(),
+        1,
+    ));
+    scheduler.clone().start();
+    app.manage(ipc::monitor::MonitorHandle {
+        tasks: monitor_tasks,
+        results: monitor_results,
+        engine,
     });
 
     // 扫码成功后置逻辑：闲鱼账号自动建渠道 WS 并拉取用户资料。

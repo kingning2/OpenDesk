@@ -14,8 +14,10 @@ pub mod chain;
 pub mod chat;
 pub mod dashboard;
 pub mod item;
+pub mod monitor;
 pub mod order;
 pub mod risk;
+pub mod search;
 pub mod setting;
 
 pub use account_connection::{
@@ -27,6 +29,10 @@ pub use chat::{
 };
 pub use dashboard::dashboard_stats;
 pub use item::{item_detail_fetch, item_get, item_list, item_sync, item_update};
+pub use monitor::{
+    monitor_generate_keywords, monitor_result_list, monitor_task_delete, monitor_task_list,
+    monitor_task_run, monitor_task_save,
+};
 pub use order::{
     order_create, order_delete, order_get, order_list, order_update_delivery, order_update_status,
 };
@@ -34,4 +40,5 @@ pub use risk::{
     risk_config_get, risk_config_set, risk_log_clear, risk_log_clear_processing, risk_log_list,
     risk_log_today_rate,
 };
+pub use search::xianyu_search;
 pub use setting::{user_setting_get, user_setting_set};

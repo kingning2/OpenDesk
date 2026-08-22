@@ -48,6 +48,7 @@ pub use event_sink::KernelEventSink;
 // --- 原 crates/app 模块（业务层，渠道无关） ---
 pub mod account;
 pub mod item;
+pub mod monitor;
 pub mod order;
 pub mod risk;
 pub mod setting;
@@ -57,6 +58,9 @@ pub use account::{
     AccountUpdate, DeliveryGuard, LoginMethod, ProxyConfig, XianyuAccount,
 };
 pub use item::{Item, ItemQuery, ItemService, ItemStore};
+pub use monitor::{
+    MonitorResult, MonitorResultStore, MonitorService, MonitorTask, MonitorTaskStore,
+};
 pub use order::{DeliveryInfoUpdate, DeliveryMethod, Order, OrderService, OrderStatus, OrderStore};
 pub use risk::{
     RiskConfig, RiskLogItem, RiskLogPage, RiskLogQuery, RiskService, RiskStore,

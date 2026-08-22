@@ -144,6 +144,9 @@ impl<'a> AccountService<'a> {
         if let Some(unb) = &patch.unb {
             account.unb = unb.clone();
         }
+        if let Some(platform) = &patch.platform {
+            account.platform = platform.clone();
+        }
         if let Some(login_method) = patch.login_method {
             account.login_method = login_method;
         }

@@ -35,6 +35,13 @@ macro_rules! platform_ipc_step_xianyu {
             channel_qr_start,
             channel_qr_check,
             channel_qr_cancel,
+            xianyu_search,
+            monitor_task_list,
+            monitor_task_save,
+            monitor_task_delete,
+            monitor_task_run,
+            monitor_result_list,
+            monitor_generate_keywords,
         )
     };
 }

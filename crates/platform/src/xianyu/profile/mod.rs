@@ -4,6 +4,7 @@
 //! 创建时间：2026-08-21
 
 mod headinfo;
+#[allow(clippy::module_inception)]
 mod profile;
 
 pub use headinfo::fetch_message_headinfo;

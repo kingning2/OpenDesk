@@ -20,6 +20,7 @@ use super::db::SqliteBusinessDb;
 
 use business::account::{AccountStore, XianyuAccount};
 use business::item::{Item, ItemQuery, ItemStore};
+use business::monitor::{MonitorResult, MonitorResultStore, MonitorTask, MonitorTaskStore};
 use business::order::{DeliveryInfoUpdate, Order, OrderStatus, OrderStore};
 use business::risk::{RiskConfig, RiskLogItem, RiskLogQuery, RiskStore};
 use business::setting::UserSettingStore;
@@ -511,5 +512,83 @@ impl UserSettingStore for InMemoryUserSettingStore {
                 .db
                 .put(DOMAIN_SETTING, key, owner_id, &value.to_string())?)
         }
+    }
+}
+
+// ─── 闲鱼监控 ──────────────────────────────────────────────────────────────────
+
+const DOMAIN_MONITOR_TASK: &str = "monitor_task";
+const DOMAIN_MONITOR_RESULT: &str = "monitor_result";
+
+fn monitor_result_record_id(task_id: &str, item_id: &str) -> String {
+    format!("{task_id}:{item_id}")
+}
+
+/// SQLite 监控任务存储。
+#[derive(Clone)]
+pub struct InMemoryMonitorTaskStore {
+    db: SqliteBusinessDb,
+}
+
+impl InMemoryMonitorTaskStore {
+    pub fn new(db: SqliteBusinessDb) -> Self {
+        Self { db }
+    }
+}
+
+impl MonitorTaskStore for InMemoryMonitorTaskStore {
+    fn list_tasks(&self, owner_id: i64) -> DingDaResult<Vec<MonitorTask>> {
+        Ok(self.db.scan(DOMAIN_MONITOR_TASK, owner_id)?)
+    }
+
+    fn get_task(&self, owner_id: i64, task_id: &str) -> DingDaResult<Option<MonitorTask>> {
+        Ok(self.db.get(DOMAIN_MONITOR_TASK, task_id, owner_id)?)
+    }
+
+    fn put_task(&self, task: &MonitorTask) -> DingDaResult<()> {
+        Ok(self
+            .db
+            .put(DOMAIN_MONITOR_TASK, &task.id, task.owner_id, task)?)
+    }
+
+    fn delete_task(&self, owner_id: i64, task_id: &str) -> DingDaResult<()> {
+        Ok(self.db.delete(DOMAIN_MONITOR_TASK, task_id, owner_id)?)
+    }
+}
+
+/// SQLite 监控结果存储。
+#[derive(Clone)]
+pub struct InMemoryMonitorResultStore {
+    db: SqliteBusinessDb,
+}
+
+impl InMemoryMonitorResultStore {
+    pub fn new(db: SqliteBusinessDb) -> Self {
+        Self { db }
+    }
+}
+
+impl MonitorResultStore for InMemoryMonitorResultStore {
+    fn list_results(&self, owner_id: i64, task_id: &str) -> DingDaResult<Vec<MonitorResult>> {
+        let all: Vec<MonitorResult> = self.db.scan(DOMAIN_MONITOR_RESULT, owner_id)?;
+        Ok(all
+            .into_iter()
+            .filter(|item| item.task_id == task_id)
+            .collect())
+    }
+
+    fn has_result(&self, owner_id: i64, task_id: &str, item_id: &str) -> DingDaResult<bool> {
+        let record_id = monitor_result_record_id(task_id, item_id);
+        Ok(self
+            .db
+            .get::<MonitorResult>(DOMAIN_MONITOR_RESULT, &record_id, owner_id)?
+            .is_some())
+    }
+
+    fn put_result(&self, result: &MonitorResult) -> DingDaResult<()> {
+        let record_id = monitor_result_record_id(&result.task_id, &result.item_id);
+        Ok(self
+            .db
+            .put(DOMAIN_MONITOR_RESULT, &record_id, result.owner_id, result)?)
     }
 }

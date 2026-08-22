@@ -3,8 +3,14 @@
 //! 壳层组合：`InMemoryAccountStore` → `business::account::AccountService`（校验 + 编排）。
 
 use crate::shared::ipc::IpcResponse;
-use business::account::{AccountService, AccountStatus, AccountUpdate, XianyuAccount};
+use crate::shared::state::AppState;
+use business::account::{
+    AccountService, AccountStatus, AccountStore, AccountUpdate, XianyuAccount,
+};
 use common;
+use common::contracts::ChannelSidecarLoginProbeRequest;
+use platform::ali1688::resolve_account_platform;
+use platform::xianyu::cookies::parse_credential;
 use platform::xianyu::stores::InMemoryAccountStore;
 use serde::Deserialize;
 use std::sync::Arc;
@@ -21,6 +27,13 @@ pub struct AccountStatusRequest {
 /// 账号删除入参。
 #[derive(Debug, Deserialize)]
 pub struct AccountDeleteRequest {
+    pub owner_id: i64,
+    pub account_id: String,
+}
+
+/// 账号探针入参（owner + account_id）。
+#[derive(Debug, Deserialize)]
+pub struct AccountProbeRequest {
     pub owner_id: i64,
     pub account_id: String,
 }
@@ -95,4 +108,98 @@ pub fn account_delete(
         .delete(request.owner_id, &request.account_id)
         .map_err(common::DingDaError::wrap)?;
     Ok(IpcResponse::ok(()))
+}
+
+/// 探测账号 Cookie 是否仍在线（1688 → sidecar Playwright；闲鱼 → mtop 用户资料）。
+#[tauri::command]
+pub async fn account_probe_login(
+    state: State<'_, AccountHandle>,
+    app_state: State<'_, AppState>,
+    request: AccountProbeRequest,
+) -> common::DingDaResult<IpcResponse<bool>> {
+    let account = state
+        .store
+        .get_account(request.owner_id, &request.account_id)
+        .map_err(common::DingDaError::wrap)?
+        .ok_or_else(|| format!("账号不存在: {}", request.account_id))?;
+    let platform = resolve_account_platform(&account.account_id, &account.platform);
+
+    tracing::info!(
+        target: "dingda.platform.login_probe",
+        account_id = %request.account_id,
+        platform,
+        stored_platform = %account.platform,
+        has_cookie = account.has_cookie(),
+        unb = %account.unb,
+        "账号登录探针开始"
+    );
+
+    if !account.has_cookie() {
+        tracing::info!(
+            target: "dingda.platform.login_probe",
+            account_id = %request.account_id,
+            reason = "empty_cookie",
+            "账号登录探针跳过"
+        );
+        return Ok(IpcResponse::ok(false));
+    }
+
+    let ok = if platform == "ali1688" {
+        let cookies = parse_credential(&account.cookie);
+        if cookies.is_empty() {
+            tracing::info!(
+                target: "dingda.platform.login_probe",
+                account_id = %request.account_id,
+                reason = "unparseable_cookie",
+                "1688 登录探针跳过"
+            );
+            false
+        } else {
+            let sidecar_request = ChannelSidecarLoginProbeRequest {
+                account_id: request.account_id.clone(),
+                cookies,
+                headed: Some(false),
+                platform: Some("ali1688".to_string()),
+                trace_id: Some(format!("ali1688-login-probe-{}", request.account_id)),
+            };
+            let sidecar = app_state.lifecycle.client();
+            match runtime::sidecar::routes::channel_login_probe::call(sidecar, sidecar_request)
+                .await
+            {
+                Ok(response) => {
+                    tracing::info!(
+                        target: "dingda.platform.ali1688.login_probe",
+                        account_id = %request.account_id,
+                        online = response.online,
+                        status = %response.status,
+                        detail = response.detail.as_deref().unwrap_or(""),
+                        "1688 Playwright 登录探针完成"
+                    );
+                    response.ok && response.online
+                }
+                Err(error) => {
+                    tracing::info!(
+                        target: "dingda.platform.ali1688.login_probe",
+                        account_id = %request.account_id,
+                        error = %error,
+                        "1688 Playwright 登录探针失败，视为离线"
+                    );
+                    false
+                }
+            }
+        }
+    } else {
+        platform::xianyu::fetch_user_profile(&account.cookie)
+            .await
+            .is_ok()
+    };
+
+    tracing::info!(
+        target: "dingda.platform.login_probe",
+        account_id = %request.account_id,
+        platform,
+        online = ok,
+        "账号登录探针完成"
+    );
+    Ok(IpcResponse::ok(ok))
 }

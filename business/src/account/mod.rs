@@ -254,6 +254,8 @@ pub struct AccountUpdate {
     pub cookie_1688: Option<String>,
     /// 更新 UNB 标识。
     pub unb: Option<String>,
+    /// 更新平台（`xianyu` / `ali1688`）。
+    pub platform: Option<String>,
     pub login_method: Option<LoginMethod>,
     /// 最近登录时间。
     pub last_login_at: Option<String>,

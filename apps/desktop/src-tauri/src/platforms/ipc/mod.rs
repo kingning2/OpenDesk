@@ -20,9 +20,11 @@ compile_error!("至少启用一个平台 feature（见 Cargo.toml [features]）"
 #[macro_export]
 macro_rules! invoke_ipc_use_decls {
     () => {
+        #[cfg(platform_ali1688)]
+        use $crate::platforms::ali1688::ipc::ali1688_search;
         use $crate::platforms::core::{
-            account_create, account_delete, account_list, account_qr_cancel, account_qr_check,
-            account_qr_start, account_set_status, account_update,
+            account_create, account_delete, account_list, account_probe_login, account_qr_cancel,
+            account_qr_check, account_qr_start, account_set_status, account_update,
         };
         #[cfg(platform_xianyu)]
         use $crate::platforms::xianyu::ipc::*;
@@ -55,6 +57,7 @@ macro_rules! with_shared_ipc {
             account_update,
             account_set_status,
             account_delete,
+            account_probe_login,
             account_qr_start,
             account_qr_check,
             account_qr_cancel,

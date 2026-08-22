@@ -8,6 +8,7 @@ pub mod account_qr;
 pub mod bootstrap;
 
 pub use account::{
-    account_create, account_delete, account_list, account_set_status, account_update,
+    account_create, account_delete, account_list, account_probe_login, account_set_status,
+    account_update,
 };
 pub use account_qr::{account_qr_cancel, account_qr_check, account_qr_start};

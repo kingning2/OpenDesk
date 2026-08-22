@@ -23,6 +23,7 @@ use std::sync::Arc;
 ///
 /// 作者：coisini
 /// 创建时间：2026-07-16
+#[derive(Clone)]
 pub struct AppState {
     /// Sidecar 生命周期控制器。
     pub lifecycle: Arc<SidecarLifecycle>,

@@ -32,6 +32,6 @@ pub use db::SqliteBusinessDb;
 pub use item::{fetch_item_detail, fetch_seller_items, PlatformItem, PlatformItemDetail};
 pub use profile::{fetch_message_headinfo, fetch_user_profile, UserProfile};
 pub use stores::{
-    InMemoryAccountStore, InMemoryItemStore, InMemoryOrderStore, InMemoryRiskStore,
-    InMemoryUserSettingStore,
+    InMemoryAccountStore, InMemoryItemStore, InMemoryMonitorResultStore, InMemoryMonitorTaskStore,
+    InMemoryOrderStore, InMemoryRiskStore, InMemoryUserSettingStore,
 };

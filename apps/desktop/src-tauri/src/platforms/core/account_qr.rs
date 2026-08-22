@@ -165,7 +165,7 @@ pub async fn account_qr_check(
                                 cookie: Some(account.cookie.clone()),
                                 cookie_1688: Some(account.cookie_1688.clone()),
                                 unb: Some(account.unb.clone()),
-                                remark: Some(account.remark.clone()),
+                                platform: Some(platform.to_string()),
                                 login_method: Some(LoginMethod::Qr),
                                 last_login_at: Some(now_string()),
                                 ..Default::default()
@@ -183,7 +183,6 @@ pub async fn account_qr_check(
             info!(
                 account = %account.account_id,
                 platform,
-                remark = %account.remark,
                 "扫码成功，账号已落库"
             );
 

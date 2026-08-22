@@ -1,38 +1,29 @@
-//! 共享扫码账号派生 — 从 sidecar 导出的 Cookie 构造业务账号（按平台分袋）。
-//!
-//! 纯逻辑、无 Tauri 类型；1688 分支委托 [`crate::ali1688::account_from_cookies`]。
-//!
-//! 作者：Xiaoman
-//! 创建时间：2026-08-22
+//! 1688 扫码落库 — 从 sidecar Cookie 派生业务账号。
 
-use super::account::{cookie_domains_for_log, xianyu_cookie_header};
+use super::cookie::cookie_header_from_cookies;
+use crate::core::cookie_domains_for_log;
 use business::account::{
     AccountAutomation, AccountStatus, DeliveryGuard, LoginMethod, ProxyConfig, XianyuAccount,
 };
 use common::contracts::ChannelCookie;
 
-/// 从 cookies 构造业务账号（单站）。
-pub fn account_from_cookies(platform: &str, cookies: &[ChannelCookie]) -> XianyuAccount {
-    #[cfg(platform_ali1688)]
-    if platform == "ali1688" {
-        return crate::ali1688::account_from_cookies(cookies);
-    }
-
+/// 从 cookies 构造 1688 业务账号。
+pub fn account_from_cookies(cookies: &[ChannelCookie]) -> XianyuAccount {
     let unb = cookies
         .iter()
         .find(|cookie| cookie.name == "unb")
         .map(|cookie| cookie.value.clone())
         .unwrap_or_default();
 
-    let cookie = xianyu_cookie_header(cookies);
+    let cookie = cookie_header_from_cookies(cookies);
     let account_id = if unb.is_empty() {
-        "xianyu-qr".to_string()
+        "1688-qr".to_string()
     } else {
-        unb.clone()
+        format!("1688:{unb}")
     };
     let domains = cookie_domains_for_log(cookies).join(",");
 
-    tracing::info!(platform = "xianyu", domains, "单站登录态已判定");
+    tracing::info!(platform = "ali1688", domains, "单站登录态已判定");
 
     XianyuAccount {
         id: 0,
@@ -45,7 +36,7 @@ pub fn account_from_cookies(platform: &str, cookies: &[ChannelCookie]) -> Xianyu
         unb,
         cookie,
         cookie_1688: String::new(),
-        platform: platform.to_string(),
+        platform: crate::ali1688::PLATFORM_ID.to_string(),
         login_method: LoginMethod::Qr,
         status: AccountStatus::Active,
         remark: String::new(),

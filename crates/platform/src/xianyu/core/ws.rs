@@ -447,7 +447,7 @@ impl XianyuChannel {
             let headers = request.headers_mut();
             headers.insert(
                 "Cookie",
-                cookie_header_value(&cookie_str).map_err(|error| ChannelError::Protocol(error))?,
+                cookie_header_value(&cookie_str).map_err(ChannelError::Protocol)?,
             );
             headers.insert("Origin", HeaderValue::from_static(xianyu::WEB_ORIGIN));
             headers.insert(

@@ -23,6 +23,8 @@ pub const TOPIC_TASK: &str = "app/task";
 pub const TOPIC_CHANNEL_MESSAGE: &str = "channel/message";
 /// 渠道连接状态 topic。
 pub const TOPIC_CHANNEL_STATUS: &str = "channel/status";
+/// 闲鱼监控命中 topic。
+pub const TOPIC_MONITOR: &str = "app/monitor";
 
 /// 应用级事件 — 涵盖消息、账号、后台任务状态。
 ///
@@ -41,6 +43,8 @@ pub enum AppEvent {
     ChannelMessage(ChannelMessageEvent),
     /// 渠道连接状态变更。
     ChannelStatus(ChannelStatusEvent),
+    /// 闲鱼监控 AI 推荐命中。
+    MonitorMatch(MonitorMatchEvent),
 }
 
 /// 消息类事件载荷。
@@ -185,6 +189,19 @@ pub struct ChannelStatusEvent {
     pub detail: Option<String>,
 }
 
+/// 闲鱼监控命中通知载荷。
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MonitorMatchEvent {
+    pub task_id: String,
+    pub task_name: String,
+    pub item_id: String,
+    pub title: String,
+    pub url: String,
+    pub price_text: String,
+    pub reason: String,
+}
+
 impl AppEvent {
     /// 返回事件应发布到的 topic。
     ///
@@ -197,6 +214,7 @@ impl AppEvent {
             AppEvent::Task(_) => TOPIC_TASK,
             AppEvent::ChannelMessage(_) => TOPIC_CHANNEL_MESSAGE,
             AppEvent::ChannelStatus(_) => TOPIC_CHANNEL_STATUS,
+            AppEvent::MonitorMatch(_) => TOPIC_MONITOR,
         }
     }
 }
