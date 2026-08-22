@@ -9,6 +9,7 @@ from .ai_ipc_config_request import AiIpcConfigRequest
 from .ai_ipc_config_response import AiIpcConfigResponse
 from .ai_provider import AiProvider
 from .channel_account import ChannelAccount
+from .channel_ali1688_search_offer import ChannelAli1688SearchOffer
 from .channel_conversation import ChannelConversation
 from .channel_cookie import ChannelCookie
 from .channel_event_message import ChannelEventMessage
@@ -35,12 +36,17 @@ from .channel_message import ChannelMessage
 from .channel_settings import ChannelSettings
 from .channel_sidecar_cookie_renew_request import ChannelSidecarCookieRenewRequest
 from .channel_sidecar_cookie_renew_response import ChannelSidecarCookieRenewResponse
+from .channel_sidecar_login_probe_request import ChannelSidecarLoginProbeRequest
+from .channel_sidecar_login_probe_response import ChannelSidecarLoginProbeResponse
 from .channel_sidecar_qr_cancel_request import ChannelSidecarQrCancelRequest
 from .channel_sidecar_qr_cancel_response import ChannelSidecarQrCancelResponse
 from .channel_sidecar_qr_check_request import ChannelSidecarQrCheckRequest
 from .channel_sidecar_qr_check_response import ChannelSidecarQrCheckResponse
 from .channel_sidecar_qr_start_request import ChannelSidecarQrStartRequest
 from .channel_sidecar_qr_start_response import ChannelSidecarQrStartResponse
+from .channel_sidecar_search_request import ChannelSidecarSearchRequest
+from .channel_sidecar_search_response import ChannelSidecarSearchResponse
+from .channel_xianyu_search_item import ChannelXianyuSearchItem
 from .llm_ipc_chat_request import LlmIpcChatRequest
 from .llm_ipc_chat_response import LlmIpcChatResponse
 from .llm_ipc_classify_request import LlmIpcClassifyRequest
@@ -68,6 +74,7 @@ __all__ = [
     "AiIpcConfigResponse",
     "AiProvider",
     "ChannelAccount",
+    "ChannelAli1688SearchOffer",
     "ChannelConversation",
     "ChannelCookie",
     "ChannelEventMessage",
@@ -94,12 +101,17 @@ __all__ = [
     "ChannelSettings",
     "ChannelSidecarCookieRenewRequest",
     "ChannelSidecarCookieRenewResponse",
+    "ChannelSidecarLoginProbeRequest",
+    "ChannelSidecarLoginProbeResponse",
     "ChannelSidecarQrCancelRequest",
     "ChannelSidecarQrCancelResponse",
     "ChannelSidecarQrCheckRequest",
     "ChannelSidecarQrCheckResponse",
     "ChannelSidecarQrStartRequest",
     "ChannelSidecarQrStartResponse",
+    "ChannelSidecarSearchRequest",
+    "ChannelSidecarSearchResponse",
+    "ChannelXianyuSearchItem",
     "LlmIpcChatRequest",
     "LlmIpcChatResponse",
     "LlmIpcClassifyRequest",
