@@ -312,6 +312,18 @@ export function useXianyuAutoConnect(): void {
         if (cancelled || startedRef.current || !config.enabled) {
           return undefined;
         }
+        // 开发态：改 Rust 会整进程重启；若仍自动连，会疯狂 /reg+token 撞风控。
+        // 需要测启动自动连时设 VITE_FORCE_AUTO_CONNECT=1。
+        const forceDevAutoConnect =
+          import.meta.env.VITE_FORCE_AUTO_CONNECT === "1" ||
+          import.meta.env.VITE_FORCE_AUTO_CONNECT === "true";
+        if (import.meta.env.DEV && !forceDevAutoConnect) {
+          void logWrite(
+            "开发模式跳过启动自动连接（改代码重编译会断 WS；需要时手动连接，或设 VITE_FORCE_AUTO_CONNECT=1）",
+            "INFO",
+          ).catch(() => {});
+          return undefined;
+        }
         startedRef.current = true;
         return accountList(OWNER_ID).then((list) => {
           if (!cancelled) {

@@ -1,1 +1,1 @@
-"""DingDa AI sidecar package."""
+"""DingDa Python sidecar package."""

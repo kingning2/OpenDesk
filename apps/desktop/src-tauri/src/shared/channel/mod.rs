@@ -16,3 +16,6 @@ pub use app::channel::{conversation_id_for, filter_reply, inbound_to_message, Ch
 #[cfg(platform_xianyu)]
 pub mod cookie_renew;
 pub mod coordinator;
+
+#[cfg(all(debug_assertions, platform_xianyu))]
+pub mod dev_host;

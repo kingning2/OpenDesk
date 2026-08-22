@@ -122,8 +122,9 @@ impl ChannelRepo {
                (id, account_id, cid, peer_id, peer_name, item_id, item_title, item_price, updated_at) \
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) \
              ON CONFLICT(id) DO UPDATE SET \
-               cid=excluded.cid, peer_name=excluded.peer_name, item_id=excluded.item_id, \
-               item_title=excluded.item_title, item_price=excluded.item_price, updated_at=excluded.updated_at",
+               cid=excluded.cid, peer_id=excluded.peer_id, peer_name=excluded.peer_name, \
+               item_id=excluded.item_id, item_title=excluded.item_title, \
+               item_price=excluded.item_price, updated_at=excluded.updated_at",
         )
         .bind::<Text, _>(&conversation.id)
         .bind::<Text, _>(&conversation.account_id)
@@ -186,6 +187,36 @@ impl ChannelRepo {
         )
         .bind::<Text, _>(peer_id)
         .bind::<Text, _>(item_id)
+        .load::<ConversationRow>(&mut *self.conn()?)
+        .map_err(|error| ChannelStoreError::Db(error.to_string()))?
+        .into_iter()
+        .map(Into::into)
+        .collect::<Vec<_>>();
+        Ok(rows.into_iter().next())
+    }
+
+    /// 按 goofish 会话 cid 查会话（同一 cid 可能曾用占位 peer 入库）。
+    ///
+    /// 作者：Xiaoman
+    /// 创建时间：2026-08-21
+    ///
+    /// # 参数
+    /// - `cid` — 裸会话 id
+    ///
+    /// # 返回值
+    /// 命中则返回会话；多行时取 `updated_at` 最新一条。
+    pub fn find_conversation_by_cid(
+        &self,
+        cid: &str,
+    ) -> Result<Option<ChannelConversation>, ChannelStoreError> {
+        if cid.is_empty() {
+            return Ok(None);
+        }
+        let rows = diesel::sql_query(
+            "SELECT id, account_id, cid, peer_id, peer_name, item_id, item_title, item_price, updated_at \
+             FROM channel_conversations WHERE cid = ? ORDER BY updated_at DESC LIMIT 1",
+        )
+        .bind::<Text, _>(cid)
         .load::<ConversationRow>(&mut *self.conn()?)
         .map_err(|error| ChannelStoreError::Db(error.to_string()))?
         .into_iter()

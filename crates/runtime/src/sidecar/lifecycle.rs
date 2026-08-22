@@ -320,8 +320,8 @@ fn resolve_sidecar_dir() -> PathBuf {
 
     if let Ok(mut dir) = std::env::current_dir() {
         for _ in 0..6 {
-            let candidate = dir.join("python").join("sidecar");
-            if candidate.exists() {
+            let candidate = dir.join("python");
+            if candidate.join("pyproject.toml").is_file() {
                 return candidate;
             }
             if !dir.pop() {
@@ -330,7 +330,7 @@ fn resolve_sidecar_dir() -> PathBuf {
         }
     }
 
-    PathBuf::from("python/sidecar")
+    PathBuf::from("python")
 }
 
 fn build_spawn_command(config: &SidecarConfig) -> Result<Command, SidecarLifecycleError> {
@@ -404,6 +404,15 @@ fn configure_stdio(mut command: Command) -> Command {
         .stdin(std::process::Stdio::null())
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped());
+    // 透传插件目录与 Camoufox 路径（桌面端在 setup / 安装后写入进程环境）。
+    if let Ok(plugins) = std::env::var("DINGDA_PLUGINS_DIR") {
+        command.env("DINGDA_PLUGINS_DIR", plugins);
+    }
+    if let Ok(exe) = std::env::var("DINGDA_CAMOUFOX_EXE") {
+        if !exe.trim().is_empty() {
+            command.env("DINGDA_CAMOUFOX_EXE", exe);
+        }
+    }
     command
 }
 

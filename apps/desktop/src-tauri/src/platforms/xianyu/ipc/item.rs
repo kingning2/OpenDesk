@@ -169,13 +169,31 @@ pub async fn item_sync(
     let mut updated = 0u32;
 
     for account in targets {
-        let user_id = account.extract_unb();
+        let cookie_header = platform::xianyu::cookies::credential_to_cookie_header(&account.cookie);
+        let user_id = {
+            let from_account = account.extract_unb();
+            if !from_account.is_empty() {
+                from_account
+            } else {
+                platform::xianyu::cookies::my_id(&platform::xianyu::cookies::parse_credential(
+                    &cookie_header,
+                ))
+                .unwrap_or_default()
+            }
+        };
         if user_id.is_empty() {
             warn!(account = %account.account_id, "账号缺少 unb，跳过商品同步");
             continue;
         }
 
-        let (platform_items, updated_cookie) = fetch_seller_items(&account.cookie, &user_id, 0)
+        // Cookie 可能是续期 JSON；规范化后再请求。若 Header 仍无 unb，补上账号字段。
+        let cookie_for_fetch = if cookie_header.contains("unb=") {
+            cookie_header
+        } else {
+            format!("unb={user_id}; {cookie_header}")
+        };
+
+        let (platform_items, updated_cookie) = fetch_seller_items(&cookie_for_fetch, &user_id, 0)
             .await
             .map_err(common::DingDaError::wrap)?;
 
@@ -288,9 +306,12 @@ pub async fn item_detail_fetch(
         return Err("账号缺少 Cookie，请先扫码登录".into());
     }
 
-    let (detail, updated_cookie) = fetch_item_detail(&account.cookie, &request.item_id)
-        .await
-        .map_err(common::DingDaError::wrap)?;
+    let (detail, updated_cookie) = fetch_item_detail(
+        &platform::xianyu::cookies::credential_to_cookie_header(&account.cookie),
+        &request.item_id,
+    )
+    .await
+    .map_err(common::DingDaError::wrap)?;
 
     if updated_cookie != account.cookie {
         account_service

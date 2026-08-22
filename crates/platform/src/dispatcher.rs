@@ -149,6 +149,36 @@ impl ChannelDispatcher {
             .unwrap_or(ConnectionState::Disconnected)
     }
 
+    /// 列出当前已登记的账号及其连接状态。
+    ///
+    /// 作者：Xiaoman
+    /// 创建时间：2026-08-21
+    ///
+    /// # 返回值
+    ///
+    /// `(account_id, state)` 列表。
+    pub async fn list_sessions(&self) -> Vec<(String, ConnectionState)> {
+        self.active
+            .read()
+            .await
+            .iter()
+            .map(|(id, protocol)| (id.clone(), protocol.connection_state()))
+            .collect()
+    }
+
+    /// 将已有协议实例挂入调度器（不触发 `connect`，用于开发态复用 Host 会话）。
+    ///
+    /// 作者：Xiaoman
+    /// 创建时间：2026-08-21
+    ///
+    /// # 参数
+    ///
+    /// * `account_id` — 账号 id
+    /// * `protocol` — 已绑定账号的协议实例
+    pub async fn adopt(&self, account_id: String, protocol: Arc<dyn ChannelProtocol>) {
+        self.active.write().await.insert(account_id, protocol);
+    }
+
     /// 拉取某会话的完整消息历史（透传平台实现）。
     ///
     /// 作者：Xiaoman

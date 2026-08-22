@@ -64,12 +64,12 @@ export const platformCapabilities: readonly string[] = [
 /** 编译期平台管理导航（侧栏数据源）。 */
 export const manageNav = MANAGE_NAV;
 
-/** 侧栏分组（含解析后的 items 与分组图标）。 */
+/** 侧栏分组（含解析后的 items 与分组图标；空组不展示）。 */
 export const manageNavGroups = MANAGE_NAV_GROUPS.map((group) => ({
   label: group.label,
   icon: group.icon,
   items: manageNavItemsForGroup(group),
-}));
+})).filter((group) => group.items.length > 0);
 
 /** @deprecated 使用 manageNavGroups；保留空数组兼容 nav-registry */
 export const sidebarNavItems: NavItem[] = [];

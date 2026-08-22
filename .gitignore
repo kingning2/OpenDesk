@@ -23,8 +23,12 @@ __pycache__/
 .ruff_cache/
 .ruff_cache/
 
-# Sidecar 运行时数据（Playwright 浏览器配置目录，由 cookie 续期/登录生成）
-python/sidecar/browser_data/
+# Sidecar 运行时数据（Playwright 浏览器配置目录）
+python/browser_data/
+
+# setuptools / editable 产物
+*.egg-info/
+python/**/*.egg-info/
 
 # Editor directories and files
 .vscode/*

@@ -138,6 +138,20 @@ pub async fn account_connect(
     if let Err(error) =
         sync_account_profile(&accounts.store, request.owner_id, &request.account_id).await
     {
+        let text = error.to_string();
+        // Session 过期不是「连接仍可用」：断开并让前端提示重新登录。
+        if text.contains("FAIL_SYS_SESSION_EXPIRED")
+            || text.contains("Session过期")
+            || text.contains("SESSION_EXPIRED")
+        {
+            warn!(
+                account = %request.account_id,
+                %error,
+                "登录态已过期，断开连接并提示重新登录"
+            );
+            let _ = dispatcher.disconnect(&request.account_id).await;
+            return Err("登录态已过期，请重新扫码登录".into());
+        }
         warn!(
             account = %request.account_id,
             %error,
@@ -214,10 +228,14 @@ pub async fn account_cookie_renew(
         .map_err(common::DingDaError::wrap)?;
 
     info!(account = %request.account_id, "手动触发闲鱼滑块续期");
-    renewer
-        .renew_once(&request.account_id, "")
-        .await
-        .map_err(common::DingDaError::wrap)?;
-
-    Ok(IpcResponse::ok("续期成功".to_string()))
+    let renewer = Arc::clone(&renewer);
+    let schedule = &renewer.spawn_renew(request.account_id.clone(), String::new());
+    let message = match schedule {
+        crate::shared::channel::cookie_renew::RenewSchedule::Started => "已开始滑块续期",
+        crate::shared::channel::cookie_renew::RenewSchedule::Queued => "已加入续期队列，请稍候",
+        crate::shared::channel::cookie_renew::RenewSchedule::InFlight => "续期已在进行或排队中",
+        crate::shared::channel::cookie_renew::RenewSchedule::Cooldown => "续期冷却中，请稍后再试",
+        crate::shared::channel::cookie_renew::RenewSchedule::Disabled => "自动续期未启用",
+    };
+    Ok(IpcResponse::ok(message.to_string()))
 }

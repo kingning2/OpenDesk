@@ -1125,6 +1125,15 @@ impl RiskStore for InMemoryRiskStore {
             .put(DOMAIN_RISK, &log.id.to_string(), log.owner_id, &log)?;
         Ok(log)
     }
+
+    fn update_log(&self, log: &RiskLogItem) -> DingDaResult<()> {
+        if log.id == 0 {
+            return Err("更新风控日志缺少 id".into());
+        }
+        self.db
+            .put(DOMAIN_RISK, &log.id.to_string(), log.owner_id, log)?;
+        Ok(())
+    }
 }
 
 // ─── 用户设置 ──────────────────────────────────────────────────────────────────

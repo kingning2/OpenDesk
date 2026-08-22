@@ -2,10 +2,19 @@
 name = "dingda"
 version.workspace = true
 edition.workspace = true
+default-run = "dingda"
 
 [lib]
 name = "dingda_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "dingda"
+path = "src/main.rs"
+
+[[bin]]
+name = "dingda-dev-channel"
+path = "src/bin/dingda_dev_channel.rs"
 
 [features]
 default = []
@@ -46,3 +55,5 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 url = { workspace = true }
 uuid = { workspace = true }
+zip = "2"
+dirs = { workspace = true }
