@@ -67,7 +67,8 @@ export function PluginsPanel() {
   return (
     <div className="flex w-full flex-col gap-5">
       <p className="max-w-md text-[length:var(--text-sm)] leading-relaxed text-muted-foreground">
-        应用启动时会检测插件是否已安装。OCR 使用 Tesseract 语言模型，按需下载，不随安装包分发。
+        应用启动时会检测插件是否已安装。OCR 为 Tesseract 语言模型；Camoufox
+        为指纹浏览器（约 500MB），用于闲鱼滑块。均按需下载，不随安装包分发。
       </p>
 
       {loadError ? (
@@ -93,7 +94,7 @@ export function PluginsPanel() {
         isOpen={pendingUninstall !== null}
         type="danger"
         title="卸载插件"
-        message={`确定卸载「${pendingUninstall?.name ?? ""}」并删除本机语言模型吗？`}
+        message={`确定卸载「${pendingUninstall?.name ?? ""}」并删除本机已下载的插件文件吗？`}
         confirmText="卸载"
         loading={uninstalling}
         onConfirm={() => void confirmUninstall()}

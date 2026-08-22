@@ -7,7 +7,7 @@
  * @created 2026-08-13
  */
 
-import { callRequest, type IpcResponse } from "./invoke";
+import { callRequest } from "./invoke";
 
 /** 账号状态（与 Rust `AccountStatus` 对齐）。 */
 export type AccountStatus = "active" | "disabled";
@@ -128,41 +128,6 @@ export function accountQrCancel(sessionId: string): Promise<void> {
   return callRequest<void>("account_qr_cancel", {
     request: { session_id: sessionId },
   }).then(() => undefined);
-}
-
-// ========== 业务账号密码登录（Playwright 真实浏览器上下文登录，成功后自动创建/更新账号） ==========
-
-/** 账号密码登录响应。 */
-export interface AccountPasswordLoginResult {
-  ok: boolean;
-  status: string;
-  account_id: string | null;
-  detail: string | null;
-}
-
-/**
- * 使用账号密码登录业务账号。
- *
- * @author Xiaoman
- * @created 2026-08-18
- *
- * @param loginId - 登录账号（手机号/用户名/邮箱）
- * @param password - 登录密码
- * @param name - 可选展示名
- * @returns 登录结果；成功时返回自动创建/更新后的账号标识
- */
-export function accountPasswordLogin(
-  loginId: string,
-  password: string,
-  name?: string,
-): Promise<IpcResponse<AccountPasswordLoginResult>> {
-  return callRequest<AccountPasswordLoginResult>("account_password_login", {
-    request: {
-      login_id: loginId,
-      password,
-      name: name ?? null,
-    },
-  });
 }
 
 // ========== 业务账号渠道连接（扫码后自动连接 / 手动断开连接） ==========

@@ -28,6 +28,8 @@ import {
   toast,
 } from "@desk/ui";
 import {
+  ChevronDown,
+  ChevronRight,
   MessageSquare,
   Package,
   PanelRightClose,
@@ -105,6 +107,47 @@ function formatDateTime(value?: string | null): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+/**
+ * 圆形头像：有 URL 显示图片，否则显示名称首字。
+ *
+ * @author Xiaoman
+ * @created 2026-08-21
+ */
+function ConversationAvatar({
+  name,
+  src,
+  size = "md",
+}: {
+  name: string;
+  src?: string | null;
+  size?: "sm" | "md";
+}) {
+  const dim = size === "sm" ? "size-7" : "size-9";
+  const text = size === "sm" ? "text-[length:var(--text-xs)]" : "text-[length:var(--text-sm)]";
+  const initial = (name.trim() || "?").slice(0, 1);
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt=""
+        className={cn(dim, "shrink-0 rounded-full border border-border object-cover")}
+      />
+    );
+  }
+  return (
+    <div
+      className={cn(
+        dim,
+        text,
+        "flex shrink-0 items-center justify-center rounded-full border border-border bg-muted font-medium text-muted-foreground",
+      )}
+      aria-hidden
+    >
+      {initial}
+    </div>
+  );
 }
 
 /**
@@ -194,6 +237,10 @@ export function ChatPage() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState<string | null>(null);
   const [headInfo, setHeadInfo] = useState<ProductHeadInfo | null>(null);
+  /** 折叠的账号 id 集合（未列入则展开）。 */
+  const [collapsedAccountIds, setCollapsedAccountIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const threadEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -206,10 +253,13 @@ export function ChatPage() {
     threadEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [threadMessages, selectedId]);
 
-  const accountLabelById = useMemo(() => {
-    const map = new Map<string, string>();
+  const accountMetaById = useMemo(() => {
+    const map = new Map<string, { label: string; avatarUrl: string }>();
     for (const account of accounts) {
-      map.set(account.account_id, account.display_name || account.account_id);
+      map.set(account.account_id, {
+        label: account.display_name || account.account_id,
+        avatarUrl: account.avatar_url || "",
+      });
     }
     return map;
   }, [accounts]);
@@ -222,12 +272,28 @@ export function ChatPage() {
       list.push(conversation);
       groups.set(conversation.account_id, list);
     }
-    return [...groups.entries()].map(([accountId, list]) => ({
-      accountId,
-      label: accountLabelById.get(accountId) ?? accountId,
-      list,
-    }));
-  }, [filteredConversations, accountLabelById]);
+    return [...groups.entries()].map(([accountId, list]) => {
+      const meta = accountMetaById.get(accountId);
+      return {
+        accountId,
+        label: meta?.label ?? accountId,
+        avatarUrl: meta?.avatarUrl ?? "",
+        list,
+      };
+    });
+  }, [filteredConversations, accountMetaById]);
+
+  function toggleAccountGroup(accountId: string) {
+    setCollapsedAccountIds((current) => {
+      const next = new Set(current);
+      if (next.has(accountId)) {
+        next.delete(accountId);
+      } else {
+        next.add(accountId);
+      }
+      return next;
+    });
+  }
 
   const selectedPeerId = selectedConversation?.peer_id ?? "";
 
@@ -292,7 +358,7 @@ export function ChatPage() {
     selectedConversation?.peer_id ||
     "未知联系人";
   const accountLabel = selectedConversation
-    ? (accountLabelById.get(selectedConversation.account_id) ??
+    ? (accountMetaById.get(selectedConversation.account_id)?.label ??
       selectedConversation.account_id)
     : "";
   const needsReply = selectedConversation
@@ -418,56 +484,98 @@ export function ChatPage() {
               </div>
             ) : (
               <div className="space-y-1 py-2">
-                {groupedConversations.map((group) => (
-                  <div key={group.accountId}>
-                    <div className="px-3 pb-1 pt-2 text-[length:var(--text-xs)] font-medium text-muted-foreground">
-                      {group.label}
+                {groupedConversations.map((group) => {
+                  const collapsed = collapsedAccountIds.has(group.accountId);
+                  return (
+                    <div key={group.accountId}>
+                      <button
+                        type="button"
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-muted/50 active:scale-[0.99]"
+                        aria-expanded={!collapsed}
+                        onClick={() => toggleAccountGroup(group.accountId)}
+                      >
+                        {collapsed ? (
+                          <ChevronRight
+                            className="size-3.5 shrink-0 text-muted-foreground"
+                            aria-hidden
+                          />
+                        ) : (
+                          <ChevronDown
+                            className="size-3.5 shrink-0 text-muted-foreground"
+                            aria-hidden
+                          />
+                        )}
+                        <ConversationAvatar
+                          name={group.label}
+                          src={group.avatarUrl}
+                          size="sm"
+                        />
+                        <span className="min-w-0 flex-1 truncate text-[length:var(--text-xs)] font-medium text-muted-foreground">
+                          {group.label}
+                        </span>
+                        <span className="shrink-0 tabular-nums text-[length:var(--text-xs)] text-muted-foreground/80">
+                          {group.list.length}
+                        </span>
+                      </button>
+                      {collapsed ? null : (
+                        <ul className="pb-1">
+                          {group.list.map((conversation) => {
+                            const active = conversation.id === selectedId;
+                            const preview = lastMessagePreview(
+                              conversation.id,
+                              messages,
+                            );
+                            const needsReply = conversationNeedsReply(
+                              conversation.id,
+                              messages,
+                            );
+                            const title =
+                              conversation.peer_name?.trim() ||
+                              conversation.peer_id ||
+                              "未知联系人";
+                            return (
+                              <li key={conversation.id}>
+                                <button
+                                  type="button"
+                                  className={cn(
+                                    "flex w-full items-start gap-2.5 py-2.5 pl-9 pr-3 text-left transition-colors duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-muted/60 active:scale-[0.99]",
+                                    active && "bg-primary/10 hover:bg-primary/15",
+                                  )}
+                                  onClick={() =>
+                                    selectConversation(conversation.id)
+                                  }
+                                >
+                                  <ConversationAvatar name={title} size="md" />
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-start justify-between gap-2">
+                                      <span className="truncate font-medium text-[length:var(--text-sm)]">
+                                        {title}
+                                      </span>
+                                      {needsReply ? (
+                                        <span className="mt-1 size-2 shrink-0 rounded-full bg-primary" />
+                                      ) : null}
+                                    </div>
+                                    <p className="mt-0.5 truncate text-[length:var(--text-xs)] text-muted-foreground">
+                                      {preview || "暂无消息"}
+                                    </p>
+                                    {conversation.item_title ||
+                                    conversation.item_id ? (
+                                      <p className="mt-0.5 truncate text-[length:var(--text-xs)] text-muted-foreground/80">
+                                        {conversation.item_title
+                                          ? conversation.item_title
+                                          : `商品 ${conversation.item_id}`}
+                                      </p>
+                                    ) : null}
+                                  </div>
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
                     </div>
-                    <ul className="divide-y divide-border">
-                      {group.list.map((conversation) => {
-                        const active = conversation.id === selectedId;
-                        const preview = lastMessagePreview(conversation.id, messages);
-                        const needsReply = conversationNeedsReply(conversation.id, messages);
-                        const title =
-                          conversation.peer_name?.trim() ||
-                          conversation.peer_id ||
-                          "未知联系人";
-                        return (
-                          <li key={conversation.id}>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              className={cn(
-                                "flex w-full flex-col items-stretch justify-start gap-0 rounded-none px-3 py-3 text-left active:scale-100 hover:bg-muted/60",
-                                active && "bg-primary/10 hover:bg-primary/15",
-                              )}
-                              onClick={() => selectConversation(conversation.id)}
-                            >
-                              <div className="flex items-start justify-between gap-2">
-                                <span className="truncate font-medium text-[length:var(--text-sm)]">
-                                  {title}
-                                </span>
-                                {needsReply ? (
-                                  <span className="mt-1 size-2 shrink-0 rounded-full bg-primary" />
-                                ) : null}
-                              </div>
-                              <p className="mt-1 truncate text-[length:var(--text-xs)] text-muted-foreground">
-                                {preview || "暂无消息"}
-                              </p>
-                              <p className="mt-1 truncate text-[length:var(--text-xs)] text-muted-foreground/80">
-                                {conversation.item_title
-                                  ? conversation.item_title
-                                  : conversation.item_id
-                                    ? `商品 ${conversation.item_id}`
-                                    : ""}
-                              </p>
-                            </Button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </ScrollArea>
@@ -482,13 +590,16 @@ export function ChatPage() {
           ) : (
             <>
               <header className="flex items-center justify-between border-b border-border px-4 py-3">
-                <div className="min-w-0">
-                  <h2 className="truncate font-medium text-[length:var(--text-base)]">
-                    {peerName}
-                  </h2>
-                  <p className="text-[length:var(--text-xs)] text-muted-foreground">
-                    账号：{accountLabel}
-                  </p>
+                <div className="flex min-w-0 items-center gap-3">
+                  <ConversationAvatar name={peerName} />
+                  <div className="min-w-0">
+                    <h2 className="truncate font-medium text-[length:var(--text-base)]">
+                      {peerName}
+                    </h2>
+                    <p className="text-[length:var(--text-xs)] text-muted-foreground">
+                      账号：{accountLabel}
+                    </p>
+                  </div>
                 </div>
                 <IconButton
                   label={infoOpen ? "收起客户信息" : "展开客户信息"}

@@ -3,3 +3,4 @@ export * from "./events";
 export * from "./window";
 export * from "./compile";
 export * from "./error";
+export * from "./channel/connection-status";

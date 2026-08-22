@@ -42,6 +42,13 @@ import {
 } from "@desk/platform/ipc/account";
 import { listenChannelStatus } from "@desk/platform/events";
 import {
+  CHANNEL_CONNECTION_STATUS_MAP,
+  connectionStatusHint,
+  mergeChannelConnectionState,
+  normalizeChannelConnectionState,
+  type ChannelConnectionState,
+} from "@desk/platform";
+import {
   loadAutoConnectConfig,
   runAutoConnectNow,
   setAccountAutoConnect,
@@ -50,25 +57,49 @@ import {
 
 const OWNER_ID = 1; // 桌面单用户；多用户时由登录态注入
 
-/** 连接状态标签。 */
-const CONNECTION_LABELS: Record<string, { label: string; cls: string }> = {
-  connected: { label: "已连接", cls: "bg-emerald-500/15 text-emerald-600" },
-  connecting: { label: "连接中", cls: "bg-amber-500/15 text-amber-600" },
-  disconnected: { label: "未连接", cls: "bg-muted text-muted-foreground" },
-  error: { label: "异常", cls: "bg-red-500/15 text-red-600" },
-};
+/**
+ * IPC / toast 错误是否为登录过期（连接失败时写入 auth_expired）。
+ *
+ * @author Xiaoman
+ * @created 2026-08-21
+ */
+function isAuthExpiredText(text?: string | null): boolean {
+  if (!text) {
+    return false;
+  }
+  return (
+    text.includes("FAIL_SYS_SESSION_EXPIRED") ||
+    text.includes("Session过期") ||
+    text.includes("SESSION_EXPIRED") ||
+    text.includes("登录态已过期") ||
+    text.includes("请重新扫码登录") ||
+    text.includes("Cookie 无效") ||
+    text.includes("cookie 缺少")
+  );
+}
 
 type QrStatus = "ready" | "waiting" | "scanned" | "confirmed" | "success" | "expired" | "failed";
 
-/** 扫码登录弹窗：显示二维码 + 轮询状态，成功后自动创建账号。 */
+/**
+ * 扫码登录弹窗：显示二维码 + 轮询状态，成功后自动创建或更新账号 Cookie。
+ *
+ * @author Xiaoman
+ * @created 2026-08-13
+ */
 function AccountQrDialog({
   open,
   onClose,
   onSuccess,
+  title = "扫码登录",
+  hint = "请用闲鱼 App 扫码",
 }: {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  /** 弹窗标题（重新登录时可改为「重新扫码登录」）。 */
+  title?: string;
+  /** 等待扫码时的提示文案。 */
+  hint?: string;
 }) {
   const [status, setStatus] = useState<QrStatus>("ready");
   const [qrBase64, setQrBase64] = useState<string | null>(null);
@@ -104,7 +135,7 @@ function AccountQrDialog({
         sessionRef.current = result.session_id;
         setQrBase64(result.qr_base64);
         setStatus("waiting");
-        setMessage("请用闲鱼 App 扫码");
+        setMessage(hint);
       })
       .catch((error) => {
         if (!cancelledRef.current) {
@@ -120,7 +151,7 @@ function AccountQrDialog({
         void accountQrCancel(sessionId).catch(() => {});
       }
     };
-  }, [open]);
+  }, [open, hint]);
 
   // 轮询扫码状态。
   useEffect(() => {
@@ -140,7 +171,7 @@ function AccountQrDialog({
         setStatus(nextStatus);
         switch (nextStatus) {
           case "waiting":
-            setMessage("请用闲鱼 App 扫码");
+            setMessage(hint);
             break;
           case "scanned":
           case "confirmed":
@@ -171,7 +202,7 @@ function AccountQrDialog({
     }, 2000);
 
     return () => window.clearInterval(timer);
-  }, [open, qrBase64, status, onSuccess, onClose]);
+  }, [open, qrBase64, status, onSuccess, onClose, hint]);
 
   const isTerminal = status === "success" || status === "expired" || status === "failed";
 
@@ -198,7 +229,7 @@ function AccountQrDialog({
     >
       <DialogContent className="w-[340px] max-w-[90vw]">
         <div className="flex flex-col items-center gap-4 p-4">
-          <h3 className="text-[length:var(--text-lg)] font-semibold tracking-tight">扫码登录</h3>
+          <h3 className="text-[length:var(--text-lg)] font-semibold tracking-tight">{title}</h3>
 
           {!qrBase64 && status === "ready" ? (
             <p className="py-10 text-[length:var(--text-sm)] text-muted-foreground">正在生成二维码…</p>
@@ -259,14 +290,21 @@ export function XianyuAccountsPage() {
   const [deleteTarget, setDeleteTarget] = useState<XianyuAccount | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
   const [qrSeq, setQrSeq] = useState(0);
+  /** 重新扫码时的弹窗文案；普通添加账号时用默认。 */
+  const [qrTitle, setQrTitle] = useState("扫码登录");
+  const [qrHint, setQrHint] = useState("请用闲鱼 App 扫码");
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<XianyuAccount | null>(null);
   const [editorDisplayName, setEditorDisplayName] = useState("");
   const [editorRemark, setEditorRemark] = useState("");
   const [editorCookie, setEditorCookie] = useState("");
   const [editorSaving, setEditorSaving] = useState(false);
-  /** account_id → 渠道连接状态。 */
-  const [connectionStates, setConnectionStates] = useState<Record<string, string>>({});
+  /** account_id → 渠道连接状态（与 `channel/status.state` / map 对齐）。 */
+  const [connectionStates, setConnectionStates] = useState<
+    Record<string, ChannelConnectionState>
+  >({});
+  /** account_id → 后端短文案 hint（禁止原始 JSON）。 */
+  const [connectionDetails, setConnectionDetails] = useState<Record<string, string>>({});
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [autoConnectOnStart, setAutoConnectOnStart] = useState(false);
   const [autoConnectIds, setAutoConnectIds] = useState<string[]>([]);
@@ -324,27 +362,45 @@ export function XianyuAccountsPage() {
     };
   }, []);
 
-  /** 拉取指定账号的渠道连接状态（合并写入，避免轮询失败清空已有状态）。 */
+  /** 一次性拉取连接状态快照（进页 / 扫码成功后）；运行中靠事件推送。 */
   const refreshConnectionStates = useCallback(async (accountIds: string[]) => {
     if (accountIds.length === 0) {
       return;
     }
-    const updates: Record<string, string> = {};
+    const updates: Record<string, ChannelConnectionState> = {};
     await Promise.all(
       accountIds.map(async (accountId) => {
         try {
-          updates[accountId] = await accountConnectionState(OWNER_ID, accountId);
+          updates[accountId] = normalizeChannelConnectionState(
+            await accountConnectionState(OWNER_ID, accountId),
+          );
         } catch {
           // 单账号状态查询失败不阻断其余。
         }
       }),
     );
-    if (Object.keys(updates).length > 0) {
-      setConnectionStates((current) => ({ ...current, ...updates }));
+    if (Object.keys(updates).length === 0) {
+      return;
     }
+    // 登录过期 / 过滑块中会伴随 disconnect，快照不得冲掉合成态。
+    setConnectionStates((current) => {
+      const merged = { ...current };
+      for (const [accountId, incoming] of Object.entries(updates)) {
+        if (
+          (current[accountId] === "auth_expired" ||
+            current[accountId] === "renewing" ||
+            current[accountId] === "queued") &&
+          incoming !== "connected"
+        ) {
+          continue;
+        }
+        merged[accountId] = incoming;
+      }
+      return merged;
+    });
   }, []);
 
-  // 订阅 Rust 侧 channel/status 推送（连接成功/断开/异常即时更新 UI）。
+  // 订阅 Rust 侧 channel/status：只信 canonical `state`，用 map 渲染。
   useEffect(() => {
     let cancelled = false;
     let unlisten: (() => void) | undefined;
@@ -355,8 +411,26 @@ export function XianyuAccountsPage() {
       }
       setConnectionStates((current) => ({
         ...current,
-        [payload.account_id]: payload.state,
+        [payload.account_id]: mergeChannelConnectionState(
+          current[payload.account_id],
+          payload.state,
+        ),
       }));
+      setConnectionDetails((current) => {
+        if (payload.state === "connected") {
+          const next = { ...current };
+          delete next[payload.account_id];
+          return next;
+        }
+        const hint = connectionStatusHint(
+          normalizeChannelConnectionState(payload.state),
+          payload.detail,
+        );
+        if (hint) {
+          return { ...current, [payload.account_id]: hint };
+        }
+        return current;
+      });
       if (payload.state === "connected") {
         void load();
       }
@@ -369,7 +443,7 @@ export function XianyuAccountsPage() {
         unlisten = fn;
       })
       .catch(() => {
-        // 事件订阅失败时仍依赖下方 IPC 轮询兜底。
+        // 事件订阅失败时仍依赖进页 IPC 快照。
       });
 
     return () => {
@@ -378,23 +452,12 @@ export function XianyuAccountsPage() {
     };
   }, []);
 
-  // 进入页面立即拉取一次，之后每 5 秒轮询兜底。
+  // 进页 / 账号列表变化时拉一次快照；运行中只信 channel/status 推送，不再定时轮询。
   useEffect(() => {
     if (accounts.length === 0) {
       return;
     }
-    const accountIds = accounts.map((account) => account.account_id);
-    const timer = window.setInterval(() => {
-      void refreshConnectionStates(accountIds);
-    }, 5000);
-    // 首次立即触发一次（通过 0ms timeout 避免 effect 内同步 setState）
-    const immediate = window.setTimeout(() => {
-      void refreshConnectionStates(accountIds);
-    }, 0);
-    return () => {
-      window.clearTimeout(immediate);
-      window.clearInterval(timer);
-    };
+    void refreshConnectionStates(accounts.map((account) => account.account_id));
   }, [accounts, refreshConnectionStates]);
 
   const filtered = useMemo(() => {
@@ -454,14 +517,39 @@ export function XianyuAccountsPage() {
   async function handleConnect(account: XianyuAccount) {
     setConnectingId(account.account_id);
     try {
-      const state = await accountConnect(OWNER_ID, account.account_id);
+      const state = normalizeChannelConnectionState(
+        await accountConnect(OWNER_ID, account.account_id),
+      );
       setConnectionStates((current) => ({ ...current, [account.account_id]: state }));
+      setConnectionDetails((current) => {
+        const next = { ...current };
+        delete next[account.account_id];
+        return next;
+      });
       await load();
       toast.success(
-        state === "connected" ? "连接成功，已同步用户资料并开始监听消息" : `连接状态：${state}`,
+        state === "connected" ? "连接成功，已同步用户资料并开始监听消息" : `连接状态：${CHANNEL_CONNECTION_STATUS_MAP[state].label}`,
       );
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : String(error));
+      const message = error instanceof Error ? error.message : String(error);
+      if (isAuthExpiredText(message)) {
+        setConnectionStates((current) => ({
+          ...current,
+          [account.account_id]: "auth_expired",
+        }));
+        setConnectionDetails((current) => ({
+          ...current,
+          [account.account_id]: "登录态已过期，请重新扫码后再连接",
+        }));
+        toast.error("登录态已过期，请重新扫码后再连接", {
+          action: {
+            label: "重新扫码",
+            onClick: () => openRescanQr(account),
+          },
+        });
+      } else {
+        toast.error(message);
+      }
     } finally {
       setConnectingId(null);
     }
@@ -532,6 +620,24 @@ export function XianyuAccountsPage() {
   }
 
   function openQrLogin() {
+    setQrTitle("扫码登录");
+    setQrHint("请用闲鱼 App 扫码");
+    setQrSeq((seq) => seq + 1);
+    setQrOpen(true);
+  }
+
+  /**
+   * 打开重新扫码弹窗（同 unb 账号会更新 Cookie，无需新建）。
+   *
+   * @author Xiaoman
+   * @created 2026-08-21
+   *
+   * @param account - 需要刷新登录态的账号
+   */
+  function openRescanQr(account: XianyuAccount) {
+    const name = account.display_name || account.account_id;
+    setQrTitle("重新扫码登录");
+    setQrHint(`请用闲鱼 App 扫码，刷新「${name}」的登录态`);
     setQrSeq((seq) => seq + 1);
     setQrOpen(true);
   }
@@ -594,14 +700,25 @@ export function XianyuAccountsPage() {
       ) : (
         <PageCardGrid>
             {filtered.map((account) => {
-              const conn = CONNECTION_LABELS[connectionStates[account.account_id] ?? "disconnected"];
+              const displayState = normalizeChannelConnectionState(
+                connectionStates[account.account_id],
+              );
+              const conn = CHANNEL_CONNECTION_STATUS_MAP[displayState];
+              const hint = connectionStatusHint(
+                displayState,
+                connectionDetails[account.account_id],
+              );
+              const authExpired = displayState === "auth_expired";
+              const renewing = displayState === "renewing";
+              const queued = displayState === "queued";
+              const sliderBusy = renewing || queued;
               const isConnecting = connectingId === account.account_id;
               return (
                 <PageGlowCard
                   key={account.account_id}
                   role="button"
                   tabIndex={0}
-                  className="text-left transition hover:bg-muted/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex h-full flex-col text-left transition hover:bg-muted/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   onClick={() => openAccountEditor(account)}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") {
@@ -610,7 +727,7 @@ export function XianyuAccountsPage() {
                     }
                   }}
                 >
-                  <div className="relative rounded-[inherit] border border-border bg-card p-4 transition hover:border-primary/40">
+                  <div className="relative flex h-full min-h-0 flex-col rounded-[inherit] border border-border bg-card p-4 transition hover:border-primary/40">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-start gap-3">
                       {account.avatar_url ? (
@@ -647,20 +764,33 @@ export function XianyuAccountsPage() {
                     </span>
                   </div>
 
-                  <div className="mt-4 space-y-2 text-[length:var(--text-sm)]">
+                  <div className="mt-4 min-h-0 flex-1 space-y-2 text-[length:var(--text-sm)]">
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-muted-foreground">连接状态</span>
                       <span
-                        className={`rounded-full px-2 py-0.5 text-[length:var(--text-xs)] ${conn.cls}`}
-                        title={
-                          connectionStates[account.account_id] === "error"
-                            ? "连接异常，详情见运行日志（风控拦截会稍后自动重试）"
-                            : undefined
-                        }
+                        className={`rounded-full px-2 py-0.5 text-[length:var(--text-xs)] ${conn.badgeClass}`}
+                        title={hint ?? undefined}
                       >
                         {conn.label}
                       </span>
                     </div>
+                    {/* 固定占位，避免有无提示文案时同行高度视觉跳动 */}
+                    <p
+                      className={`min-h-[1.25rem] text-[length:var(--text-xs)] ${
+                        authExpired
+                          ? "text-orange-700"
+                          : renewing
+                            ? "text-sky-700"
+                            : queued
+                              ? "text-violet-700"
+                              : displayState === "error"
+                                ? "text-red-600"
+                                : "invisible"
+                      }`}
+                      aria-hidden={!hint}
+                    >
+                      {hint ?? "占位"}
+                    </p>
                     <div className="flex items-start justify-between gap-3">
                       <span className="text-muted-foreground">备注</span>
                       <span className="line-clamp-2 max-w-[65%] text-right">{account.remark || "—"}</span>
@@ -681,6 +811,12 @@ export function XianyuAccountsPage() {
                       />
                       自动连接
                     </label>
+                    {authExpired ? (
+                      <Button size="sm" onClick={() => openRescanQr(account)}>
+                        <QrCode className="size-3.5" aria-hidden />
+                        重新扫码
+                      </Button>
+                    ) : null}
                     {connectionStates[account.account_id] === "connected" ? (
                       <Button size="sm" variant="outline" onClick={() => void handleDisconnect(account)}>
                         断开
@@ -689,8 +825,17 @@ export function XianyuAccountsPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        disabled={isConnecting || !account.cookie}
+                        disabled={isConnecting || !account.cookie || authExpired || sliderBusy}
                         onClick={() => void handleConnect(account)}
+                        title={
+                          authExpired
+                            ? "请先重新扫码刷新登录态"
+                            : renewing
+                              ? "正在过滑块，请稍候"
+                              : queued
+                                ? "排队等待过滑块，请稍候"
+                                : undefined
+                        }
                       >
                         {isConnecting ? "连接中…" : "连接"}
                       </Button>
@@ -721,8 +866,19 @@ export function XianyuAccountsPage() {
       <AccountQrDialog
         key={qrSeq}
         open={qrOpen}
+        title={qrTitle}
+        hint={qrHint}
         onClose={() => setQrOpen(false)}
-        onSuccess={() => void load()}
+        onSuccess={() => {
+          void (async () => {
+            const list = await accountList(OWNER_ID);
+            setAccounts(list);
+            await refreshConnectionStates(list.map((account) => account.account_id));
+            toast.success("扫码成功，登录态已刷新");
+          })().catch((error) => {
+            toast.error(error instanceof Error ? error.message : String(error));
+          });
+        }}
       />
 
       <ConfirmModal

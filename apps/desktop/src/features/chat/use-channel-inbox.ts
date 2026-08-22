@@ -84,7 +84,7 @@ export function useChannelInbox(): ChannelInboxState {
     void refresh();
   }, [refresh]);
 
-  // WS 连接成功（userConvs 全量会话已同步）后刷新，让会话及时出现。
+  // WS 连接成功或会话列表补齐后刷新侧栏。
   useEffect(() => {
     let cancelled = false;
     let unlisten: (() => void) | undefined;

@@ -29,7 +29,6 @@ export const IPC_COMMAND_LABELS: Readonly<Record<string, string>> = {
   account_update: "更新账号",
   account_set_status: "设置账号状态",
   account_delete: "删除账号",
-  account_password_login: "账号密码登录",
   account_qr_start: "发起扫码登录",
   account_qr_check: "检查扫码状态",
   account_qr_cancel: "取消扫码登录",
