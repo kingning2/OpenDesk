@@ -1,11 +1,10 @@
 [package]
-name = "dingda-business"
+name = "business"
 version.workspace = true
 edition.workspace = true
 description = "DingDa 桌面端纯 Rust 业务逻辑（不依赖 Tauri）"
 
 [dependencies]
-adapter = { path = "../crates/adapter" }
 agent = { path = "../crates/agent" }
 async-trait = { workspace = true }
 chrono = { workspace = true }
@@ -13,7 +12,6 @@ common = { path = "../crates/common" }
 diesel = { workspace = true }
 kernel = { path = "../crates/kernel" }
 md-5 = { workspace = true }
-platform = { path = "../crates/platform" }
 ports = { path = "../crates/ports" }
 serde = { workspace = true }
 serde_json = { workspace = true }

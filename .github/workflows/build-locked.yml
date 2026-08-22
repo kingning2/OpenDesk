@@ -44,7 +44,7 @@ jobs:
           perl -v
 
       - name: Build locked Windows x64 bundle
-        run: node tooling/scripts/tauri-build-locked.mjs --target x86_64-pc-windows-msvc
+        run: pnpm tauri build locked --target x86_64-pc-windows-msvc
 
       - name: Verify bundled license-verifier
         shell: pwsh

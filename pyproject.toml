@@ -39,9 +39,9 @@ ignore = []
 
 [tool.ruff.lint.isort]
 known-first-party = [
+  "channels",
   "contracts",
-  "gateway",
-  "shared",
+  "core",
   "sidecar",
 ]
 

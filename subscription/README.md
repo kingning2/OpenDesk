@@ -110,10 +110,14 @@ node tooling/scripts/build-license-verifier.mjs --target <triple>
 **有锁构建 CI**（`build-locked.yml`）在 Windows x64 上跑：
 
 ```bash
-node tooling/scripts/tauri-build-locked.mjs --target x86_64-pc-windows-msvc
+pnpm tauri build locked --target x86_64-pc-windows-msvc
 ```
 
-本地等价：`pnpm tauri:build:locked -- --target x86_64-pc-windows-msvc`
+或显式指定平台：
+
+```bash
+pnpm tauri build xianyu,ali1688 locked --target x86_64-pc-windows-msvc
+```
 
 Windows runner 需安装 Strawberry Perl（workflow 已 `choco install`），供 openssl-src vendored 使用。  
 `pnpm tauri build` 的 `beforeBuildCommand`（`build:bundle`）也会再编一次 verifier，并读取 `TAURI_ENV_TARGET_TRIPLE`。

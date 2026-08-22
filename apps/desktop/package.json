@@ -5,9 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:xianyu": "node ../../tooling/scripts/run-with-channel-platform.mjs xianyu vite",
     "build": "tsc && vite build",
-    "build:xianyu": "node ../../tooling/scripts/run-with-channel-platform.mjs xianyu \"pnpm exec tsc && vite build\"",
     "build:bundle": "node ../../tooling/scripts/build-sidecar.mjs && node ../../tooling/scripts/build-license-verifier.mjs && pnpm build",
     "preview": "vite preview",
     "tauri": "tauri",

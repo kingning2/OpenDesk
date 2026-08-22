@@ -1,28 +1,30 @@
 // 编译期渠道平台 cfg 注入 — 供各 crate 的 `build.rs` 通过 `include!` 复用。
 //
-// 读取环境变量 `DINGDA_CHANNEL_PLATFORM`（缺省见 `tooling/config/channel-platforms.json`），
-// 校验后向 Cargo 输出：
-// - `cargo:rustc-env=DINGDA_CHANNEL_PLATFORM=<id>`
-// - `cargo:rustc-cfg=platform_<id>`（如 `platform_xianyu`）
+// 优先级：
+// 1. Cargo feature：`xianyu` / `ali1688`（`CARGO_FEATURE_*`）
+// 2. 环境变量 `DINGDA_CHANNEL_PLATFORMS`（逗号分隔，`1688` 视为 `ali1688`）
+// 3. 环境变量 `DINGDA_CHANNEL_PLATFORM`（单站，兼容旧用法）
+// 4. `channel-platforms.json` 的 `default`
+//
+// 输出：
+// - `cargo:rustc-env=DINGDA_CHANNEL_PLATFORM=<主站>`
+// - `cargo:rustc-env=DINGDA_CHANNEL_PLATFORMS=<id,id>`
+// - `cargo:rustc-cfg=platform_<id>`（可多个）
 //
 // 作者：Xiaoman
 // 创建时间：2026-08-18
 
+use std::collections::BTreeSet;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
 
-// 渠道平台配置（与 `tooling/config/channel-platforms.json` 对齐）。
 #[derive(Debug)]
 struct ChannelPlatformsConfig {
     default: String,
     platforms: Vec<String>,
 }
 
-// 读取并校验渠道平台配置 JSON。
-//
-// # 参数
-// - `config_path` — 相对 `CARGO_MANIFEST_DIR` 的配置文件路径
 fn load_config(config_path: &str) -> ChannelPlatformsConfig {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let path = manifest_dir.join(config_path);
@@ -57,33 +59,82 @@ fn load_config(config_path: &str) -> ChannelPlatformsConfig {
 
     println!("cargo:rerun-if-changed={}", path.display());
     println!("cargo:rerun-if-env-changed=DINGDA_CHANNEL_PLATFORM");
+    println!("cargo:rerun-if-env-changed=DINGDA_CHANNEL_PLATFORMS");
 
     ChannelPlatformsConfig { default, platforms }
 }
 
-// 将平台 id 转为 `platform_<id>` cfg 键（`-` → `_`）。
 fn cfg_key(platform_id: &str) -> String {
     format!("platform_{}", platform_id.replace('-', "_"))
 }
 
-// 注入编译期渠道平台 cfg 与环境变量。
-//
-// # 参数
-// - `config_rel_to_manifest` — 相对当前 crate manifest 的配置路径
+fn canonicalize_id(raw: &str) -> String {
+    match raw.trim().to_ascii_lowercase().as_str() {
+        "1688" | "ali1688" => "ali1688".to_string(),
+        other => other.to_string(),
+    }
+}
+
+fn from_cargo_features() -> Vec<String> {
+    let mut enabled = Vec::new();
+    if env::var("CARGO_FEATURE_XIANYU").is_ok() {
+        enabled.push("xianyu".to_string());
+    }
+    if env::var("CARGO_FEATURE_ALI1688").is_ok() {
+        enabled.push("ali1688".to_string());
+    }
+    enabled
+}
+
+fn parse_list(raw: &str) -> Vec<String> {
+    raw.split(',')
+        .map(canonicalize_id)
+        .filter(|item| !item.is_empty())
+        .collect()
+}
+
+fn validate(ids: &[String], known: &[String]) -> Vec<String> {
+    let mut unique = BTreeSet::new();
+    for id in ids {
+        if !known.iter().any(|item| item == id) {
+            panic!("未知渠道平台 {id:?}，可选: {}", known.join(", "));
+        }
+        unique.insert(id.clone());
+    }
+    unique.into_iter().collect()
+}
+
+fn primary_platform(enabled: &[String]) -> String {
+    if enabled.iter().any(|id| id == "xianyu") {
+        return "xianyu".to_string();
+    }
+    enabled.first().cloned().expect("至少启用一个渠道平台")
+}
+
 pub fn emit_channel_platform_cfg(config_rel_to_manifest: &str) {
     let config = load_config(config_rel_to_manifest);
     for id in &config.platforms {
         println!("cargo:rustc-check-cfg=cfg({})", cfg_key(id));
     }
-    let requested = env::var("DINGDA_CHANNEL_PLATFORM").unwrap_or(config.default);
 
-    if !config.platforms.iter().any(|id| id == &requested) {
-        panic!(
-            "未知 DINGDA_CHANNEL_PLATFORM={requested:?}，可选: {}",
-            config.platforms.join(", ")
-        );
+    let enabled = {
+        let from_features = from_cargo_features();
+        if !from_features.is_empty() {
+            validate(&from_features, &config.platforms)
+        } else if let Ok(list) = env::var("DINGDA_CHANNEL_PLATFORMS") {
+            validate(&parse_list(&list), &config.platforms)
+        } else if let Ok(single) = env::var("DINGDA_CHANNEL_PLATFORM") {
+            validate(&[canonicalize_id(&single)], &config.platforms)
+        } else {
+            validate(&[canonicalize_id(&config.default)], &config.platforms)
+        }
+    };
+
+    let primary = primary_platform(&enabled);
+    let joined = enabled.join(",");
+    println!("cargo:rustc-env=DINGDA_CHANNEL_PLATFORM={primary}");
+    println!("cargo:rustc-env=DINGDA_CHANNEL_PLATFORMS={joined}");
+    for id in &enabled {
+        println!("cargo:rustc-cfg={}", cfg_key(id));
     }
-
-    println!("cargo:rustc-env=DINGDA_CHANNEL_PLATFORM={requested}");
-    println!("cargo:rustc-cfg={}", cfg_key(&requested));
 }

@@ -3,14 +3,15 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
-import { channelPlatformDefine, resolveChannelPlatform } from "../../tooling/scripts/read-channel-platform.mjs";
+import { channelPlatformDefine } from "../../tooling/scripts/read-channel-platform.mjs";
+import { platformChainPlugin } from "../../tooling/vite/platform-chain-plugin.mjs";
 
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
-const channelPlatform = resolveChannelPlatform();
 
 /**
- * 拆分大体积依赖；其余交给 Rollup 默认策略，避�?vendor �?react 循环 chunk�? *
+ * 拆分大体积依赖；其余交给 Rollup 默认策略，避免 vendor 与 react 循环 chunk。
+ *
  * @param id - Rollup 模块 id
  * @returns chunk 名；不强制拆分则返回 undefined
  */
@@ -53,6 +54,7 @@ function manualChunks(id: string): string | undefined {
 export default defineConfig(async () => ({
   define: channelPlatformDefine(),
   plugins: [
+    platformChainPlugin(),
     react({
       babel: {
         plugins: [["babel-plugin-react-compiler", {}]],
@@ -67,10 +69,7 @@ export default defineConfig(async () => ({
       "@desk/store": path.resolve(__dirname, "../../packages/store/src"),
       "@desk/contracts": path.resolve(__dirname, "../../packages/contracts/src"),
       "@feature": path.resolve(__dirname, "./src/features"),
-      "@platform-routes": path.resolve(
-        __dirname,
-        `./src/route/platforms/${channelPlatform}-routes.ts`,
-      ),
+      "@platform-routes": path.resolve(__dirname, "./src/route/platforms/index.ts"),
     },
   },
   build: {

@@ -28,14 +28,15 @@
       "@desk/utils": ["packages/utils/src"],
       "@desk/utils/*": ["packages/utils/src/*"],
       "@feature/*": ["apps/desktop/src/features/*"],
-      "@platform-routes": ["apps/desktop/src/route/platforms/xianyu-routes.ts"]
+      "@platform-routes": ["apps/desktop/src/route/platforms/index.ts"]
     }
   },
   "include": [
     "apps/**/*.ts",
     "apps/**/*.tsx",
     "packages/**/*.ts",
-    "packages/**/*.tsx"
+    "packages/**/*.tsx",
+    "tooling/types/platform-chain.d.ts"
   ],
   "exclude": [
     "**/dist/**",

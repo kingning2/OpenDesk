@@ -3,13 +3,21 @@ name = "platform"
 version.workspace = true
 edition.workspace = true
 
+[features]
+default = ["xianyu", "ali1688"]
+xianyu = []
+ali1688 = []
+
 [build-dependencies]
 serde_json = { workspace = true }
 
 [dependencies]
 async-trait = { workspace = true }
 base64 = "0.22"
+business = { path = "../../business" }
+chrono = { workspace = true }
 common = { path = "../common" }
+diesel = { workspace = true }
 futures-util = { workspace = true }
 md-5 = { workspace = true }
 rand = { workspace = true }
@@ -18,6 +26,7 @@ wreq-util = { workspace = true }
 rmpv = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+storage = { path = "../storage" }
 thiserror = { workspace = true }
 tokio = { workspace = true }
 tokio-tungstenite = { workspace = true }

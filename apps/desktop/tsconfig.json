@@ -55,12 +55,13 @@
                                                              "./src/features/*"
                                                          ],
                                           "@platform-routes":  [
-                                                                   "./src/route/platforms/xianyu-routes.ts"
+                                                                   "./src/route/platforms/index.ts"
                                                                ]
                                       }
                         },
     "include":  [
-                    "src"
+                    "src",
+                    "../../tooling/types/platform-chain.d.ts"
                 ],
     "references":  [
                        {

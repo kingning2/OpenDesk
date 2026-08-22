@@ -1,5 +1,5 @@
 [package]
-name = "dingda-macros"
+name = "macros"
 version.workspace = true
 edition.workspace = true
 description = "DingDa procedural macros (e.g. #[timed])"

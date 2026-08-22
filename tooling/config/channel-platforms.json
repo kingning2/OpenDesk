@@ -9,6 +9,11 @@
       "implemented": true
     },
     {
+      "id": "ali1688",
+      "name": "1688",
+      "implemented": true
+    },
+    {
       "id": "xiaohongshu",
       "name": "小红书",
       "implemented": false

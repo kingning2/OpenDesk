@@ -17,8 +17,10 @@ name = "dingda-dev-channel"
 path = "src/bin/dingda_dev_channel.rs"
 
 [features]
-default = []
+default = ["xianyu", "ali1688"]
 license-lock = []
+xianyu = ["platform/xianyu"]
+ali1688 = ["platform/ali1688"]
 
 [build-dependencies]
 serde_json = { workspace = true }
@@ -26,7 +28,7 @@ tauri-build = { workspace = true }
 
 [dependencies]
 adapter = { path = "../../../crates/adapter" }
-app = { package = "dingda-business", path = "../../../business" }
+business = { path = "../../../business" }
 agent = { path = "../../../crates/agent" }
 async-trait = { workspace = true }
 common = { path = "../../../crates/common" }
@@ -36,8 +38,8 @@ diesel = { workspace = true }
 futures-util = { workspace = true }
 kernel = { path = "../../../crates/kernel" }
 md-5 = { workspace = true }
-dingda-macros = { path = "../../../crates/dingda-macros" }
-platform = { path = "../../../crates/platform" }
+macros = { path = "../../../crates/macros" }
+platform = { path = "../../../crates/platform", default-features = false }
 ports = { path = "../../../crates/ports" }
 rand = { workspace = true }
 reqwest = { workspace = true }
