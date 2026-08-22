@@ -2,6 +2,8 @@
 //!
 //! 定时调度 / Sidecar 搜索 / AI 决策由 Tauri 壳层编排；本模块仅持久化与查询。
 
+use chrono::Utc;
+use common::events::MonitorProgressEvent;
 use common::DingDaResult;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -69,7 +71,45 @@ pub struct MonitorResult {
     pub notified: bool,
     #[serde(default)]
     pub raw: Value,
+    /// 商品主图 URL（可能为空）。
+    #[serde(default)]
+    pub image: Option<String>,
     pub crawled_at: String,
+}
+
+/// 监控运行记录 — 每次任务执行一条，含状态、汇总与逐步步骤。
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MonitorRun {
+    pub id: String,
+    pub task_id: String,
+    pub owner_id: i64,
+    /// `running` / `success` / `failed`。
+    pub status: String,
+    pub started_at: String,
+    #[serde(default)]
+    pub finished_at: Option<String>,
+    #[serde(default)]
+    pub error: Option<String>,
+    pub scanned: u32,
+    pub new_items: u32,
+    pub skipped: u32,
+    pub recommended: u32,
+    /// 本次运行的逐步进度（与实时事件同构，供回看）。
+    #[serde(default)]
+    pub steps: Vec<MonitorProgressEvent>,
+}
+
+/// 监控整体统计（供概览条展示）。
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct MonitorStats {
+    pub task_count: u32,
+    pub running_count: u32,
+    pub enabled_count: u32,
+    pub result_count: u32,
+    pub recommended_count: u32,
+    pub today_new_count: u32,
 }
 
 /// 监控任务存储 Port。
@@ -83,19 +123,36 @@ pub trait MonitorTaskStore: Send + Sync {
 /// 监控结果存储 Port。
 pub trait MonitorResultStore: Send + Sync {
     fn list_results(&self, owner_id: i64, task_id: &str) -> DingDaResult<Vec<MonitorResult>>;
+    fn list_all_results(&self, owner_id: i64) -> DingDaResult<Vec<MonitorResult>>;
     fn has_result(&self, owner_id: i64, task_id: &str, item_id: &str) -> DingDaResult<bool>;
     fn put_result(&self, result: &MonitorResult) -> DingDaResult<()>;
+}
+
+/// 监控运行记录存储 Port。
+pub trait MonitorRunStore: Send + Sync {
+    fn list_runs(&self, owner_id: i64, task_id: &str) -> DingDaResult<Vec<MonitorRun>>;
+    fn get_run(&self, owner_id: i64, run_id: &str) -> DingDaResult<Option<MonitorRun>>;
+    fn put_run(&self, run: &MonitorRun) -> DingDaResult<()>;
 }
 
 /// 监控业务服务。
 pub struct MonitorService<'a> {
     tasks: &'a dyn MonitorTaskStore,
     results: &'a dyn MonitorResultStore,
+    runs: &'a dyn MonitorRunStore,
 }
 
 impl<'a> MonitorService<'a> {
-    pub fn new(tasks: &'a dyn MonitorTaskStore, results: &'a dyn MonitorResultStore) -> Self {
-        Self { tasks, results }
+    pub fn new(
+        tasks: &'a dyn MonitorTaskStore,
+        results: &'a dyn MonitorResultStore,
+        runs: &'a dyn MonitorRunStore,
+    ) -> Self {
+        Self {
+            tasks,
+            results,
+            runs,
+        }
     }
 
     pub fn list_tasks(&self, owner_id: i64) -> DingDaResult<Vec<MonitorTask>> {
@@ -126,5 +183,44 @@ impl<'a> MonitorService<'a> {
 
     pub fn save_result(&self, result: &MonitorResult) -> DingDaResult<()> {
         self.results.put_result(result)
+    }
+
+    pub fn list_runs(&self, owner_id: i64, task_id: &str) -> DingDaResult<Vec<MonitorRun>> {
+        let mut items = self.runs.list_runs(owner_id, task_id)?;
+        items.sort_by(|a, b| b.started_at.cmp(&a.started_at));
+        items.truncate(200);
+        // 列表只回摘要，避免拉取大转录体量；详情页用 get_run 取完整 steps。
+        for run in &mut items {
+            run.steps.clear();
+        }
+        Ok(items)
+    }
+
+    pub fn get_run(&self, owner_id: i64, run_id: &str) -> DingDaResult<Option<MonitorRun>> {
+        self.runs.get_run(owner_id, run_id)
+    }
+
+    pub fn save_run(&self, run: &MonitorRun) -> DingDaResult<()> {
+        self.runs.put_run(run)
+    }
+
+    pub fn stats(&self, owner_id: i64) -> DingDaResult<MonitorStats> {
+        let tasks = self.tasks.list_tasks(owner_id)?;
+        let results = self.results.list_all_results(owner_id)?;
+        let today = Utc::now().format("%Y-%m-%d").to_string();
+        Ok(MonitorStats {
+            task_count: tasks.len() as u32,
+            running_count: tasks.iter().filter(|task| task.is_running).count() as u32,
+            enabled_count: tasks.iter().filter(|task| task.enabled).count() as u32,
+            result_count: results.len() as u32,
+            recommended_count: results
+                .iter()
+                .filter(|result| result.ai_recommended)
+                .count() as u32,
+            today_new_count: results
+                .iter()
+                .filter(|result| result.crawled_at.starts_with(&today))
+                .count() as u32,
+        })
     }
 }

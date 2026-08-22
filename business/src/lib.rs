@@ -36,7 +36,6 @@ extern crate tracing;
 pub use common::DingDaResult;
 
 // --- 原 business 模块 ---
-pub mod agent;
 pub mod channel;
 pub mod config;
 pub mod event_sink;
