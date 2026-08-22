@@ -11,6 +11,7 @@ export default tseslint.config(
       "**/target/**",
       "**/node_modules/**",
       "**/.venv/**",
+      "**/.tools/**",
       "**/pnpm-lock.yaml",
       ".tmp/**",
       "python/browser_data/**",
