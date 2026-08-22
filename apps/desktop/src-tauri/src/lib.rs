@@ -47,10 +47,10 @@ use platforms::xianyu::bootstrap::register_active_platform;
 #[cfg(platform_xianyu)]
 use platforms::xianyu::ipc::{
     account_connect, account_connection_state, account_cookie_renew, account_create,
-    account_delete, account_disconnect, account_list, account_password_login, account_qr_cancel,
-    account_qr_check, account_qr_start, account_set_status, account_update, address_batch_delete,
-    address_create, address_delete, address_list, address_update, auto_reply_log_list,
-    blacklist_delete, blacklist_personal_create, blacklist_personal_list, blacklist_platform_list,
+    account_delete, account_disconnect, account_list, account_qr_cancel, account_qr_check,
+    account_qr_start, account_set_status, account_update, address_batch_delete, address_create,
+    address_delete, address_list, address_update, auto_reply_log_list, blacklist_delete,
+    blacklist_personal_create, blacklist_personal_list, blacklist_platform_list,
     blacklist_set_enabled, card_create, card_delete, card_list, card_set_enabled, card_update,
     channel_close_site, channel_open_site, dashboard_stats, feedback_create, feedback_delete,
     feedback_list, filter_create, filter_delete, filter_list, filter_set_enabled, filter_update,
@@ -92,7 +92,6 @@ macro_rules! base_invoke_handler {
                 account_update,
                 account_set_status,
                 account_delete,
-                account_password_login,
                 account_qr_start,
                 account_qr_check,
                 account_qr_cancel,
@@ -267,10 +266,12 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
                     config_dir.clone()
                 }
             };
-            app.manage(Arc::new(shared::config::ConfigStore::new(
+            let config_store = Arc::new(shared::config::ConfigStore::new(
                 config_dir.clone(),
                 data_dir,
-            )));
+            ));
+            shared::plugin_download::sync_camoufox_env(&config_store);
+            app.manage(config_store);
             let plugin_tracker = Arc::new(shared::plugin_download::PluginDownloadTracker::new());
             app.manage(plugin_tracker);
 
@@ -333,6 +334,7 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
                         store,
                         dispatcher.clone(),
                         risk_store.clone(),
+                        event_sink.clone(),
                         1,
                     ))
                 });
@@ -354,7 +356,12 @@ pub fn launch(context: tauri::Context<tauri::Wry>) -> tauri::Result<()> {
             app.manage(coordinator.clone());
 
             #[cfg(platform_xianyu)]
-            register_active_platform(&dispatcher, &coordinator);
+            {
+                let account_store = app
+                    .try_state::<platforms::xianyu::ipc::account::AccountHandle>()
+                    .map(|handle| handle.store.clone());
+                register_active_platform(&dispatcher, &coordinator, account_store);
+            }
 
             let lifecycle = app.state::<AppState>().lifecycle.clone();
             tauri::async_runtime::spawn(async move {

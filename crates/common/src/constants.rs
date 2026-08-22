@@ -60,6 +60,12 @@ pub struct FeatureFlags {
     pub skip_license_check: bool,
     /// 是否启用渠道 WebSocket 自动重连。
     pub channel_auto_reconnect: bool,
+    /// 普通断开后的重连等待秒数（调试默认 30，可用环境变量覆盖）。
+    pub channel_reconnect_delay_secs: u64,
+    /// 风控时是否自动拉起浏览器 Cookie 续期。
+    pub auto_cookie_renew: bool,
+    /// 开发态是否把闲鱼 WS 放到常驻 Channel Host（仅 debug 构建可读）。
+    pub dev_channel_host: bool,
 }
 
 impl Default for FeatureFlags {
@@ -78,13 +84,23 @@ impl FeatureFlags {
     /// - `DINGDA_DEBUG` — `1` / `true` / `yes` 开启调试
     /// - `DINGDA_MOCK_PUBLISH` — 开启 Mock 发布
     /// - `DINGDA_SKIP_LICENSE` — 跳过 License（仅 debug 构建读取）
-    /// - `DINGDA_CHANNEL_AUTO_RECONNECT` — `0` / `false` 关闭自动重连
+    /// - `DINGDA_CHANNEL_AUTO_RECONNECT` — `0` / `false` 关闭自动重连（开发改代码时建议关）
+    /// - `DINGDA_CHANNEL_RECONNECT_DELAY_SECS` — 普通重连间隔秒数（默认：debug 30 / release 5）
+    /// - `DINGDA_DISABLE_AUTO_COOKIE_RENEW` — `1` 关闭风控自动滑块续期
+    /// - `DINGDA_DEV_CHANNEL_HOST` — debug 默认开启；设 `0`/`false` 关闭常驻 Host
     pub fn from_env() -> Self {
+        let debug_mode = cfg!(debug_assertions) || env_truthy("DINGDA_DEBUG");
+        let default_reconnect_delay = if debug_mode { 30 } else { 5 };
         Self {
-            debug_mode: cfg!(debug_assertions) || env_truthy("DINGDA_DEBUG"),
+            debug_mode,
             mock_publish: env_truthy("DINGDA_MOCK_PUBLISH"),
             skip_license_check: cfg!(debug_assertions) && env_truthy("DINGDA_SKIP_LICENSE"),
             channel_auto_reconnect: !env_falsy("DINGDA_CHANNEL_AUTO_RECONNECT"),
+            channel_reconnect_delay_secs: env_u64("DINGDA_CHANNEL_RECONNECT_DELAY_SECS")
+                .unwrap_or(default_reconnect_delay),
+            auto_cookie_renew: !env_truthy("DINGDA_DISABLE_AUTO_COOKIE_RENEW"),
+            // debug 默认开启，避免改壳层代码就断 WS；显式 `=0` 才关。
+            dev_channel_host: cfg!(debug_assertions) && !env_falsy("DINGDA_DEV_CHANNEL_HOST"),
         }
     }
 
@@ -111,6 +127,11 @@ fn env_falsy(key: &str) -> bool {
         .is_some_and(|value| matches!(value.to_ascii_lowercase().as_str(), "0" | "false" | "no"))
 }
 
+/// 解析环境变量为 u64。
+fn env_u64(key: &str) -> Option<u64> {
+    std::env::var(key).ok()?.parse().ok()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -128,7 +149,12 @@ mod tests {
             mock_publish: false,
             skip_license_check: false,
             channel_auto_reconnect: true,
+            channel_reconnect_delay_secs: 5,
+            auto_cookie_renew: true,
+            dev_channel_host: false,
         };
         assert!(flags.channel_auto_reconnect);
+        assert!(flags.auto_cookie_renew);
+        assert!(!flags.dev_channel_host);
     }
 }

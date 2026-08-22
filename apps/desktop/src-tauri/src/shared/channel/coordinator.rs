@@ -28,6 +28,38 @@ use super::dispatcher::ChannelDispatcher;
 use super::protocol::{ChannelInboundMessage, ConnectionState, ConversationSync, InboundListener};
 use super::{conversation_id_for, filter_reply, inbound_to_message, ChannelRepo};
 
+/// 登录态过期类错误（推 `auth_expired`，勿把原文 JSON 给前端）。
+fn is_auth_expired_text(text: &str) -> bool {
+    [
+        "FAIL_SYS_SESSION_EXPIRED",
+        "Session过期",
+        "SESSION_EXPIRED",
+        "登录态已过期",
+        "请重新扫码登录",
+        "cookie 缺少",
+    ]
+    .iter()
+    .any(|keyword| text.contains(keyword))
+}
+
+/// 压缩错误 detail：禁止把 punish/token 整段 JSON 推到 UI。
+fn sanitize_status_detail(text: &str) -> String {
+    let trimmed = text.trim();
+    if trimmed.is_empty() {
+        return "连接异常，请稍后重试".into();
+    }
+    if trimmed.contains("_____tmd_____")
+        || trimmed.contains("FAIL_SYS_USER_VALIDATE")
+        || trimmed.contains("punish")
+    {
+        return "风控拦截，请稍后重试".into();
+    }
+    if trimmed.starts_with('{') || trimmed.len() > 120 {
+        return "连接异常，请稍后重试或查看运行日志".into();
+    }
+    trimmed.chars().take(120).collect()
+}
+
 /// 协调器 — 持有 store / dispatcher / 自动回复管线 / 事件总线。
 pub struct ChannelCoordinator {
     store: Arc<ChannelRepo>,
@@ -269,15 +301,10 @@ impl ChannelCoordinator {
         platform::xianyu::fetch_message_headinfo(&cookie_str, &session_id, &item_id).await
     }
 
-    fn emit_channel_status(
-        &self,
-        account_id: &str,
-        state: ConnectionState,
-        detail: Option<String>,
-    ) {
+    fn emit_channel_status(&self, account_id: &str, state: &str, detail: Option<String>) {
         let event = AppEvent::ChannelStatus(ChannelStatusEvent {
             account_id: account_id.to_string(),
-            state: state.as_str().to_string(),
+            state: state.to_string(),
             detail,
         });
         if let Err(e) = emit(self.sink.as_ref(), &event) {
@@ -324,7 +351,19 @@ impl InboundListener for ChannelCoordinator {
     async fn on_message(&self, inbound: ChannelInboundMessage) {
         info!(peer = %inbound.peer_id, item = %inbound.item_id, "渠道收到入站消息");
 
-        let conversation_id = conversation_id_for(&inbound.peer_id, &inbound.item_id);
+        // 优先按 cid 合并：WS 推包可能先用 cid 占位建会话，真消息到达后复用同一行。
+        let conversation_id = if !inbound.cid.is_empty() {
+            match self.store.find_conversation_by_cid(&inbound.cid) {
+                Ok(Some(existing)) => existing.id,
+                Ok(None) => conversation_id_for(&inbound.peer_id, &inbound.item_id),
+                Err(error) => {
+                    warn!(%error, "按 cid 查会话失败");
+                    conversation_id_for(&inbound.peer_id, &inbound.item_id)
+                }
+            }
+        } else {
+            conversation_id_for(&inbound.peer_id, &inbound.item_id)
+        };
         let now = self.now_iso();
         let message_created_at = if inbound.created_at_ms > 0 {
             inbound.created_at_ms.to_string()
@@ -444,54 +483,138 @@ impl InboundListener for ChannelCoordinator {
         match state {
             ConnectionState::Connected => {
                 info!(account = %account_id, "已连接到闲鱼");
+                self.emit_channel_status(account_id, "connected", None);
             }
             ConnectionState::Disconnected => {
                 info!(account = %account_id, "已断开闲鱼连接");
+                self.emit_channel_status(account_id, "disconnected", None);
+            }
+            ConnectionState::Connecting => {
+                self.emit_channel_status(account_id, "connecting", Some("正在连接闲鱼…".into()));
             }
             ConnectionState::Error => {
                 warn!(account = %account_id, detail = ?detail, "闲鱼连接异常");
-                if let Some(detail) = detail.as_deref() {
-                    if is_risk_control_text(detail) {
-                        #[cfg(platform_xianyu)]
-                        if let Some(renewer) = &self.cookie_renewer {
-                            warn!(account = %account_id, "检测到风控，调度浏览器自动过滑块");
-                            renewer
-                                .clone()
-                                .spawn_renew(account_id.to_string(), detail.to_string());
-                        } else {
-                            warn!(account = %account_id, "滑块续期器未注入，无法自动过滑块");
-                        }
-                    }
-                    self.maybe_record_risk(account_id, detail);
+                let detail_text = detail.as_deref().unwrap_or("");
+                if is_auth_expired_text(detail_text) {
+                    self.emit_channel_status(
+                        account_id,
+                        "auth_expired",
+                        Some("登录态已过期，请重新扫码后再连接".into()),
+                    );
+                    return;
                 }
+                if is_risk_control_text(detail_text) {
+                    self.maybe_record_risk(account_id, detail_text);
+                    #[cfg(platform_xianyu)]
+                    if let Some(renewer) = &self.cookie_renewer {
+                        warn!(account = %account_id, "检测到风控，调度浏览器自动过滑块");
+                        let schedule = renewer
+                            .clone()
+                            .spawn_renew(account_id.to_string(), detail_text.to_string());
+                        match schedule {
+                            super::cookie_renew::RenewSchedule::Started
+                            | super::cookie_renew::RenewSchedule::InFlight => {
+                                // Started：renewer 已推 renewing；InFlight：保持原 renewing/queued，勿覆盖。
+                                if matches!(schedule, super::cookie_renew::RenewSchedule::Started) {
+                                    self.emit_channel_status(
+                                        account_id,
+                                        "renewing",
+                                        Some("正在过滑块验证，请稍候".into()),
+                                    );
+                                }
+                            }
+                            super::cookie_renew::RenewSchedule::Queued => {
+                                self.emit_channel_status(
+                                    account_id,
+                                    "queued",
+                                    Some("排队等待过滑块，请稍候".into()),
+                                );
+                            }
+                            super::cookie_renew::RenewSchedule::Cooldown => {
+                                self.emit_channel_status(
+                                    account_id,
+                                    "renewing",
+                                    Some("过滑块冷却中，请稍候再试".into()),
+                                );
+                            }
+                            super::cookie_renew::RenewSchedule::Disabled => {
+                                self.emit_channel_status(
+                                    account_id,
+                                    "error",
+                                    Some("风控拦截，自动过滑块未启用".into()),
+                                );
+                            }
+                        }
+                        return;
+                    }
+                    #[cfg(platform_xianyu)]
+                    warn!(account = %account_id, "滑块续期器未注入，无法自动过滑块");
+                    self.emit_channel_status(
+                        account_id,
+                        "error",
+                        Some("风控拦截，请稍后重试".into()),
+                    );
+                    return;
+                }
+                self.emit_channel_status(
+                    account_id,
+                    "error",
+                    Some(sanitize_status_detail(detail_text)),
+                );
             }
-            ConnectionState::Connecting => {}
         }
-        self.emit_channel_status(account_id, state, detail);
     }
 
     async fn on_conversation(&self, sync: ConversationSync) {
+        // 已有同 cid 会话则复用 id，避免 watch 占位 peer 与 baseline 真 peer 拆成两行。
+        let conversation_id = if !sync.cid.is_empty() {
+            match self.store.find_conversation_by_cid(&sync.cid) {
+                Ok(Some(existing)) => existing.id,
+                Ok(None) => conversation_id_for(&sync.peer_id, &sync.item_id),
+                Err(error) => {
+                    warn!(%error, "按 cid 查会话失败");
+                    conversation_id_for(&sync.peer_id, &sync.item_id)
+                }
+            }
+        } else {
+            conversation_id_for(&sync.peer_id, &sync.item_id)
+        };
+
+        let existing = self
+            .store
+            .find_conversation_by_id(&conversation_id)
+            .ok()
+            .flatten();
+        // 占位 peer（=cid）不覆盖已有真实 peer。
+        let peer_id = match &existing {
+            Some(row) if row.peer_id != sync.cid && sync.peer_id == sync.cid => row.peer_id.clone(),
+            _ => sync.peer_id.clone(),
+        };
+        let peer_name = existing.as_ref().and_then(|row| row.peer_name.clone());
+        let item_id = if sync.item_id.is_empty() {
+            existing.as_ref().and_then(|row| row.item_id.clone())
+        } else {
+            Some(sync.item_id.clone())
+        };
+        let item_title = if sync.item_title.is_empty() {
+            existing.as_ref().and_then(|row| row.item_title.clone())
+        } else {
+            Some(sync.item_title.clone())
+        };
+
         let conversation = ChannelConversation {
-            id: conversation_id_for(&sync.peer_id, &sync.item_id),
+            id: conversation_id,
             account_id: sync.account_id.clone(),
             cid: if sync.cid.is_empty() {
                 None
             } else {
                 Some(sync.cid.clone())
             },
-            peer_id: sync.peer_id,
-            peer_name: None,
-            item_id: if sync.item_id.is_empty() {
-                None
-            } else {
-                Some(sync.item_id)
-            },
-            item_title: if sync.item_title.is_empty() {
-                None
-            } else {
-                Some(sync.item_title)
-            },
-            item_price: None,
+            peer_id,
+            peer_name,
+            item_id,
+            item_title,
+            item_price: existing.as_ref().and_then(|row| row.item_price),
             updated_at: sync.updated_at,
         };
         if let Err(error) = self.store.upsert_conversation(&conversation) {

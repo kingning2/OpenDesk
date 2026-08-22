@@ -5,6 +5,7 @@
 
 use crate::platforms::xianyu::ipc;
 use crate::shared::channel::coordinator::ChannelCoordinator;
+use app::account::AccountStore;
 use app::xianyu::{
     InMemoryAccountStore, InMemoryAddressStore, InMemoryAutoReplyLogStore, InMemoryBatchStore,
     InMemoryBlacklistStore, InMemoryCardStore, InMemoryFeedbackStore, InMemoryFilterStore,
@@ -124,6 +125,8 @@ pub fn register_business(
 
 /// 向调度器注册闲鱼渠道协议，并绑定入站监听器。
 ///
+/// 开发态默认走帧隧道 Host（`127.0.0.1:10050`）：上游 WSS 在 Host，协议在本进程。
+///
 /// 作者：Xiaoman
 /// 创建时间：2026-08-18
 ///
@@ -131,6 +134,7 @@ pub fn register_business(
 ///
 /// * `dispatcher` — 渠道调度器
 /// * `coordinator` — 入站协调器（作为协议监听器）
+/// * `account_store` — 用于启动后自动附着 Host 已有会话
 ///
 /// # 返回值
 ///
@@ -138,7 +142,56 @@ pub fn register_business(
 pub fn register_active_platform(
     dispatcher: &Arc<ChannelDispatcher>,
     coordinator: &Arc<ChannelCoordinator>,
+    account_store: Option<Arc<InMemoryAccountStore>>,
 ) {
+    #[cfg(all(debug_assertions, platform_xianyu))]
+    {
+        if common::constants::FeatureFlags::from_env().dev_channel_host {
+            match crate::shared::channel::dev_host::ensure_dev_channel_host() {
+                Ok(()) => {
+                    let listener = coordinator.clone();
+                    dispatcher.register_factory(
+                        ChannelKind::Xianyu,
+                        Arc::new(move || {
+                            let channel = Arc::new(XianyuChannel::new_dev_tunnel());
+                            channel.set_inbound_listener(listener.clone());
+                            channel
+                        }),
+                    );
+                    tracing::info!(
+                        "闲鱼协议使用开发态帧隧道（Host 持有 WSS，本进程持有协议所有权）"
+                    );
+                    let dispatcher = dispatcher.clone();
+                    let store = account_store;
+                    tauri::async_runtime::spawn(async move {
+                        let accounts = store
+                            .and_then(|store| store.list_accounts(1).ok())
+                            .unwrap_or_default()
+                            .into_iter()
+                            .filter(|account| account.has_cookie())
+                            .map(|account| {
+                                let name = if account.display_name.is_empty() {
+                                    account.account_id.clone()
+                                } else {
+                                    account.display_name.clone()
+                                };
+                                (account.account_id, account.cookie, name)
+                            })
+                            .collect();
+                        crate::shared::channel::dev_host::reattach_host_sessions(
+                            dispatcher, accounts,
+                        )
+                        .await;
+                    });
+                    return;
+                }
+                Err(error) => {
+                    tracing::warn!(%error, "Channel Host 不可用，回退进程内直连");
+                }
+            }
+        }
+    }
+
     let listener = coordinator.clone();
     dispatcher.register_factory(
         ChannelKind::Xianyu,

@@ -17,7 +17,7 @@ use tauri::State;
 use crate::config::ConfigStore;
 use crate::shared::ipc::IpcResponse;
 use crate::shared::plugin_download::{
-    install_plugin, plugin_list_with_status, PluginDownloadTracker,
+    install_plugin, plugin_list_with_status, sync_camoufox_env, PluginDownloadTracker,
 };
 
 /// 列出内置插件及安装状态。
@@ -88,5 +88,6 @@ pub async fn plugin_uninstall(
     request: PluginIpcUninstallRequest,
 ) -> DingDaResult<IpcResponse<PluginIpcUninstallResponse>> {
     let item = state.plugin_uninstall(request.plugin_id.trim())?;
+    sync_camoufox_env(&state);
     Ok(IpcResponse::ok(PluginIpcUninstallResponse { item }))
 }
