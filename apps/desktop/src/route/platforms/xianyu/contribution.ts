@@ -29,6 +29,7 @@ function buildXianyuRoutes(): PlatformRouteContribution {
       { path: toRouteSegment(CHANNEL_MANAGE_ROOT) },
       ...MANAGE_NAV.map((item) => ({ path: toRouteSegment(managePath(item.key)) })),
       { path: `${toRouteSegment(managePath("items"))}/:itemId` },
+      { path: `${toRouteSegment(managePath("monitor"))}/runs/:runId` },
     ],
     pageLoaders: {
       [CHANNEL_MANAGE_ROOT]: loadManageConsole,
@@ -54,6 +55,9 @@ function buildXianyuRoutes(): PlatformRouteContribution {
       const rest = pathname.slice(prefix.length);
       if (rest.startsWith("items/") && rest.split("/").length >= 2) {
         return "商品详情";
+      }
+      if (rest.startsWith("monitor/runs/") && rest.split("/").length >= 3) {
+        return "运行详情";
       }
       const view = rest.split("/")[0] ?? "";
       if (isManageView(view)) {

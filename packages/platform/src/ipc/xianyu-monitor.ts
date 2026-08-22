@@ -3,6 +3,7 @@
  */
 
 import { callRequest } from "./invoke";
+import type { MonitorStepPayload } from "../events";
 
 export interface MonitorTask {
   id: string;
@@ -39,6 +40,7 @@ export interface MonitorResult {
   aiRecommended: boolean;
   aiReason: string;
   notified: boolean;
+  image?: string;
   crawledAt: string;
 }
 
@@ -84,7 +86,7 @@ export function monitorTaskSave(params: {
       enabled: params.enabled ?? true,
       ai_criteria: params.aiCriteria,
       max_results: params.maxResults ?? 20,
-      headed: params.headed ?? true,
+      headed: params.headed ?? false,
     },
   }).then((r) => r.data);
 }
@@ -105,6 +107,46 @@ export function monitorResultList(ownerId: number, taskId: string): Promise<Moni
   return callRequest<MonitorResult[]>("monitor_result_list", {
     request: { owner_id: ownerId, task_id: taskId },
   }).then((r) => r.data);
+}
+
+export interface MonitorRun {
+  id: string;
+  taskId: string;
+  ownerId: number;
+  status: "running" | "success" | "failed";
+  startedAt: string;
+  finishedAt?: string;
+  error?: string;
+  scanned: number;
+  newItems: number;
+  skipped: number;
+  recommended: number;
+  steps: MonitorStepPayload[];
+}
+
+export function monitorRunList(ownerId: number, taskId: string): Promise<MonitorRun[]> {
+  return callRequest<MonitorRun[]>("monitor_run_list", {
+    request: { owner_id: ownerId, task_id: taskId },
+  }).then((r) => r.data);
+}
+
+export function monitorRunGet(ownerId: number, runId: string): Promise<MonitorRun | null> {
+  return callRequest<MonitorRun | null>("monitor_run_get", {
+    request: { owner_id: ownerId, run_id: runId },
+  }).then((r) => r.data);
+}
+
+export interface MonitorStats {
+  taskCount: number;
+  runningCount: number;
+  enabledCount: number;
+  resultCount: number;
+  recommendedCount: number;
+  todayNewCount: number;
+}
+
+export function monitorStats(ownerId: number): Promise<MonitorStats> {
+  return callRequest<MonitorStats>("monitor_stats", { ownerId }).then((r) => r.data);
 }
 
 export function monitorGenerateKeywords(params: {

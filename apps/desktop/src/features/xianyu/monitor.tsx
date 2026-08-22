@@ -1,8 +1,8 @@
 /**
- * 闲鱼商品监控 — 多任务定时 + AI 关键词 / 决策 + SQLite 结果。
+ * 闲鱼商品监控 — 任务 / 运行记录管理；点击某次运行进入详情页（agent 转录式）。
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AsyncButton,
   Button,
@@ -17,21 +17,35 @@ import {
   Textarea,
   toast,
 } from "@desk/ui";
-import { ChevronDown, ChevronUp, ExternalLink, Play, Trash2 } from "@desk/ui/icons";
+import {
+  CheckCircle,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  Loader2,
+  Play,
+  Trash2,
+  XCircle,
+} from "@desk/ui/icons";
 import type { AiAccount, AiProvider } from "@desk/contracts";
+import { managePath } from "@desk/platform/compile";
 import { aiConfigGet } from "@desk/platform/ipc/ai";
 import { accountList, type XianyuAccount } from "@desk/platform/ipc/account";
-import { listenMonitorMatch } from "@desk/platform/events";
+import { listenMonitorProgress } from "@desk/platform/events";
 import {
   monitorGenerateKeywords,
-  monitorResultList,
+  monitorRunList,
+  monitorStats,
   monitorTaskDelete,
   monitorTaskList,
   monitorTaskRun,
   monitorTaskSave,
-  type MonitorResult,
+  type MonitorRun,
+  type MonitorStats,
   type MonitorTask,
 } from "@desk/platform/ipc/xianyu-monitor";
+import { useWorkspaceNav } from "../../app/use-workspace-tabs";
+import { formatRunTime } from "./monitor-console";
 import { BUILT_IN_PROVIDERS } from "@feature/ai/builtin-providers";
 
 const OWNER_ID = 1;
@@ -100,16 +114,74 @@ function moveAiAccountOrder(order: string[], index: number, delta: -1 | 1): stri
   return next;
 }
 
+function StatCard({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: number;
+  highlight?: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-xl border p-3 ${
+        highlight ? "border-primary/40 bg-primary/5" : "border-border bg-card"
+      }`}
+    >
+      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-0.5 text-xl font-semibold tabular-nums">{value}</p>
+    </div>
+  );
+}
+
+function RunRecordRow({ run, onOpen }: { run: MonitorRun; onOpen: () => void }) {
+  const running = run.status === "running";
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={onOpen}
+        className="flex w-full items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-left transition-colors hover:bg-muted/40"
+      >
+        {running ? (
+          <Loader2 className="size-4 shrink-0 animate-spin text-primary" />
+        ) : run.status === "success" ? (
+          <CheckCircle className="size-4 shrink-0 text-emerald-500" />
+        ) : (
+          <XCircle className="size-4 shrink-0 text-destructive" />
+        )}
+        <span className="min-w-0 flex-1 space-y-0.5">
+          <span className="block text-xs font-medium">
+            {formatRunTime(run.startedAt)}
+            {running ? " · 运行中" : run.status === "success" ? " · 成功" : " · 失败"}
+          </span>
+          <span className="block text-[10px] text-muted-foreground">
+            扫描 {run.scanned} · 新增 {run.newItems} · 推荐 {run.recommended}
+            {run.error ? ` · ${run.error}` : ""}
+          </span>
+        </span>
+        <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+      </button>
+    </li>
+  );
+}
+
 export function XianyuMonitorPage() {
+  const { selectTab } = useWorkspaceNav();
   const [accounts, setAccounts] = useState<XianyuAccount[]>([]);
   const [aiAccountOptions, setAiAccountOptions] = useState<AiAccountOption[]>([]);
   const [tasks, setTasks] = useState<MonitorTask[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
-  const [results, setResults] = useState<MonitorResult[]>([]);
+  const [runs, setRuns] = useState<MonitorRun[]>([]);
+  const [runningTaskId, setRunningTaskId] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [stats, setStats] = useState<MonitorStats | null>(null);
+  const pendingNavTaskId = useRef<string | null>(null);
 
   const accountOptions = useMemo(() => toAccountOptions(accounts), [accounts]);
   const aiAccountLabelMap = useMemo(
@@ -137,13 +209,19 @@ export function XianyuMonitorPage() {
     }
   }, [selectedId]);
 
-  const loadResults = useCallback(async (taskId: string) => {
+  const loadRuns = useCallback(async (taskId: string) => {
     if (!taskId) {
-      setResults([]);
-      return;
+      setRuns([]);
+      return [];
     }
-    const list = await monitorResultList(OWNER_ID, taskId);
-    setResults(list);
+    const list = await monitorRunList(OWNER_ID, taskId);
+    setRuns(list);
+    return list;
+  }, []);
+
+  const loadStats = useCallback(async () => {
+    const value = await monitorStats(OWNER_ID);
+    setStats(value);
   }, []);
 
   useEffect(() => {
@@ -200,20 +278,46 @@ export function XianyuMonitorPage() {
   }, [loadTasks]);
 
   useEffect(() => {
-    if (!selectedId) return;
-    void loadResults(selectedId).catch((error) =>
+    void loadStats().catch((error) =>
       toast.error(error instanceof Error ? error.message : String(error)),
     );
-  }, [selectedId, loadResults]);
+  }, [loadStats]);
+
+  useEffect(() => {
+    if (!selectedId) {
+      setRuns([]);
+      return;
+    }
+    setRunningTaskId(null);
+    void loadRuns(selectedId)
+      .then((list) => {
+        if (list[0]?.status === "running") {
+          setRunningTaskId(selectedId);
+        }
+      })
+      .catch((error) =>
+        toast.error(error instanceof Error ? error.message : String(error)),
+      );
+  }, [selectedId, loadRuns]);
 
   useEffect(() => {
     let unlisten: (() => void) | undefined;
-    void listenMonitorMatch((payload) => {
-      toast.success(`监控命中：${payload.title}`, {
-        description: payload.reason,
-      });
-      if (payload.taskId === selectedId) {
-        void loadResults(payload.taskId);
+    void listenMonitorProgress((payload) => {
+      if (payload.taskId !== selectedId) return;
+      if (payload.stage === "started") {
+        if (pendingNavTaskId.current === payload.taskId) {
+          pendingNavTaskId.current = null;
+          setRunningTaskId(null);
+          selectTab(`${managePath("monitor")}/runs/${payload.runId}`);
+          return;
+        }
+        setRunningTaskId(payload.taskId);
+        void loadRuns(payload.taskId);
+        return;
+      }
+      if (payload.stage === "finished" || payload.stage === "failed") {
+        setRunningTaskId(null);
+        void loadRuns(payload.taskId);
       }
     }).then((fn) => {
       unlisten = fn;
@@ -221,7 +325,7 @@ export function XianyuMonitorPage() {
     return () => {
       unlisten?.();
     };
-  }, [selectedId, loadResults]);
+  }, [selectedId, loadRuns, selectTab]);
 
   function resetForm(task?: MonitorTask) {
     if (task) {
@@ -281,6 +385,7 @@ export function XianyuMonitorPage() {
       toast.success("监控任务已保存");
       await loadTasks();
       setSelectedId(saved.id);
+      setEditing(false);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : String(error));
     } finally {
@@ -316,17 +421,14 @@ export function XianyuMonitorPage() {
     }
   }
 
-  async function handleRun(taskId: string) {
-    try {
-      const summary = await monitorTaskRun(OWNER_ID, taskId);
-      toast.success(
-        `扫描 ${summary.scanned} 条，新增 ${summary.newItems} 条，推荐 ${summary.recommended} 条`,
-      );
-      await loadTasks();
-      await loadResults(taskId);
-    } catch (error) {
+  function handleRun(taskId: string) {
+    pendingNavTaskId.current = taskId;
+    setRunningTaskId(taskId);
+    void monitorTaskRun(OWNER_ID, taskId).catch((error) => {
       toast.error(error instanceof Error ? error.message : String(error));
-    }
+      pendingNavTaskId.current = null;
+      setRunningTaskId(null);
+    });
   }
 
   async function handleDelete(taskId: string) {
@@ -336,6 +438,7 @@ export function XianyuMonitorPage() {
       if (selectedId === taskId) {
         setSelectedId("");
         resetForm();
+        setEditing(true);
       }
       await loadTasks();
     } catch (error) {
@@ -346,8 +449,23 @@ export function XianyuMonitorPage() {
   return (
     <PageScaffold
       title="商品监控"
-      subtitle="定时多任务并发：AI 生成关键词 → 列表搜索 → AI 决策 → SQLite 存储 → 桌面通知（AI 余额不足时自动切换备用账号）"
+      subtitle="定时多任务并发：AI 生成关键词 → 列表搜索 → AI 决策 → 结果落库；点击某次运行进入详情页查看完整过程与商品。"
     >
+      {stats ? (
+        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <StatCard label="任务" value={stats.taskCount} />
+          <StatCard
+            label="运行中"
+            value={stats.runningCount}
+            highlight={stats.runningCount > 0}
+          />
+          <StatCard label="已启用" value={stats.enabledCount} />
+          <StatCard label="累计命中" value={stats.resultCount} />
+          <StatCard label="AI 推荐" value={stats.recommendedCount} />
+          <StatCard label="今日新增" value={stats.todayNewCount} />
+        </div>
+      ) : null}
+
       <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
         <section className="space-y-3">
           <div className="flex items-center justify-between">
@@ -358,6 +476,7 @@ export function XianyuMonitorPage() {
               onClick={() => {
                 setSelectedId("");
                 resetForm();
+                setEditing(true);
               }}
             >
               新建
@@ -371,6 +490,7 @@ export function XianyuMonitorPage() {
                   onClick={() => {
                     setSelectedId(task.id);
                     resetForm(task);
+                    setEditing(false);
                   }}
                   className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
                     selectedId === task.id
@@ -399,299 +519,296 @@ export function XianyuMonitorPage() {
         </section>
 
         <section className="space-y-6">
-          <div className="space-y-3 rounded-xl border border-border bg-card p-4">
-            <h2 className="text-sm font-medium">{selectedTask ? "编辑任务" : "新建任务"}</h2>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5 sm:col-span-2">
-                <label className="text-xs text-muted-foreground">任务名称</label>
-                <Input
-                  value={form.name}
-                  onChange={(event) => setForm({ ...form, name: event.target.value })}
-                  placeholder="例如：MacBook Air M1 捡漏"
-                />
-              </div>
-              <div className="space-y-1.5 sm:col-span-2">
-                <label className="text-xs text-muted-foreground">购买意图（AI 生成关键词）</label>
-                <Textarea
-                  value={form.intent}
-                  onChange={(event) => setForm({ ...form, intent: event.target.value })}
-                  placeholder="描述你想买什么、预算、成色要求等"
-                  rows={3}
-                />
-              </div>
-              <div className="space-y-1.5 sm:col-span-2">
-                <label className="text-xs text-muted-foreground">AI 筛选标准（决策用）</label>
-                <Textarea
-                  value={form.aiCriteria}
-                  onChange={(event) => setForm({ ...form, aiCriteria: event.target.value })}
-                  placeholder="例如：M1 芯片、16G 内存、价格低于 3500、个人闲置优先"
-                  rows={3}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs text-muted-foreground">闲鱼账号</label>
-                <Select
-                  value={form.accountId}
-                  onValueChange={(value) => setForm({ ...form, accountId: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择账号" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {accountOptions.map((account) => (
-                      <SelectItem key={account.id} value={account.id}>
-                        {account.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5 sm:col-span-2">
-                <label className="text-xs text-muted-foreground">AI 账号（关键词 + 决策）</label>
-                <Select
-                  value={form.aiAccountId}
-                  onValueChange={(value) =>
-                    setForm((current) => ({
-                      ...current,
-                      aiAccountId: value,
-                      aiAccountOrder: sanitizeAiAccountOrder(current.aiAccountOrder, value),
-                    }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择 AI 账号" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {aiAccountOptions.map((option) => (
-                      <SelectItem key={option.id} value={option.id}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {aiAccountOptions.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">
-                    请先在「AI 配置」中添加 DeepSeek / 豆包账号，或使用本地 Ollama。
-                  </p>
+          {selectedTask ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-3">
+              <div className="min-w-0 space-y-0.5">
+                <h2 className="truncate text-sm font-medium">{selectedTask.name}</h2>
+                <p className="text-xs text-muted-foreground">
+                  {selectedTask.isRunning || runningTaskId === selectedTask.id
+                    ? "运行中"
+                    : selectedTask.enabled
+                      ? "已启用"
+                      : "已停用"}
+                  {" · "}
+                  间隔 {selectedTask.intervalMinutes} 分钟 · {selectedTask.keywords.length} 个关键词
+                </p>
+                {selectedTask.lastError ? (
+                  <p className="text-xs text-destructive">上次错误：{selectedTask.lastError}</p>
                 ) : null}
               </div>
-              <div className="flex items-center gap-2 sm:col-span-2">
-                <Switch
-                  checked={form.aiFailoverEnabled}
-                  onCheckedChange={(checked) =>
-                    setForm({ ...form, aiFailoverEnabled: checked })
-                  }
-                />
-                <span className="text-sm">余额不足时自动切换备用 AI</span>
+              <div className="flex flex-wrap gap-2">
+                <AsyncButton
+                  onClick={() => handleRun(selectedTask.id)}
+                  disabled={runningTaskId === selectedTask.id}
+                >
+                  <Play className="mr-1.5 size-4" />
+                  立即运行
+                </AsyncButton>
+                <Button variant="outline" onClick={() => setEditing(true)}>
+                  编辑任务
+                </Button>
+                <Button variant="outline" onClick={() => void handleDelete(selectedTask.id)}>
+                  <Trash2 className="mr-1.5 size-4" />
+                  删除
+                </Button>
               </div>
-              {form.aiFailoverEnabled ? (
-                <div className="space-y-2 sm:col-span-2">
-                  <label className="text-xs text-muted-foreground">
-                    备用账号顺序（首选失败后依次尝试；留空则自动使用其余 AI 账号）
-                  </label>
-                  {form.aiAccountOrder.length > 0 ? (
-                    <ul className="space-y-2">
-                      {form.aiAccountOrder.map((id, index) => (
-                        <li
-                          key={id}
-                          className="flex items-center gap-2 rounded-lg border border-border bg-muted/20 px-2 py-1.5"
-                        >
-                          <span className="min-w-0 flex-1 truncate text-sm">
-                            {index + 1}. {aiAccountLabelMap.get(id) ?? id}
-                          </span>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            disabled={index === 0}
-                            aria-label="上移"
-                            onClick={() =>
-                              setForm({
-                                ...form,
-                                aiAccountOrder: moveAiAccountOrder(form.aiAccountOrder, index, -1),
-                              })
-                            }
-                          >
-                            <ChevronUp className="size-4" />
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            disabled={index === form.aiAccountOrder.length - 1}
-                            aria-label="下移"
-                            onClick={() =>
-                              setForm({
-                                ...form,
-                                aiAccountOrder: moveAiAccountOrder(form.aiAccountOrder, index, 1),
-                              })
-                            }
-                          >
-                            <ChevronDown className="size-4" />
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            aria-label="移除"
-                            onClick={() =>
-                              setForm({
-                                ...form,
-                                aiAccountOrder: form.aiAccountOrder.filter((item) => item !== id),
-                              })
-                            }
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
-                        </li>
+            </div>
+          ) : null}
+
+          {selectedTask ? (
+            <section className="space-y-3">
+              <h2 className="text-sm font-medium">运行记录</h2>
+              {runs.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  {runningTaskId
+                    ? "正在执行…"
+                    : "暂无运行记录。点击「立即运行」进入详情页查看实时过程，或从历史运行记录进入。"}
+                </p>
+              ) : (
+                <ol className="space-y-2">
+                  {runs.map((run) => (
+                    <RunRecordRow
+                      key={run.id}
+                      run={run}
+                      onOpen={() => selectTab(`${managePath("monitor")}/runs/${run.id}`)}
+                    />
+                  ))}
+                </ol>
+              )}
+            </section>
+          ) : null}
+
+          {editing || !selectedTask ? (
+            <div className="space-y-3 rounded-xl border border-border bg-card p-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-medium">{selectedTask ? "编辑任务" : "新建任务"}</h2>
+                {selectedTask ? (
+                  <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
+                    收起
+                  </Button>
+                ) : null}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-xs text-muted-foreground">任务名称</label>
+                  <Input
+                    value={form.name}
+                    onChange={(event) => setForm({ ...form, name: event.target.value })}
+                    placeholder="例如：MacBook Air M1 捡漏"
+                  />
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-xs text-muted-foreground">购买意图（AI 生成关键词）</label>
+                  <Textarea
+                    value={form.intent}
+                    onChange={(event) => setForm({ ...form, intent: event.target.value })}
+                    placeholder="描述你想买什么、预算、成色要求等"
+                    rows={3}
+                  />
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-xs text-muted-foreground">AI 筛选标准（决策用）</label>
+                  <Textarea
+                    value={form.aiCriteria}
+                    onChange={(event) => setForm({ ...form, aiCriteria: event.target.value })}
+                    placeholder="例如：M1 芯片、16G 内存、价格低于 3500、个人闲置优先"
+                    rows={3}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs text-muted-foreground">闲鱼账号</label>
+                  <Select
+                    value={form.accountId}
+                    onValueChange={(value) => setForm({ ...form, accountId: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="选择账号" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {accountOptions.map((account) => (
+                        <SelectItem key={account.id} value={account.id}>
+                          {account.label}
+                        </SelectItem>
                       ))}
-                    </ul>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">未配置时将按 AI 配置中的账号自动尝试。</p>
-                  )}
-                  {addableAiAccounts.length > 0 ? (
-                    <Select
-                      key={form.aiAccountOrder.join(",")}
-                      onValueChange={(value) => {
-                        setForm({
-                          ...form,
-                          aiAccountOrder: [...form.aiAccountOrder, value],
-                        });
-                      }}
-                    >
-                      <SelectTrigger className="max-w-xs">
-                        <SelectValue placeholder="添加备用账号" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {addableAiAccounts.map((option) => (
-                          <SelectItem key={option.id} value={option.id}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-xs text-muted-foreground">AI 账号（关键词 + 决策）</label>
+                  <Select
+                    value={form.aiAccountId}
+                    onValueChange={(value) =>
+                      setForm((current) => ({
+                        ...current,
+                        aiAccountId: value,
+                        aiAccountOrder: sanitizeAiAccountOrder(current.aiAccountOrder, value),
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="选择 AI 账号" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {aiAccountOptions.map((option) => (
+                        <SelectItem key={option.id} value={option.id}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {aiAccountOptions.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      请先在「AI 配置」中添加 DeepSeek / 豆包账号，或使用本地 Ollama。
+                    </p>
                   ) : null}
                 </div>
-              ) : null}
-              <div className="space-y-1.5">
-                <label className="text-xs text-muted-foreground">定时间隔（分钟）</label>
-                <Input
-                  type="number"
-                  min={1}
-                  value={form.intervalMinutes}
-                  onChange={(event) =>
-                    setForm({ ...form, intervalMinutes: event.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-1.5 sm:col-span-2">
-                <div className="flex items-center justify-between gap-2">
-                  <label className="text-xs text-muted-foreground">搜索关键词（可 AI 生成）</label>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={generating}
-                    onClick={() => void handleGenerateKeywords()}
-                  >
-                    {generating ? "生成中…" : "AI 生成关键词"}
-                  </Button>
+                <div className="flex items-center gap-2 sm:col-span-2">
+                  <Switch
+                    checked={form.aiFailoverEnabled}
+                    onCheckedChange={(checked) =>
+                      setForm({ ...form, aiFailoverEnabled: checked })
+                    }
+                  />
+                  <span className="text-sm">余额不足时自动切换备用 AI</span>
                 </div>
-                <Textarea
-                  value={form.keywords}
-                  onChange={(event) => setForm({ ...form, keywords: event.target.value })}
-                  placeholder="每行一个关键词；留空则运行时自动生成"
-                  rows={3}
-                />
-              </div>
-              <div className="flex items-center gap-2 sm:col-span-2">
-                <Switch
-                  checked={form.enabled}
-                  onCheckedChange={(checked) => setForm({ ...form, enabled: checked })}
-                />
-                <span className="text-sm">启用定时监控</span>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <AsyncButton loading={saving} onClick={() => void handleSave()}>
-                保存任务
-              </AsyncButton>
-              {selectedTask ? (
-                <>
-                  <AsyncButton
-                    variant="outline"
-                    onClick={() => void handleRun(selectedTask.id)}
-                    disabled={selectedTask.isRunning}
-                  >
-                    <Play className="mr-1.5 size-4" />
-                    立即运行
-                  </AsyncButton>
-                  <Button
-                    variant="outline"
-                    onClick={() => void handleDelete(selectedTask.id)}
-                  >
-                    <Trash2 className="mr-1.5 size-4" />
-                    删除
-                  </Button>
-                </>
-              ) : null}
-            </div>
-            {selectedTask?.lastError ? (
-              <p className="text-xs text-destructive">上次错误：{selectedTask.lastError}</p>
-            ) : null}
-          </div>
-
-          <div className="space-y-3">
-            <h2 className="text-sm font-medium">
-              监控结果{selectedTask ? ` — ${selectedTask.name}` : ""}
-            </h2>
-            {results.length === 0 ? (
-              <p className="text-sm text-muted-foreground">暂无结果，保存并运行任务后会写入 SQLite。</p>
-            ) : (
-              <ul className="space-y-3">
-                {results.map((item) => (
-                  <li key={item.id}>
-                    <article
-                      className={`rounded-xl border p-3 sm:p-4 ${
-                        item.aiRecommended
-                          ? "border-primary/40 bg-primary/5"
-                          : "border-border bg-card"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 space-y-1">
-                          <a
-                            href={item.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="line-clamp-2 text-sm font-medium hover:underline"
+                {form.aiFailoverEnabled ? (
+                  <div className="space-y-2 sm:col-span-2">
+                    <label className="text-xs text-muted-foreground">
+                      备用账号顺序（首选失败后依次尝试；留空则自动使用其余 AI 账号）
+                    </label>
+                    {form.aiAccountOrder.length > 0 ? (
+                      <ul className="space-y-2">
+                        {form.aiAccountOrder.map((id, index) => (
+                          <li
+                            key={id}
+                            className="flex items-center gap-2 rounded-lg border border-border bg-muted/20 px-2 py-1.5"
                           >
-                            {item.title}
-                          </a>
-                          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                            <span className="font-semibold text-foreground">
-                              {item.priceText || "—"}
+                            <span className="min-w-0 flex-1 truncate text-sm">
+                              {index + 1}. {aiAccountLabelMap.get(id) ?? id}
                             </span>
-                            {item.sellerName ? <span>{item.sellerName}</span> : null}
-                            {item.location ? <span>{item.location}</span> : null}
-                            <span>{item.crawledAt}</span>
-                          </div>
-                          <p className="text-xs text-muted-foreground">{item.aiReason}</p>
-                        </div>
-                        <a
-                          href={item.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="shrink-0 text-muted-foreground hover:text-foreground"
-                        >
-                          <ExternalLink className="size-4" />
-                        </a>
-                      </div>
-                    </article>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              disabled={index === 0}
+                              aria-label="上移"
+                              onClick={() =>
+                                setForm({
+                                  ...form,
+                                  aiAccountOrder: moveAiAccountOrder(form.aiAccountOrder, index, -1),
+                                })
+                              }
+                            >
+                              <ChevronUp className="size-4" />
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              disabled={index === form.aiAccountOrder.length - 1}
+                              aria-label="下移"
+                              onClick={() =>
+                                setForm({
+                                  ...form,
+                                  aiAccountOrder: moveAiAccountOrder(form.aiAccountOrder, index, 1),
+                                })
+                              }
+                            >
+                              <ChevronDown className="size-4" />
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              aria-label="移除"
+                              onClick={() =>
+                                setForm({
+                                  ...form,
+                                  aiAccountOrder: form.aiAccountOrder.filter((item) => item !== id),
+                                })
+                              }
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        未配置时将按 AI 配置中的账号自动尝试。
+                      </p>
+                    )}
+                    {addableAiAccounts.length > 0 ? (
+                      <Select
+                        key={form.aiAccountOrder.join(",")}
+                        onValueChange={(value) => {
+                          setForm({
+                            ...form,
+                            aiAccountOrder: [...form.aiAccountOrder, value],
+                          });
+                        }}
+                      >
+                        <SelectTrigger className="max-w-xs">
+                          <SelectValue placeholder="添加备用账号" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {addableAiAccounts.map((option) => (
+                            <SelectItem key={option.id} value={option.id}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : null}
+                  </div>
+                ) : null}
+                <div className="space-y-1.5">
+                  <label className="text-xs text-muted-foreground">定时间隔（分钟）</label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={form.intervalMinutes}
+                    onChange={(event) =>
+                      setForm({ ...form, intervalMinutes: event.target.value })
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <label className="text-xs text-muted-foreground">
+                      搜索关键词（可 AI 生成）
+                    </label>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={generating}
+                      onClick={() => void handleGenerateKeywords()}
+                    >
+                      {generating ? "生成中…" : "AI 生成关键词"}
+                    </Button>
+                  </div>
+                  <Textarea
+                    value={form.keywords}
+                    onChange={(event) => setForm({ ...form, keywords: event.target.value })}
+                    placeholder="每行一个关键词；留空则运行时自动生成"
+                    rows={3}
+                  />
+                </div>
+                <div className="flex items-center gap-2 sm:col-span-2">
+                  <Switch
+                    checked={form.enabled}
+                    onCheckedChange={(checked) => setForm({ ...form, enabled: checked })}
+                  />
+                  <span className="text-sm">启用定时监控</span>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <AsyncButton loading={saving} onClick={() => void handleSave()}>
+                  保存任务
+                </AsyncButton>
+              </div>
+            </div>
+          ) : null}
         </section>
       </div>
     </PageScaffold>

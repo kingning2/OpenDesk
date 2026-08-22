@@ -14,6 +14,7 @@ import { useLocation } from "react-router";
 import { CHANNEL_MANAGE_ROOT, managePath } from "@desk/platform/compile";
 import { Ali1688SearchPage } from "@feature/1688/search";
 import { XianyuMonitorPage } from "./monitor";
+import { XianyuMonitorRunDetailPage } from "./monitor-run-detail";
 import { XianyuSearchPage } from "./search";
 import { XianyuAccountsPage } from "./accounts";
 import { XianyuDashboardPage } from "./dashboard";
@@ -86,6 +87,21 @@ function itemIdFromPathname(pathname: string): string | null {
 }
 
 /**
+ * 从路径解析监控运行详情 ID（`/manage/.../monitor/runs/:runId`）。
+ *
+ * @author Xiaoman
+ * @created 2026-08-22
+ */
+function monitorRunIdFromPathname(pathname: string): string | null {
+  const prefix = `${managePath("monitor")}/runs/`;
+  if (!pathname.startsWith(prefix)) {
+    return null;
+  }
+  const segment = pathname.slice(prefix.length).split("/")[0] ?? "";
+  return segment ? decodeURIComponent(segment) : null;
+}
+
+/**
  * 闲鱼管理子页出口（静态 URL → 业务页）。
  *
  * @author agent
@@ -98,6 +114,10 @@ export function XianyuManageConsole() {
   const itemId = itemIdFromPathname(pathname);
   if (itemId) {
     return <XianyuItemDetailPage itemId={itemId} />;
+  }
+  const runId = monitorRunIdFromPathname(pathname);
+  if (runId) {
+    return <XianyuMonitorRunDetailPage runId={runId} />;
   }
   const view = viewFromPathname(pathname);
   const Page = VIEW_PAGES[view] ?? XianyuDashboardPage;
