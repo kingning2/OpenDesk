@@ -47,9 +47,9 @@ contracts/schema/v1/<feature>/sidecar/<action>.response.schema.json
 
 | 层 | 路径 |
 |----|------|
-| Rust 生命周期 + 端口 | `crates/runtime/` |
-| Rust HTTP 客户端 | `crates/runtime/src/sidecar/client.rs` |
-| Rust 路由绑定 | `crates/runtime/src/sidecar/routes/<feature>_<action>.rs` |
+| Rust 生命周期 + 端口 | `crates/infra/` |
+| Rust HTTP 客户端 | `crates/infra/src/sidecar/client.rs` |
+| Rust 路由绑定 | `crates/infra/src/sidecar/routes/<feature>_<action>.rs` |
 | Python 处理器 | `python/packages/gateway/src/gateway/handlers/` |
 | Python 路由表 | `python/sidecar/routes.py` |
 

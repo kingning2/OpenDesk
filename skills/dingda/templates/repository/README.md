@@ -6,7 +6,7 @@ Storage 层 Port 实现骨架。
 
 ```
 crates/ports/src/{{NAME}}_repo.rs    # trait
-crates/storage/src/{{NAME}}_repo.rs  # SQLite impl (skeleton)
+crates/platform/src/storage/src/{{NAME}}_repo.rs  # SQLite impl (skeleton)
 ```
 
 ## trait 骨架

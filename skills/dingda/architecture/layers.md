@@ -15,11 +15,11 @@
 │ Layer 2: Rust（Application Core，默认实现含 AI）           │
 │                                                          │
 │  apps/desktop/src-tauri/    Tauri commands · 业务 · LLM   │
-│  crates/adapter/            基础设施适配器（sidecar gateway）│
-│  crates/kernel/             event bus · task scheduler    │
+│  crates/infra/src/            基础设施适配器（sidecar gateway）│
+│  crates/infra/             event bus · task scheduler    │
 │  crates/ports/              共享 Port trait               │
-│  crates/storage/            SQLite 实现                   │
-│  crates/runtime/            例外 Sidecar 生命周期          │
+│  crates/platform/src/storage/            SQLite 实现                   │
+│  crates/infra/            例外 Sidecar 生命周期          │
 └────────────────────────────┬─────────────────────────────┘
                              │ 仅当 Rust 生态不够（ADR-0009）
 ┌────────────────────────────▼─────────────────────────────┐

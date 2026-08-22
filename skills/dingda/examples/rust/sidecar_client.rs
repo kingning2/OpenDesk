@@ -1,6 +1,6 @@
 //! Example: Rust sidecar HTTP client (Rust → Python).
 //!
-//! Real code lives in `crates/runtime/src/sidecar/`.
+//! Real code lives in `crates/infra/src/sidecar/`.
 //! This file documents the pattern only.
 
 /*
@@ -20,5 +20,5 @@ async fn example(runtime_port: u16, trace_id: String) -> Result<(), Box<dyn std:
 */
 
 fn main() {
-    // documentation-only example; see crates/runtime/src/sidecar/
+    // documentation-only example; see crates/infra/src/sidecar/
 }

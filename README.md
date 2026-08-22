@@ -28,7 +28,7 @@ React  →  Rust（默认实现，含 AI）
 
 - `apps/desktop` — Tauri + React 桌面应用
 - `packages` — 前端共享包（ui · platform · contracts）
-- `crates` — Rust Workspace（仅基建：kernel · common · ports · adapter · runtime · storage）
+- `crates` — Rust Workspace（自包含能力包：`ai` · `platform` · `infra` · 共享叶子 `common`/`ports` · `macros`）
 - `python` — 例外 Sidecar（gateway · contracts · shared；仅 Rust 生态不够时扩展）
 - `contracts` — 跨端共享契约（**唯一真相源**）
 - `docs/managed/` — 领域文档、Change Record、ADR

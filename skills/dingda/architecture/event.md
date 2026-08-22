@@ -61,7 +61,7 @@ contracts/schema/v1/<feature>/event/<name>.schema.json
 ## Rust 骨架（无业务逻辑）
 
 ```rust
-// crates/kernel/src/event/mod.rs — 概念示意
+// crates/infra/src/event/mod.rs — 概念示意
 pub trait EventBus: Send + Sync {
     fn publish(&self, topic: &str, payload: &[u8]) -> Result<(), EventError>;
     fn subscribe(&self, topic: &str, handler: Box<dyn EventHandler>) -> Result<SubscriptionId, EventError>;

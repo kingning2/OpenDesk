@@ -22,7 +22,7 @@ flowchart LR
         K_DOM[domain]
     end
 
-    subgraph kernel["crates/kernel"]
+    subgraph kernel["crates/infra"]
         EB[event bus]
     end
 

@@ -2,7 +2,7 @@
 
 > 作者：Xiaoman  
 > 创建时间：2026-08-20  
-> 适用：`crates/platform/src/xianyu/` 新增平台 HTTP 能力时
+> 适用：`crates/platform/src/xianyu/src/` 新增平台 HTTP 能力时
 
 闲鱼 Web 端**没有面向第三方的公开 REST API**。业务数据通过阿里 **mtop** 协议下发（`h5api.m.goofish.com`），需登录 Cookie + MD5 签名。本指南记录**如何发现新接口**、**如何登记**、**如何在 Rust 接入**。
 
@@ -46,13 +46,13 @@
 ### 2. 确认登录态依赖
 
 - 请求 Header 必须带 **Cookie**（含 `unb`、`_m_h5_tk` 等）。
-- 签名 token 取自 `_m_h5_tk` 的 `_` 前缀；过期时响应 set-cookie 下发新 token，需重签重试（已在 [`MtopClient`](../../../../crates/platform/src/xianyu/mtop.rs) 实现）。
+- 签名 token 取自 `_m_h5_tk` 的 `_` 前缀；过期时响应 set-cookie 下发新 token，需重签重试（已在 [`MtopClient`](../../../../crates/platform/src/xianyu/src/core/mtop.rs) 实现）。
 
 ### 3. Rust 接入（固定模式）
 
 ```
 抓包确认 api + data
-  → crates/platform/src/xianyu/<能力>.rs  声明 MtopRequest + 解析响应
+  → crates/platform/src/xianyu/src/<能力>.rs  声明 MtopRequest + 解析响应
   → Tauri ipc/<模块>.rs                   编排（读账号 Cookie → 调 platform → 写 business store）
   → 登记本文「已接入接口表」
 ```
@@ -113,7 +113,7 @@ let response = client.call(&request).await?;
 
 | 层 | 路径 |
 |----|------|
-| 平台 API | [`crates/platform/src/xianyu/item.rs`](../../../../crates/platform/src/xianyu/item.rs) → `fetch_seller_items` |
+| 平台 API | [`crates/platform/src/xianyu/src/item/mod.rs`](../../../../crates/platform/src/xianyu/src/item/mod.rs) → `fetch_seller_items` |
 | IPC | [`apps/desktop/src-tauri/src/platforms/xianyu/ipc/item.rs`](../../../../apps/desktop/src-tauri/src/platforms/xianyu/ipc/item.rs) → `item_sync` |
 | 前端 | [`apps/desktop/src/features/xianyu/items.tsx`](../../../../apps/desktop/src/features/xianyu/items.tsx) →「同步商品」 |
 
@@ -125,16 +125,16 @@ let response = client.call(&request).await?;
 
 | api | v | 用途 | 发现方式 | Rust 实现 | 备注 |
 |-----|---|------|----------|-----------|------|
-| `mtop.idle.web.user.page.nav` | 1.0 | 登录用户昵称 / 头像 | 连接后抓包 / 社区资料 | [`profile.rs`](../../../../crates/platform/src/xianyu/profile.rs) | `data={}` |
-| `mtop.idle.web.xyh.item.list` | 1.0 | 卖家主页在售商品列表 | [sakasa 文章](https://www.sakasa.cn/posts/paxianyu/) + 卖家主页抓包 | [`item.rs`](../../../../crates/platform/src/xianyu/item.rs) | 商品同步 |
-| `mtop.taobao.idlemessage.pc.session.sync` | 3.0 | IM 会话列表基线（仅活跃 Top N） | [goofish-cli list-chats](https://github.com/fancyboi999/goofish-cli) | [`session.rs`](../../../../crates/platform/src/xianyu/session.rs) | **完整会话列表走 WS `userConvs` 推送**（`ackDiff pts=0` 请求全量，参考 goofish-cli `collect_session_cids`）；本接口只是基线，会漏掉非活跃会话 |
-| `mtop.taobao.idlemessage.pc.login.token` | 1.0 | WebSocket 注册 token | IM 连接抓包 | [`api.rs`](../../../../crates/platform/src/xianyu/api.rs) | 非 MtopClient，独立实现 |
-| `/r/MessageManager/listUserMessages`（WS LWP） | — | 拉取会话完整消息历史 | [goofish-cli message history](https://github.com/fancyboi999/goofish-cli) `commands/message/history.py` / `core/ws.py` | [`ws.rs`](../../../../crates/platform/src/xianyu/ws.rs) `fetch_user_messages` | WebSocket LWP 请求/响应：mid 关联、`userMessageModels` 分页、内容 `content.custom.data` base64→JSON 解码 |
-| `mtop.taobao.idle.pc.detail` | 1.0 | 商品详情（文案 / 高清图） | [sakasa 文章](https://www.sakasa.cn/posts/paxianyu/) + Goofish Client 文档 | [`item.rs`](../../../../crates/platform/src/xianyu/item.rs) `fetch_item_detail` | 响应含 `shareInfoJsonString` 需二次 JSON 解析 |
-| `mtop.idle.trade.pc.message.headinfo` | 1.0 | 会话关联商品卡信息（标题/图/价格） | 网页端聊天抓包 | [`headinfo.rs`](../../../../crates/platform/src/xianyu/headinfo.rs) `fetch_message_headinfo` | **GET** 请求；`data={"itemId":...,"sessionId":...,"sessionType":1}`（`MtopRequest::with_get()`） |
+| `mtop.idle.web.user.page.nav` | 1.0 | 登录用户昵称 / 头像 | 连接后抓包 / 社区资料 | [`profile.rs`](../../../../crates/platform/src/xianyu/src/profile/profile.rs) | `data={}` |
+| `mtop.idle.web.xyh.item.list` | 1.0 | 卖家主页在售商品列表 | [sakasa 文章](https://www.sakasa.cn/posts/paxianyu/) + 卖家主页抓包 | [`item.rs`](../../../../crates/platform/src/xianyu/src/item/mod.rs) | 商品同步 |
+| `mtop.taobao.idlemessage.pc.session.sync` | 3.0 | IM 会话列表基线（仅活跃 Top N） | [goofish-cli list-chats](https://github.com/fancyboi999/goofish-cli) | [`session.rs`](../../../../crates/platform/src/xianyu/src/core/session.rs) | **完整会话列表走 WS `userConvs` 推送**（`ackDiff pts=0` 请求全量，参考 goofish-cli `collect_session_cids`）；本接口只是基线，会漏掉非活跃会话 |
+| `mtop.taobao.idlemessage.pc.login.token` | 1.0 | WebSocket 注册 token | IM 连接抓包 | [`api.rs`](../../../../crates/platform/src/xianyu/src/core/api.rs) | 非 MtopClient，独立实现 |
+| `/r/MessageManager/listUserMessages`（WS LWP） | — | 拉取会话完整消息历史 | [goofish-cli message history](https://github.com/fancyboi999/goofish-cli) `commands/message/history.py` / `core/ws.py` | [`ws.rs`](../../../../crates/platform/src/xianyu/src/core/ws.rs) `fetch_user_messages` | WebSocket LWP 请求/响应：mid 关联、`userMessageModels` 分页、内容 `content.custom.data` base64→JSON 解码 |
+| `mtop.taobao.idle.pc.detail` | 1.0 | 商品详情（文案 / 高清图） | [sakasa 文章](https://www.sakasa.cn/posts/paxianyu/) + Goofish Client 文档 | [`item.rs`](../../../../crates/platform/src/xianyu/src/item/mod.rs) `fetch_item_detail` | 响应含 `shareInfoJsonString` 需二次 JSON 解析 |
+| `mtop.idle.trade.pc.message.headinfo` | 1.0 | 会话关联商品卡信息（标题/图/价格） | 网页端聊天抓包 | [`headinfo.rs`](../../../../crates/platform/src/xianyu/src/headinfo.rs) `fetch_message_headinfo` | **GET** 请求；`data={"itemId":...,"sessionId":...,"sessionType":1}`（`MtopRequest::with_get()`） |
 | `mtop.idle.web.trade.rate.list` | — | 买家评价列表 | 业务注释 | **未实现** | 见 `business/src/delivery/data.rs` 注释 |
 
-> **WS 会话同步（非 HTTP）**：侧栏完整会话列表由 `wss://wss-goofish.dingtalk.com/` 推送。注册后发 `/r/SyncStatus/ackDiff` 且 **`pts=0`** 请求全量同步（用当前时间戳只会推连接后的新消息），服务器随后推 `body.userConvs[]`（每项含 `cid`、`extension.extUserId`/`itemId`/`itemTitle`、`visible`、`modifyTime`）。实现见 [`ws.rs`](../../../../crates/platform/src/xianyu/ws.rs) `sync_user_convs`；会话存储新增 `cid`（goofish 会话 id），消息历史/发送/商品卡都以 `cid` 为会话标识。
+> **WS 会话同步（非 HTTP）**：侧栏完整会话列表由 `wss://wss-goofish.dingtalk.com/` 推送。注册后发 `/r/SyncStatus/ackDiff` 且 **`pts=0`** 请求全量同步（用当前时间戳只会推连接后的新消息），服务器随后推 `body.userConvs[]`（每项含 `cid`、`extension.extUserId`/`itemId`/`itemTitle`、`visible`、`modifyTime`）。实现见 [`ws.rs`](../../../../crates/platform/src/xianyu/src/core/ws.rs) `sync_user_convs`；会话存储新增 `cid`（goofish 会话 id），消息历史/发送/商品卡都以 `cid` 为会话标识。
 
 ---
 
@@ -165,6 +165,6 @@ let response = client.call(&request).await?;
 
 ## 六、相关文件
 
-- mtop 客户端：[`crates/platform/src/xianyu/mtop.rs`](../../../../crates/platform/src/xianyu/mtop.rs)
-- 模块索引：[`crates/platform/src/xianyu/README.md`](../../../../crates/platform/src/xianyu/README.md)
+- mtop 客户端：[`crates/platform/src/xianyu/src/core/mtop.rs`](../../../../crates/platform/src/xianyu/src/core/mtop.rs)
+- 模块索引：[`crates/platform/src/xianyu/src/README.md`](../../../../crates/platform/src/xianyu/src/README.md)
 - 变更记录：[`docs/managed/changes/2026/08/chg-20260820-001-xianyu-item-sync.md`](../../../../docs/managed/changes/2026/08/chg-20260820-001-xianyu-item-sync.md)

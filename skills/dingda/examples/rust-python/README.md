@@ -16,7 +16,7 @@ apps/desktop/src-tauri/commands
 apps/desktop/src-tauri/src/<feature>.rs（UseCase）
   │
   ▼
-crates/runtime/src/sidecar（HTTP client）
+crates/infra/src/sidecar（HTTP client）
   │  POST http://127.0.0.1:{port}/v1/{feature}/{action}
   ▼
 python/sidecar（HTTP server，Rust 管理生命周期）

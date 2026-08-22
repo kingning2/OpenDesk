@@ -29,8 +29,8 @@ python skills/dingda/scripts/create_rust_python_ipc.py --feature agent --action 
 ```
 contracts/schema/v1/<feature>/sidecar/<action>.{request,response}.schema.json
 contracts/openapi/sidecar.paths/<feature>_<action>.yaml
-crates/runtime/src/sidecar/client.rs          # 首次创建
-crates/runtime/src/sidecar/routes/<feature>_<action>.rs
+crates/infra/src/sidecar/client.rs          # 首次创建
+crates/infra/src/sidecar/routes/<feature>_<action>.rs
 python/packages/gateway/src/gateway/handlers/<feature>_<action>.py
 python/sidecar/routes.py                      # 路由注册
 skills/dingda/examples/rust-python/<feature>_<action>/README.md
