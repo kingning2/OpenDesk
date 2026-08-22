@@ -1,10 +1,10 @@
 //! 1688 扫码落库 — 从 sidecar Cookie 派生业务账号。
 
 use super::cookie::cookie_header_from_cookies;
-use crate::core::cookie_domains_for_log;
-use business::account::{
+use crate::domain::account::{
     AccountAutomation, AccountStatus, DeliveryGuard, LoginMethod, ProxyConfig, XianyuAccount,
 };
+use crate::shared::account::cookie_domains_for_log;
 use common::contracts::ChannelCookie;
 
 /// 从 cookies 构造 1688 业务账号。

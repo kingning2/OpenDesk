@@ -10,8 +10,8 @@ use common::DingDaResult;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::xianyu::core::cookie::{my_id, parse_cookies};
-use crate::xianyu::core::cookies::credential_to_cookie_header;
+use crate::shared::cookie::{my_id, parse_cookies};
+use crate::shared::cookies::credential_to_cookie_header;
 use crate::xianyu::core::mtop::{MtopClient, MtopRequest};
 
 /// 平台侧商品摘要（同步入库前）。

@@ -337,9 +337,9 @@ impl XianyuChannel {
                 .clear();
         }
 
-        let cookie_str = super::cookies::cookies_to_string(&super::cookies::parse_credential(
-            &account.credential,
-        ));
+        let cookie_str = crate::shared::cookies::cookies_to_string(
+            &crate::shared::cookies::parse_credential(&account.credential),
+        );
         {
             let this = self.clone();
             let cookie = cookie_str;
@@ -418,16 +418,16 @@ impl XianyuChannel {
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .clone()
             .ok_or_else(|| ChannelError::NotConnected("no account".into()))?;
-        let cookie_str = super::cookies::cookies_to_string(&super::cookies::parse_credential(
-            &account.credential,
-        ));
+        let cookie_str = crate::shared::cookies::cookies_to_string(
+            &crate::shared::cookies::parse_credential(&account.credential),
+        );
         let api = XianyuApi::new(&cookie_str)
             .map_err(|error| ChannelError::Protocol(error.to_string()))?;
-        let cookies = super::cookies::parse_credential(&account.credential);
+        let cookies = crate::shared::cookies::parse_credential(&account.credential);
         // 校验 unb 存在（协议发送依赖）。
-        let unb = super::cookies::my_id(&cookies)
+        let unb = crate::shared::cookies::my_id(&cookies)
             .ok_or_else(|| ChannelError::Protocol("cookie 缺少 unb".into()))?;
-        let device_id = super::cookies::device_id(&cookies)
+        let device_id = crate::shared::cookies::device_id(&cookies)
             .ok_or_else(|| ChannelError::Protocol("cookie 缺少 unb".into()))?;
 
         info!(account = %account.id, unb = %unb, device = %device_id, "闲鱼开始连接：正在获取 mtop token");
@@ -1215,8 +1215,8 @@ impl ChannelProtocol for XianyuChannel {
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .clone()
             .ok_or_else(|| ChannelError::NotConnected("no account".into()))?;
-        let cookies = super::cookies::parse_credential(&account.credential);
-        let my_id = super::cookies::my_id(&cookies)
+        let cookies = crate::shared::cookies::parse_credential(&account.credential);
+        let my_id = crate::shared::cookies::my_id(&cookies)
             .ok_or_else(|| ChannelError::Protocol("cookie 缺少 unb".into()))?;
         let frame = message::send_message_frame(cid, peer_id, &my_id, text);
 

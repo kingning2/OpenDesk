@@ -3,13 +3,10 @@ resolver = "2"
 members = [
   "apps/desktop/src-tauri",
   "business",
-  "crates/kernel",
   "crates/common",
   "crates/ports",
-  "crates/adapter",
-  "crates/runtime",
-  "crates/storage",
   "crates/macros",
+  "crates/infra",
   "crates/agent",
   "crates/platform",
 ]

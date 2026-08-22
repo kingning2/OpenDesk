@@ -1,22 +1,12 @@
 //! 1688 账号 Cookie 与平台标识辅助。
+//!
+//! 平台识别（`normalize_platform` / `resolve_account_platform`）为纯字符串识别，
+//! 已下沉到共享底座 `platform-core`（两站共用），此处 re-export 保持
+//! `platform_ali1688::resolve_account_platform` 路径可用。
+
+pub use crate::shared::account::{normalize_platform, resolve_account_platform};
 
 use common::contracts::ChannelCookie;
-
-/// 规范化 1688 平台标识；非 1688 变体返回 `None`。
-pub fn normalize_platform(platform: &str) -> Option<&'static str> {
-    match platform.trim().to_ascii_lowercase().as_str() {
-        "ali1688" | "1688" | "alibaba1688" => Some("ali1688"),
-        _ => None,
-    }
-}
-
-/// 解析账号所属平台（对齐前端 [`resolveAccountPlatform`]）。
-pub fn resolve_account_platform(account_id: &str, platform: &str) -> &'static str {
-    if account_id.starts_with("1688:") {
-        return "ali1688";
-    }
-    normalize_platform(platform).unwrap_or("xianyu")
-}
 
 /// 按 1688 域过滤后拼成 `name=value; …` Cookie 头。
 pub fn cookie_header_from_cookies(cookies: &[ChannelCookie]) -> String {
@@ -80,23 +70,6 @@ mod tests {
             secure: None,
             same_site: None,
         }
-    }
-
-    #[test]
-    fn normalize_platform_variants() {
-        assert_eq!(normalize_platform("ali1688"), Some("ali1688"));
-        assert_eq!(normalize_platform("1688"), Some("ali1688"));
-        assert_eq!(normalize_platform("xianyu"), None);
-    }
-
-    #[test]
-    fn resolve_platform_prefers_1688_account_id_prefix() {
-        assert_eq!(
-            resolve_account_platform("1688:2200574208023", "xianyu"),
-            "ali1688"
-        );
-        assert_eq!(resolve_account_platform("xy123", "ali1688"), "ali1688");
-        assert_eq!(resolve_account_platform("xy123", ""), "xianyu");
     }
 
     #[test]

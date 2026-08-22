@@ -17,7 +17,7 @@ use serde_json::Value;
 
 use crate::intent::{self, Intent};
 use crate::knowledge::ItemKnowledge;
-use crate::llm::{
+use crate::model::{
     normalize_provider_type, provider_from_settings, ChatMessage, ChatRequest, LlmError,
     LlmProvider, ProviderSettings,
 };
@@ -177,7 +177,7 @@ impl ReplyEngine {
         }
 
         // 4. 组装提示词。
-        let system = PromptBuilder::system_prompt(intent, &settings.custom_prompts);
+        let system = PromptBuilder::system_prompt(intent.as_str(), &settings.custom_prompts);
         let item_context = context.item.to_context();
         let history = context
             .history
@@ -265,7 +265,7 @@ fn truncate(text: &str, limit: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::llm::ChatMessage;
+    use crate::model::ChatMessage;
 
     fn settings() -> AiSettings {
         AiSettings {

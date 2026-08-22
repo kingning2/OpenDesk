@@ -2,6 +2,7 @@
 name = "common"
 version.workspace = true
 edition.workspace = true
+description = "共享 DTO / 契约类型 / 错误 / 事件（跨 crate 叶子层）"
 
 [dependencies]
 anyhow = { workspace = true }

@@ -1,7 +1,10 @@
-//! 1688 平台模块。
+//! platform-ali1688 crate — 1688 账号 **Provider**。
 //!
-//! - [`account`] — Cookie 分袋、平台解析、扫码落库
+//! 职责：
+//! - `account` — Cookie 分袋、平台解析、扫码落库
 //! - 浏览器任务（搜索 / 登录探针）由 Python sidecar 实现
+//!
+//! 共享底座（账号构造、Cookie 工具、业务数据层）在 `platform-core`。
 //!
 //! 作者：Xiaoman
 //! 创建时间：2026-08-22

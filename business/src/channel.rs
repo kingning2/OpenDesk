@@ -32,13 +32,13 @@ pub enum ChannelStoreError {
 
 /// SQLite 渠道仓库 — 账号/会话/消息/设置的 CRUD。
 ///
-/// 使用 `crates/storage::sqlite::SqliteDb` 的通用连接与运行时迁移；
+/// 使用 `crates/platform::storage::sqlite::SqliteDb` 的通用连接与运行时迁移；
 /// `channel_*` 表的迁移 SQL 位于 `apps/desktop/src-tauri/migrations/`。
 ///
 /// 作者：Xiaoman
 /// 创建时间：2026-08-18
 pub struct ChannelRepo {
-    db: storage::sqlite::SqliteDb,
+    db: platform::storage::sqlite::SqliteDb,
 }
 
 impl ChannelRepo {
@@ -54,7 +54,7 @@ impl ChannelRepo {
     /// # 返回值
     /// 打开并迁移后的仓库，或错误。
     pub fn open(db_path: &Path, migrations_dir: &Path) -> Result<Self, ChannelStoreError> {
-        let db = storage::sqlite::SqliteDb::open(db_path)
+        let db = platform::storage::sqlite::SqliteDb::open(db_path)
             .map_err(|error| ChannelStoreError::Db(error.to_string()))?;
         db.migrate(migrations_dir)
             .map_err(|error| ChannelStoreError::Db(error.to_string()))?;

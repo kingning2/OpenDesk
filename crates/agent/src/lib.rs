@@ -1,31 +1,29 @@
-//! agent crate — AI 基建（渠道无关）。
+//! agent crate — AI 编排层。
 //!
-//! 目录职责：
-//! - `llm` — LLM provider 抽象 + 多协议接入（OpenAI 兼容 / Anthropic / Gemini / DashScope）
-//! - `intent` — 本地意图检测（price / tech / default / no_reply）
-//! - `prompt` — 提示词模板与组装（议价 / 技术 / 默认客服）
+//! 在 `lib` 编排：`intent` → `knowledge` → `prompt` → `model` → `reply`。
+//! 各功能为独立文件夹（`model` / `knowledge` / `prompt` / `intent` / `reply`），
+//! 各自负责各自功能；本 lib 负责编排与策略（议价控制、provider 分发）。
+//!
+//! - `model` — LLM 模型家族（seam + 4 个 provider）
 //! - `knowledge` — 知识库（商品信息提取与注入）
-//! - `reply` — 回复引擎（上下文管理、议价控制、provider 分发）
-//!
-//! 设计约束：
-//! - **渠道无关**：不依赖 platform / app，可被任何业务（闲鱼、邮件、未来平台）复用。
-//! - **不感知存储**：通过入参注入，不直接访问数据库。
-//! - 边界情况从简：能 `map` 就不写 `if`；错误一律 `Result` + `tracing`，禁止 `unwrap` 崩。
+//! - `prompt` — 提示词模板（模板独立文件 + 意图索引）
+//! - `intent` — 本地意图检测（price / tech / default / no_reply）
+//! - `reply` — 回复引擎（编排入口：`ReplyEngine::generate`）
 
 #[macro_use]
 extern crate tracing;
 
 pub mod intent;
 pub mod knowledge;
-pub mod llm;
+pub mod model;
 pub mod prompt;
 pub mod reply;
 
 pub use intent::{route_intent, Intent};
 pub use knowledge::{build_item_context, ItemKnowledge};
-pub use llm::{
-    provider_from_settings, ChatMessage, ChatRequest, ChatResponse, LlmError, LlmProvider,
-    ProviderSettings,
+pub use model::{
+    clean_text, normalize_provider_type, provider_from_settings, ChatMessage, ChatRequest,
+    ChatResponse, LlmError, LlmProvider, ProviderSettings,
 };
 pub use prompt::PromptBuilder;
 pub use reply::{AiSettings, ReplyContext, ReplyEngine, ReplyOutcome};

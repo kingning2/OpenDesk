@@ -1,4 +1,4 @@
-//! 将 `kernel::InMemoryEventBus` 接入 `common::events::EventSink`。
+//! 将 `infra::InMemoryEventBus` 接入 `common::events::EventSink`。
 //!
 //! 使用本地 newtype 满足 orphan rule，供 [`common::events::emit`] 统一发布。
 //!
@@ -8,7 +8,7 @@
 use common::errors::DingDaError;
 use common::events::EventSink;
 use common::DingDaResult;
-use kernel::event::{EventBus, InMemoryEventBus};
+use infra::event::{EventBus, InMemoryEventBus};
 use std::sync::Arc;
 
 /// EventBus 的 [`EventSink`] 适配器（newtype）。

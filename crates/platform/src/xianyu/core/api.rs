@@ -7,9 +7,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use super::cookie::{device_id_from_cookie, my_id, now_ms, parse_cookies, sign_token};
 use super::http::{build_client, collect_set_cookies};
 use super::sign::generate_sign;
+use crate::shared::cookie::{device_id_from_cookie, my_id, now_ms, parse_cookies, sign_token};
 
 use common::constants::xianyu;
 use common::{DingDaError, DingDaResult};
@@ -41,7 +41,7 @@ impl XianyuApi {
     ///
     /// 成功返回客户端；HTTP 客户端构建失败返回错误。
     pub fn new(cookie_str: &str) -> DingDaResult<Self> {
-        let normalized = super::cookies::credential_to_cookie_header(cookie_str);
+        let normalized = crate::shared::cookies::credential_to_cookie_header(cookie_str);
         Ok(Self {
             http: build_client()?,
             cookie: Arc::new(RwLock::new(normalized)),

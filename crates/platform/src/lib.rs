@@ -1,49 +1,35 @@
-//! platform crate — 多渠道协议抽象层 + 平台自包含实现。
+//! platform crate — 渠道平台（**自包含**）：协议 seam + 领域层 + 共享底座 + 平台 Provider + SQLite 存储。
 //!
-//! 职责：
-//! - `protocol` — 渠道统一 `ChannelProtocol` trait + 入站消息归一化
-//! - `dispatcher` — 多账号调度器（注册表 + 生命周期）
-//! - `capabilities` — 平台能力清单（前端动态路由元数据）
-//! - `registry` — 平台注册表（能力层 + 协议层统一入口）
-//! - `xianyu` — 闲鱼自包含实现（协议 `core/` + 业务数据层 `db/stores`）
-//! - `ali1688` — 1688 薄模块（登录走 sidecar，目前无协议/业务 crate 代码）
-//! - `core` — 两站共用的账号 / 扫码逻辑
+//! 结构（各模块根 re-export 对齐其历史 crate 的公开 API）：
+//! - `protocol` — 渠道协议 seam（`ChannelProtocol` + dispatcher + 能力清单 + 编译期平台选择）
+//! - `domain` — 领域层（业务模型 + Store Ports + 领域服务）
+//! - `shared` — Provider 共享底座（账号派生 / Cookie 工具 / 业务 SQLite 数据层）
+//! - `xianyu` — 闲鱼协议 Provider（`#[cfg(platform_xianyu)]`）
+//! - `ali1688` — 1688 账号 Provider（`#[cfg(platform_ali1688)]`）
+//! - `storage` — 通用 SQLite 记录存储（`SqliteDb` + `RecordStore`）
 //!
-//! 设计约束：
-//! - **不依赖 Tauri**：本 crate 可被桌面壳、CLI、未来 Web 服务复用。
-//! - 协议层不感知业务：不读库、不决策回复、不调 LLM。
-//! - 新平台接入三步：`ChannelKind` 加枚举 → `builtin_descriptors` 声明能力 →
-//!   在 `xianyu/` 同构子目录实现 [`protocol::ChannelProtocol`] 并注册进
-//!   [`dispatcher::ChannelDispatcher`] / [`registry::PlatformRegistry`]。
+//! 只依赖 `common` / `ports`（共享叶子）+ 外部 crate，不依赖其它 DingDa crate。
 
 #[macro_use]
 extern crate tracing;
 
-pub mod capabilities;
-pub mod compile;
-#[cfg(any(platform_xianyu, platform_ali1688))]
-pub mod core;
-pub mod dispatcher;
-pub mod protocol;
-pub mod registry;
-// `xianyu` 数据层（db/stores）为两站共享（1688 复用账号库），
-// 故 `platform_xianyu` / `platform_ali1688` 任一开启都编译；
-// `XianyuChannel` 协议 re-export 仍仅 `platform_xianyu`。
 #[cfg(platform_ali1688)]
 pub mod ali1688;
-#[cfg(any(platform_xianyu, platform_ali1688))]
+pub mod domain;
+pub mod protocol;
+pub mod shared;
+pub mod storage;
+#[cfg(platform_xianyu)]
 pub mod xianyu;
 
-pub use capabilities::{PlatformCapabilities, PlatformCapability, PlatformDescriptor};
-pub use common::DingDaResult;
-pub use compile::{
-    active_kind, enabled_platform_ids, is_active, is_active_id, ACTIVE_PLATFORM, ENABLED_PLATFORMS,
-};
-pub use dispatcher::{ChannelDispatcher, ChannelProtocolFactory, DispatcherError};
 pub use protocol::{
-    ChannelError, ChannelInboundMessage, ChannelKind, ChannelProtocol, ConnectionState,
-    InboundListener,
+    ChannelAccount, ChannelDispatcher, ChannelError, ChannelInboundMessage, ChannelKind,
+    ChannelProtocol, ChannelProtocolFactory, ConnectionState, ConversationSync, DispatcherError,
+    HistoryMessage, InboundListener, PlatformCapabilities, PlatformCapability, PlatformDescriptor,
+    PlatformInfo, PlatformRegistry,
 };
-pub use registry::{PlatformInfo, PlatformRegistry};
-#[cfg(platform_xianyu)]
-pub use xianyu::XianyuChannel;
+pub use shared::{
+    normalize_account_platform, resolve_account_platform, InMemoryAccountStore, InMemoryItemStore,
+    InMemoryMonitorResultStore, InMemoryMonitorRunStore, InMemoryMonitorTaskStore,
+    InMemoryOrderStore, InMemoryRiskStore, InMemoryUserSettingStore, SqliteBusinessDb,
+};

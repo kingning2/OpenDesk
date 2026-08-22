@@ -2,20 +2,16 @@
 name = "business"
 version.workspace = true
 edition.workspace = true
-description = "DingDa 桌面端纯 Rust 业务逻辑（不依赖 Tauri）"
+description = "桌面端应用胶水（不依赖 Tauri）：日志/配置/渠道存储/事件桥/耗时计时；领域层在 crates/platform::domain"
 
 [dependencies]
-agent = { path = "../crates/agent" }
-async-trait = { workspace = true }
-chrono = { workspace = true }
 common = { path = "../crates/common" }
 diesel = { workspace = true }
-kernel = { path = "../crates/kernel" }
+infra = { path = "../crates/infra" }
 md-5 = { workspace = true }
-ports = { path = "../crates/ports" }
+platform = { path = "../crates/platform" }
 serde = { workspace = true }
 serde_json = { workspace = true }
-storage = { path = "../crates/storage" }
 thiserror = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }

@@ -20,7 +20,7 @@ import { ensureSccache } from "./ensure-sccache.mjs";
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const subscriptionDir = join(root, "subscription");
 const binariesDir = join(root, "apps/desktop/src-tauri/binaries");
-const adapterGeneratedDir = join(root, "crates/adapter/generated");
+const infraGeneratedDir = join(root, "crates/infra/generated");
 
 /** 本机 Windows 默认 MSVC triple（仅当未指定 --target / 环境变量时）。 */
 const WINDOWS_DEFAULT_MSVC_TRIPLE = "x86_64-pc-windows-msvc";
@@ -216,8 +216,8 @@ function resolveVerifierSyncState(destPath, sourcePath, force) {
 
 function syncSha256Sidecars(destPath) {
   const digest = sha256File(destPath);
-  const shaPath = join(adapterGeneratedDir, "license_verifier.sha256");
-  mkdirSync(adapterGeneratedDir, { recursive: true });
+  const shaPath = join(infraGeneratedDir, "license_verifier.sha256");
+  mkdirSync(infraGeneratedDir, { recursive: true });
   const previous = existsSync(shaPath)
     ? readFileSync(shaPath, "utf8").trim()
     : "";
@@ -284,7 +284,7 @@ if (!existsSync(sourcePath)) {
 }
 
 mkdirSync(binariesDir, { recursive: true });
-mkdirSync(adapterGeneratedDir, { recursive: true });
+mkdirSync(infraGeneratedDir, { recursive: true });
 
 cpSync(sourcePath, destPath);
 if (!buildTriple.includes("windows")) {
@@ -305,7 +305,7 @@ if (platform() === "win32") {
 
 const digest = syncSha256Sidecars(destPath);
 
-const attestPath = join(adapterGeneratedDir, "license_attest_key.hex");
+const attestPath = join(infraGeneratedDir, "license_attest_key.hex");
 if (!existsSync(attestPath)) {
   console.error(
     `missing ${attestPath}; subscription build.rs should write it from public_key.pem`,

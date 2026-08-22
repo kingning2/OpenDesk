@@ -10,7 +10,7 @@ use serde_json::{json, Value};
 
 use crate::xianyu::core::sign::REG_APP_KEY;
 
-pub use crate::xianyu::core::cookie::{device_id_from_cookie, generate_device_id, now_ms};
+pub use crate::shared::cookie::{device_id_from_cookie, generate_device_id, now_ms};
 
 /// 生成随机 mid（与闲鱼同构：随机段 + 毫秒时间戳）。
 pub fn generate_mid() -> String {

@@ -2,16 +2,16 @@
 name = "agent"
 version.workspace = true
 edition.workspace = true
+description = "AI 编排层：model / knowledge / prompt / intent / reply 各功能文件夹，lib 编排"
 
 [dependencies]
 async-trait = { workspace = true }
-chrono = { version = "0.4", features = ["serde"] }
-common = { path = "../common" }
+chrono = { workspace = true }
 reqwest = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
-tokio = { workspace = true }
 tracing = { workspace = true }
 
 [dev-dependencies]
+tokio = { workspace = true }
