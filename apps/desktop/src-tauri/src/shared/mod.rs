@@ -24,11 +24,10 @@ pub mod shell_platform;
 pub mod state;
 
 // 从 dingda-business re-export，保持 IPC 层路径不变
-pub use app::agent;
-pub use app::auto_reply_handle as auto_reply;
-pub use app::config;
-pub use app::logging;
-pub use app::timing;
+pub use business::agent;
+pub use business::config;
+pub use business::logging;
+pub use business::timing;
 pub use event_bridge::BusToTauri;
 pub use event_sink::TauriEventSink;
 

@@ -1,27 +1,36 @@
-//! 闲鱼壳层启动：打开业务库、注册 Handle、注册渠道协议。
+//! 闲鱼壳层启动：注册业务 Handle、装配风控、注册渠道协议。
+//!
+//! 账号 CRUD / 扫码登录等两站共用 Handle 由 `platforms::core::bootstrap` 无条件注册；
+//! 本模块仅注册闲鱼专属 Handle（商品 / 订单 / 风控 / 用户设置 / 仪表盘），
+//! 并把闲鱼扫码后置逻辑写入共用的 `AccountQrHandle.post_login`。
+//!
+//! 精简说明：发布 / 卡券 / 黑名单 / 关键词 / 消息过滤 / 通知 / 反馈 / 评价等
+//! 子页已下线，对应 Store Handle 一并移除。
 //!
 //! 作者：Xiaoman
 //! 创建时间：2026-08-18
 
+use crate::platforms::core::account::AccountHandle;
+use crate::platforms::core::account_qr::{AccountQrHandle, PostQrLoginHook};
 use crate::platforms::xianyu::ipc;
 use crate::shared::channel::coordinator::ChannelCoordinator;
-use app::account::AccountStore;
-use app::xianyu::{
-    InMemoryAccountStore, InMemoryAddressStore, InMemoryAutoReplyLogStore, InMemoryBatchStore,
-    InMemoryBlacklistStore, InMemoryCardStore, InMemoryFeedbackStore, InMemoryFilterStore,
-    InMemoryItemStore, InMemoryKeywordStore, InMemoryNotificationStore, InMemoryOrderStore,
-    InMemoryPublishGateway, InMemoryPublishLogStore, InMemoryPublishMaterialStore,
-    InMemoryRiskStore, InMemoryUserSettingStore, SqliteBusinessDb,
-};
+use crate::shared::channel::risk_handler::RiskHandler;
+use business::account::AccountStore;
+use common::events::EventSink;
 use common::DingDaResult;
 use platform::dispatcher::ChannelDispatcher;
 use platform::protocol::{ChannelKind, ChannelProtocol};
-use platform::xianyu::XianyuChannel;
-use std::path::{Path, PathBuf};
+use platform::xianyu::{
+    InMemoryAccountStore, InMemoryItemStore, InMemoryOrderStore, InMemoryRiskStore,
+    InMemoryUserSettingStore, SqliteBusinessDb, XianyuChannel,
+};
 use std::sync::Arc;
 use tauri::Manager;
 
-/// 打开业务 SQLite 并注册闲鱼 Handle。
+/// 注册闲鱼专属 Handle + 写入扫码后置逻辑。
+///
+/// 业务库与账号 Handle 已由 `platforms::core::bootstrap::register_business` 注册，
+/// 此处仅注册闲鱼专属 Handle，并把闲鱼扫码后置逻辑写入共用 `AccountQrHandle`。
 ///
 /// 作者：Xiaoman
 /// 创建时间：2026-08-18
@@ -29,98 +38,113 @@ use tauri::Manager;
 /// # 参数
 ///
 /// * `app` — Tauri 应用句柄
-/// * `config_dir` — 应用配置目录
 ///
 /// # 返回值
 ///
-/// 成功返回共享业务库；打开或迁移失败返回错误文案。
-pub fn register_business(
-    app: &tauri::AppHandle,
-    config_dir: &Path,
-) -> DingDaResult<Arc<SqliteBusinessDb>> {
-    let business_dir = config_dir.join("business");
-    std::fs::create_dir_all(&business_dir).map_err(|error| error.to_string())?;
-    let db = SqliteBusinessDb::open(
-        &business_dir.join("business.db"),
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("migrations"),
-    )
-    .map_err(|error| error.to_string())?;
-    let business_db = Arc::new(db.clone());
-    app.manage(business_db.clone());
+/// 成功返回 `()`；注册失败返回错误文案。
+pub fn register_business(app: &tauri::AppHandle) -> DingDaResult<()> {
+    let db = app.state::<Arc<SqliteBusinessDb>>();
+    let accounts = app.state::<AccountHandle>().store.clone();
 
-    let accounts = Arc::new(InMemoryAccountStore::new(db.clone()));
-    let keywords = Arc::new(InMemoryKeywordStore::new(db.clone()));
-    let items = Arc::new(InMemoryItemStore::new(db.clone()));
-    let cards = Arc::new(InMemoryCardStore::new(db.clone()));
-    let orders = Arc::new(InMemoryOrderStore::new(db.clone()));
-    let logs = Arc::new(InMemoryPublishLogStore::new(db.clone()));
+    let items = Arc::new(InMemoryItemStore::new((**db).clone()));
+    let orders = Arc::new(InMemoryOrderStore::new((**db).clone()));
 
-    app.manage(ipc::account::AccountHandle {
-        store: accounts.clone(),
-    });
-    app.manage(ipc::account_qr::AccountQrHandle {
-        store: accounts.clone(),
-    });
-    app.manage(ipc::address::AddressHandle {
-        store: Arc::new(InMemoryAddressStore::new(db.clone())),
-    });
     app.manage(ipc::order::OrderHandle {
         store: orders.clone(),
-    });
-    app.manage(ipc::keyword::KeywordHandle {
-        store: keywords.clone(),
     });
     app.manage(ipc::item::ItemHandle {
         store: items.clone(),
     });
-    app.manage(ipc::card::CardHandle {
-        store: cards.clone(),
-    });
-    app.manage(ipc::blacklist::BlacklistHandle {
-        store: Arc::new(InMemoryBlacklistStore::new(db.clone())),
-    });
-    app.manage(ipc::filter::FilterHandle {
-        store: Arc::new(InMemoryFilterStore::new(db.clone())),
-    });
-    app.manage(ipc::feedback::FeedbackHandle {
-        store: Arc::new(InMemoryFeedbackStore::new(db.clone())),
-    });
-    app.manage(ipc::notification::NotificationHandle {
-        store: Arc::new(InMemoryNotificationStore::new(db.clone())),
-    });
-    app.manage(ipc::auto_reply_log::AutoReplyLogHandle {
-        store: Arc::new(InMemoryAutoReplyLogStore::new(db.clone())),
-    });
-    app.manage(ipc::risk::RiskHandle {
-        store: Arc::new(InMemoryRiskStore::new(db.clone())),
-    });
     app.manage(ipc::setting::UserSettingHandle {
-        store: Arc::new(InMemoryUserSettingStore::new(db.clone())),
-    });
-    app.manage(ipc::publish_material::PublishMaterialHandle {
-        store: Arc::new(InMemoryPublishMaterialStore::new(db.clone())),
-    });
-    app.manage(ipc::publish_log::PublishLogHandle {
-        store: logs.clone(),
-    });
-
-    let gateway = Arc::new(InMemoryPublishGateway::new(accounts.clone(), logs));
-    app.manage(ipc::publish::PublishHandle {
-        gateway: gateway.clone(),
-    });
-    app.manage(ipc::publish_batch::BatchPublishHandle {
-        store: Arc::new(InMemoryBatchStore::new(db)),
-        gateway,
+        store: Arc::new(InMemoryUserSettingStore::new((**db).clone())),
     });
     app.manage(ipc::dashboard::DashboardHandle {
         accounts,
-        keywords,
         items,
-        cards,
         orders,
     });
 
-    Ok(business_db)
+    // 扫码成功后置逻辑：闲鱼账号自动建渠道 WS 并拉取用户资料。
+    // 1688 账号（双站构建下同一 handle 共用）不连闲鱼 WS，直接跳过。
+    let post_login: PostQrLoginHook = Arc::new(|dispatcher, store, owner_id, account| {
+        Box::pin(async move {
+            use crate::platforms::xianyu::ipc::account_connection;
+            if account.platform != "xianyu" {
+                return Ok(());
+            }
+            let channel_account = account_connection::to_channel_account(owner_id, &account);
+            dispatcher
+                .connect(&channel_account)
+                .await
+                .map_err(common::DingDaError::wrap)?;
+            if let Err(error) =
+                account_connection::sync_account_profile(&store, owner_id, &account.account_id)
+                    .await
+            {
+                warn!(
+                    account = %account.account_id,
+                    %error,
+                    "扫码后拉取闲鱼用户资料失败"
+                );
+            }
+            Ok(())
+        })
+    });
+    let qr_handle = app.state::<AccountQrHandle>();
+    *qr_handle
+        .post_login
+        .write()
+        .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(post_login);
+
+    Ok(())
+}
+
+/// 装配闲鱼风控：风控存储、滑块续期器、风控处理实现。
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-08-22
+///
+/// # 参数
+///
+/// * `app` — Tauri 应用句柄
+/// * `dispatcher` — 渠道调度器
+/// * `event_sink` — 事件下发
+///
+/// # 返回值
+///
+/// 闲鱼风控处理（`Arc<dyn RiskHandler>`）。
+pub fn build_risk_handler(
+    app: &tauri::AppHandle,
+    dispatcher: &Arc<ChannelDispatcher>,
+    event_sink: Arc<dyn EventSink>,
+) -> Arc<dyn RiskHandler> {
+    let db = app.state::<Arc<SqliteBusinessDb>>();
+    let risk_store = Arc::new(InMemoryRiskStore::new((**db).clone()));
+    app.manage(ipc::risk::RiskHandle {
+        store: risk_store.clone(),
+    });
+
+    let account_store: Arc<dyn AccountStore> = app.state::<AccountHandle>().store.clone();
+    let renewer = Arc::new(
+        crate::platforms::xianyu::cookie_renew::RiskCookieRenewer::new(
+            app.state::<crate::shared::state::AppState>()
+                .lifecycle
+                .clone(),
+            account_store,
+            dispatcher.clone(),
+            Some(risk_store.clone()),
+            event_sink.clone(),
+            1,
+        ),
+    );
+    app.manage(renewer.clone());
+
+    Arc::new(crate::platforms::xianyu::risk::XianyuRiskHandler::new(
+        Some(risk_store),
+        Some(renewer),
+        event_sink,
+        1,
+    ))
 }
 
 /// 向调度器注册闲鱼渠道协议，并绑定入站监听器。
@@ -144,10 +168,10 @@ pub fn register_active_platform(
     coordinator: &Arc<ChannelCoordinator>,
     account_store: Option<Arc<InMemoryAccountStore>>,
 ) {
-    #[cfg(all(debug_assertions, platform_xianyu))]
+    #[cfg(debug_assertions)]
     {
         if common::constants::FeatureFlags::from_env().dev_channel_host {
-            match crate::shared::channel::dev_host::ensure_dev_channel_host() {
+            match crate::platforms::xianyu::dev_host::ensure_dev_channel_host() {
                 Ok(()) => {
                     let listener = coordinator.clone();
                     dispatcher.register_factory(
@@ -178,7 +202,7 @@ pub fn register_active_platform(
                                 (account.account_id, account.cookie, name)
                             })
                             .collect();
-                        crate::shared::channel::dev_host::reattach_host_sessions(
+                        crate::platforms::xianyu::dev_host::reattach_host_sessions(
                             dispatcher, accounts,
                         )
                         .await;

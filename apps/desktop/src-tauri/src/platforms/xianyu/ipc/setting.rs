@@ -1,8 +1,8 @@
-//! 个人设置 Tauri commands — 用户级键值存储。
+//! 用户设置 Tauri commands — 用户级键值存储。
 
 use crate::platforms::xianyu::persist::InMemoryUserSettingStore;
 use crate::shared::ipc::IpcResponse;
-use app::setting::{load_personal_settings, PersonalSettings, UserSettingService};
+use business::setting::UserSettingService;
 use common;
 use serde::Deserialize;
 use std::sync::Arc;
@@ -48,16 +48,4 @@ pub fn user_setting_set(
     let service = UserSettingService::new(state.store.as_ref());
     service.set(request.owner_id, &request.key, &request.value)?;
     Ok(IpcResponse::ok(()))
-}
-
-/// 读取个人设置聚合视图（一次 IPC 返回全部）。
-#[tauri::command]
-pub fn user_settings_get_all(
-    state: State<'_, UserSettingHandle>,
-    owner_id: i64,
-) -> common::DingDaResult<IpcResponse<PersonalSettings>> {
-    Ok(IpcResponse::ok(load_personal_settings(
-        state.store.as_ref(),
-        owner_id,
-    )))
 }

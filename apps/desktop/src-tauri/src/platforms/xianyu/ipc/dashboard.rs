@@ -1,16 +1,12 @@
 //! 仪表盘统计 Tauri commands。
 
 use crate::platforms::xianyu::persist::InMemoryAccountStore;
-use crate::platforms::xianyu::persist::InMemoryCardStore;
 use crate::platforms::xianyu::persist::InMemoryItemStore;
-use crate::platforms::xianyu::persist::InMemoryKeywordStore;
 use crate::platforms::xianyu::persist::InMemoryOrderStore;
 use crate::shared::ipc::IpcResponse;
-use app::account::AccountStore;
-use app::auto_reply::KeywordStore;
-use app::card::{CardQuery, CardStore};
-use app::item::{ItemQuery, ItemStore};
-use app::order::{OrderStatus, OrderStore};
+use business::account::AccountStore;
+use business::item::{ItemQuery, ItemStore};
+use business::order::{OrderStatus, OrderStore};
 use common;
 use serde::Serialize;
 use std::sync::Arc;
@@ -20,18 +16,14 @@ use tauri::State;
 pub struct DashboardStats {
     pub total_accounts: u32,
     pub active_accounts: u32,
-    pub total_keywords: u32,
     pub total_items: u32,
-    pub total_cards: u32,
     pub total_orders: u32,
     pub pending_ship_orders: u32,
 }
 
 pub struct DashboardHandle {
     pub accounts: Arc<InMemoryAccountStore>,
-    pub keywords: Arc<InMemoryKeywordStore>,
     pub items: Arc<InMemoryItemStore>,
-    pub cards: Arc<InMemoryCardStore>,
     pub orders: Arc<InMemoryOrderStore>,
 }
 
@@ -44,15 +36,6 @@ impl DashboardHandle {
             .filter(|account| account.is_active())
             .count() as u32;
 
-        let mut total_keywords = 0u32;
-        for account in &accounts {
-            let list = self
-                .keywords
-                .list_keywords(&account.account_id)
-                .unwrap_or_default();
-            total_keywords += list.len() as u32;
-        }
-
         let item_query = ItemQuery {
             page: 1,
             page_size: 1,
@@ -61,16 +44,6 @@ impl DashboardHandle {
         let (_, total_items) = self
             .items
             .list_items(owner_id, &item_query)
-            .unwrap_or((Vec::new(), 0));
-
-        let card_query = CardQuery {
-            page: 1,
-            page_size: 1,
-            ..Default::default()
-        };
-        let (_, total_cards) = self
-            .cards
-            .list_cards(owner_id, &card_query)
             .unwrap_or((Vec::new(), 0));
 
         let (_, total_orders) = self
@@ -86,9 +59,7 @@ impl DashboardHandle {
         DashboardStats {
             total_accounts,
             active_accounts,
-            total_keywords,
             total_items,
-            total_cards,
             total_orders,
             pending_ship_orders,
         }

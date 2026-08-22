@@ -1,10 +1,10 @@
 //! 订单管理 Tauri commands — 订单查询/状态/发货/评价联动。
 //!
-//! 壳层组合：`InMemoryOrderStore` → `app::order::OrderService`。
+//! 壳层组合：`InMemoryOrderStore` → `business::order::OrderService`。
 
 use crate::platforms::xianyu::persist::InMemoryOrderStore;
 use crate::shared::ipc::IpcResponse;
-use app::order::{DeliveryInfoUpdate, Order, OrderService, OrderStatus};
+use business::order::{DeliveryInfoUpdate, Order, OrderService, OrderStatus};
 use common;
 use serde::Deserialize;
 use std::sync::Arc;
@@ -102,7 +102,7 @@ pub fn order_update_delivery(
     let service = OrderService::new(state.store.as_ref());
     let update = DeliveryInfoUpdate {
         status: OrderStatus::from_str(&request.status),
-        delivery_method: app::order::DeliveryMethod::from_str(&request.delivery_method),
+        delivery_method: business::order::DeliveryMethod::from_str(&request.delivery_method),
         delivery_content: request.delivery_content.clone(),
         buyer_fish_nick: None,
     };

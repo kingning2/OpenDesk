@@ -10,17 +10,17 @@ use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use app::account::{AccountService, AccountStore, AccountUpdate};
-use app::risk::RiskService;
-use app::xianyu::InMemoryRiskStore;
+use business::account::{AccountService, AccountStore, AccountUpdate};
+use business::risk::RiskService;
 use common::contracts::ChannelSidecarCookieRenewRequest;
 use common::events::{emit, AppEvent, ChannelStatusEvent, EventSink};
 use platform::xianyu::cookies::parse_credential;
 use platform::xianyu::extract_punish_url;
+use platform::xianyu::stores::InMemoryRiskStore;
 use runtime::sidecar::lifecycle::SidecarLifecycle;
 
-use super::dispatcher::ChannelDispatcher;
 use crate::platforms::xianyu::ipc::account_connection::to_channel_account;
+use crate::shared::channel::dispatcher::ChannelDispatcher;
 
 /// 与前端 `CHANNEL_CONNECTION_STATUS_MAP` 对齐的 UI 状态键。
 pub mod ui_status {

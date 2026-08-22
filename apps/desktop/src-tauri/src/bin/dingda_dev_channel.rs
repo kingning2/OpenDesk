@@ -453,7 +453,7 @@ async fn session_actor(
         let (ws, _) = connect_async(request)
             .await
             .map_err(|error| format!("ws 连接失败: {error}"))?;
-        let (mut sink, mut stream) = ws.split();
+        let (mut sink, stream) = ws.split();
 
         let reg = register_frame(&device_id, &token);
         sink.send(Message::Text(reg.to_string()))

@@ -1,10 +1,10 @@
 //! 风控 Tauri commands — 日志查询 / 清空 / 配置读写。
 //!
-//! 壳层组合：`InMemoryRiskStore` → `app::risk::RiskService`。
+//! 壳层组合：`InMemoryRiskStore` → `business::risk::RiskService`。
 
 use crate::platforms::xianyu::persist::InMemoryRiskStore;
 use crate::shared::ipc::IpcResponse;
-use app::risk::{RiskConfig, RiskLogPage, RiskLogQuery, RiskService};
+use business::risk::{RiskConfig, RiskLogPage, RiskLogQuery, RiskService};
 use common;
 use serde::Deserialize;
 use std::sync::Arc;
@@ -84,7 +84,7 @@ pub fn risk_log_list(
 pub fn risk_log_today_rate(
     state: State<'_, RiskHandle>,
     request: RiskRateRequest,
-) -> common::DingDaResult<IpcResponse<app::risk::RiskTodaySuccessRate>> {
+) -> common::DingDaResult<IpcResponse<business::risk::RiskTodaySuccessRate>> {
     let service = RiskService::new(state.store.as_ref());
     let result = service.today_success_rate(request.owner_id, &request.date)?;
     Ok(IpcResponse::ok(result))

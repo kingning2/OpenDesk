@@ -1,11 +1,11 @@
 //! 账号管理 Tauri commands — 多账号 CRUD + 状态切换。
 //!
-//! 壳层组合：`InMemoryAccountStore` → `app::account::AccountService`（校验 + 编排）。
+//! 壳层组合：`InMemoryAccountStore` → `business::account::AccountService`（校验 + 编排）。
 
-use crate::platforms::xianyu::persist::InMemoryAccountStore;
 use crate::shared::ipc::IpcResponse;
-use app::account::{AccountService, AccountStatus, AccountUpdate, XianyuAccount};
+use business::account::{AccountService, AccountStatus, AccountUpdate, XianyuAccount};
 use common;
+use platform::xianyu::stores::InMemoryAccountStore;
 use serde::Deserialize;
 use std::sync::Arc;
 use tauri::State;

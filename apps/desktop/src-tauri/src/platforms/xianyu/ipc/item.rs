@@ -3,11 +3,11 @@
 //! 作者：Xiaoman
 //! 创建时间：2026-08-20
 
-use crate::platforms::xianyu::ipc::account::AccountHandle;
+use crate::platforms::core::account::AccountHandle;
 use crate::platforms::xianyu::persist::InMemoryItemStore;
 use crate::shared::ipc::IpcResponse;
-use app::account::{AccountService, AccountStore, AccountUpdate, XianyuAccount};
-use app::item::{Item, ItemQuery, ItemService};
+use business::account::{AccountService, AccountStore, AccountUpdate, XianyuAccount};
+use business::item::{Item, ItemQuery, ItemService};
 use common;
 use platform::xianyu::{fetch_item_detail, fetch_seller_items, PlatformItemDetail};
 use serde::{Deserialize, Serialize};

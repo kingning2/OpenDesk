@@ -3,12 +3,12 @@
 //! 作者：Xiaoman
 //! 创建时间：2026-08-18
 
-use crate::platforms::xianyu::ipc::account::AccountHandle;
+use crate::platforms::core::account::AccountHandle;
 use crate::platforms::xianyu::persist::InMemoryAccountStore;
 use crate::shared::channel::dispatcher::ChannelDispatcher;
 use crate::shared::ipc::IpcResponse;
 use crate::shared::state::AppState;
-use app::account::{AccountService, AccountStore, AccountUpdate};
+use business::account::{AccountService, AccountStore, AccountUpdate};
 use common::contracts::ChannelAccount;
 use platform::xianyu::fetch_user_profile;
 use serde::Deserialize;
@@ -23,7 +23,10 @@ pub struct AccountConnectRequest {
 }
 
 /// 由业务账号构造渠道账号（credential = cookie 字符串）。
-pub fn to_channel_account(_owner_id: i64, account: &app::account::XianyuAccount) -> ChannelAccount {
+pub fn to_channel_account(
+    _owner_id: i64,
+    account: &business::account::XianyuAccount,
+) -> ChannelAccount {
     ChannelAccount {
         id: account.account_id.clone(),
         kind: "xianyu".to_string(),
@@ -218,7 +221,7 @@ pub async fn account_connection_state(
 #[tauri::command]
 pub async fn account_cookie_renew(
     state: State<'_, AppState>,
-    renewer: State<'_, Arc<crate::shared::channel::cookie_renew::RiskCookieRenewer>>,
+    renewer: State<'_, Arc<crate::platforms::xianyu::cookie_renew::RiskCookieRenewer>>,
     request: AccountConnectRequest,
 ) -> common::DingDaResult<IpcResponse<String>> {
     state
@@ -231,11 +234,11 @@ pub async fn account_cookie_renew(
     let renewer = Arc::clone(&renewer);
     let schedule = &renewer.spawn_renew(request.account_id.clone(), String::new());
     let message = match schedule {
-        crate::shared::channel::cookie_renew::RenewSchedule::Started => "已开始滑块续期",
-        crate::shared::channel::cookie_renew::RenewSchedule::Queued => "已加入续期队列，请稍候",
-        crate::shared::channel::cookie_renew::RenewSchedule::InFlight => "续期已在进行或排队中",
-        crate::shared::channel::cookie_renew::RenewSchedule::Cooldown => "续期冷却中，请稍后再试",
-        crate::shared::channel::cookie_renew::RenewSchedule::Disabled => "自动续期未启用",
+        crate::platforms::xianyu::cookie_renew::RenewSchedule::Started => "已开始滑块续期",
+        crate::platforms::xianyu::cookie_renew::RenewSchedule::Queued => "已加入续期队列，请稍候",
+        crate::platforms::xianyu::cookie_renew::RenewSchedule::InFlight => "续期已在进行或排队中",
+        crate::platforms::xianyu::cookie_renew::RenewSchedule::Cooldown => "续期冷却中，请稍后再试",
+        crate::platforms::xianyu::cookie_renew::RenewSchedule::Disabled => "自动续期未启用",
     };
     Ok(IpcResponse::ok(message.to_string()))
 }
