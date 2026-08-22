@@ -23,6 +23,9 @@ __pycache__/
 .ruff_cache/
 .ruff_cache/
 
+# 临时目录（本地参考/实验，不提交）
+.tmp/
+
 # Sidecar 运行时数据（Playwright 浏览器配置目录）
 python/browser_data/
 

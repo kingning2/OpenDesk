@@ -14,7 +14,7 @@
     "prepare": "husky",
     "lint": "pnpm lint:frontend && pnpm lint:rust && pnpm lint:python",
     "lint:fix": "pnpm lint:frontend:fix && pnpm lint:rust:fix && pnpm lint:python:fix",
-    "lint:frontend": "eslint . && pnpm lint:types",
+    "lint:frontend": "eslint . --max-warnings 0 && pnpm lint:types",
     "lint:frontend:fix": "eslint . --fix",
     "lint:types": "tsc -p tsconfig.lint.json --noEmit",
     "lint:rust": "node tooling/scripts/lint-rust.mjs",
