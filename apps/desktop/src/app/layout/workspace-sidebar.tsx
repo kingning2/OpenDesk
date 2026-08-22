@@ -19,7 +19,7 @@ import {
 } from "@desk/ui";
 import { Home } from "@desk/ui/icons";
 import { manageNavGroups, type ManageNavItem } from "@platform-routes";
-import { aiFeature } from "@feature/ai";
+import { aiFeature } from "@feature/agent";
 import { chatFeature } from "@feature/chat";
 import { LicensePlanBadge } from "@feature/license";
 

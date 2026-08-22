@@ -1,8 +1,7 @@
 export * from "./components";
 export * from "./query";
 export * from "./motion";
-export { ThemeProvider } from "./theme/provider";
-export { useThemeTransition } from "./theme/theme-transition";
+export * from "./theme";
 export { useTheme } from "next-themes";
-export { cn } from "./lib/cn";
+export * from "./lib";
 export { spring, duration } from "./tokens/motion";

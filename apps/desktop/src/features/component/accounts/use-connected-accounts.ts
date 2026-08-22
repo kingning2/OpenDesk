@@ -7,39 +7,15 @@
  * @created 2026-08-22
  */
 
+import { OWNER_ID } from "@desk/platform/constants";
 import { accountProbeLogin } from "@desk/platform/ipc/account";
 import { userSettingGet, userSettingSet } from "@desk/platform/ipc/setting";
 import type { XianyuAccount } from "@desk/platform/ipc/account";
+import { enqueueWrite, parseAccountIds } from "./helpers";
 
-const OWNER_ID = 1;
 const SETTING_CONNECTED_IDS = "account.connected.account_ids";
 
-let writeChain: Promise<void> = Promise.resolve();
 const probeCache = new Map<string, boolean>();
-
-function parseAccountIds(raw: string | null): string[] {
-  if (!raw) {
-    return [];
-  }
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-    return parsed.filter((item): item is string => typeof item === "string" && item.length > 0);
-  } catch {
-    return [];
-  }
-}
-
-function enqueueWrite<T>(task: () => Promise<T>): Promise<T> {
-  const result = writeChain.then(task, task);
-  writeChain = result.then(
-    () => undefined,
-    () => undefined,
-  );
-  return result;
-}
 
 /** 读取曾标记为「已连接」的账号 id 列表。 */
 export async function loadConnectedAccountIds(): Promise<string[]> {

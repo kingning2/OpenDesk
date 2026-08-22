@@ -4,6 +4,7 @@
  * 数据访问走 Tauri IPC（`@desk/platform/ipc/risk`）。
  */
 
+import { OWNER_ID } from "@desk/platform/constants";
 import { useEffect, useState } from "react";
 import {
   Button,
@@ -26,7 +27,6 @@ import {
   type RiskLogItem,
 } from "@desk/platform/ipc/risk";
 
-const OWNER_ID = 1;
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
 const STATUS_LABELS: Record<string, string> = {

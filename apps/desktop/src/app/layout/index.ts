@@ -11,11 +11,5 @@ export type { AppLayoutProps } from "./app-layout";
 export { MainPanel } from "./main-panel";
 export type { MainPanelProps } from "./main-panel";
 
-export { NavRail, NavRailNav, NavRailItem, navRailItemVariants } from "./nav-rail";
-export type { NavRailItemProps } from "./nav-rail";
-
-export { TabBar, tabItemVariants } from "./tab-bar";
-export type { TabBarItem, TabBarProps } from "./tab-bar";
-
 export { WorkspaceSidebar } from "./workspace-sidebar";
 export type { WorkspaceSidebarProps } from "./workspace-sidebar";

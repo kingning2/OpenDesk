@@ -10,7 +10,7 @@ import {
   MANAGE_VIEW_TITLES,
   isManageView,
   manageNavItemsForGroup,
-} from "@feature/1688/manage-nav";
+} from "@feature/platform/ali1688/manage-nav";
 
 import type { PageLoader, PlatformRouteContribution } from "../types";
 
@@ -19,7 +19,7 @@ function toRouteSegment(fullPath: string): string {
 }
 
 const loadManageConsole: PageLoader = async () => {
-  const { Ali1688ManageConsole } = await import("@feature/1688/manage-console");
+  const { Ali1688ManageConsole } = await import("@feature/platform/ali1688/manage-console");
   return Ali1688ManageConsole;
 };
 

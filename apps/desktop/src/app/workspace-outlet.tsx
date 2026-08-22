@@ -20,7 +20,7 @@ const PAGE_LOADERS: Record<string, PageLoader> = {
     return AgentPage;
   },
   "/features/ai": async () => {
-    const { AiPage } = await import("@feature/ai/ai-page");
+    const { AiPage } = await import("@feature/agent/ai-page");
     return AiPage;
   },
   "/features/chat": async () => {

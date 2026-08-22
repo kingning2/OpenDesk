@@ -22,6 +22,3 @@ export const manageTitleFromPath = mergedPlatformRoutes.manageTitleFromPath;
 
 /** 编译期平台管理导航（侧栏数据源）。 */
 export const manageNav = manageNavGroups.flatMap((group) => group.items);
-
-/** @deprecated 使用 manageNavGroups；保留空数组兼容 nav-registry */
-export const sidebarNavItems = [] as const;

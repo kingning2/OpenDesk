@@ -8,6 +8,15 @@
 import { MessageSquare } from "@desk/ui/icons";
 
 export { ChatPage } from "./chat-page";
+export { InboxPanel } from "./inbox-panel";
+export type { InboxGroup, InboxPanelProps } from "./inbox-panel";
+export { ThreadPanel } from "./thread-panel";
+export type { ThreadPanelProps } from "./thread-panel";
+export { CustomerPanel } from "./customer-panel";
+export type { CustomerPanelProps } from "./customer-panel";
+export { ConversationAvatar } from "./conversation-avatar";
+export { InfoSection, InfoRow } from "./info-section";
+export { formatChatTime } from "./format";
 export { useChannelInbox } from "./use-channel-inbox";
 
 /** Chat 功能路由与侧栏元信息。 */

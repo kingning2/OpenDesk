@@ -13,7 +13,7 @@ import { PluginsPanel } from "@feature/plugin";
 
 import { AboutPanel } from "./about-panel";
 import { DisclaimerPanel } from "./disclaimer-panel";
-import { mergePlatformSettingsSections } from "./platform-sections/chain";
+import { mergePlatformSettingsSections } from "./platform-sections";
 import type { SettingsSectionDef, SettingsSectionId } from "./types";
 
 export type { SettingsSectionDef, SettingsSectionId } from "./types";

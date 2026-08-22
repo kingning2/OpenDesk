@@ -44,8 +44,8 @@ const IPC_PLATFORM = {
 
 /** 平台 id → manage-nav 模块（Vite alias 路径）。 */
 const MANAGE_NAV_MODULE = {
-  xianyu: "@feature/xianyu/manage-nav",
-  ali1688: "@feature/1688/manage-nav",
+  xianyu: "@feature/platform/xianyu/manage-nav",
+  ali1688: "@feature/platform/ali1688/manage-nav",
 };
 
 /** contribution / settings 导出名前缀。 */

@@ -5,6 +5,7 @@
  * @created 2026-08-20
  */
 
+import { OWNER_ID } from "@desk/platform/constants";
 import { useEffect, useRef } from "react";
 import {
   accountConnect,
@@ -16,8 +17,8 @@ import { logWrite } from "@desk/platform/ipc/log";
 import { userSettingGet, userSettingSet } from "@desk/platform/ipc/setting";
 import { resolveAccountPlatform } from "./accounts-panel";
 import { loadConnectedAccountIds, probeConnectedAccounts } from "./use-connected-accounts";
+import { enqueueWrite, parseAccountIds } from "./helpers";
 
-const OWNER_ID = 1;
 const SETTING_ENABLED = "account.auto_connect.enabled";
 const SETTING_ACCOUNT_IDS = "account.auto_connect.account_ids";
 const LEGACY_XIANYU_ENABLED = "xianyu.auto_connect.enabled";
@@ -35,22 +36,6 @@ interface AutoConnectConfig {
 }
 
 let cached: AutoConnectConfig = { enabled: false, accountIds: [] };
-let writeChain: Promise<void> = Promise.resolve();
-
-function parseAccountIds(raw: string | null): string[] {
-  if (!raw) {
-    return [];
-  }
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-    return parsed.filter((item): item is string => typeof item === "string" && item.length > 0);
-  } catch {
-    return [];
-  }
-}
 
 function readLegacyFromLocalStorage(): AutoConnectConfig | null {
   if (typeof window === "undefined") {
@@ -125,15 +110,6 @@ async function persistAutoConnectConfig(config: AutoConnectConfig): Promise<void
     userSettingSet(SETTING_ENABLED, cached.enabled ? "true" : "false"),
     userSettingSet(SETTING_ACCOUNT_IDS, JSON.stringify(cached.accountIds)),
   ]);
-}
-
-function enqueueWrite<T>(task: () => Promise<T>): Promise<T> {
-  const result = writeChain.then(task, task);
-  writeChain = result.then(
-    () => undefined,
-    () => undefined,
-  );
-  return result;
 }
 
 /**

@@ -10,7 +10,7 @@ import {
   MANAGE_VIEW_TITLES,
   isManageView,
   manageNavItemsForGroup,
-} from "@feature/xianyu/manage-nav";
+} from "@feature/platform/xianyu/manage-nav";
 
 import type { PageLoader, PlatformRouteContribution } from "../types";
 
@@ -19,7 +19,7 @@ function toRouteSegment(fullPath: string): string {
 }
 
 const loadManageConsole: PageLoader = async () => {
-  const { XianyuManageConsole } = await import("@feature/xianyu/manage-console");
+  const { XianyuManageConsole } = await import("@feature/platform/xianyu/manage-console");
   return XianyuManageConsole;
 };
 

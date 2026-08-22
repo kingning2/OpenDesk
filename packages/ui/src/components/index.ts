@@ -64,6 +64,8 @@ export { ThemeToggle } from "./theme-toggle";
 export type { ThemeToggleProps } from "./theme-toggle";
 export { IconButton } from "./icon-button";
 export type { IconButtonProps } from "./icon-button";
+export { Pagination } from "./pagination";
+export type { PaginationProps } from "./pagination";
 export {
   Dialog,
   DialogPortal,

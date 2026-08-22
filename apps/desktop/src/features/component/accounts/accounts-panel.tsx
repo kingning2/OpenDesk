@@ -9,6 +9,7 @@
  * @created 2026-08-13
  */
 
+import { OWNER_ID } from "@desk/platform/constants";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Button,
@@ -53,7 +54,6 @@ import {
   setAccountConnected,
 } from "./use-connected-accounts";
 
-const OWNER_ID = 1; // 桌面单用户；多用户时由登录态注入
 
 /**
  * IPC / toast 错误是否为登录过期（连接失败时写入 auth_expired）。

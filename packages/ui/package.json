@@ -6,6 +6,11 @@
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
+    "./components": "./src/components/index.ts",
+    "./theme": "./src/theme/index.ts",
+    "./query": "./src/query/index.ts",
+    "./motion": "./src/motion/index.ts",
+    "./lib": "./src/lib/index.ts",
     "./tokens": "./src/tokens/index.css",
     "./tokens/motion": "./src/tokens/motion.ts",
     "./tailwind": "./tailwind.preset.ts",
