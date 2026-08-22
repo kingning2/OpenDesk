@@ -13,6 +13,8 @@ use thiserror::Error;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum ChannelKind {
     Xianyu,
+    /// 1688（账号 / 登录；无闲鱼 WS 协议）。
+    Ali1688,
     /// 小红书（协议实现待接入，能力层已声明）。
     Xiaohongshu,
     /// 抖音（协议实现待接入，能力层已声明）。
@@ -24,6 +26,7 @@ impl ChannelKind {
     pub fn as_str(&self) -> &'static str {
         match self {
             ChannelKind::Xianyu => "xianyu",
+            ChannelKind::Ali1688 => "ali1688",
             ChannelKind::Xiaohongshu => "xiaohongshu",
             ChannelKind::Douyin => "douyin",
         }
@@ -34,6 +37,7 @@ impl ChannelKind {
     pub fn from_str(value: &str) -> Option<Self> {
         match value {
             "xianyu" => Some(ChannelKind::Xianyu),
+            "ali1688" | "1688" => Some(ChannelKind::Ali1688),
             "xiaohongshu" => Some(ChannelKind::Xiaohongshu),
             "douyin" => Some(ChannelKind::Douyin),
             _ => None,
@@ -41,9 +45,10 @@ impl ChannelKind {
     }
 
     /// 全部已知平台。
-    pub fn all() -> [Self; 3] {
+    pub fn all() -> [Self; 4] {
         [
             ChannelKind::Xianyu,
+            ChannelKind::Ali1688,
             ChannelKind::Xiaohongshu,
             ChannelKind::Douyin,
         ]
@@ -72,17 +77,6 @@ impl ConnectionState {
             ConnectionState::Connecting => "connecting",
             ConnectionState::Connected => "connected",
             ConnectionState::Error => "error",
-        }
-    }
-
-    #[allow(dead_code)]
-    #[allow(clippy::should_implement_trait)]
-    pub fn from_str(value: &str) -> Self {
-        match value {
-            "connecting" => ConnectionState::Connecting,
-            "connected" => ConnectionState::Connected,
-            "error" => ConnectionState::Error,
-            _ => ConnectionState::Disconnected,
         }
     }
 }
@@ -128,22 +122,8 @@ pub trait InboundListener: Send + Sync {
     async fn on_conversation(&self, _sync: ConversationSync) {}
 }
 
-/// 协议层归一化后的入站消息（应用层继续加工为 `common::contracts::ChannelMessage`）。
-#[derive(Debug, Clone)]
-pub struct ChannelInboundMessage {
-    pub account_id: String,
-    /// 会话对端用户 id（买家 userId）。
-    pub peer_id: String,
-    /// 会话对端昵称。
-    pub peer_name: String,
-    /// 关联商品 id。
-    pub item_id: String,
-    /// goofish 会话 id（cid，`xxx@goofish` 的裸数字），消息历史/发送使用。
-    pub cid: String,
-    pub content: String,
-    #[allow(dead_code)]
-    pub created_at_ms: i64,
-}
+/// 协议层归一化后的入站消息（`common` 下沉，`business`/`platform` 共用）。
+pub use common::channel_inbound_message::ChannelInboundMessage;
 
 /// 单条历史消息（`MessageManager/listUserMessages` 返回，跨平台 DTO）。
 ///

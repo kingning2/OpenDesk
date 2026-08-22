@@ -1,14 +1,10 @@
-//! 个人设置 — 用户级键值配置存取。
+//! 用户设置 — 用户级键值配置存取。
 //!
-//! 对齐 Python 版 `/api/v1/user-settings` 的用户级设置语义：
-//! - 重发货触发关键字（聊天中「关键字+订单号」触发自动重发货）；
-//! - 联系方式（微信 / QQ，供分销商联系）；
-//! - 对接卡密秘钥（分销卡券对接上游系统鉴权）。
-//!
-//! 余额 / 充值 / 提现 / 结算 / 密码等依赖 SaaS 服务端的项不迁移（桌面单用户）。
+//! 对齐 Python 版 `/api/v1/user-settings` 的用户级设置语义（桌面单用户）。
+//! 精简说明：个人设置聚合视图（重发货关键字 / 联系方式 / 卡密秘钥）已下线，
+//! 仅保留通用键值读写。
 
 use common::DingDaResult;
-use serde::{Deserialize, Serialize};
 
 /// 用户设置存储 Port。
 pub trait UserSettingStore: Send + Sync {
@@ -41,38 +37,6 @@ impl<'a> UserSettingService<'a> {
         }
         let value = value.trim();
         self.store.set(owner_id, key.trim(), value)
-    }
-}
-
-/// 个人设置聚合视图（单次读取，减少 IPC 往返）。
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct PersonalSettings {
-    /// 重发货触发关键字（空 = 关闭）。
-    #[serde(default)]
-    pub redelivery_keyword: String,
-    #[serde(default)]
-    pub contact_wechat: String,
-    #[serde(default)]
-    pub contact_qq: String,
-    /// 对接卡密秘钥（分销卡券对接上游系统）。
-    #[serde(default)]
-    pub card_secret_key: String,
-}
-
-/// 个人设置键。
-pub const KEY_REDELIVERY: &str = "personal.redelivery_keyword";
-pub const KEY_WECHAT: &str = "personal.contact_wechat";
-pub const KEY_QQ: &str = "personal.contact_qq";
-pub const KEY_CARD_SECRET: &str = "personal.card_secret_key";
-
-/// 读取个人设置聚合视图。
-pub fn load_personal_settings(store: &dyn UserSettingStore, owner_id: i64) -> PersonalSettings {
-    let get = |key: &str| store.get(owner_id, key).unwrap_or(None).unwrap_or_default();
-    PersonalSettings {
-        redelivery_keyword: get(KEY_REDELIVERY),
-        contact_wechat: get(KEY_WECHAT),
-        contact_qq: get(KEY_QQ),
-        card_secret_key: get(KEY_CARD_SECRET),
     }
 }
 
@@ -112,14 +76,14 @@ mod tests {
             map: Mutex::new(HashMap::new()),
         };
         let service = UserSettingService::new(&store);
-        service.set(1, KEY_REDELIVERY, " 重新触发 ").expect("set");
+        service.set(1, "test.key", " 重新触发 ").expect("set");
         assert_eq!(
-            service.get(1, KEY_REDELIVERY).expect("get").as_deref(),
+            service.get(1, "test.key").expect("get").as_deref(),
             Some("重新触发")
         );
         // 空值删除
-        service.set(1, KEY_REDELIVERY, "").expect("set");
-        assert_eq!(service.get(1, KEY_REDELIVERY).expect("get"), None);
+        service.set(1, "test.key", "").expect("set");
+        assert_eq!(service.get(1, "test.key").expect("get"), None);
     }
 
     #[test]
@@ -129,22 +93,5 @@ mod tests {
         };
         let service = UserSettingService::new(&store);
         assert!(service.set(1, "  ", "value").is_err());
-    }
-
-    #[test]
-    fn load_aggregate_view() {
-        let store = MockStore {
-            map: Mutex::new(HashMap::new()),
-        };
-        let service = UserSettingService::new(&store);
-        service.set(1, KEY_REDELIVERY, "重新触发").expect("set");
-        service.set(1, KEY_WECHAT, "wx-123").expect("set");
-        let settings = load_personal_settings(&store, 1);
-        assert_eq!(settings.redelivery_keyword, "重新触发");
-        assert_eq!(settings.contact_wechat, "wx-123");
-        assert_eq!(settings.contact_qq, "");
-        // 归属隔离
-        let other = load_personal_settings(&store, 2);
-        assert_eq!(other.redelivery_keyword, "");
     }
 }

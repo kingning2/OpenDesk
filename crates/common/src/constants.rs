@@ -20,8 +20,6 @@ pub mod xianyu {
     /// 登录 token 接口完整 URL。
     pub const LOGIN_TOKEN_URL: &str =
         "https://h5api.m.goofish.com/h5/mtop.taobao.idlemessage.pc.login.token/1.0/";
-    /// Passport 登录校验。
-    pub const HAS_LOGIN_URL: &str = "https://passport.goofish.com/newlogin/hasLogin.do";
     /// IM WebSocket。
     pub const WS_URL: &str = "wss://wss-goofish.dingtalk.com/";
     /// Cookie 写入域。

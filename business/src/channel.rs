@@ -2,7 +2,6 @@
 //!
 //! 包含：
 //! - [`ChannelRepo`]：渠道账号/会话/消息/设置的 SQLite CRUD
-//! - [`filter_reply`]：出站消息安全敏感词过滤
 //! - [`conversation_id_for`]、[`inbound_to_message`]：会话/消息 DTO 工具
 //!
 //! 本模块不依赖 Tauri；Tauri 壳层直接持有 `Arc<ChannelRepo>` 并通过 IPC 调用。
@@ -15,7 +14,7 @@ use diesel::sql_types::Text;
 use diesel::{QueryableByName, RunQueryDsl, SqliteConnection};
 use std::path::Path;
 
-use platform::protocol::ChannelInboundMessage;
+use common::channel_inbound_message::ChannelInboundMessage;
 
 // ─── 持久化错误 ───────────────────────────────────────────────────────────────
 
@@ -100,16 +99,6 @@ impl ChannelRepo {
         Ok(rows)
     }
 
-    /// 删除账号。
-    #[allow(dead_code)]
-    pub fn delete_account(&self, id: &str) -> Result<(), ChannelStoreError> {
-        diesel::sql_query("DELETE FROM channel_accounts WHERE id = ?")
-            .bind::<Text, _>(id)
-            .execute(&mut *self.conn()?)
-            .map_err(|error| ChannelStoreError::Db(error.to_string()))?;
-        Ok(())
-    }
-
     // ---- conversations ----
 
     /// 插入或更新会话。
@@ -166,27 +155,6 @@ impl ChannelRepo {
              FROM channel_conversations WHERE id = ?",
         )
         .bind::<Text, _>(id)
-        .load::<ConversationRow>(&mut *self.conn()?)
-        .map_err(|error| ChannelStoreError::Db(error.to_string()))?
-        .into_iter()
-        .map(Into::into)
-        .collect::<Vec<_>>();
-        Ok(rows.into_iter().next())
-    }
-
-    /// 按 peer_id + item_id 查会话。
-    #[allow(dead_code)]
-    pub fn find_conversation_by_peer(
-        &self,
-        peer_id: &str,
-        item_id: &str,
-    ) -> Result<Option<ChannelConversation>, ChannelStoreError> {
-        let rows = diesel::sql_query(
-            "SELECT id, account_id, cid, peer_id, peer_name, item_id, item_title, item_price, updated_at \
-             FROM channel_conversations WHERE peer_id = ? AND item_id = ?",
-        )
-        .bind::<Text, _>(peer_id)
-        .bind::<Text, _>(item_id)
         .load::<ConversationRow>(&mut *self.conn()?)
         .map_err(|error| ChannelStoreError::Db(error.to_string()))?
         .into_iter()
@@ -461,43 +429,6 @@ pub fn inbound_to_message(
     }
 }
 
-// ─── 安全过滤 ──────────────────────────────────────────────────────────────────
-
-/// 命中安全词时返回的统一提示。
-pub const SAFETY_FILTERED_REPLY: &str = "[安全提醒]请通过平台沟通";
-
-/// 敏感词表（参考 XianyuAutoAgent 的 `_safe_filter`）。
-const BLOCKED_PHRASES: &[&str] = &[
-    "微信",
-    "QQ",
-    "支付宝",
-    "银行卡",
-    "线下",
-    "vx",
-    "wx",
-    "qq",
-    "zfb",
-];
-
-/// 安全过滤：文本命中敏感词时替换为安全提示；否则原样返回。
-///
-/// 作者：Xiaoman
-/// 创建时间：2026-08-18
-///
-/// # 参数
-/// - `text` — 待过滤文本
-///
-/// # 返回值
-/// 过滤后的文本。
-pub fn filter_reply(text: &str) -> String {
-    let lower = text.to_lowercase();
-    if BLOCKED_PHRASES.iter().any(|phrase| lower.contains(phrase)) {
-        SAFETY_FILTERED_REPLY.to_string()
-    } else {
-        text.to_string()
-    }
-}
-
 // ─── 测试 ──────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
@@ -512,29 +443,5 @@ mod tests {
         assert_eq!(a, b);
         assert_ne!(a, c);
         assert!(a.starts_with("cv-"));
-    }
-
-    #[test]
-    fn blocks_wechat_and_money_channel_words() {
-        assert_eq!(
-            filter_reply("加我微信详聊"),
-            SAFETY_FILTERED_REPLY.to_string()
-        );
-        assert_eq!(filter_reply("QQ联系"), SAFETY_FILTERED_REPLY.to_string());
-        assert_eq!(
-            filter_reply("支付宝付款"),
-            SAFETY_FILTERED_REPLY.to_string()
-        );
-    }
-
-    #[test]
-    fn passes_clean_replies() {
-        assert_eq!(filter_reply("这个可以便宜点吗"), "这个可以便宜点吗");
-        assert_eq!(filter_reply("包邮吗"), "包邮吗");
-    }
-
-    #[test]
-    fn case_insensitive_latin() {
-        assert_eq!(filter_reply("加VX"), SAFETY_FILTERED_REPLY.to_string());
     }
 }

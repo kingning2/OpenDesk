@@ -5,12 +5,23 @@
 //! - 账号级自动化开关（自动回复延迟 / 自动确认发货 / 只发卡券 / 禁止发货等）；
 //! - 代理配置（HTTP / SOCKS5）；
 //! - 归属校验（owner_id）+ Cookie 必备校验。
+//!
+//! 作者：Xiaoman
+//! 创建时间：2026-08-13
 
 pub mod service;
 
 pub use service::{AccountService, AccountServiceError, AccountStore};
 
 use serde::{Deserialize, Serialize};
+
+/// 默认账号平台（闲鱼）。
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-08-22
+fn default_account_platform() -> String {
+    "xianyu".to_string()
+}
 
 /// 账号状态。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -115,6 +126,9 @@ pub struct DeliveryGuard {
 }
 
 /// 闲鱼账号（对齐 `xy_accounts`）。
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-08-13
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct XianyuAccount {
     pub id: i64,
@@ -131,7 +145,20 @@ pub struct XianyuAccount {
     pub login_password: String,
     /// UNB 标识。
     pub unb: String,
+    /// 闲鱼（goofish）业务 Cookie。
     pub cookie: String,
+    /// 1688 业务 Cookie（可选；分站登录时 1688 账号也可只写 `cookie`）。
+    ///
+    /// 作者：Xiaoman
+    /// 创建时间：2026-08-22
+    #[serde(default)]
+    pub cookie_1688: String,
+    /// 账号所属平台：`xianyu` / `ali1688`。
+    ///
+    /// 作者：Xiaoman
+    /// 创建时间：2026-08-22
+    #[serde(default = "default_account_platform")]
+    pub platform: String,
     pub login_method: LoginMethod,
     pub status: AccountStatus,
     pub remark: String,
@@ -147,6 +174,18 @@ impl XianyuAccount {
     /// Cookie 是否已配置（发布/登录校验用）。
     pub fn has_cookie(&self) -> bool {
         !self.cookie.trim().is_empty()
+    }
+
+    /// 是否已配置 1688 Cookie。
+    ///
+    /// 作者：Xiaoman
+    /// 创建时间：2026-08-22
+    ///
+    /// # 返回值
+    ///
+    /// `cookie_1688` 非空时为 `true`。
+    pub fn has_cookie_1688(&self) -> bool {
+        !self.cookie_1688.trim().is_empty()
     }
 
     /// 是否为启用状态。
@@ -208,6 +247,11 @@ pub struct AccountUpdate {
     pub login_password: Option<String>,
     /// 更新登录凭据（扫码重登 / Cookie 刷新）。
     pub cookie: Option<String>,
+    /// 更新 1688 Cookie。
+    ///
+    /// 作者：Xiaoman
+    /// 创建时间：2026-08-22
+    pub cookie_1688: Option<String>,
     /// 更新 UNB 标识。
     pub unb: Option<String>,
     pub login_method: Option<LoginMethod>,
@@ -234,6 +278,8 @@ mod tests {
             login_password: String::new(),
             unb: unb.to_string(),
             cookie: cookie.to_string(),
+            cookie_1688: String::new(),
+            platform: "xianyu".to_string(),
             login_method: LoginMethod::Qr,
             status: AccountStatus::Active,
             remark: String::new(),

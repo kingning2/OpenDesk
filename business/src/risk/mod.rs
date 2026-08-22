@@ -279,6 +279,9 @@ impl<'a> RiskService<'a> {
 
     /// 记录闲鱼 IM / mtop 风控拦截事件。
     ///
+    /// 同账号已有 `processing` 日志时复用并刷新，避免 WS 重试刷出多条「处理中」。
+    /// 原始错误不入 `error_message`（展示在「处理结果 / 失败原因」终态字段）。
+    ///
     /// 作者：Xiaoman
     /// 创建时间：2026-08-20
     pub fn record_im_risk(
@@ -294,19 +297,36 @@ impl<'a> RiskService<'a> {
         } else {
             "rgv587".to_string()
         };
-        let error_message = truncate_detail(detail, 500);
+        let message = format!("{source}：触发闲鱼风控");
+
+        let processing = self.store.list_logs(
+            owner_id,
+            &RiskLogQuery {
+                account_id: account_id.to_string(),
+                processing_status: "processing".to_string(),
+                ..Default::default()
+            },
+        )?;
+        if let Some(mut log) = processing.into_iter().max_by_key(|item| item.id) {
+            log.risk_type = risk_type;
+            log.message = message;
+            log.updated_at = Some(now);
+            self.store.update_log(&log)?;
+            return Ok(log);
+        }
+
         let log = RiskLogItem {
             id: 0,
             owner_id,
             account_id: account_id.to_string(),
             risk_type,
-            message: format!("{source}：触发闲鱼风控"),
+            message,
             processing_result: String::new(),
             processing_status: "processing".to_string(),
             captcha_engine: Some("playwright".to_string()),
             call_type: Some("local".to_string()),
             call_user: None,
-            error_message: Some(error_message),
+            error_message: None,
             created_at: Some(now),
             updated_at: None,
         };
@@ -315,7 +335,7 @@ impl<'a> RiskService<'a> {
 
     /// 记录本机过滑块结果（成功 / 失败）。
     ///
-    /// 优先把同账号最新一条 `processing` 日志更新为终态；没有则追加新日志。
+    /// 同账号所有 `processing` 日志一并更新为终态；没有则追加新日志。
     ///
     /// 作者：Xiaoman
     /// 创建时间：2026-08-21
@@ -335,14 +355,19 @@ impl<'a> RiskService<'a> {
         let now = chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
         let status = if success { "success" } else { "failed" };
         let processing_result = if success {
-            "本机过滑块成功，Cookie 已续期".to_string()
+            "滑块验证通过，Cookie 已续期".to_string()
         } else {
-            format!("本机过滑块失败：{}", truncate_detail(detail, 200))
+            format!("滑块验证失败：{}", humanize_failure_detail(detail))
         };
         let message = if success {
-            "本机过滑块成功".to_string()
+            "滑块验证通过".to_string()
         } else {
-            "本机过滑块失败".to_string()
+            "滑块验证失败".to_string()
+        };
+        let error_message = if success {
+            None
+        } else {
+            Some(humanize_failure_detail(detail))
         };
 
         let processing = self.store.list_logs(
@@ -353,19 +378,21 @@ impl<'a> RiskService<'a> {
                 ..Default::default()
             },
         )?;
-        if let Some(mut log) = processing.into_iter().max_by_key(|item| item.id) {
-            log.risk_type = "slider".to_string();
-            log.message = message;
-            log.processing_result = processing_result;
-            log.processing_status = status.to_string();
-            log.captcha_engine = Some("playwright".to_string());
-            log.call_type = Some("local".to_string());
-            if !success {
-                log.error_message = Some(truncate_detail(detail, 500));
+        if !processing.is_empty() {
+            let mut last = None;
+            for mut log in processing {
+                log.risk_type = "slider".to_string();
+                log.message = message.clone();
+                log.processing_result = processing_result.clone();
+                log.processing_status = status.to_string();
+                log.captcha_engine = Some("playwright".to_string());
+                log.call_type = Some("local".to_string());
+                log.error_message = error_message.clone();
+                log.updated_at = Some(now.clone());
+                self.store.update_log(&log)?;
+                last = Some(log);
             }
-            log.updated_at = Some(now);
-            self.store.update_log(&log)?;
-            return Ok(log);
+            return Ok(last.expect("processing 非空"));
         }
 
         let log = RiskLogItem {
@@ -379,11 +406,7 @@ impl<'a> RiskService<'a> {
             captcha_engine: Some("playwright".to_string()),
             call_type: Some("local".to_string()),
             call_user: None,
-            error_message: if success {
-                None
-            } else {
-                Some(truncate_detail(detail, 500))
-            },
+            error_message,
             created_at: Some(now),
             updated_at: None,
         };
@@ -391,11 +414,37 @@ impl<'a> RiskService<'a> {
     }
 }
 
+/// 截断过长文本（按 Unicode 字符计）。
 fn truncate_detail(detail: &str, max_chars: usize) -> String {
     if detail.chars().count() <= max_chars {
         return detail.to_string();
     }
     format!("{}…", detail.chars().take(max_chars).collect::<String>())
+}
+
+/// 将原始协议错误转为可读失败原因（避免整段 JSON 进表格）。
+fn humanize_failure_detail(detail: &str) -> String {
+    let trimmed = detail.trim();
+    if trimmed.is_empty() {
+        return "未知错误".to_string();
+    }
+    if trimmed.contains("RGV587") || trimmed.contains("被挤爆") || trimmed.contains("USER_VALIDATE")
+    {
+        return "闲鱼风控拦截，滑块验证未通过".to_string();
+    }
+    if trimmed.contains("Sidecar 未就绪") || trimmed.contains("Sidecar") {
+        return truncate_detail(trimmed, 120);
+    }
+    if trimmed.contains("Cookie") || trimmed.contains("cookie") {
+        return truncate_detail(trimmed, 120);
+    }
+    if trimmed.contains("token 接口未成功") || trimmed.contains("FAIL_SYS") {
+        return "登录态异常，请重新扫码或完成滑块验证".to_string();
+    }
+    if trimmed.starts_with('{') || trimmed.contains("\"ret\"") {
+        return "闲鱼接口返回异常，请稍后重试".to_string();
+    }
+    truncate_detail(trimmed, 120)
 }
 
 fn pct(success: u32, total: u32) -> u32 {
@@ -580,7 +629,33 @@ mod tests {
     }
 
     #[test]
-    fn record_im_risk_truncates_utf8_without_panic() {
+    fn record_im_risk_reuses_open_processing_log() {
+        let mock = store();
+        let service = RiskService::new(&mock);
+        let first = service
+            .record_im_risk(1, "acc-1", "闲鱼 IM", "punish captcha")
+            .expect("first");
+        let second = service
+            .record_im_risk(1, "acc-1", "闲鱼 IM", "RGV587 again")
+            .expect("second");
+        assert_eq!(first.id, second.id);
+        assert_eq!(second.processing_status, "processing");
+        assert!(second.error_message.is_none());
+        let processing = mock
+            .list_logs(
+                1,
+                &RiskLogQuery {
+                    account_id: "acc-1".to_string(),
+                    processing_status: "processing".to_string(),
+                    ..Default::default()
+                },
+            )
+            .expect("list");
+        assert_eq!(processing.len(), 1);
+    }
+
+    #[test]
+    fn record_im_risk_does_not_store_raw_detail_in_error_message() {
         let mock = store();
         let service = RiskService::new(&mock);
         let detail = format!(
@@ -590,9 +665,7 @@ mod tests {
         let log = service
             .record_im_risk(1, "acc-1", "闲鱼 IM", &detail)
             .expect("record");
-        let message = log.error_message.expect("message");
-        assert!(message.chars().count() <= 501);
-        assert!(message.ends_with('…'));
+        assert!(log.error_message.is_none());
     }
 
     #[test]
@@ -606,7 +679,8 @@ mod tests {
             .record_slider_outcome(1, "acc-new", true, "")
             .expect("success");
         assert_eq!(ok.processing_status, "success");
-        assert!(ok.processing_result.contains("成功"));
+        assert!(ok.processing_result.contains("通过"));
+        assert!(ok.error_message.is_none());
         let processing = service
             .list(
                 1,
@@ -627,5 +701,32 @@ mod tests {
             .expect("failed");
         assert_eq!(failed.processing_status, "failed");
         assert!(failed.processing_result.contains("失败"));
+        assert_eq!(failed.error_message.as_deref(), Some("浏览器续期超时"));
+    }
+
+    #[test]
+    fn record_slider_outcome_updates_all_processing_for_account() {
+        let mock = store();
+        let service = RiskService::new(&mock);
+        for _ in 0..3 {
+            let mut log = log(0, "acc-multi", "processing", "local", "2026-08-04 10:00:00");
+            log.id = 0;
+            log.account_id = "acc-multi".to_string();
+            mock.append_log(log).expect("append");
+        }
+        service
+            .record_slider_outcome(1, "acc-multi", true, "")
+            .expect("success");
+        let remaining = mock
+            .list_logs(
+                1,
+                &RiskLogQuery {
+                    account_id: "acc-multi".to_string(),
+                    processing_status: "processing".to_string(),
+                    ..Default::default()
+                },
+            )
+            .expect("list");
+        assert!(remaining.is_empty());
     }
 }

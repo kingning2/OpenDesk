@@ -16,8 +16,6 @@ use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::tungstenite::http::header::HeaderValue;
 use tokio_tungstenite::tungstenite::Message;
-use tokio_tungstenite::MaybeTlsStream;
-use tokio_tungstenite::WebSocketStream;
 
 use super::api::XianyuApi;
 use super::codec;
@@ -60,10 +58,6 @@ const HISTORY_MAX_PAGES: u32 = 3;
 const HISTORY_RESPONSE_TIMEOUT: Duration = Duration::from_secs(10);
 /// `listUserMessages` 首次翻页游标（服务端约定的大数）。
 const HISTORY_FIRST_CURSOR: i64 = 9_007_199_254_740_991;
-
-/// 连接流类型（保留供未来扩展类型标注）。
-#[allow(dead_code)]
-type WsStream = WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>;
 
 /// 判断是否为认证类错误：会话过期 / cookie 失效 / 未登录等，重试无意义，需重新登录。
 ///

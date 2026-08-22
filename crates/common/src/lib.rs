@@ -3,6 +3,7 @@
 //! 作者：Xiaoman
 //! 创建时间：2026-08-18
 
+pub mod channel_inbound_message;
 pub mod constants;
 pub mod contracts;
 pub mod errors;

@@ -94,6 +94,8 @@ pub fn builtin_descriptors() -> Vec<PlatformDescriptor> {
     vec![
         #[cfg(platform_xianyu)]
         xianyu_descriptor(),
+        #[cfg(platform_ali1688)]
+        ali1688_descriptor(),
         #[cfg(platform_xiaohongshu)]
         xiaohongshu_descriptor(),
         #[cfg(platform_douyin)]
@@ -116,6 +118,18 @@ fn xianyu_descriptor() -> PlatformDescriptor {
             PlatformCapability::Order,
             PlatformCapability::Rate,
             PlatformCapability::ListingMonitor,
+            PlatformCapability::Account,
+            PlatformCapability::Manage,
+        ]),
+    }
+}
+
+#[cfg(platform_ali1688)]
+fn ali1688_descriptor() -> PlatformDescriptor {
+    PlatformDescriptor {
+        kind: "ali1688".to_string(),
+        name: "1688".to_string(),
+        capabilities: PlatformCapabilities::new(vec![
             PlatformCapability::Account,
             PlatformCapability::Manage,
         ]),

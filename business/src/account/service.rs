@@ -138,6 +138,9 @@ impl<'a> AccountService<'a> {
         if let Some(cookie) = &patch.cookie {
             account.cookie = cookie.clone();
         }
+        if let Some(cookie_1688) = &patch.cookie_1688 {
+            account.cookie_1688 = cookie_1688.clone();
+        }
         if let Some(unb) = &patch.unb {
             account.unb = unb.clone();
         }
@@ -291,6 +294,8 @@ mod tests {
             login_password: String::new(),
             unb: String::new(),
             cookie: cookie.to_string(),
+            cookie_1688: String::new(),
+            platform: "xianyu".to_string(),
             login_method: LoginMethod::Qr,
             status: AccountStatus::Active,
             remark: String::new(),

@@ -7,18 +7,11 @@
 use rmpv::Value;
 
 /// 入站文本消息路径约定（来自闲鱼钉钉协议逆向）。
-/// 部分路径为导航参考，未全量接入 —— 保留供后续字段扩展。
-#[allow(dead_code)]
-pub const MSG_ROOT: &[&str] = &["1"];
-#[allow(dead_code)]
 pub const MSG_TYPE: &[&str] = &["1", "2"]; // `xxx@goofish` 会话标识
 pub const MSG_CREATE_TIME: &[&str] = &["1", "5"]; // 毫秒时间戳
-#[allow(dead_code)]
-pub const MSG_HEADER: &[&str] = &["1", "10"];
 pub const MSG_CONTENT: &[&str] = &["1", "10", "reminderContent"];
 pub const MSG_SENDER_NAME: &[&str] = &["1", "10", "reminderTitle"];
 pub const MSG_SENDER_ID: &[&str] = &["1", "10", "senderUserId"];
-#[allow(dead_code)]
 pub const MSG_URL: &[&str] = &["1", "10", "reminderUrl"];
 
 /// 从 MessagePack 帧中按字符串键路径取值（跳过 map 类型检查，缺失返回 `None`）。

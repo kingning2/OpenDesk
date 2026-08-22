@@ -15,7 +15,6 @@ use common::constants::xianyu;
 use common::{DingDaError, DingDaResult};
 
 const TOKEN_URL: &str = xianyu::LOGIN_TOKEN_URL;
-const HAS_LOGIN_URL: &str = xianyu::HAS_LOGIN_URL;
 
 /// 闲鱼 HTTP 客户端。
 ///
@@ -52,62 +51,6 @@ impl XianyuApi {
     /// 当前 cookie 字符串（set-cookie 写回后为最新值）。
     pub async fn cookie_str(&self) -> String {
         self.cookie.read().await.clone()
-    }
-
-    /// 校验 Cookie 是否仍有效（`hasLogin.do` 返回 success）。
-    #[allow(dead_code)]
-    pub async fn has_login(&self) -> DingDaResult<bool> {
-        let cookie_str = self.cookie.read().await.clone();
-        let cookies = parse_cookies(&cookie_str);
-        let hid = cookies.get("unb").cloned().unwrap_or_default();
-        let csrf = cookies.get("XSRF-TOKEN").cloned().unwrap_or_default();
-        let device = cookies.get("cna").cloned().unwrap_or_default();
-        let cookie2 = cookies.get("cookie2").cloned().unwrap_or_default();
-
-        let form: HashMap<String, String> = [
-            ("appName", "xianyu"),
-            ("fromSite", "77"),
-            ("hid", hid.as_str()),
-            ("ltl", "true"),
-            ("appEntrance", "web"),
-            ("_csrf_token", csrf.as_str()),
-            ("umidToken", ""),
-            ("hsiz", cookie2.as_str()),
-            ("bizParams", "taobaoBizLoginFrom=web"),
-            ("mainPage", "false"),
-            ("isMobile", "false"),
-            ("lang", "zh_CN"),
-            ("returnUrl", ""),
-            ("isIframe", "true"),
-            ("documentReferer", xianyu::WEB_ORIGIN),
-            ("defaultView", "hasLogin"),
-            ("umidTag", "SERVER"),
-            ("deviceId", device.as_str()),
-        ]
-        .into_iter()
-        .map(|(k, v)| (k.to_string(), v.to_string()))
-        .collect();
-
-        let response = self
-            .http
-            .post(HAS_LOGIN_URL)
-            .query(&[("appName", "xianyu"), ("fromSite", "77")])
-            .header("Origin", xianyu::WEB_ORIGIN)
-            .header("Cookie", cookie_str.clone())
-            .form(&form)
-            .send()
-            .await
-            .map_err(|error| format!("hasLogin 请求失败: {error}"))?;
-
-        let body: serde_json::Value = response
-            .json()
-            .await
-            .map_err(|error| format!("hasLogin 解析失败: {error}"))?;
-
-        Ok(body
-            .pointer("/content/success")
-            .and_then(serde_json::Value::as_bool)
-            .unwrap_or(false))
     }
 
     /// 获取 WebSocket 注册 token。
