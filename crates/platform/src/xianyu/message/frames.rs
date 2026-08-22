@@ -1,21 +1,16 @@
 //! 出站帧构造 — /reg 注册、同步 ack、消息发送。
 //!
 //! 全部为 JSON 文本帧，对齐闲鱼钉钉系 WebSocket 协议（参考 XianyuAutoAgent）。
+//!
+//! 作者：Xiaoman
+//! 创建时间：2026-08-21
 
 use base64::Engine;
 use serde_json::{json, Value};
-use std::time::{SystemTime, UNIX_EPOCH};
 
-use super::cookie::parse_cookies;
-use super::sign::REG_APP_KEY;
+use crate::xianyu::core::sign::REG_APP_KEY;
 
-/// 当前毫秒时间戳。
-pub fn now_ms() -> i64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|duration| duration.as_millis() as i64)
-        .unwrap_or(0)
-}
+pub use crate::xianyu::core::cookie::{device_id_from_cookie, generate_device_id, now_ms};
 
 /// 生成随机 mid（与闲鱼同构：随机段 + 毫秒时间戳）。
 pub fn generate_mid() -> String {
@@ -26,27 +21,6 @@ pub fn generate_mid() -> String {
 /// 生成随机 uuid。
 pub fn generate_uuid() -> String {
     format!("-{}1", now_ms())
-}
-
-/// 生成设备 id：UUID 样式 + 用户 id 后缀。
-pub fn generate_device_id(user_id: &str) -> String {
-    let mut result = String::with_capacity(36);
-    let chars = b"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-    for i in 0..36 {
-        match i {
-            8 | 13 | 18 | 23 => result.push('-'),
-            14 => result.push('4'),
-            19 => {
-                let v = rand::random::<u8>();
-                result.push(chars[(v & 0x0f) as usize | 0x08] as char);
-            }
-            _ => {
-                let v = rand::random::<u8>();
-                result.push(chars[(v % 16) as usize] as char);
-            }
-        }
-    }
-    format!("{result}-{user_id}")
 }
 
 /// /reg 注册帧（建立连接后首帧）。
@@ -97,7 +71,17 @@ pub fn heartbeat_frame() -> Value {
 }
 
 /// 通用 ACK 响应帧（回显服务端 mid/sid 及关键头）。
-#[allow(dead_code)]
+///
+/// 对齐 goofish-cli：每条下行业务帧都需回 `code=200`，否则服务端可能停推。
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-08-21
+///
+/// # 参数
+/// - `headers` — 入站帧的 `headers` 对象
+///
+/// # 返回值
+/// 可直接 `send` 的 ACK JSON。
 pub fn ack_frame(headers: &Value) -> Value {
     let mut out_headers = json!({
         "mid": headers.get("mid").cloned().unwrap_or_else(|| Value::String(generate_mid())),
@@ -185,13 +169,6 @@ pub fn extract_item_id(url: &str) -> Option<String> {
 /// 从入站会话标识 `xxx@goofish` 提取裸会话 id。
 pub fn extract_cid(raw: &str) -> String {
     raw.split('@').next().unwrap_or(raw).to_string()
-}
-
-/// 便捷：由 cookie 字符串生成设备 id。
-pub fn device_id_from_cookie(cookie_str: &str) -> Option<String> {
-    let cookies = parse_cookies(cookie_str);
-    let my_id = cookies.get("unb")?;
-    Some(generate_device_id(my_id))
 }
 
 #[cfg(test)]

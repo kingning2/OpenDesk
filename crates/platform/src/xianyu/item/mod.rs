@@ -10,8 +10,9 @@ use common::DingDaResult;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use super::cookie::{my_id, parse_cookies};
-use super::mtop::{MtopClient, MtopRequest};
+use crate::xianyu::core::cookie::{my_id, parse_cookies};
+use crate::xianyu::core::cookies::credential_to_cookie_header;
+use crate::xianyu::core::mtop::{MtopClient, MtopRequest};
 
 /// 平台侧商品摘要（同步入库前）。
 ///
@@ -58,7 +59,7 @@ pub async fn fetch_seller_items(
         return Err("cookie 缺少 unb，无法拉取商品".into());
     }
 
-    let client = MtopClient::new(cookie_str)?;
+    let client = MtopClient::new(&credential_to_cookie_header(cookie_str))?;
     let page_limit = if max_pages == 0 { 50 } else { max_pages };
     let mut all_items = Vec::new();
     let mut seen_ids = std::collections::HashSet::new();
@@ -152,7 +153,7 @@ pub async fn fetch_item_detail(
         return Err("cookie 缺少 unb，无法拉取商品详情".into());
     }
 
-    let client = MtopClient::new(cookie_str)?;
+    let client = MtopClient::new(&credential_to_cookie_header(cookie_str))?;
     let request = MtopRequest::new(
         "mtop.taobao.idle.pc.detail",
         "1.0",

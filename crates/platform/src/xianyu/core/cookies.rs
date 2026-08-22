@@ -6,20 +6,51 @@
 use common::contracts::ChannelCookie;
 
 /// 从 cookies 数组构造 `name=value; ...` 字符串（供 HTTP/WS 请求头使用）。
+///
+/// 同名 Cookie 只保留一条：优先 `goofish.com`，其次 `taobao.com`，避免 Camoufox
+/// 全量导出后 Header 里出现重复名导致 mtop `FAIL_SYS_ILLEGAL_ACCESS`。
 pub fn cookies_to_string(cookies: &[ChannelCookie]) -> String {
-    cookies
-        .iter()
-        .filter(|cookie| !cookie.name.is_empty() && !cookie.value.is_empty())
+    let mut best: std::collections::HashMap<&str, &ChannelCookie> =
+        std::collections::HashMap::new();
+    for cookie in cookies {
+        if cookie.name.is_empty() || cookie.value.is_empty() {
+            continue;
+        }
+        match best.get(cookie.name.as_str()) {
+            None => {
+                best.insert(&cookie.name, cookie);
+            }
+            Some(previous) => {
+                if domain_preference(&cookie.domain) < domain_preference(&previous.domain) {
+                    best.insert(&cookie.name, cookie);
+                }
+            }
+        }
+    }
+    best.values()
         .map(|cookie| format!("{}={}", cookie.name, cookie.value))
         .collect::<Vec<_>>()
         .join("; ")
 }
 
-/// 从凭据（`ChannelAccount.credential`）解析 cookies 数组。
+fn domain_preference(domain: &str) -> i32 {
+    let lowered = domain.to_ascii_lowercase();
+    if lowered.contains("goofish.com") {
+        0
+    } else if lowered.contains("taobao.com") {
+        1
+    } else if lowered.contains("alibaba.com") {
+        2
+    } else {
+        50
+    }
+}
+
+/// 从凭据（`ChannelAccount.credential` / 业务账号 `cookie`）解析 cookies 数组。
 ///
 /// 兼容三种形态：
 /// - **快照 JSON**（Chrome 扩展导出）：`{"cookies":[{...}], "env":{...}, ...}` → 取 `cookies`
-/// - **cookies 数组 JSON**（登录后导出）：`[{name,value,...}, ...]`
+/// - **cookies 数组 JSON**（登录后 / 滑块续期写回）：`[{name,value,...}, ...]`
 /// - **旧 cookie 字符串**：`unb=...; _m_h5_tk=...` → 拆成无 domain 的 cookie
 pub fn parse_credential(credential: &str) -> Vec<ChannelCookie> {
     // 尝试 JSON 解析。
@@ -65,6 +96,28 @@ pub fn parse_credential(credential: &str) -> Vec<ChannelCookie> {
         .collect()
 }
 
+/// 把任意凭据形态规范成 HTTP `Cookie` 头：`name=value; ...`。
+///
+/// 滑块续期会把 Cookie 存成 JSON 数组；mtop / 商品同步仍吃 Header 字符串。
+/// 统一经此函数，避免 `parse_cookies("[{...}]")` 读不到 `unb`。
+///
+/// 作者：Xiaoman
+/// 创建时间：2026-08-21
+///
+/// # 参数
+/// - `credential` — JSON 数组 / 快照 / `k=v;` 字符串
+///
+/// # 返回值
+/// Header 用 Cookie 串；解析为空时回退原文（兼容极旧数据）。
+pub fn credential_to_cookie_header(credential: &str) -> String {
+    let header = cookies_to_string(&parse_credential(credential));
+    if header.is_empty() {
+        credential.trim().to_string()
+    } else {
+        header
+    }
+}
+
 /// 取用户 id（`unb` cookie）。
 pub fn my_id(cookies: &[ChannelCookie]) -> Option<String> {
     cookies
@@ -76,7 +129,7 @@ pub fn my_id(cookies: &[ChannelCookie]) -> Option<String> {
 /// 从 cookies 数组构造设备 id（UUID 样式 + 用户 id 后缀）。
 pub fn device_id(cookies: &[ChannelCookie]) -> Option<String> {
     let unb = my_id(cookies)?;
-    Some(super::message::generate_device_id(&unb))
+    Some(super::cookie::generate_device_id(&unb))
 }
 
 #[cfg(test)]
@@ -158,5 +211,14 @@ mod tests {
         );
         let from_snapshot = parse_credential(&snapshot_json);
         assert_eq!(my_id(&from_snapshot), Some("U-9".to_string()));
+    }
+
+    #[test]
+    fn credential_to_cookie_header_from_json_array() {
+        let array_json = r#"[{"name":"unb","value":"2214350705775","domain":".goofish.com","path":"/"},{"name":"_m_h5_tk","value":"tk_x","domain":".goofish.com","path":"/"}]"#;
+        let header = credential_to_cookie_header(array_json);
+        assert!(header.contains("unb=2214350705775"));
+        assert!(header.contains("_m_h5_tk=tk_x"));
+        assert!(!header.trim_start().starts_with('['));
     }
 }

@@ -6,7 +6,7 @@
 use common::DingDaResult;
 use serde_json::Value;
 
-use super::mtop::{MtopClient, MtopRequest};
+use crate::xianyu::core::mtop::{MtopClient, MtopRequest};
 
 /// 拉取会话关联商品卡信息，返回响应 `data` 节点（原始 JSON）。
 ///

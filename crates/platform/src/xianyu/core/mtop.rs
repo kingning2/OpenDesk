@@ -114,9 +114,11 @@ impl MtopClient {
     ///
     /// 成功返回客户端；HTTP 客户端构建失败返回错误。
     pub fn new(cookie_str: &str) -> DingDaResult<Self> {
+        // 续期写回可能是 JSON 数组；统一成 Header 串再发 mtop。
+        let normalized = super::cookies::credential_to_cookie_header(cookie_str);
         Ok(Self {
             http: build_client()?,
-            cookie: Arc::new(RwLock::new(cookie_str.to_string())),
+            cookie: Arc::new(RwLock::new(normalized)),
         })
     }
 
@@ -151,7 +153,7 @@ impl MtopClient {
         let cookie_str = self.cookie.read().await.clone();
         let cookies = parse_cookies(&cookie_str);
         let token = sign_token(&cookies).unwrap_or_default();
-        let timestamp = crate::xianyu::message::now_ms().to_string();
+        let timestamp = super::cookie::now_ms().to_string();
         let data_val = serde_json::to_string(&request.data)
             .map_err(|error| format!("mtop data 序列化失败: {error}"))?;
         let sign = generate_sign(&token, &timestamp, &data_val);

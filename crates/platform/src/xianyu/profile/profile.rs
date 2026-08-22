@@ -5,7 +5,7 @@
 
 use common::DingDaResult;
 
-use super::mtop::{MtopClient, MtopRequest};
+use crate::xianyu::core::mtop::{MtopClient, MtopRequest};
 
 /// 闲鱼用户公开资料（导航接口 `mtop.idle.web.user.page.nav`）。
 ///
