@@ -20,7 +20,9 @@ use super::db::SqliteBusinessDb;
 
 use business::account::{AccountStore, XianyuAccount};
 use business::item::{Item, ItemQuery, ItemStore};
-use business::monitor::{MonitorResult, MonitorResultStore, MonitorTask, MonitorTaskStore};
+use business::monitor::{
+    MonitorResult, MonitorResultStore, MonitorRun, MonitorRunStore, MonitorTask, MonitorTaskStore,
+};
 use business::order::{DeliveryInfoUpdate, Order, OrderStatus, OrderStore};
 use business::risk::{RiskConfig, RiskLogItem, RiskLogQuery, RiskStore};
 use business::setting::UserSettingStore;
@@ -519,6 +521,7 @@ impl UserSettingStore for InMemoryUserSettingStore {
 
 const DOMAIN_MONITOR_TASK: &str = "monitor_task";
 const DOMAIN_MONITOR_RESULT: &str = "monitor_result";
+const DOMAIN_MONITOR_RUN: &str = "monitor_run";
 
 fn monitor_result_record_id(task_id: &str, item_id: &str) -> String {
     format!("{task_id}:{item_id}")
@@ -577,6 +580,10 @@ impl MonitorResultStore for InMemoryMonitorResultStore {
             .collect())
     }
 
+    fn list_all_results(&self, owner_id: i64) -> DingDaResult<Vec<MonitorResult>> {
+        Ok(self.db.scan(DOMAIN_MONITOR_RESULT, owner_id)?)
+    }
+
     fn has_result(&self, owner_id: i64, task_id: &str, item_id: &str) -> DingDaResult<bool> {
         let record_id = monitor_result_record_id(task_id, item_id);
         Ok(self
@@ -590,5 +597,37 @@ impl MonitorResultStore for InMemoryMonitorResultStore {
         Ok(self
             .db
             .put(DOMAIN_MONITOR_RESULT, &record_id, result.owner_id, result)?)
+    }
+}
+
+/// SQLite 监控运行记录存储。
+#[derive(Clone)]
+pub struct InMemoryMonitorRunStore {
+    db: SqliteBusinessDb,
+}
+
+impl InMemoryMonitorRunStore {
+    pub fn new(db: SqliteBusinessDb) -> Self {
+        Self { db }
+    }
+}
+
+impl MonitorRunStore for InMemoryMonitorRunStore {
+    fn list_runs(&self, owner_id: i64, task_id: &str) -> DingDaResult<Vec<MonitorRun>> {
+        let all: Vec<MonitorRun> = self.db.scan(DOMAIN_MONITOR_RUN, owner_id)?;
+        Ok(all
+            .into_iter()
+            .filter(|item| item.task_id == task_id)
+            .collect())
+    }
+
+    fn get_run(&self, owner_id: i64, run_id: &str) -> DingDaResult<Option<MonitorRun>> {
+        Ok(self.db.get(DOMAIN_MONITOR_RUN, run_id, owner_id)?)
+    }
+
+    fn put_run(&self, run: &MonitorRun) -> DingDaResult<()> {
+        Ok(self
+            .db
+            .put(DOMAIN_MONITOR_RUN, &run.id, run.owner_id, run)?)
     }
 }
