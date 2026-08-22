@@ -28,6 +28,7 @@ __pycache__/
 
 # Sidecar 运行时数据（Playwright 浏览器配置目录）
 python/browser_data/
+python/sidecar/browser_data/
 
 # setuptools / editable 产物
 *.egg-info/
